@@ -674,6 +674,15 @@ namespace ImageGlass
                 //update thumbnail
                 thumbnailBar.Items[GlobalSetting.CurrentIndex].Update();
             }
+            else
+            {
+                // KBR 20190804 Fix obscure issue: 
+                // 1. Rotate/flip image with "IsSaveAfterRotating" is OFF
+                // 2. Move through images
+                // 3. Turn "IsSaveAfterRotating" ON
+                // 4. On navigate to another image, the change made at step 1 will be saved.
+                LocalSetting.ImageModifiedPath = "";
+            }
 
             picMain.Text = "";
             LocalSetting.IsTempMemoryData = false;
@@ -3758,6 +3767,19 @@ namespace ImageGlass
 
         private void picMain_MouseDoubleClick(object sender, MouseEventArgs e)
         {
+            //workaround that makes it so side mouse buttons will not zoom the image
+            if (e.Button == MouseButtons.XButton1)
+            {
+                mnuMainViewPrevious_Click(null, null);
+                return;
+            }
+
+            if (e.Button == MouseButtons.XButton2)
+            {
+                mnuMainViewNext_Click(null, null);
+                return;
+            }
+        
             void ToggleActualSize()
             {
                 if (picMain.Zoom < 100)
