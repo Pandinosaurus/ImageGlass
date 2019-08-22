@@ -5184,6 +5184,36 @@ namespace ImageGlass
             }
         }
 
+
+        /// <summary>
+        /// Manage the Page Navigation Tool.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void mnuMainPageNav_Click(object sender, EventArgs e)
+        {
+            LocalSetting.IsPageNavToolOpen = mnuMainPageNav.Checked;
+
+            if (mnuMainPageNav.Checked)
+            {
+                // Open the page navigation tool
+                if (LocalSetting.FPageNav == null || LocalSetting.FPageNav.IsDisposed)
+                    LocalSetting.FPageNav = new frmPageNav();
+                LocalSetting.ForceUpdateActions |= MainFormForceUpdateAction.PAGE_NAV_MENU;
+                LocalSetting.FPageNav.Owner = this;
+                LocalSetting.FPageNav.Show(this);
+                this.Activate();
+
+                // TODO register page event handler(s)
+            }
+            else
+            {
+                // Close the page navigation tool
+                LocalSetting.FPageNav?.Close();
+            }
+        }
+
+
         private void mnuMainSettings_Click(object sender, EventArgs e)
         {
             if (LocalSetting.FSetting.IsDisposed)
