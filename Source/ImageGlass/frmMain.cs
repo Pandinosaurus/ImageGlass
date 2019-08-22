@@ -1809,7 +1809,8 @@ namespace ImageGlass
 
                 mnuMainClearClipboard.Image = 
                 mnuMainToolbar.Image = 
-                mnuMainColorPicker.Image = 
+                mnuMainColorPicker.Image =
+                mnuMainPageNav.Image = 
                 mnuMainAbout.Image = 
                 mnuMainSettings.Image =
 
@@ -3232,11 +3233,20 @@ namespace ImageGlass
             #endregion
 
 
+            #region PAGE_NAV_MENU
+            if ((flags & MainFormForceUpdateAction.PAGE_NAV_MENU) != 0)
+            {
+                mnuMainPageNav.Checked = LocalSetting.IsPageNavToolOpen;
+            }
+            #endregion
+
+
             #region THEME
             if ((flags & MainFormForceUpdateAction.THEME) == MainFormForceUpdateAction.THEME)
             {
                 ApplyTheme(LocalSetting.Theme.ThemeFolderName);
                 LocalSetting.FColorPicker.UpdateUI();
+                LocalSetting.FPageNav.UpdateUI();
             }
             #endregion
 
