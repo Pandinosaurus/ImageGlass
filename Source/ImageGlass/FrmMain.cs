@@ -1,6 +1,6 @@
 ﻿/*
 ImageGlass Project - Image viewer for Windows
-Copyright (C) 2010 - 2024 DUONG DIEU PHAP
+Copyright (C) 2010 - 2025 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
 
 This program is free software: you can redistribute it and/or modify
@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 using Cysharp.Text;
 using ImageGlass.Base;
 using ImageGlass.Base.Actions;
-using ImageGlass.Base.DirectoryComparer;
+using ImageGlass.Base.FileSystem;
 using ImageGlass.Base.PhotoBox;
 using ImageGlass.Base.Photoing.Codecs;
 using ImageGlass.Base.WinApi;
@@ -43,7 +43,8 @@ public partial class FrmMain : ThemedForm
     private CancellationTokenSource? _loadCancelTokenSrc = new();
     private readonly IProgress<ProgressReporterEventArgs> _uiReporter;
     private MovableForm? _movableForm;
-    private bool _isShowingImagePreview;
+    private FileFinder? _fileFinder = new();
+    string? _inputFilePath;
 
 
     // variable to back up / restore window layout when changing window mode
@@ -54,6 +55,7 @@ public partial class FrmMain : ThemedForm
     private Rectangle _windowBound;
     private FormWindowState _windowState = FormWindowState.Normal;
 
+
     public FrmMain() : base()
     {
         InitializeComponent();
@@ -61,6 +63,7 @@ public partial class FrmMain : ThemedForm
 
         // initialize UI thread reporter
         _uiReporter = new Progress<ProgressReporterEventArgs>(ReportToUIThread);
+        _fileFinder.FilesEnumerated += FileFinder_FilesEnumerated;
 
         // update the DpiApi when DPI changed.
         EnableDpiApiUpdate = true;
@@ -89,12 +92,9 @@ public partial class FrmMain : ThemedForm
 
         UpdateGallerySize();
 
-        // update picmain scaling
-        PicMain.NavButtonSize = this.ScaleToDpi(new SizeF(50f, 50f));
-        PicMain.CheckerboardCellSize = this.ScaleToDpi(Const.VIEWER_GRID_SIZE);
-
         ResumeLayout(true);
     }
+
 
     protected override void OnDpiChanged(DpiChangedEventArgs e)
     {
@@ -104,6 +104,7 @@ public partial class FrmMain : ThemedForm
             MnuContext.CurrentDpi =
             MnuSubMenu.CurrentDpi = e.DeviceDpiNew;
     }
+
 
     protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
     {
@@ -338,6 +339,7 @@ public partial class FrmMain : ThemedForm
     }
 
 
+
     #region Image Loading functions
 
     /// <summary>
@@ -346,20 +348,7 @@ public partial class FrmMain : ThemedForm
     /// </summary>
     public void LoadImagesFromCmdArgs(string[] args)
     {
-        var pathToLoad = string.Empty;
-
-        if (args.Length >= 2)
-        {
-            // get path from params
-            var cmdPath = args
-                .Skip(1)
-                .FirstOrDefault(i => !i.StartsWith(Const.CONFIG_CMD_PREFIX, StringComparison.Ordinal));
-
-            if (!string.IsNullOrEmpty(cmdPath))
-            {
-                pathToLoad = cmdPath;
-            }
-        }
+        var pathToLoad = Program.InputImagePathFromArgs;
 
         if (string.IsNullOrEmpty(pathToLoad)
             && Config.ShouldOpenLastSeenImage
@@ -382,8 +371,8 @@ public partial class FrmMain : ThemedForm
         }
 
 
-        // Start loading path
-        _ = BHelper.RunAsThread(() => PrepareLoading(pathToLoad));
+        // start loading path with the foreground shell
+        PrepareLoading(pathToLoad, false);
     }
 
 
@@ -393,7 +382,7 @@ public partial class FrmMain : ThemedForm
     /// <param name="inputPath">
     /// The relative/absolute path of file/folder; or a protocol path
     /// </param>
-    public void PrepareLoading(string inputPath)
+    public void PrepareLoading(string inputPath, bool disposeForegroundShell)
     {
         var path = BHelper.ResolvePath(inputPath);
         if (string.IsNullOrEmpty(path)) return;
@@ -401,17 +390,21 @@ public partial class FrmMain : ThemedForm
         var pathType = BHelper.CheckPath(path);
         if (pathType == PathType.Unknown) return;
 
+        // dispose the foreground shell if requested
+        if (disposeForegroundShell) Program.ForegroundShell = null;
+
+
         if (pathType == PathType.Dir)
         {
             _ = PrepareLoadingAsync([inputPath], string.Empty);
         }
         else
         {
-            // load images list
-            _ = LoadImageListAsync([inputPath], path);
-
             // load the current image
-            _ = ViewNextCancellableAsync(0, filePath: path);
+            BHelper.RunAsThread(() => _ = ViewNextCancellableAsync(0, filePath: path));
+
+            // load images list
+            LoadImageList([inputPath], path);
         }
     }
 
@@ -432,7 +425,7 @@ public partial class FrmMain : ThemedForm
         if (string.IsNullOrEmpty(filePath))
         {
             // load images list
-            await LoadImageListAsync(paths, currentFile ?? filePath);
+            LoadImageList(paths, currentFile ?? filePath);
 
             // load the current image
             await ViewNextCancellableAsync(0);
@@ -443,116 +436,132 @@ public partial class FrmMain : ThemedForm
             _ = ViewNextCancellableAsync(0, filePath: filePath);
 
             // load images list
-            _ = LoadImageListAsync(paths, currentFile ?? filePath);
+            LoadImageList(paths, currentFile ?? filePath);
         }
     }
+
 
     /// <summary>
     /// Load the images list.
     /// </summary>
     /// <param name="inputPaths">The list of files to load</param>
     /// <param name="currentFilePath">The image file path to view first</param>
-    public async Task LoadImageListAsync(
+    public void LoadImageList(
         IEnumerable<string> inputPaths,
         string? currentFilePath)
     {
         if (!inputPaths.Any()) return;
 
-        currentFilePath ??= string.Empty;
+        _inputFilePath = currentFilePath ??= string.Empty;
+
         var hasInitFile = !string.IsNullOrEmpty(currentFilePath);
+        var dirPaths = new HashSet<string>();
 
+        //  Get the distinct directories list
+        #region Get the distinct directories list
+        var isFirstPath = true;
 
-        await Task.Run(() =>
+        // parse string to absolute path
+        var paths = inputPaths.Select(item => BHelper.ResolvePath(item));
+
+        // prepare the distinct dir list
+        var distinctDirsList = BHelper.GetDistinctDirsFromPaths(paths);
+
+        foreach (var aPath in distinctDirsList)
         {
-            // track paths loaded to prevent duplicates
-            var dirPaths = new HashSet<string>();
-            var isFirstPath = true;
+            var pathType = BHelper.CheckPath(aPath);
+            if (pathType == PathType.Unknown) continue;
 
-            // parse string to absolute path
-            var paths = inputPaths.Select(item => BHelper.ResolvePath(item));
+            var dirPath = aPath;
 
-            // prepare the distinct dir list
-            var distinctDirsList = BHelper.GetDistinctDirsFromPaths(paths);
-
-            foreach (var aPath in distinctDirsList)
+            // path is directory
+            if (pathType == PathType.Dir)
             {
-                var pathType = BHelper.CheckPath(aPath);
-                if (pathType == PathType.Unknown) continue;
-
-                var dirPath = aPath;
-
-                // path is directory
-                if (pathType == PathType.Dir)
+                // Issue #415: If the folder name ends in ALT+255 (alternate space),
+                // DirectoryInfo strips it.
+                if (!aPath.EndsWith(Path.DirectorySeparatorChar.ToString(), StringComparison.OrdinalIgnoreCase))
                 {
-                    // Issue #415: If the folder name ends in ALT+255 (alternate space),
-                    // DirectoryInfo strips it.
-                    if (!aPath.EndsWith(Path.DirectorySeparatorChar.ToString(), StringComparison.OrdinalIgnoreCase))
-                    {
-                        dirPath = aPath + Path.DirectorySeparatorChar;
-                    }
+                    dirPath = aPath + Path.DirectorySeparatorChar;
                 }
-                // path is file
+            }
+            // path is file
+            else
+            {
+                if (string.Equals(Path.GetExtension(aPath), ".lnk", StringComparison.OrdinalIgnoreCase))
+                {
+                    dirPath = FileShortcutApi.GetTargetPathFromShortcut(aPath);
+                }
                 else
                 {
-                    if (string.Equals(Path.GetExtension(aPath), ".lnk", StringComparison.OrdinalIgnoreCase))
-                    {
-                        dirPath = FileShortcutApi.GetTargetPathFromShortcut(aPath);
-                    }
-                    else
-                    {
-                        dirPath = Path.GetDirectoryName(aPath) ?? string.Empty;
-                    }
+                    dirPath = Path.GetDirectoryName(aPath) ?? string.Empty;
                 }
-
-
-                // TODO: Currently only have the ability to watch a single path for changes!
-                if (isFirstPath)
-                {
-                    isFirstPath = false;
-                    StartFileWatcher(dirPath);
-
-                    // Seek for explorer sort order
-                    DetermineSortOrder(dirPath);
-                }
-
-                // KBR 20181004 Fix observed bug: dropping multiple files from the same path
-                // would load ALL files in said path multiple times! Prevent loading the same
-                // path more than once.
-                dirPaths.Add(dirPath);
             }
 
 
-            Local.InitialInputPath = hasInitFile
-                ? (distinctDirsList.Count > 0 ? distinctDirsList[0] : string.Empty)
-                : currentFilePath;
-
-
-            // get image files
-            var allFilePaths = BHelper.FindFiles(dirPaths,
-                Config.EnableRecursiveLoading,
-                Config.ShouldLoadHiddenImages,
-                filePath =>
-                {
-                    if (string.IsNullOrWhiteSpace(filePath)) return false;
-
-                    var ext = Path.GetExtension(filePath).ToLowerInvariant();
-                    return ext.Length > 0 && Config.FileFormats.Contains(ext);
-                },
-                filePaths => BHelper.SortFilePathList(filePaths,
-                    Local.ActiveImageLoadingOrder,
-                    Local.ActiveImageLoadingOrderType,
-                    Config.ShouldGroupImagesByDirectory));
-
-
-            // add to image list
-            Local.InitImageList(allFilePaths, distinctDirsList);
-
-
-            _uiReporter.Report(new(new ImageListLoadedEventArgs()
+            // TODO: Currently only have the ability to watch a single path for changes!
+            if (isFirstPath)
             {
-                InitFilePath = currentFilePath,
-            }, nameof(Local.RaiseImageListLoadedEvent)));
-        });
+                isFirstPath = false;
+                StartFileWatcher(dirPath);
+            }
+
+            // KBR 20181004 Fix observed bug: dropping multiple files from the same path
+            // would load ALL files in said path multiple times! Prevent loading the same
+            // path more than once.
+            dirPaths.Add(dirPath);
+        }
+        #endregion // Get the distinct directories list
+
+
+        Local.InitialInputPath = hasInitFile
+            ? (distinctDirsList.Count > 0 ? distinctDirsList[0] : string.Empty)
+            : currentFilePath;
+
+        // initialize image list
+        Local.InitImageList(null, distinctDirsList);
+
+
+        // Load images to the list
+        #region Load images to the list
+
+        // update sort order setting
+        _fileFinder.UseExplorerSortOrder = Config.ShouldUseExplorerSortOrder;
+
+        // check if we should load images from foreground window
+        var useForegroundWindow = Program.CanUseForegroundShell();
+
+        // start finding image files
+        _fileFinder.StartFindingFiles(
+            useForegroundWindow ? Program.ForegroundShell : null,
+            dirPaths,
+            Config.EnableRecursiveLoading,
+            Config.ShouldLoadHiddenImages,
+            filePath =>
+            {
+                if (string.IsNullOrWhiteSpace(filePath)) return false;
+
+                var ext = Path.GetExtension(filePath).ToLowerInvariant();
+                return ext.Length > 0 && Config.FileFormats.Contains(ext);
+            },
+            filePaths => BHelper.SortFilePathList(filePaths,
+                Config.ImageLoadingOrder,
+                Config.ImageLoadingOrderType,
+                Config.ShouldGroupImagesByDirectory));
+
+        #endregion // Load images to the list
+
+    }
+
+
+    private void FileFinder_FilesEnumerated(object? sender, FilesEnumeratedEventArgs e)
+    {
+        // add to image list
+        Local.Images.Add(e.FilePaths);
+
+        _uiReporter.Report(new(new ImageListLoadedEventArgs()
+        {
+            InitFilePath = _inputFilePath,
+        }, nameof(Local.RaiseImageListLoadedEvent)));
     }
 
 
@@ -563,7 +572,7 @@ public partial class FrmMain : ThemedForm
     {
         if (string.IsNullOrEmpty(currentFilePath))
         {
-            Local.CurrentIndex = 0;
+            Local.CurrentIndex = -1;
             return;
         }
 
@@ -572,8 +581,10 @@ public partial class FrmMain : ThemedForm
         var di = new DirectoryInfo(currentFilePath);
         currentFilePath = di.FullName;
 
+
         // Find the index of current image
         Local.CurrentIndex = Local.Images.IndexOf(currentFilePath);
+
 
         // KBR 20181009
         // Changing "include subfolder" setting could lose the "current" image. Prefer
@@ -596,45 +607,6 @@ public partial class FrmMain : ThemedForm
 
 
     /// <summary>
-    /// Determine the image sort order/direction based on user settings
-    /// or Windows Explorer sorting.
-    /// <para>
-    /// Side effects:
-    /// </para>
-    /// <list type="bullet">
-    ///     <item>Updates <see cref="Local.ActiveImageLoadingOrder"/></item>
-    ///     <item>Updates <see cref="Local.ActiveImageLoadingOrderType"/></item>
-    /// </list>
-    /// </summary>
-    /// <param name="fullPath">
-    /// Full path to file/folder(i.e. as comes in from drag-and-drop)
-    /// </param>
-    private static void DetermineSortOrder(string fullPath)
-    {
-        // Initialize to the user-configured sorting order. Fetching the Explorer sort
-        // order may fail, or may be on an unsupported column.
-        Local.ActiveImageLoadingOrder = Config.ImageLoadingOrder;
-        Local.ActiveImageLoadingOrderType = Config.ImageLoadingOrderType;
-
-        // Use File Explorer sort order if possible
-        if (!Config.ShouldUseExplorerSortOrder) return;
-
-        if (ExplorerSortOrder.GetExplorerSortOrder(fullPath, out var order, out var isAscending))
-        {
-            if (order != null)
-            {
-                Local.ActiveImageLoadingOrder = order.Value;
-            }
-
-            if (isAscending != null)
-            {
-                Local.ActiveImageLoadingOrderType = isAscending.Value ? ImageOrderType.Asc : ImageOrderType.Desc;
-            }
-        }
-    }
-
-
-    /// <summary>
     /// Clear and reload all thumbnails in gallery
     /// </summary>
     public void LoadGallery()
@@ -648,7 +620,7 @@ public partial class FrmMain : ThemedForm
         Gallery.SuspendLayout();
         Gallery.Items.Clear();
 
-        Gallery.Items.AddRange(Local.Images.FileNames.ToArray());
+        Gallery.Items.AddRange(Local.Images.FilePaths.ToArray());
 
         Gallery.ResumeLayout();
         UpdateGallerySize();
@@ -686,7 +658,6 @@ public partial class FrmMain : ThemedForm
     /// <summary>
     /// View the next image using jump step.
     /// </summary>
-    [SuppressMessage("IDisposableAnalyzers.Correctness", "IDISP003:Dispose previous before re-assigning", Justification = "<Pending>")]
     private async Task ViewNextAsync(int step,
         bool resetZoom = true,
         bool isSkipCache = false,
@@ -700,14 +671,13 @@ public partial class FrmMain : ThemedForm
         {
             Local.CurrentIndex = -1;
             Local.Metadata = null;
-
             LoadImageInfo();
-
             return;
         }
 
         // temp index
-        var imageIndex = Local.CurrentIndex + step;
+        var shouldUpdateIndex = string.IsNullOrWhiteSpace(filePath);
+        var imageIndex = shouldUpdateIndex ? Local.CurrentIndex + step : -1;
         var oldImgPath = Local.Images.GetFilePath(Local.CurrentIndex);
 
 
@@ -715,69 +685,72 @@ public partial class FrmMain : ThemedForm
         {
             // Validate image index
             #region Validate image index
+            var oldIndex = Local.CurrentIndex;
 
-            if (Local.Images.Length > 0)
+
+            if (shouldUpdateIndex)
             {
-                // Reach end of list
-                if (imageIndex >= Local.Images.Length || (Local.Images.Length == 1 && step > 0))
+                if (Local.Images.Length > 0)
                 {
-                    _uiReporter.Report(new(new ImageEventArgs()
+                    // Reach end of list
+                    if (imageIndex >= Local.Images.Length || (Local.Images.Length == 1 && step > 0))
                     {
-                        Index = Local.CurrentIndex,
-                        FilePath = oldImgPath,
-                    }, nameof(Local.RaiseLastImageReachedEvent)));
-
-                    if (!Config.EnableLoopBackNavigation || Local.Images.Length == 1)
-                    {
-                        // if the image is not rendered yet
-                        if (PicMain.ImageDrawingState != Viewer.ImageDrawingState.Done)
+                        _uiReporter.Report(new(new ImageEventArgs()
                         {
-                            Local.CurrentIndex = Local.Images.Length - 1;
-                            await ViewNextCancellableAsync(0, resetZoom, isSkipCache, frameIndex, filePath);
+                            Index = Local.CurrentIndex,
+                            FilePath = oldImgPath,
+                        }, nameof(Local.RaiseLastImageReachedEvent)));
+
+                        if (!Config.EnableLoopBackNavigation || Local.Images.Length == 1)
+                        {
+                            // if the image is not rendered yet
+                            if (!PicMain.CanImageAnimate
+                                && PicMain.ImageDrawingState != Viewer.ImageDrawingState.Done)
+                            {
+                                Local.CurrentIndex = Local.Images.Length - 1;
+                                await ViewNextCancellableAsync(0, resetZoom, isSkipCache, frameIndex, filePath);
+                            }
+                            return;
                         }
-                        return;
+                    }
+
+                    // Reach the first image of list
+                    if (imageIndex < 0 || (Local.Images.Length == 1 && step < 0))
+                    {
+                        _uiReporter.Report(new(new ImageEventArgs()
+                        {
+                            Index = Local.CurrentIndex,
+                            FilePath = oldImgPath,
+                        }, nameof(Local.RaiseFirstImageReachedEvent)));
+
+
+                        if (!Config.EnableLoopBackNavigation || Local.Images.Length == 1)
+                        {
+                            // if the image is not rendered yet
+                            if (!PicMain.CanImageAnimate
+                                && PicMain.ImageDrawingState != Viewer.ImageDrawingState.Done)
+                            {
+                                Local.CurrentIndex = 0;
+                                await ViewNextCancellableAsync(0, resetZoom, isSkipCache, frameIndex, filePath);
+                            }
+                            return;
+                        }
                     }
                 }
 
-                // Reach the first image of list
-                if (imageIndex < 0 || (Local.Images.Length == 1 && step < 0))
-                {
-                    _uiReporter.Report(new(new ImageEventArgs()
-                    {
-                        Index = Local.CurrentIndex,
-                        FilePath = oldImgPath,
-                    }, nameof(Local.RaiseFirstImageReachedEvent)));
+
+                // Check if current index is greater than upper limit
+                if (imageIndex >= Local.Images.Length)
+                    imageIndex = 0;
+
+                // Check if current index is less than lower limit
+                if (imageIndex < 0)
+                    imageIndex = Local.Images.Length - 1;
 
 
-                    if (!Config.EnableLoopBackNavigation || Local.Images.Length == 1)
-                    {
-                        // if the image is not rendered yet
-                        if (PicMain.ImageDrawingState != Viewer.ImageDrawingState.Done)
-                        {
-                            Local.CurrentIndex = 0;
-                            await ViewNextCancellableAsync(0, resetZoom, isSkipCache, frameIndex, filePath);
-                        }
-                        return;
-                    }
-                }
-            }
-
-
-            // Check if current index is greater than upper limit
-            if (imageIndex >= Local.Images.Length)
-                imageIndex = 0;
-
-            // Check if current index is less than lower limit
-            if (imageIndex < 0)
-                imageIndex = Local.Images.Length - 1;
-
-
-            if (string.IsNullOrEmpty(filePath))
-            {
                 // Update current index
                 Local.CurrentIndex = imageIndex;
             }
-
             #endregion // Validate image index
 
 
@@ -785,6 +758,7 @@ public partial class FrmMain : ThemedForm
             // check if loading is cancelled
             tokenSrc?.Token.ThrowIfCancellationRequested();
             IgPhoto? photo = null;
+
             var readSettings = new CodecReadOptions()
             {
                 ColorProfileName = Config.ColorProfile,
@@ -801,6 +775,7 @@ public partial class FrmMain : ThemedForm
             // load image metadata
             if (!string.IsNullOrEmpty(filePath))
             {
+                photo?.Dispose();
                 photo = new IgPhoto(filePath);
                 readSettings.FirstFrameOnly = Config.SingleFrameFormats.Contains(photo.Extension);
 
@@ -856,6 +831,7 @@ public partial class FrmMain : ThemedForm
             // if we are using Webview2
             if (useWebview2)
             {
+                photo?.Dispose();
                 photo = new IgPhoto(imgFilePath)
                 {
                     Metadata = Local.Metadata,
@@ -868,9 +844,18 @@ public partial class FrmMain : ThemedForm
                 if (photo != null)
                 {
                     await photo.LoadAsync(readSettings, tokenSrc);
+
+                    // update metadata for JXR format
+                    if (Local.Metadata.FileExtension == ".JXR"
+                        || Local.Metadata.FileExtension == ".HDP"
+                        || Local.Metadata.FileExtension == ".WDP")
+                    {
+                        Local.Metadata = photo.Metadata;
+                    }
                 }
                 else
                 {
+                    photo?.Dispose();
                     photo = await Local.Images.GetAsync(
                         imageIndex,
                         useCache: !isSkipCache,
@@ -896,6 +881,16 @@ public partial class FrmMain : ThemedForm
                 UseWebview2 = useWebview2,
             }, nameof(Local.RaiseImageLoadedEvent)));
 
+
+            // check if embedded video exists
+            _ = photo.LoadEmbeddedVideoAsync(tokenSrc)
+                .ContinueWith(task =>
+                {
+                    _uiReporter.Report(new(new EmbeddedVideoCheckedEventArgs()
+                    {
+                        Photo = photo,
+                    }));
+                });
         }
         catch (OperationCanceledException)
         {
@@ -982,29 +977,36 @@ public partial class FrmMain : ThemedForm
             return;
         }
 
+        // Embedded video is found
+        if (e.Data is EmbeddedVideoCheckedEventArgs e4)
+        {
+            PicMain.ShowMotionButton = e4.Photo.EmbeddedVideo?.Length > 0;
+            return;
+        }
+
         // Image list is loaded
         if (e.Type.Equals(nameof(Local.RaiseImageListLoadedEvent), StringComparison.OrdinalIgnoreCase)
-            && e.Data is ImageListLoadedEventArgs e4)
+            && e.Data is ImageListLoadedEventArgs e5)
         {
-            Local.RaiseImageListLoadedEvent(e4);
-            HandleImageList_Loaded(e4);
+            Local.RaiseImageListLoadedEvent(e5);
+            HandleImageList_Loaded(e5);
             return;
         }
 
         // the first image is reached
         if (e.Type.Equals(nameof(Local.RaiseFirstImageReachedEvent), StringComparison.OrdinalIgnoreCase)
-            && e.Data is ImageEventArgs e5)
+            && e.Data is ImageEventArgs e6)
         {
-            Local.RaiseFirstImageReachedEvent(e5);
+            Local.RaiseFirstImageReachedEvent(e6);
             HandleImage_FirstReached();
             return;
         }
 
         // the last image is reached
         if (e.Type.Equals(nameof(Local.RaiseLastImageReachedEvent), StringComparison.OrdinalIgnoreCase)
-            && e.Data is ImageEventArgs e6)
+            && e.Data is ImageEventArgs e7)
         {
-            Local.RaiseLastImageReachedEvent(e6);
+            Local.RaiseLastImageReachedEvent(e7);
             HandleImage_LastReached();
             return;
         }
@@ -1022,6 +1024,7 @@ public partial class FrmMain : ThemedForm
     {
         Local.IsImageError = false;
 
+        PicMain.ShowMotionButton = false;
         PicMain.ClearMessage(false);
         if (e.Index >= 0 || !string.IsNullOrEmpty(e.FilePath))
         {
@@ -1029,7 +1032,10 @@ public partial class FrmMain : ThemedForm
         }
 
         // Select thumbnail item
-        _ = BHelper.RunAsThread(SelectCurrentGalleryThumbnail);
+        if (e.NewIndex >= 0)
+        {
+            _ = BHelper.RunAsThread(SelectCurrentGalleryThumbnail);
+        }
 
         // show image preview if it's not cached
         if (!e.UseWebview2 && !Local.Images.IsCached(Local.CurrentIndex))
@@ -1092,22 +1098,11 @@ public partial class FrmMain : ThemedForm
             Local.TempImagePath = null;
 
 
-            // enable image transition
-            var enableFadingTrainsition = false;
-            if (Config.EnableImageTransition && !e.IsViewingSeparateFrame)
-            {
-                var isImageBigForFading = Local.Metadata.RenderedWidth > 8000
-                    || Local.Metadata.RenderedHeight > 8000;
-                enableFadingTrainsition = !_isShowingImagePreview && !isImageBigForFading;
-            }
-
-
             // set the main image
             PicMain.SetImage(e.Data.ImgData,
                 autoAnimate: !e.IsViewingSeparateFrame,
                 frameIndex: e.FrameIndex,
                 resetZoom: e.ResetZoom,
-                enableFading: enableFadingTrainsition,
                 channels: Local.ImageChannels);
 
             // update window fit
@@ -1120,14 +1115,13 @@ public partial class FrmMain : ThemedForm
         }
 
 
-
-        if (Local.CurrentIndex >= 0)
+        // select thumbnail
+        if (e.Index >= 0)
         {
             SelectCurrentGalleryThumbnail();
         }
 
 
-        _isShowingImagePreview = false;
         LoadImageInfo(ImageInfoUpdateTypes.Dimension | ImageInfoUpdateTypes.FrameCount);
 
 
@@ -1144,6 +1138,10 @@ public partial class FrmMain : ThemedForm
         }
 
         LoadImageInfo(ImageInfoUpdateTypes.ListCount);
+
+        // start image caching, don't cache the current index
+        var includeCurrentIndex = !Local.Images.IsCached(Local.CurrentIndex);
+        Local.Images.StartCaching(Local.CurrentIndex, includeCurrentIndex);
 
         // Load thumnbnail
         BHelper.RunAsThread(LoadGallery);
@@ -1240,7 +1238,7 @@ public partial class FrmMain : ThemedForm
                 }
                 else
                 {
-                    var zoomFactor = PicMain.CalculateZoomFactor(Config.ZoomMode, Local.Metadata.RenderedWidth, Local.Metadata.RenderedHeight, PicMain.Width, PicMain.Height);
+                    var zoomFactor = PicMain.CalculateZoomFactor(Config.ZoomMode, Local.Metadata.RenderedWidth, Local.Metadata.RenderedHeight);
 
                     previewSize = new((int)(Local.Metadata.RenderedWidth * zoomFactor), (int)(Local.Metadata.RenderedHeight * zoomFactor));
                 }
@@ -1267,11 +1265,7 @@ public partial class FrmMain : ThemedForm
                     Image = wicSrc,
                     CanAnimate = false,
                     FrameCount = 1,
-                }, enableFading: Config.EnableImageTransition,
-                    isForPreview: true,
-                    channels: Local.ImageChannels);
-
-                _isShowingImagePreview = true;
+                }, isForPreview: true, channels: Local.ImageChannels);
             }
             catch (OperationCanceledException) { }
         }
@@ -2244,6 +2238,11 @@ public partial class FrmMain : ThemedForm
     {
         Local.ImageChannels = ColorChannels.A;
         IG_SetImageColorChannels();
+    }
+
+    private void MnuInvertColors_Click(object sender, EventArgs e)
+    {
+        IG_InvertColors();
     }
 
 

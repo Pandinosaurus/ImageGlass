@@ -1,6 +1,6 @@
 ﻿/*
 ImageGlass Project - Image viewer for Windows
-Copyright (C) 2010 - 2024 DUONG DIEU PHAP
+Copyright (C) 2010 - 2025 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
 
 This program is free software: you can redistribute it and/or modify
@@ -41,6 +41,7 @@ public partial class DialogForm : ThemedForm
     /// <summary>
     /// Gets, sets <see cref="BtnAccept"/>'s text.
     /// </summary>
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     public string AcceptButtonText
     {
         get => BtnAccept.Text;
@@ -77,6 +78,7 @@ public partial class DialogForm : ThemedForm
     /// <summary>
     /// Gets, sets <see cref="BtnCancel"/>'s text.
     /// </summary>
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     public string CancelButtonText
     {
         get => BtnCancel.Text;
@@ -102,6 +104,7 @@ public partial class DialogForm : ThemedForm
     /// <summary>
     /// Gets, sets <see cref="BtnApply"/>'s text.
     /// </summary>
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     public string ApplyButtonText
     {
         get => BtnApply.Text;

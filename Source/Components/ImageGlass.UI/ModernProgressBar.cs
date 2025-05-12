@@ -1,6 +1,6 @@
 ﻿/*
 ImageGlass Project - Image viewer for Windows
-Copyright (C) 2010 - 2024 DUONG DIEU PHAP
+Copyright (C) 2010 - 2025 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
 
 This program is free software: you can redistribute it and/or modify
@@ -17,6 +17,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 using ImageGlass.Base;
+using System.ComponentModel;
 using Timer = System.Windows.Forms.Timer;
 
 namespace ImageGlass.UI;
@@ -39,6 +40,7 @@ public class ModernProgressBar : ProgressBar
     /// <summary>
     /// Toggles dark mode for this <see cref="ModernButton"/> control.
     /// </summary>
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     public bool DarkMode
     {
         get => _darkMode;
@@ -53,6 +55,7 @@ public class ModernProgressBar : ProgressBar
     /// <summary>
     /// Use Marquee style.
     /// </summary>
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     public bool UseMarqueeStyle
     {
         get => _useMarqueeStyle;

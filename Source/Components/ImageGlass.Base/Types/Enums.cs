@@ -1,6 +1,6 @@
 ﻿/*
 ImageGlass Project - Image viewer for Windows
-Copyright (C) 2010 - 2024 DUONG DIEU PHAP
+Copyright (C) 2010 - 2025 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
 
 This program is free software: you can redistribute it and/or modify
@@ -229,4 +229,34 @@ public enum ImageResamplingMethod : int
     Spline36,
 }
 
+
+/// <summary>
+/// The loading order list.
+/// **If we need to rename, we MUST update the language string too.
+/// Because the name is also language keyword!
+/// </summary>
+public enum ImageOrderBy
+{
+    Name = 0,
+    Random,
+    FileSize,
+    Extension,
+    DateCreated,
+    DateAccessed,
+    DateModified,
+    ExifDateTaken,
+    ExifRating,
+}
+
+
+/// <summary>
+/// The loading order types list
+/// **If we need to rename, we MUST update the language string too.
+/// Because the name is also language keyword!
+/// </summary>
+public enum ImageOrderType
+{
+    Asc = 0,
+    Desc = 1,
+}
 

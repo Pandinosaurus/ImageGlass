@@ -1,6 +1,6 @@
 ﻿/*
 ImageGlass Project - Image viewer for Windows
-Copyright (C) 2010 - 2024 DUONG DIEU PHAP
+Copyright (C) 2010 - 2025 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
 
 This program is free software: you can redistribute it and/or modify
@@ -36,6 +36,7 @@ public class ModernMenu(IContainer container) : ContextMenuStrip(container)
     /// <summary>
     /// Gets, sets the theme of menu
     /// </summary>
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     public IgTheme Theme
     {
         get => _theme;
@@ -54,6 +55,7 @@ public class ModernMenu(IContainer container) : ContextMenuStrip(container)
     /// <summary>
     /// Checks if the menu is open.
     /// </summary>
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     public bool IsOpen { get; private set; } = false;
 
     /// <summary>
@@ -64,6 +66,7 @@ public class ModernMenu(IContainer container) : ContextMenuStrip(container)
     /// See the issue at: <see href="https://github.com/dotnet/winforms/issues/4898"/>.
     /// </para>
     /// </summary>
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     public int CurrentDpi { get; set; } = 96;
 
 

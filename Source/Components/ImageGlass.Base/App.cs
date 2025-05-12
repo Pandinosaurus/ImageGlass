@@ -1,6 +1,6 @@
 ﻿/*
 ImageGlass Project - Image viewer for Windows
-Copyright (C) 2010 - 2024 DUONG DIEU PHAP
+Copyright (C) 2010 - 2025 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
 
 This program is free software: you can redistribute it and/or modify
@@ -75,11 +75,11 @@ public class App
     public static string ConfigDir(PathType type, params string[] paths)
     {
         // use StartUp dir if it's writable
-        var startUpDir = StartUpDir(paths);
+        var startUpPath = StartUpDir(paths);
 
-        if (BHelper.CheckPathWritable(type, startUpDir))
+        if (BHelper.CheckPathWritable(type, startUpPath))
         {
-            return startUpDir;
+            return startUpPath;
         }
 
         // else, use AppData dir

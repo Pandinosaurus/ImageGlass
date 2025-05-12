@@ -1,6 +1,6 @@
 ﻿/*
 ImageGlass Project - Image viewer for Windows
-Copyright (C) 2010 - 2024 DUONG DIEU PHAP
+Copyright (C) 2010 - 2025 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
 
 This program is free software: you can redistribute it and/or modify
@@ -350,7 +350,7 @@ public class Local
         var filesList = new List<string>();
         if (Local.ToolPipeServers.Count > 0)
         {
-            filesList.AddRange(Local.Images.FileNames);
+            filesList.AddRange(Local.Images.FilePaths);
         }
 
         var eventArgs = new IgImageListUpdatedEventArgs()
@@ -509,21 +509,9 @@ public class Local
     public static bool IsImageError { get; set; }
 
     /// <summary>
-    /// <para>The current "initial" path (file or dir) we're viewing. Used when the user changes the sort settings: we need to rebuild the image list, but otherwise we don't know what image/folder we started with.</para>
-    /// <para>Here's what happened: I opened a folder with subfolders (child folders enabled). I was going through the images, and decided I wanted to change the sort order. Since the _current_ image was in a sub-folder, after a rescan of the image list, only the _sub_-folders images were re-loaded!</para>
-    /// <para>But if we reload the list using the original image, then the original folder's images, and the sub-folders, are reloaded.</para>
+    /// The current "initial" path (file or dir) we're viewing for rebuilding the image list.
     /// </summary>
     public static string InitialInputPath { get; set; } = string.Empty;
-
-    /// <summary>
-    /// The 'current' image sorting order. A reconciliation between the user's Settings selection and the sorting order from Windows Explorer, to be used to sort the active image list.
-    /// </summary>
-    public static ImageOrderBy ActiveImageLoadingOrder { get; set; }
-
-    /// <summary>
-    /// The 'current' image sorting direction. A reconciliation between the user's Settings selection and the sorting direction from Windows Explorer, to be used to sort the active image list.
-    /// </summary>
-    public static ImageOrderType ActiveImageLoadingOrderType { get; set; }
 
     /// <summary>
     /// Remember for this session the last-used "Save As" extension. When the user is iterating
@@ -579,6 +567,9 @@ public class Local
 
             DistinctDirs = distinctDirsList ?? [],
         };
+
+        Local.CurrentIndex = -1;
+        Local.CurrentFrameIndex = 0;
     }
 
 
@@ -900,7 +891,6 @@ public class Local
 
         _ = Config.SetFromJson(dict, nameof(Config.EnableLoopBackNavigation));
         _ = Config.SetFromJson(dict, nameof(Config.ShowImagePreview));
-        _ = Config.SetFromJson(dict, nameof(Config.EnableImageTransition));
         _ = Config.SetFromJson(dict, nameof(Config.EnableImageAsyncLoading));
 
         if (Config.SetFromJson(dict, nameof(Config.UseEmbeddedThumbnailRawFormats)).Done) { reloadImg = true; }

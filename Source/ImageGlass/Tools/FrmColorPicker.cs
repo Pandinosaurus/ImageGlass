@@ -1,6 +1,6 @@
 ﻿/*
 ImageGlass Project - Image viewer for Windows
-Copyright (C) 2010 - 2024 DUONG DIEU PHAP
+Copyright (C) 2010 - 2025 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
 
 This program is free software: you can redistribute it and/or modify
@@ -19,6 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 using ImageGlass.Base;
 using ImageGlass.Settings;
 using ImageGlass.Viewer;
+using System.ComponentModel;
 
 namespace ImageGlass;
 
@@ -26,9 +27,12 @@ public partial class FrmColorPicker : ToolForm, IToolForm<ColorPickerConfig>
 {
     private Color? _pickedColor;
     private Point _pickedLocation;
+    private bool _isInitialized;
 
 
     public string ToolId => "ColorPicker";
+
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     public ColorPickerConfig Settings { get; set; }
 
 
@@ -42,6 +46,7 @@ public partial class FrmColorPicker : ToolForm, IToolForm<ColorPickerConfig>
     {
         InitializeComponent();
         if (DesignMode) return;
+        _isInitialized = true;
 
         Owner = owner;
         Settings = new(ToolId);
@@ -56,6 +61,8 @@ public partial class FrmColorPicker : ToolForm, IToolForm<ColorPickerConfig>
 
     protected override void ApplyTheme(bool darkMode, BackdropStyle? style = null)
     {
+        if (!_isInitialized) return;
+
         SuspendLayout();
 
 
@@ -148,6 +155,7 @@ public partial class FrmColorPicker : ToolForm, IToolForm<ColorPickerConfig>
     protected override int OnUpdateHeight(bool performUpdate = true)
     {
         var baseHeight = base.OnUpdateHeight(false);
+        if (!_isInitialized) return baseHeight;
 
         // calculate form height
         var contentHeight = TableLayout.Height + TableLayout.Padding.Vertical;

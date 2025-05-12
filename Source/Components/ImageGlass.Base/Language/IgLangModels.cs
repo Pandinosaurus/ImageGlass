@@ -1,6 +1,6 @@
 ﻿/*
 ImageGlass Project - Image viewer for Windows
-Copyright (C) 2010 - 2024 DUONG DIEU PHAP
+Copyright (C) 2010 - 2025 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
 
 This program is free software: you can redistribute it and/or modify
@@ -29,7 +29,7 @@ public record IgLangMetadata
     public string EnglishName { get; set; } = "English";
     public string LocalName { get; set; } = "English";
     public string Author { get; set; } = "Duong Dieu Phap";
-    public string MinVersion { get; set; } = "9.2";
+    public string MinVersion { get; set; } = "9.3";
 }
 
 

@@ -2,6 +2,14 @@ ImageGlass - A lightweight, versatile image viewer
 ===
 
 
+<h3>
+  <img src="https://upload.wikimedia.org/wikipedia/commons/1/15/Orange_rectangle.svg" height="10" width="100%"/>
+  📢 Try out <a href="https://github.com/d2phap/ImageGlass/releases/tag/9.2.1.324-beta">Version 9.3 Beta 2</a> and share your feedback!
+  <img src="https://upload.wikimedia.org/wikipedia/commons/1/15/Orange_rectangle.svg" height="10" width="100%"/>
+</h3>
+<br/>
+
+
 [![Website](https://img.shields.io/badge/www-imageglass.org-0099BC.svg?maxAge=3600&color=%233097B8)](https://imageglass.org)
 [![GPL Licence](https://img.shields.io/badge/license-GPLv3-green.svg?maxAge=3600)](https://github.com/d2phap/ImageGlass/blob/master/LICENSE)
 [![Crowdin](https://d322cqt584bo4o.cloudfront.net/imageglass/localized.svg)](https://crowdin.com/project/imageglass)
@@ -19,6 +27,7 @@ ImageGlass is a lightweight software designed for seamless viewing of images in 
 
 
 ## 📥 Download
+
 <a href="https://apps.microsoft.com/detail/9N33VZK3C7TH?launch=true&cid=GitHubRelease&mode=full">
   <img height="58" src="https://github.com/d2phap/ImageGlass/assets/3154213/08a071bb-a6ae-420c-b53b-2317004570d4" />
 </a>
@@ -32,7 +41,7 @@ ImageGlass is a lightweight software designed for seamless viewing of images in 
 
 ### ImageGlass on Microsoft Store!
 - If you want to support the development of ImageGlass, you can purchase ImageGlass from Microsoft Store.
-- Alternatively, you can use the one-time donation from [♥ GitHub Sponsor](https://github.com/sponsors/d2phap), then drop me a message in [ImageGlass Discord](https://discord.com/channels/818852544859209748/818852544859209751) or [email](https://imageglass.org/about), and I will send the code shortly.
+- Alternatively, you can use the one-time donation from [♥ GitHub Sponsor](https://github.com/sponsors/d2phap), then drop me a message in [ImageGlass Discord](https://discord.gg/tWjbynH2X8) or [email](https://imageglass.org/about), and I will send the code shortly.
 - ImageGlass Store provides the convenience of fast, easy installation onto all of your Windows devices along with fully automatic, behind-the-scenes updates with all the newest features, improvements, and fixes.
 
 ### Difference Between ImageGlass Classic and Store Release
@@ -77,7 +86,7 @@ For more information about ImageGlass, go to [ImageGlass Docs](https://imageglas
 
 ## 🤼 Community and Support
 - [GitHub issues](https://github.com/d2phap/ImageGlass/issues)
-- [ImageGlass Discord](https://discord.io/imageglass)
+- [ImageGlass Discord](https://discord.gg/tWjbynH2X8)
 - [Google forum](https://groups.google.com/forum/#!forum/imageglass)
 
 

@@ -1,6 +1,6 @@
 ﻿/*
 ImageGlass Project - Image viewer for Windows
-Copyright (C) 2010 - 2024 DUONG DIEU PHAP
+Copyright (C) 2010 - 2025 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
 
 This program is free software: you can redistribute it and/or modify
@@ -19,11 +19,13 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 using ImageGlass.Base;
 using ImageGlass.Settings;
+using System.ComponentModel;
 
 namespace ImageGlass;
 
 public partial class FrmColorPickerSettings : DialogForm
 {
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     public ColorPickerConfig Settings { get; init; }
 
 

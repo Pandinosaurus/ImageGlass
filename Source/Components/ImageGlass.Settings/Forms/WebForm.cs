@@ -1,6 +1,6 @@
 ﻿/*
 ImageGlass Project - Image viewer for Windows
-Copyright (C) 2010 - 2024 DUONG DIEU PHAP
+Copyright (C) 2010 - 2025 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
 
 This program is free software: you can redistribute it and/or modify
@@ -295,6 +295,7 @@ public partial class WebForm : ThemedForm
     public async Task SetPageVariablesAsync()
     {
         await Web2.ExecuteScriptAsync($"""
+            window._page.isWindows10 = {BHelper.IsOS(WindowsOS.Win10).ToString().ToLowerInvariant()};
             window._page.isUwpApp = {BHelper.IsRunningAsUwp().ToString().ToLowerInvariant()};
         """);
     }

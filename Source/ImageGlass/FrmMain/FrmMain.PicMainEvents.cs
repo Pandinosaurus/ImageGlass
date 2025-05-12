@@ -1,6 +1,6 @@
 ﻿/*
 ImageGlass Project - Image viewer for Windows
-Copyright (C) 2010 - 2024 DUONG DIEU PHAP
+Copyright (C) 2010 - 2025 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
 
 This program is free software: you can redistribute it and/or modify
@@ -18,6 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 using Cysharp.Text;
+using D2Phap;
 using ImageGlass.Base;
 using ImageGlass.Settings;
 using ImageGlass.Viewer;
@@ -93,13 +94,21 @@ public partial class FrmMain
             return;
         }
 
+
         var filePath = BHelper.ResolvePath(paths[0]);
         var imageIndex = Local.Images.IndexOf(filePath);
 
+
+        // get foreground shell
+        using var shell = new EggShell();
+        Program.ForegroundShell = shell.GetForegroundWindowView();
+        Program.UpdateInputImagePath(filePath);
+
+
         // The file is located another folder, load the entire folder
-        if (imageIndex == -1)
+        if (imageIndex == -1 || Program.CanUseForegroundShell())
         {
-            PrepareLoading(filePath);
+            PrepareLoading(filePath, false);
         }
         // The file is in current folder AND it is the viewing image
         else if (Local.CurrentIndex == imageIndex)
@@ -376,6 +385,13 @@ public partial class FrmMain
     private void PicMain_OnNavRightClicked(object? sender, MouseEventArgs e)
     {
         _ = ViewNextCancellableAsync(1);
+    }
+
+
+    private async void PicMain_OnMotionBtnClicked(object sender, MouseEventArgs e)
+    {
+        var img = await Local.Images.GetAsync(Local.CurrentIndex);
+        await img.OpenEmbeddedVideoFileAsync();
     }
 
 

@@ -1,6 +1,6 @@
 ﻿/*
 ImageGlass Project - Image viewer for Windows
-Copyright (C) 2010 - 2024 DUONG DIEU PHAP
+Copyright (C) 2010 - 2025 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
 
 This program is free software: you can redistribute it and/or modify
@@ -285,11 +285,10 @@ public class WindowApi
     /// <para>
     /// <c>Note**: </c> The control's <c>BackColor</c> must be set to <see cref="Color.Black"/>.</para>
     /// </summary>
-    public static void SetTransparentBlackBackground(Graphics g, Rectangle destRect)
+    public static unsafe void SetTransparentBlackBackground(Graphics g, Rectangle destRect)
     {
         var destDc = g.GetHdc();
-        var createdHdc = PInvoke.CreateCompatibleDC(new HDC(destDc));
-        var memoryDc = new HDC(createdHdc);
+        var memoryDc = PInvoke.CreateCompatibleDC(new HDC(destDc));
         var bitmapOld = new HGDIOBJ(IntPtr.Zero);
         var bitmapGdiObj = new HGDIOBJ(IntPtr.Zero);
 
@@ -318,7 +317,7 @@ public class WindowApi
 
             _ = PInvoke.DeleteObject(bitmapGdiObj);
             _ = PInvoke.ReleaseDC(new HWND(memoryDc.Value), memoryDc); // (IntPtr, -1)
-            _ = PInvoke.DeleteDC(createdHdc);
+            _ = PInvoke.DeleteDC(memoryDc);
         }
 
         g.ReleaseHdc();

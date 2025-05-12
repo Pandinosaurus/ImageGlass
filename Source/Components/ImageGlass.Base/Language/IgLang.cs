@@ -1,6 +1,6 @@
 ﻿/*
 ImageGlass Project - Image viewer for Windows
-Copyright (C) 2010 - 2024 DUONG DIEU PHAP
+Copyright (C) 2010 - 2025 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
 
 This program is free software: you can redistribute it and/or modify
@@ -447,6 +447,7 @@ public class IgLang : IDictionary<string, string>
             { "FrmMain.MnuViewChannels", "View channels" }, //v7.0
             { "FrmMain.MnuLoadingOrders", "Loading orders" }, //v8.0
 
+            { "FrmMain.MnuInvertColors", "Invert colors" }, // v9.3
             { "FrmMain.MnuRotateLeft", "Rotate left" }, //v7.5
             { "FrmMain.MnuRotateRight", "Rotate right" }, //v7.5
             { "FrmMain.MnuFlipHorizontal", "Flip Horizontal" }, // V6.0
@@ -643,13 +644,12 @@ public class IgLang : IDictionary<string, string>
             // Image > Image loading
             { "FrmSettings._ImageLoading", "Image loading" },
             { "FrmSettings._ImageLoadingOrder", "Image loading order" },
-            { "FrmSettings._ShouldUseExplorerSortOrder", "Use Windows File Explorer sort order if possible" },
+            { "FrmSettings._ShouldUseExplorerSortOrder", "Use Explorer sort order if possible" },
             { "FrmSettings._EnableRecursiveLoading", "Load images in subfolders" },
             { "FrmSettings._ShouldGroupImagesByDirectory", "Group images by directory" },
             { "FrmSettings._ShouldLoadHiddenImages", "Load hidden images" },
             { "FrmSettings._EnableLoopBackNavigation", "Loop back to the first image when reaching the end of the image list" },
             { "FrmSettings._ShowImagePreview", "Display image preview while it's being loaded" },
-            { "FrmSettings._EnableImageTransition", "Enable image transition effect" },
             { "FrmSettings._EnableImageAsyncLoading", "Enable image asynchronous loading" },
 
             { "FrmSettings._EmbeddedThumbnail", "Embedded thumbnail" },

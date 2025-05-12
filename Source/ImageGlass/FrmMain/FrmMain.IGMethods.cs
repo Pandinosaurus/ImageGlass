@@ -1,6 +1,6 @@
 ﻿/*
 ImageGlass Project - Image viewer for Windows
-Copyright (C) 2010 - 2024 DUONG DIEU PHAP
+Copyright (C) 2010 - 2025 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
 
 This program is free software: you can redistribute it and/or modify
@@ -69,7 +69,7 @@ public partial class FrmMain
 
         if (o.ShowDialog() == DialogResult.OK)
         {
-            PrepareLoading(o.FileName);
+            PrepareLoading(o.FileName, true);
         }
     }
 
@@ -121,7 +121,7 @@ public partial class FrmMain
     /// </summary>
     public void IG_ReloadList()
     {
-        _ = LoadImageListAsync(Local.Images.DistinctDirs, Local.Images.GetFilePath(Local.CurrentIndex));
+        LoadImageList(Local.Images.DistinctDirs, Local.Images.GetFilePath(Local.CurrentIndex));
     }
 
 
@@ -1328,7 +1328,7 @@ public partial class FrmMain
             var sFile = Clipboard.GetData(DataFormats.FileDrop) as string[];
 
             // load file
-            PrepareLoading(sFile[0]);
+            PrepareLoading(sFile[0], true);
         }
 
         // Is there a image in clipboard?
@@ -1347,7 +1347,7 @@ public partial class FrmMain
 
             if (File.Exists(text) || Directory.Exists(text))
             {
-                PrepareLoading(text);
+                PrepareLoading(text, true);
             }
             // get image from Base64string 
             else
@@ -1381,7 +1381,7 @@ public partial class FrmMain
             Image = img,
             FrameCount = 1,
             HasAlpha = true,
-        }, enableFading: Config.EnableImageTransition);
+        });
         PicMain.ClearMessage();
 
         Local.ImageTransform.Clear();
@@ -1606,7 +1606,18 @@ public partial class FrmMain
         // save the image in the list
         else if (hasSrcPath)
         {
-            error = await DoSaveAsync(srcFilePath, destFilePath);
+            if (srcFilePath.EndsWith(".JXR", StringComparison.InvariantCultureIgnoreCase)
+                || srcFilePath.EndsWith(".HDP", StringComparison.InvariantCultureIgnoreCase)
+                || srcFilePath.EndsWith(".WDP", StringComparison.InvariantCultureIgnoreCase))
+            {
+                var img = await Local.Images.GetAsync(Local.CurrentIndex);
+                error = await DoSaveAsync(img.ImgData.Image, srcFilePath, destFilePath);
+            }
+            else
+            {
+                error = await DoSaveAsync(srcFilePath, destFilePath);
+            }
+
             saveSource = ImageSaveSource.CurrentFile;
         }
 
@@ -2758,7 +2769,7 @@ public partial class FrmMain
             // send the list of images
             var data = new IgImageListUpdatedEventArgs()
             {
-                Files = Local.Images.FileNames,
+                Files = Local.Images.FilePaths,
             };
             var jsonData = BHelper.ToJson(data);
             _ = toolServer.SendAsync(ImageGlassEvents.IMAGE_LIST_UPDATED, jsonData);
@@ -2965,6 +2976,28 @@ public partial class FrmMain
 
 
     /// <summary>
+    /// Invert image colors.
+    /// </summary>
+    public void IG_InvertColors()
+    {
+        if (PicMain.Source == ImageSource.Null || Local.IsBusy) return;
+
+        // invert image colors
+        if (PicMain.InvertColor(true))
+        {
+            Local.ImageTransform.IsColorInverted = PicMain.IsColorInverted;
+        }
+        else
+        {
+            PicMain.ShowMessage(
+                text: "",
+                heading: Config.Language["_._InvalidAction"],
+                durationMs: Config.InAppMessageDuration);
+        }
+    }
+
+
+    /// <summary>
     /// Crops the viewing image.
     /// </summary>
     public void IG_Crop()
@@ -3014,7 +3047,7 @@ public partial class FrmMain
         // apply transforms
         if (Local.ImageTransform.HasChanges)
         {
-            PhotoCodec.TransformImage(img.ImgData.Image, Local.ImageTransform);
+            img.ImgData.Image = PhotoCodec.TransformImage(img.ImgData.Image, Local.ImageTransform);
         }
 
         if (selectionOnly)
@@ -3150,21 +3183,22 @@ public partial class FrmMain
     public bool IG_ToggleFrameNavTool(bool? visible = null)
     {
         visible ??= MnuFrameNav.Checked;
+        Config.ShowFrameNavTool = visible.Value;
 
         // update menu item state
-        MnuFrameNav.Checked = visible.Value;
+        MnuFrameNav.Checked = Config.ShowFrameNavTool;
 
         // update toolbar items state
         UpdateToolbarItemsState();
 
         // toggle frame nav toolbar
-        _ = ToggleFrameNavToolbarAsync(visible.Value);
+        _ = SetFrameNavToolbarVisibilityAsync(Config.ShowFrameNavTool);
 
-        return visible.Value;
+        return Config.ShowFrameNavTool;
     }
 
 
-    private async Task ToggleFrameNavToolbarAsync(bool visible)
+    private async Task SetFrameNavToolbarVisibilityAsync(bool visible)
     {
         ToolbarContext.SuspendLayout();
         ToolbarContext.ClearItems();

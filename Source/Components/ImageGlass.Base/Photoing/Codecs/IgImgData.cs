@@ -1,6 +1,6 @@
 ﻿/*
 ImageGlass Project - Image viewer for Windows
-Copyright (C) 2010 - 2024 DUONG DIEU PHAP
+Copyright (C) 2010 - 2025 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
 
 This program is free software: you can redistribute it and/or modify
@@ -141,7 +141,7 @@ public class IgImgData : IDisposable
         {
             HasAlpha = data.SingleFrameImage?.HasAlpha ?? false;
 
-            var bmpSrc = data.SingleFrameImage?.ToBitmapSourceWithDensity();
+            var bmpSrc = data.SingleFrameImage?.ToBitmapSource();
             Image = BHelper.ToWicBitmapSource(bmpSrc, HasAlpha);
         }
     }

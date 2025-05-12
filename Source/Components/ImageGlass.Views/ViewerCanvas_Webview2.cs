@@ -1,6 +1,6 @@
 ﻿/*
 ImageGlass Project - Image viewer for Windows
-Copyright (C) 2010 - 2024 DUONG DIEU PHAP
+Copyright (C) 2010 - 2025 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
 
 This program is free software: you can redistribute it and/or modify
@@ -35,6 +35,7 @@ public partial class ViewerCanvas
     private string _web2NavLeftImagePath = string.Empty;
     private string _web2NavRightImagePath = string.Empty;
     private MouseEventArgs? _web2PointerDownEventArgs = null;
+    private RectangleF _web2DestRect = RectangleF.Empty;
 
 
     // Properties
@@ -210,6 +211,14 @@ public partial class ViewerCanvas
             var mouseWheelEventArgs = ViewerCanvas.ParseMouseEventJson(e.Data);
             this.OnMouseWheel(mouseWheelEventArgs);
         }
+        else if (e.Name == Web2FrontendMsgNames.ON_CONTENT_SIZE_CHANGED)
+        {
+            _web2DestRect = ViewerCanvas.ParseContentSizeChangedEventJson(e.Data);
+            if (!_web2DestRect.IsEmpty)
+            {
+                this.Invalidate();
+            }
+        }
         else if (e.Name == Web2FrontendMsgNames.ON_FILE_DROP)
         {
             var filePaths = e.AdditionalObjects.Where(i => i is CoreWebView2File)
@@ -270,16 +279,16 @@ public partial class ViewerCanvas
             _ = obj.TryAdd("ZoomFactor", ZoomFactor);
 
             // if image file is SVG, we read its content
-            if (!string.IsNullOrWhiteSpace(data.Filename)
-                && data.Filename.EndsWith(".svg", StringComparison.InvariantCultureIgnoreCase))
+            if (!string.IsNullOrWhiteSpace(data.FilePath)
+                && data.FilePath.EndsWith(".svg", StringComparison.InvariantCultureIgnoreCase))
             {
-                var textContent = await File.ReadAllTextAsync(data.Filename, token);
+                var textContent = await File.ReadAllTextAsync(data.FilePath, token);
                 _ = obj.TryAdd("Html", textContent);
                 msgName = Web2BackendMsgNames.SET_HTML;
             }
             else
             {
-                _ = obj.TryAdd("Url", data.Filename);
+                _ = obj.TryAdd("Url", data.FilePath);
                 msgName = Web2BackendMsgNames.SET_IMAGE;
             }
 
@@ -428,19 +437,18 @@ public partial class ViewerCanvas
         var dict = BHelper.ParseJson<ExpandoObject>(json)
             .ToDictionary(i => i.Key, i => i.Value.ToString() ?? string.Empty);
 
-        if (dict.TryGetValue("ZoomFactor", out var zoomFactor))
+        if (dict.TryGetValue(nameof(ZoomEventArgs.ZoomFactor), out var zoomFactor))
         {
             _ = float.TryParse(zoomFactor, out _zoomFactor);
         }
-        if (dict.TryGetValue("IsManualZoom", out var isManualZoom))
+        if (dict.TryGetValue(nameof(ZoomEventArgs.IsManualZoom), out var isManualZoom))
         {
             _isManualZoom = isManualZoom.Equals("true", StringComparison.InvariantCultureIgnoreCase);
         }
-        if (dict.TryGetValue("IsZoomModeChanged", out var zoomModeChanged))
+        if (dict.TryGetValue(nameof(ZoomEventArgs.IsZoomModeChange), out var zoomModeChanged))
         {
             isZoomModeChanged = zoomModeChanged.Equals("true", StringComparison.InvariantCultureIgnoreCase);
         }
-
 
         return new ZoomEventArgs()
         {
@@ -450,6 +458,46 @@ public partial class ViewerCanvas
             IsPreviewingImage = false,
             ChangeSource = ZoomChangeSource.Unknown,
         };
+    }
+
+
+    /// <summary>
+    /// Parses JSON string to <see cref="RectangleF"/>.
+    /// </summary>
+    private static RectangleF ParseContentSizeChangedEventJson(string json)
+    {
+        var rect = new RectangleF();
+        var dict = BHelper.ParseJson<ExpandoObject>(json)
+            .ToDictionary(i => i.Key, i => i.Value.ToString() ?? string.Empty);
+
+        // save the dest rect of Web2
+        var dpi = DpiApi.DpiScale;
+        if (dict.TryGetValue("Dpi", out var dpiStr))
+        {
+            _ = float.TryParse(dpiStr, out dpi);
+        }
+        if (dict.TryGetValue("X", out var xStr))
+        {
+            _ = float.TryParse(xStr, out var x);
+            rect.X = x * dpi;
+        }
+        if (dict.TryGetValue("Y", out var yStr))
+        {
+            _ = float.TryParse(yStr, out var y);
+            rect.Y = y * dpi;
+        }
+        if (dict.TryGetValue("Width", out var widthStr))
+        {
+            _ = float.TryParse(widthStr, out var width);
+            rect.Width = width * dpi;
+        }
+        if (dict.TryGetValue("Height", out var heightStr))
+        {
+            _ = float.TryParse(heightStr, out var height);
+            rect.Height = height * dpi;
+        }
+
+        return rect;
     }
 
 

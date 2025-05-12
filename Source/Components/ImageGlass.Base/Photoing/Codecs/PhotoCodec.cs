@@ -1,6 +1,6 @@
 ﻿/*
 ImageGlass Project - Image viewer for Windows
-Copyright (C) 2010 - 2024 DUONG DIEU PHAP
+Copyright (C) 2010 - 2025 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
 
 This program is free software: you can redistribute it and/or modify
@@ -415,7 +415,7 @@ public static class PhotoCodec
         {
             await imgM.ReadAsync(svgFilePath, settings, token);
         }
-        
+
 
         return imgM;
     }
@@ -510,7 +510,7 @@ public static class PhotoCodec
             token.ThrowIfCancellationRequested();
 
             // transform image
-            TransformImage(srcBitmap, transform);
+            srcBitmap = TransformImage(srcBitmap, transform);
 
             // get WIC encoder for the dest format 
             var encoder = WicEncoder.FromFileExtension(Path.GetExtension(destFilePath));
@@ -605,7 +605,7 @@ public static class PhotoCodec
         try
         {
             token.ThrowIfCancellationRequested();
-            TransformImage(srcBitmap, transform);
+            srcBitmap = TransformImage(srcBitmap, transform);
 
             token.ThrowIfCancellationRequested();
 
@@ -666,7 +666,7 @@ public static class PhotoCodec
                 // read source file content
                 using var fs = new FileStream(srcFilePath, FileMode.Open, FileAccess.Read);
                 var data = new byte[fs.Length];
-                await fs.ReadAsync(data.AsMemory(0, (int)fs.Length), token);
+                await fs.ReadExactlyAsync(data.AsMemory(0, (int)fs.Length), token);
                 fs.Close();
 
                 token.ThrowIfCancellationRequested();
@@ -698,9 +698,9 @@ public static class PhotoCodec
     /// <summary>
     /// Applies changes from <see cref="ImgTransform"/>.
     /// </summary>
-    public static void TransformImage(WicBitmapSource? bmpSrc, ImgTransform? transform)
+    public static WicBitmapSource? TransformImage(WicBitmapSource? bmpSrc, ImgTransform? transform)
     {
-        if (bmpSrc == null || transform == null) return;
+        if (bmpSrc == null || transform == null) return null;
 
         // list of flips
         var flips = new List<WICBitmapTransformOptions>();
@@ -736,8 +736,35 @@ public static class PhotoCodec
             _ => WICBitmapTransformOptions.WICBitmapTransformRotate0,
         };
 
-        if (rotate == WICBitmapTransformOptions.WICBitmapTransformRotate0) return;
-        bmpSrc.FlipRotate(rotate);
+        if (rotate != WICBitmapTransformOptions.WICBitmapTransformRotate0)
+        {
+            bmpSrc.FlipRotate(rotate);
+        }
+
+
+        // invert color
+        if (transform.IsColorInverted)
+        {
+            var newBmp = new WicBitmapSource(
+                bmpSrc.Width, bmpSrc.Height,
+                WicPixelFormat.GUID_WICPixelFormat32bppPRGBA);
+
+            using var dc = newBmp.CreateDeviceContext();
+            using var effect = dc.CreateEffect(Direct2DEffects.CLSID_D2D1Invert);
+
+            using var cb = dc.CreateBitmapFromWicBitmap(bmpSrc.ComObject);
+            {
+                effect.SetInput(cb, 0);
+                dc.BeginDraw();
+                dc.DrawImage(effect);
+                dc.EndDraw();
+            }
+
+            bmpSrc.Dispose();
+            bmpSrc = newBmp;
+        }
+
+        return bmpSrc;
     }
 
 
@@ -849,7 +876,7 @@ public static class PhotoCodec
 
                     if (result.FrameCount == 1)
                     {
-                        TransformImage(result.Image, transform);
+                        result.Image = TransformImage(result.Image, transform);
                     }
                 }
                 break;
@@ -895,6 +922,40 @@ public static class PhotoCodec
                     {
                         using var webpBmp = webp.Load(filePath);
                         result.Image = BHelper.ToWicBitmapSource(webpBmp);
+                    }
+                }
+                catch
+                {
+                    loadSuccessful = false;
+                }
+                break;
+
+            case ".JXR":
+            case ".HDP":
+            case ".WDP":
+                try
+                {
+                    var wic = WicBitmapSource.Load(filePath);
+
+                    if (options.IgnoreColorProfile)
+                    {
+                        result.Image = wic;
+                    }
+                    else
+                    {
+                        var ms = BHelper.ToMemoryStream(wic);
+
+                        var imgM = new MagickImage(ms);
+                        var processResult = ProcessMagickImage(imgM, options, ext, true);
+                        if (processResult.ThumbM != null)
+                        {
+                            imgM = processResult.ThumbM;
+                        }
+
+
+                        // apply final changes
+                        TransformImage(imgM, transform);
+                        result.Image = BHelper.ToWicBitmapSource(imgM.ToBitmapSource());
                     }
                 }
                 catch
@@ -1300,6 +1361,12 @@ public static class PhotoCodec
         {
             imgM.Flip();
         }
+
+        // invert color
+        if (transform.IsColorInverted)
+        {
+            imgM.Negate(Channels.RGB);
+        }
     }
 
 
@@ -1323,6 +1390,18 @@ public static class PhotoCodec
             settings.SetDefine("svg:xml-parse-huge", "true");
             settings.Format = MagickFormat.Rsvg;
             settings.BackgroundColor = MagickColors.Transparent;
+        }
+        else if (ext.Equals(".SVGZ", StringComparison.OrdinalIgnoreCase))
+        {
+            settings.Format = MagickFormat.Svgz;
+            settings.BackgroundColor = MagickColors.Transparent;
+        }
+        else if (ext.Equals(".HEIC", StringComparison.OrdinalIgnoreCase))
+        {
+            settings.SetDefines(new HeicReadDefines()
+            {
+                MaxChildrenPerBox = 500,
+            });
         }
         else if (ext.Equals(".JP2", StringComparison.OrdinalIgnoreCase))
         {

@@ -1,6 +1,6 @@
 ﻿/*
 ImageGlass Project - Image viewer for Windows
-Copyright (C) 2010 - 2024 DUONG DIEU PHAP
+Copyright (C) 2010 - 2025 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
 
 This program is free software: you can redistribute it and/or modify
@@ -17,13 +17,15 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+using System.Diagnostics;
+
 namespace ImageGlass.Base.Photoing.Codecs;
 
 /// <summary>
 /// Initialize <see cref="IgPhoto"/> instance
 /// </summary>
-/// <param name="filename"></param>
-public class IgPhoto(string filename) : IDisposable
+/// <param name="filePath"></param>
+public class IgPhoto(string filePath) : IDisposable
 {
     #region IDisposable Disposing
 
@@ -65,19 +67,14 @@ public class IgPhoto(string filename) : IDisposable
     #region Public properties
 
     /// <summary>
-    /// Gets, sets original filename.
+    /// Gets, sets working file path.
     /// </summary>
-    public string OriginalFilename { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Gets, sets working filename.
-    /// </summary>
-    public string Filename { get; set; } = filename;
+    public string FilePath { get; set; } = filePath;
 
     /// <summary>
     /// Gets file extension. E.g: <c>.png</c>.
     /// </summary>
-    public string Extension => Path.GetExtension(Filename);
+    public string Extension => Path.GetExtension(FilePath);
 
     /// <summary>
     /// Gets the error details
@@ -104,6 +101,17 @@ public class IgPhoto(string filename) : IDisposable
     /// </summary>
     public IgMetadata? Metadata { get; set; }
 
+    /// <summary>
+    /// Gets, sets the embedded video data.
+    /// If value is <c>null</c> (not cached), calling <see cref="LoadEmbeddedVideoAsync"/> will load the video file.
+    /// </summary>
+    public byte[]? EmbeddedVideo { get; set; }
+
+    /// <summary>
+    /// Gets, sets the hash key of the image.
+    /// </summary>
+    public string HashKey => BHelper.CreateUniqueFileKey(FilePath);
+
     #endregion
 
 
@@ -114,7 +122,6 @@ public class IgPhoto(string filename) : IDisposable
     /// Load the photo.
     /// </summary>
     /// <param name="options"></param>
-    /// <returns></returns>
     /// <exception cref="NullReferenceException"></exception>
     private async Task LoadImageAsync(CodecReadOptions? options = null)
     {
@@ -132,7 +139,7 @@ public class IgPhoto(string filename) : IDisposable
         try
         {
             // load image data
-            Metadata ??= PhotoCodec.LoadMetadata(Filename, options);
+            Metadata ??= PhotoCodec.LoadMetadata(FilePath, options);
             FrameCount = Metadata?.FrameCount ?? 0;
 
             if (options.FirstFrameOnly == null)
@@ -150,7 +157,16 @@ public class IgPhoto(string filename) : IDisposable
             }
 
             // load image
-            ImgData = await PhotoCodec.LoadAsync(Filename, options, null, _tokenSrc?.Token);
+            ImgData = await PhotoCodec.LoadAsync(FilePath, options, null, _tokenSrc?.Token);
+
+            // update metadata for JXR format
+            if (Metadata.FileExtension == ".JXR"
+                || Metadata.FileExtension == ".HDP"
+                || Metadata.FileExtension == ".WDP")
+            {
+                Metadata.RenderedWidth = Metadata.OriginalWidth = (uint)(ImgData.Image?.Width ?? 0);
+                Metadata.RenderedHeight = Metadata.OriginalHeight = (uint)(ImgData.Image?.Height ?? 0);
+            }
 
             // cancel if requested
             if (_tokenSrc is not null && _tokenSrc.IsCancellationRequested)
@@ -180,8 +196,6 @@ public class IgPhoto(string filename) : IDisposable
     /// <summary>
     /// Read and load image into memory.
     /// </summary>
-    /// <param name="options"></param>
-    /// <returns></returns>
     public async Task LoadAsync(
         CodecReadOptions? options = null,
         CancellationTokenSource? tokenSrc = null)
@@ -192,6 +206,47 @@ public class IgPhoto(string filename) : IDisposable
     }
 
     /// <summary>
+    /// Load the embedded video.
+    /// </summary>
+    public async Task LoadEmbeddedVideoAsync(CancellationTokenSource? tokenSrc = null)
+    {
+        if (EmbeddedVideo is not null) return;
+
+        // load the video data
+        EmbeddedVideo = await BHelper.GetLiveVideoAsync(FilePath, tokenSrc?.Token);
+    }
+
+
+    /// <summary>
+    /// Open the embedded video file.
+    /// </summary>
+    public async Task OpenEmbeddedVideoFileAsync(CancellationTokenSource? tokenSrc = null)
+    {
+        await LoadEmbeddedVideoAsync(tokenSrc);
+
+
+        // save the video file to temporary directory
+        var fileName = Path.GetFileNameWithoutExtension(FilePath);
+        var tempDir = App.ConfigDir(PathType.Dir, Dir.Temporary);
+        Directory.CreateDirectory(tempDir);
+
+        var destFile = Path.Combine(tempDir, $"{fileName}_live-{HashKey}.mp4");
+        if (!File.Exists(destFile))
+        {
+            await File.WriteAllBytesAsync(destFile, EmbeddedVideo);
+        }
+
+
+        // open the video file
+        using var proc = Process.Start(new ProcessStartInfo()
+        {
+            FileName = destFile,
+            UseShellExecute = true,
+        });
+    }
+
+
+    /// <summary>
     /// Unload the image and reset the relevant info
     /// </summary>
     public void Unload()
@@ -200,6 +255,7 @@ public class IgPhoto(string filename) : IDisposable
         IsDone = false;
         Error = null;
         FrameCount = 0;
+        EmbeddedVideo = null;
 
         // unload image
         ImgData?.Dispose();

@@ -1,6 +1,6 @@
 ﻿/*
 ImageGlass Project - Image viewer for Windows
-Copyright (C) 2010 - 2024 DUONG DIEU PHAP
+Copyright (C) 2010 - 2025 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
 
 This program is free software: you can redistribute it and/or modify
@@ -20,6 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 using ImageGlass.Base;
 using ImageGlass.Settings;
 using ImageGlass.Viewer;
+using System.ComponentModel;
 
 namespace ImageGlass;
 
@@ -29,10 +30,13 @@ public partial class FrmCrop : ToolForm, IToolForm<CropToolConfig>
     private bool _isSquareRatioSelectionKeyPressed;
     private bool _isDefaultSelectionLoaded;
     private bool _isNewFileSaved;
+    private bool _isInitialized;
     private Rectangle _lastSelectionArea;
 
 
     public string ToolId => "CropTool";
+
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     public CropToolConfig Settings { get; set; }
 
 
@@ -46,6 +50,7 @@ public partial class FrmCrop : ToolForm, IToolForm<CropToolConfig>
         InitializeComponent();
         if (DesignMode) return;
 
+        _isInitialized = true;
         Owner = owner;
         Settings = new(ToolId);
 
@@ -58,6 +63,7 @@ public partial class FrmCrop : ToolForm, IToolForm<CropToolConfig>
 
     protected override void ApplyTheme(bool darkMode, BackdropStyle? style = null)
     {
+        if (!_isInitialized) return;
         SuspendLayout();
 
 
@@ -148,6 +154,7 @@ public partial class FrmCrop : ToolForm, IToolForm<CropToolConfig>
     protected override int OnUpdateHeight(bool performUpdate = true)
     {
         var baseHeight = base.OnUpdateHeight(false);
+        if (!_isInitialized) return baseHeight;
 
         // calculate form height
         var formHeight = baseHeight;

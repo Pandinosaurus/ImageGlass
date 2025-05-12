@@ -1,6 +1,6 @@
 ﻿/*
 ImageGlass Project - Image viewer for Windows
-Copyright (C) 2010 - 2024 DUONG DIEU PHAP
+Copyright (C) 2010 - 2025 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
 
 This program is free software: you can redistribute it and/or modify
@@ -24,6 +24,7 @@ using ImageGlass.Base.PhotoBox;
 using ImageGlass.Base.WinApi;
 using ImageGlass.Settings;
 using ImageGlass.UI;
+using System.ComponentModel;
 
 namespace ImageGlass;
 
@@ -36,6 +37,7 @@ public partial class FrmMain
     /// <summary>
     /// Hotkeys list of main menu
     /// </summary>
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     public static Dictionary<string, List<Hotkey>> CurrentMenuHotkeys { get; set; } = new()
     {
 	    // Open main menu
@@ -91,8 +93,9 @@ public partial class FrmMain
         { nameof(MnuScaleToFill),           [new(Keys.D6), new(Keys.NumPad6)] },
 
         // MnuImage
-        { nameof(MnuViewChannels),          [new(Keys.Shift | Keys.C)] },
         { nameof(MnuLoadingOrders),         [new(Keys.Shift | Keys.O)] },
+        { nameof(MnuViewChannels),          [new(Keys.Shift | Keys.C)] },
+        { nameof(MnuInvertColors),          [new(Keys.Control | Keys.I)] }, // Ctrl+I
         { nameof(MnuRotateLeft),            [new(Keys.Control | Keys.OemPeriod)] }, // Ctrl+.
         { nameof(MnuRotateRight),           [new(Keys.Control | Keys.OemQuestion)] }, // Ctrl+/
         { nameof(MnuFlipHorizontal),        [new(Keys.Control | Keys.Oem1)] }, // Ctrl+;
@@ -103,7 +106,7 @@ public partial class FrmMain
         { nameof(MnuToggleImageAnimation),  [new(Keys.Control | Keys.Space)] },
         { nameof(MnuExportFrames),          [new(Keys.Control | Keys.J)] },
         { nameof(MnuOpenLocation),          [new(Keys.L)] },
-        { nameof(MnuImageProperties),       [new(Keys.Control | Keys.I)] },
+        { nameof(MnuImageProperties),       [new(Keys.Alt | Keys.Enter)] },
 
         // MnuClipboard
         { nameof(MnuCopyImageData),         [new(Keys.Control | Keys.C)] },
@@ -188,6 +191,9 @@ public partial class FrmMain
 
         // toggle gallery
         IG_ToggleGallery(Config.ShowGallery);
+
+        // toggle frame navigation tool
+        IG_ToggleFrameNavTool(Config.ShowFrameNavTool);
 
 
         ResumeLayout(false);
@@ -297,7 +303,7 @@ public partial class FrmMain
             }
 
             // load first image
-            LoadImagesFromCmdArgs(Environment.GetCommandLineArgs());
+            LoadImagesFromCmdArgs(Program.Args);
         }
 
 
@@ -717,6 +723,8 @@ public partial class FrmMain
         // Menu Image
         #region Menu Image
         MnuImage.Text = lang[$"{Name}.{nameof(MnuImage)}"];
+
+        MnuInvertColors.Text = lang[$"{Name}.{nameof(MnuInvertColors)}"];
         MnuRotateLeft.Text = lang[$"{Name}.{nameof(MnuRotateLeft)}"];
         MnuRotateRight.Text = lang[$"{Name}.{nameof(MnuRotateRight)}"];
         MnuFlipHorizontal.Text = lang[$"{Name}.{nameof(MnuFlipHorizontal)}"];
@@ -924,10 +932,24 @@ public partial class FrmMain
     {
         // clear items
         MnuLoadingOrders.DropDown.Items.Clear();
-
         var newMenuIconHeight = this.ScaleToDpi(Const.MENU_ICON_HEIGHT);
 
-        // add ImageOrderBy items
+
+        // 1. add Use Explorer sort order item
+        var mnuUseExplorerSortOrder = new ToolStripRadioButtonMenuItem()
+        {
+            Text = Config.Language[$"{nameof(FrmSettings)}._{nameof(Config.ShouldUseExplorerSortOrder)}"],
+            CheckOnClick = true,
+            Checked = Config.ShouldUseExplorerSortOrder,
+            ImageScaling = ToolStripItemImageScaling.None,
+            Image = new Bitmap(newMenuIconHeight, newMenuIconHeight),
+        };
+        mnuUseExplorerSortOrder.Click += MnuUseExplorerSortOrder_Click;
+        MnuLoadingOrders.DropDown.Items.Add(mnuUseExplorerSortOrder);
+        MnuLoadingOrders.DropDown.Items.Add(new ToolStripSeparator());
+
+
+        // 2. add ImageOrderBy items
         foreach (var order in Enum.GetValues<ImageOrderBy>())
         {
             var orderName = Enum.GetName(order);
@@ -948,10 +970,10 @@ public partial class FrmMain
             mnu.Click += MnuLoadingOrderItem_Click;
             MnuLoadingOrders.DropDown.Items.Add(mnu);
         }
-
         MnuLoadingOrders.DropDown.Items.Add(new ToolStripSeparator());
 
-        // add ImageOrderType items
+
+        // 3. add ImageOrderType items
         foreach (var orderType in Enum.GetValues<ImageOrderType>())
         {
             var typeName = Enum.GetName(orderType);
@@ -972,6 +994,21 @@ public partial class FrmMain
             mnu.Click += MnuLoadingOrderTypeItem_Click;
             MnuLoadingOrders.DropDown.Items.Add(mnu);
         }
+
+    }
+
+
+    private void MnuUseExplorerSortOrder_Click(object? sender, EventArgs e)
+    {
+        if (sender is not ToolStripMenuItem mnu) return;
+
+        Config.ShouldUseExplorerSortOrder = mnu.Checked;
+
+        // reload image list
+        IG_ReloadList();
+
+        // reload the state
+        LoadMnuLoadingOrdersSubItems();
     }
 
 

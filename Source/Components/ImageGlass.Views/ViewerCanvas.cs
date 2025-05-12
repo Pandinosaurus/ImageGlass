@@ -1,6 +1,6 @@
 ﻿/*
 ImageGlass Project - Image viewer for Windows
-Copyright (C) 2010 - 2024 DUONG DIEU PHAP
+Copyright (C) 2010 - 2025 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
 
 This program is free software: you can redistribute it and/or modify
@@ -67,12 +67,10 @@ public partial class ViewerCanvas : DXCanvas
     };
 
     private Color _accentColor = Color.Blue;
-    private float _imageOpacity = 1f;
-    private float _opacityStep = 0.05f;
     private bool _isPreviewing = false;
     private bool _debugMode = false;
     private ImageDrawingState _imageDrawingState = ImageDrawingState.NotStarted;
-
+    private bool _isColorInverted = false;
 
     private RectangleF _srcRect = default; // image source rectangle
     private RectangleF _destRect = default; // image destination rectangle
@@ -102,7 +100,6 @@ public partial class ViewerCanvas : DXCanvas
 
     // checkerboard
     private CheckerboardMode _checkerboardMode = CheckerboardMode.None;
-    private float _checkerboardCellSize = 10f;
     private Color _checkerboardColor1 = Color.Black.WithAlpha(25);
     private Color _checkerboardColor2 = Color.White.WithAlpha(25);
 
@@ -111,13 +108,10 @@ public partial class ViewerCanvas : DXCanvas
     private AnimatorSource _animatorSource = AnimatorSource.None;
     private ImgAnimator? _imgAnimator = null;
     private AnimationSource _animationSource = AnimationSource.None;
-    private bool _shouldRecalculateDrawingRegion = true;
 
     // Navigation buttons
-    private bool _isNavLeftHovered = false;
-    private bool _isNavLeftPressed = false;
-    private bool _isNavRightHovered = false;
-    private bool _isNavRightPressed = false;
+    private DXButtonStates _navLeftState = DXButtonStates.Normal;
+    private DXButtonStates _navRightState = DXButtonStates.Normal;
     private bool _isNavVisible = false;
     private NavButtonDisplay _navDisplay = NavButtonDisplay.None;
     private float NavBorderRadius => NavButtonSize.Width / 2;
@@ -129,6 +123,27 @@ public partial class ViewerCanvas : DXCanvas
     internal PointF NavRightPos => new(
         DrawingArea.Right - NavButtonSize.Width / 2 - NAV_PADDING,
         DrawingArea.Top + DrawingArea.Height / 2);
+
+    // Motion button
+    private bool _showMotionButton = false;
+    private DXButtonStates _motionBtnState = DXButtonStates.Normal;
+    private RectangleF MotionButtonRect
+    {
+        get
+        {
+            var margin = this.ScaleToDpi(20f);
+            var size = this.ScaleToDpi(40f);
+
+            return new RectangleF()
+            {
+                X = PaddingLeft + margin,
+                Y = PaddingTop + margin,
+                Width = size,
+                Height = size,
+            };
+        }
+    }
+
 
     // selection
     private bool _enableSelection = false;
@@ -159,7 +174,9 @@ public partial class ViewerCanvas : DXCanvas
         set
         {
             Padding = new Padding(value, Padding.Top, Padding.Right, Padding.Bottom);
-            _shouldRecalculateDrawingRegion = true;
+
+            // update drawing regions
+            CalculateDrawingRegion();
             Refresh(!_isManualZoom);
         }
     }
@@ -175,7 +192,9 @@ public partial class ViewerCanvas : DXCanvas
         set
         {
             Padding = new Padding(Padding.Left, value, Padding.Right, Padding.Bottom);
-            _shouldRecalculateDrawingRegion = true;
+
+            // update drawing regions
+            CalculateDrawingRegion();
             Refresh(!_isManualZoom);
         }
     }
@@ -191,7 +210,9 @@ public partial class ViewerCanvas : DXCanvas
         set
         {
             Padding = new Padding(Padding.Left, Padding.Top, value, Padding.Bottom);
-            _shouldRecalculateDrawingRegion = true;
+
+            // update drawing regions
+            CalculateDrawingRegion();
             Refresh(!_isManualZoom);
         }
     }
@@ -207,7 +228,9 @@ public partial class ViewerCanvas : DXCanvas
         set
         {
             Padding = new Padding(Padding.Left, Padding.Top, Padding.Right, value);
-            _shouldRecalculateDrawingRegion = true;
+
+            // update drawing regions
+            CalculateDrawingRegion();
             Refresh(!_isManualZoom);
         }
     }
@@ -535,6 +558,7 @@ public partial class ViewerCanvas : DXCanvas
     /// Gets, sets zoom levels (ordered by ascending).
     /// </summary>
     [Category("Zooming")]
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     public float[] ZoomLevels
     {
         get => _zoomLevels;
@@ -706,26 +730,6 @@ public partial class ViewerCanvas : DXCanvas
 
 
     [Category("Checkerboard")]
-    [DefaultValue(typeof(float), "10")]
-    public float CheckerboardCellSize
-    {
-        get => _checkerboardCellSize;
-        set
-        {
-            if (_checkerboardCellSize != value)
-            {
-                _checkerboardCellSize = value;
-
-                // reset checkerboard brush
-                DisposeCheckerboardBrushes();
-
-                Invalidate();
-            }
-        }
-    }
-
-
-    [Category("Checkerboard")]
     [DefaultValue(typeof(Color), "25, 0, 0, 0")]
     public Color CheckerboardColor1
     {
@@ -803,6 +807,25 @@ public partial class ViewerCanvas : DXCanvas
     #region Navigation
 
     /// <summary>
+    /// Gets, sets the Motion button visibility.
+    /// </summary>
+    [Browsable(false)]
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+    public bool ShowMotionButton
+    {
+        get => _showMotionButton;
+        set
+        {
+            if (_showMotionButton != value)
+            {
+                _showMotionButton = value;
+                Invalidate();
+            }
+        }
+    }
+
+
+    /// <summary>
     /// Gets, sets the navigation buttons display style.
     /// </summary>
     [Category("Navigation")]
@@ -844,7 +867,7 @@ public partial class ViewerCanvas : DXCanvas
     /// </summary>
     [Browsable(false)]
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-    public SizeF NavButtonSize { get; set; } = new(60f, 60f);
+    public SizeF NavButtonSize => this.ScaleToDpi(new SizeF(50f, 50f));
 
 
     /// <summary>
@@ -858,9 +881,7 @@ public partial class ViewerCanvas : DXCanvas
         {
             // _wicNavLeftImage is a ref, do not dispose here
             _wicNavLeftImage = value;
-
             DXHelper.DisposeD2D1Bitmap(ref _d2dNavLeftImage);
-            _d2dNavLeftImage = DXHelper.ToD2D1Bitmap(Device, _wicNavLeftImage);
         }
     }
 
@@ -876,9 +897,7 @@ public partial class ViewerCanvas : DXCanvas
         {
             // _wicNavRightImage is a ref, do not dispose here
             _wicNavRightImage = value;
-
             DXHelper.DisposeD2D1Bitmap(ref _d2dNavRightImage);
-            _d2dNavRightImage = DXHelper.ToD2D1Bitmap(Device, _wicNavRightImage);
         }
     }
 
@@ -891,6 +910,7 @@ public partial class ViewerCanvas : DXCanvas
     /// <summary>
     /// Enable transparent background.
     /// </summary>
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     public bool EnableTransparent { get; set; } = true;
 
 
@@ -907,7 +927,7 @@ public partial class ViewerCanvas : DXCanvas
     /// </summary>
     [Browsable(false)]
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-    public float MessageBorderRadius { get; set; } = 6f;
+    public float MessageBorderRadius => this.ScaleToDpi(8f);
 
 
     /// <summary>
@@ -915,6 +935,13 @@ public partial class ViewerCanvas : DXCanvas
     /// </summary>
     [Browsable(false)]
     public AnimationSource AnimationSource => _animationSource;
+
+
+    /// <summary>
+    /// Gets the value indicates whether the color is inverted by <see cref="InvertColor(bool)"/>.
+    /// </summary>
+    [Browsable(false)]
+    public bool IsColorInverted => _isColorInverted;
 
 
     /// <summary>
@@ -988,6 +1015,12 @@ public partial class ViewerCanvas : DXCanvas
     /// Occurs when the <see cref="ClientSelection"/> is changed.
     /// </summary>
     public event EventHandler<SelectionEventArgs>? SelectionChanged;
+
+
+    /// <summary>
+    /// Occurs when the motion button clicked.
+    /// </summary>
+    public event EventHandler<MouseEventArgs>? OnMotionBtnClicked;
 
 
     /// <summary>
@@ -1070,16 +1103,10 @@ public partial class ViewerCanvas : DXCanvas
     {
         base.OnDeviceCreated(reason);
 
-        // re-create Direct2D left nav icon
-        DXHelper.DisposeD2D1Bitmap(ref _d2dNavLeftImage);
-        _d2dNavLeftImage = DXHelper.ToD2D1Bitmap(Device, _wicNavLeftImage);
-
-        // re-create Direct2D right nav icon
-        DXHelper.DisposeD2D1Bitmap(ref _d2dNavRightImage);
-        _d2dNavRightImage = DXHelper.ToD2D1Bitmap(Device, _wicNavRightImage);
-
-
         // dispose the Direct2D resource of the old device
+        DXHelper.DisposeD2D1Bitmap(ref _d2dNavLeftImage);
+        DXHelper.DisposeD2D1Bitmap(ref _d2dNavRightImage);
+
         if (reason != DeviceCreatedReason.FirstTime)
         {
             // dispose checkerboard
@@ -1115,23 +1142,31 @@ public partial class ViewerCanvas : DXCanvas
         var requestRerender = false;
 
 
-        // Navigation clickable check
-        #region Navigation clickable check
+        // Check the clickable buttons
+        #region Check the clickable buttons
         if (e.Button == MouseButtons.Left)
         {
-            // calculate whether the point inside the left nav
-            if (this.CheckWhichNav(e.Location, NavCheck.LeftOnly) == MouseAndNavLocation.LeftNav)
+            if (ShowMotionButton && MotionButtonRect.Contains(e.Location))
             {
-                _isNavLeftPressed = true;
+                _motionBtnState |= DXButtonStates.Pressed;
+                requestRerender = true;
             }
-
-            // calculate whether the point inside the right nav
-            if (this.CheckWhichNav(e.Location, NavCheck.RightOnly) == MouseAndNavLocation.RightNav)
+            else
             {
-                _isNavRightPressed = true;
-            }
+                // calculate whether the point inside the left nav
+                if (this.CheckWhichNav(e.Location, NavCheck.LeftOnly) == MouseAndNavLocation.LeftNav)
+                {
+                    _navLeftState |= DXButtonStates.Pressed;
+                    requestRerender = true;
+                }
 
-            requestRerender = _isNavLeftPressed || _isNavRightPressed;
+                // calculate whether the point inside the right nav
+                if (this.CheckWhichNav(e.Location, NavCheck.RightOnly) == MouseAndNavLocation.RightNav)
+                {
+                    _navRightState |= DXButtonStates.Pressed;
+                    requestRerender = true;
+                }
+            }
         }
         #endregion
 
@@ -1246,13 +1281,20 @@ public partial class ViewerCanvas : DXCanvas
         }
 
 
-        // Navigation clickable check
-        #region Navigation clickable check
+        // Check the clickable buttons
+        #region Check the clickable buttons
 
         // trigger nav click only if selection is empty
         if (e.Button == MouseButtons.Left && SourceSelection.Size.IsEmpty)
         {
-            if (_isNavRightPressed)
+            // emit motion button event
+            if (ShowMotionButton
+                && MotionButtonRect.Contains(e.Location)
+                && _motionBtnState.HasFlag(DXButtonStates.Pressed))
+            {
+                OnMotionBtnClicked?.Invoke(this, e);
+            }
+            else if (_navRightState.HasFlag(DXButtonStates.Pressed))
             {
                 // emit nav button event if the point inside the right nav
                 if (this.CheckWhichNav(e.Location, NavCheck.RightOnly) == MouseAndNavLocation.RightNav)
@@ -1260,7 +1302,7 @@ public partial class ViewerCanvas : DXCanvas
                     OnNavRightClicked?.Invoke(this, e);
                 }
             }
-            else if (_isNavLeftPressed)
+            else if (_navLeftState.HasFlag(DXButtonStates.Pressed))
             {
                 // emit nav button event if the point inside the left nav
                 if (this.CheckWhichNav(e.Location, NavCheck.LeftOnly) == MouseAndNavLocation.LeftNav)
@@ -1270,8 +1312,9 @@ public partial class ViewerCanvas : DXCanvas
             }
         }
 
-        _isNavLeftPressed = false;
-        _isNavRightPressed = false;
+        _motionBtnState &= ~DXButtonStates.Pressed;
+        _navLeftState &= ~DXButtonStates.Pressed;
+        _navRightState &= ~DXButtonStates.Pressed;
         #endregion
 
     }
@@ -1289,29 +1332,53 @@ public partial class ViewerCanvas : DXCanvas
 
         // Navigation hoverable check
         #region Navigation hoverable check
+
         // hide nav button when hovering on the selection area
         if (ClientSelection.Contains(e.Location))
         {
-            _isNavLeftHovered = false;
-            _isNavRightHovered = false;
+            _motionBtnState &= ~DXButtonStates.Hover;
+            _navLeftState &= ~DXButtonStates.Hover;
+            _navRightState &= ~DXButtonStates.Hover;
         }
+
         // if no button pressed, check if nav is hovered
         else if (e.Button == MouseButtons.None)
         {
-            // calculate whether the point inside the left nav
-            _isNavLeftHovered = this.CheckWhichNav(e.Location, NavCheck.LeftOnly) == MouseAndNavLocation.LeftNav;
+            // check if Motion btn is being hovered
+            var isMotionBtnHovered = ShowMotionButton && MotionButtonRect.Contains(e.Location);
+            var isNavLeftHovered = false;
+            var isNavRightHovered = false;
 
-            // calculate whether the point inside the right nav
-            _isNavRightHovered = this.CheckWhichNav(e.Location, NavCheck.RightOnly) == MouseAndNavLocation.RightNav;
+            if (isMotionBtnHovered)
+            {
+                _motionBtnState |= DXButtonStates.Hover;
+                _navLeftState &= ~DXButtonStates.Hover;
+                _navRightState &= ~DXButtonStates.Hover;
+            }
+            // check if Nav buttons are being hovered
+            else
+            {
+                _motionBtnState &= ~DXButtonStates.Hover;
 
-            if (!_isNavLeftHovered && !_isNavRightHovered && _isNavVisible)
+                // calculate whether the point inside the left nav
+                isNavLeftHovered = this.CheckWhichNav(e.Location, NavCheck.LeftOnly) == MouseAndNavLocation.LeftNav;
+                if (isNavLeftHovered) _navLeftState |= DXButtonStates.Hover;
+                else _navLeftState &= ~DXButtonStates.Hover;
+
+                // calculate whether the point inside the right nav
+                isNavRightHovered = this.CheckWhichNav(e.Location, NavCheck.RightOnly) == MouseAndNavLocation.RightNav;
+                if (isNavRightHovered) _navRightState |= DXButtonStates.Hover;
+                else _navRightState &= ~DXButtonStates.Hover;
+            }
+
+            if (!isMotionBtnHovered && !isNavLeftHovered && !isNavRightHovered && _isNavVisible)
             {
                 requestRerender = true;
                 _isNavVisible = false;
             }
             else
             {
-                requestRerender = _isNavVisible = _isNavLeftHovered || _isNavRightHovered;
+                requestRerender = _isNavVisible = isMotionBtnHovered || isNavLeftHovered || isNavRightHovered;
             }
         }
         #endregion
@@ -1410,8 +1477,9 @@ public partial class ViewerCanvas : DXCanvas
     {
         base.OnMouseLeave(e);
 
-        _isNavLeftHovered = false;
-        _isNavRightHovered = false;
+        _motionBtnState &= ~DXButtonStates.Hover;
+        _navLeftState &= ~DXButtonStates.Hover;
+        _navRightState &= ~DXButtonStates.Hover;
         _isSelectionHovered = false;
         _mouseMovePoint = null;
 
@@ -1425,15 +1493,17 @@ public partial class ViewerCanvas : DXCanvas
 
     protected override void OnResize(EventArgs e)
     {
-        _shouldRecalculateDrawingRegion = true;
+        base.OnResize(e);
+        if (DrawingArea.IsEmpty) return;
+
+        // update drawing regions
+        CalculateDrawingRegion();
 
         // redraw the control on resizing if it's not manual zoom
         if (IsReady && Source != ImageSource.Null && !_isManualZoom)
         {
             Refresh(true, false, true);
         }
-
-        base.OnResize(e);
     }
 
     protected override void OnFrame(FrameEventArgs e)
@@ -1478,18 +1548,6 @@ public partial class ViewerCanvas : DXCanvas
             var point = PointToClient(Cursor.Position);
             _ = ZoomByDeltaToPoint(-20, point, requestRerender: false);
         }
-
-
-        if (_animationSource.HasFlag(AnimationSource.ImageFadeIn))
-        {
-            _imageOpacity += _opacityStep;
-
-            if (_imageOpacity > 1)
-            {
-                StopAnimation(AnimationSource.ImageFadeIn);
-                _imageOpacity = 1;
-            }
-        }
     }
 
 
@@ -1498,20 +1556,12 @@ public partial class ViewerCanvas : DXCanvas
         // check if the image is already drawn
         var isImageDrawn = _imageDrawingState == ImageDrawingState.Drawing && !_isPreviewing;
 
-        // check if this is the final draw since the image is set
-        var isImageFinalDrawn = _imageOpacity == 1 && isImageDrawn;
-
-
         // correct the background if no transparency
         if (!EnableTransparent)
         {
             g.ClearBackground(TopLevelControl.BackColor);
             g.DrawRectangle(ClientRectangle, 0, Color.Transparent, BackColor);
         }
-
-
-        // update drawing regions
-        CalculateDrawingRegion();
 
         // checkerboard background
         DrawCheckerboardLayer(g);
@@ -1547,6 +1597,11 @@ public partial class ViewerCanvas : DXCanvas
         // text message
         DrawMessageLayer(g);
 
+
+        // draw motion button
+        DrawMotionButton(g);
+
+
         // navigation layer
         DrawNavigationLayer(g);
 
@@ -1567,7 +1622,7 @@ public partial class ViewerCanvas : DXCanvas
             }
             else
             {
-                text += $"Opacity={_imageOpacity}; FPS={FPS}; ";
+                text += $"FPS={FPS}; ";
             }
 
             var textSize = g.MeasureText(text, Font.Name, Font.Size, textDpi: DeviceDpi);
@@ -1579,7 +1634,7 @@ public partial class ViewerCanvas : DXCanvas
 
 
         // emits event ImageLoaded
-        if (isImageFinalDrawn)
+        if (isImageDrawn)
         {
             _imageDrawingState = ImageDrawingState.Done;
             ImageLoaded?.Invoke(this, EventArgs.Empty);
@@ -1592,7 +1647,7 @@ public partial class ViewerCanvas : DXCanvas
     /// </summary>
     protected virtual void CalculateDrawingRegion()
     {
-        if (Source == ImageSource.Null || _shouldRecalculateDrawingRegion is false) return;
+        if (Source == ImageSource.Null || DrawingArea.IsEmpty) return;
 
         var zoomX = _zoommedPoint.X;
         var zoomY = _zoommedPoint.Y;
@@ -1670,21 +1725,18 @@ public partial class ViewerCanvas : DXCanvas
             _yOut = true;
             _srcRect.Y = 0;
         }
-
-        _shouldRecalculateDrawingRegion = false;
     }
 
 
     /// <summary>
     /// Draw the input image.
     /// </summary>
-    /// <param name="g">Drawing graphic object.</param>
     protected virtual void DrawImageLayer(DXGraphics g)
     {
         if (UseWebview2) return;
         if (Source == ImageSource.Null) return;
 
-        g.DrawBitmap(_d2dImage, _destRect, _srcRect, (InterpolationMode)CurrentInterpolation, _imageOpacity);
+        g.DrawBitmap(_d2dImage, _destRect, _srcRect, (InterpolationMode)CurrentInterpolation);
     }
 
 
@@ -1700,12 +1752,17 @@ public partial class ViewerCanvas : DXCanvas
 
         if (CheckerboardMode == CheckerboardMode.Image)
         {
-            if (UseWebview2) return;
+            if (UseWebview2)
+            {
+                region = _web2DestRect;
+            }
+            else
+            {
+                // no need to draw checkerboard if image does not has alpha pixels
+                if (!HasAlphaPixels) return;
 
-            // no need to draw checkerboard if image does not has alpha pixels
-            if (!HasAlphaPixels) return;
-
-            region = _destRect;
+                region = _destRect;
+            }
         }
         else
         {
@@ -1714,7 +1771,7 @@ public partial class ViewerCanvas : DXCanvas
 
 
         // create bitmap brush
-        _checkerboardBrushD2D ??= VHelper.CreateCheckerBoxTileD2D(Device, CheckerboardCellSize, CheckerboardColor1, CheckerboardColor2);
+        _checkerboardBrushD2D ??= VHelper.CreateCheckerBoxTileD2D(Device, this.ScaleToDpi(Const.VIEWER_GRID_SIZE), CheckerboardColor1, CheckerboardColor2);
 
         // draw checkerboard
         Device.FillRectangle(DXHelper.ToD2DRectF(region), _checkerboardBrushD2D);
@@ -1852,6 +1909,67 @@ public partial class ViewerCanvas : DXCanvas
 
 
     /// <summary>
+    /// Draw Motion button
+    /// </summary>
+    protected virtual void DrawMotionButton(DXGraphics g)
+    {
+        if (!ShowMotionButton || EnableSelection) return;
+
+        VHelper.DrawDXButton(g,
+            MotionButtonRect,
+            MessageBorderRadius,
+            ForeColor.InvertBlackOrWhite(150),
+            NavButtonColor,
+            this.ScaleToDpi(1f),
+            null,
+            _motionBtnState);
+
+        var iconAlpha = _motionBtnState.HasFlag(DXButtonStates.Pressed)
+            ? 153 // 0.6f
+            : 200;
+        var iconY = _motionBtnState.HasFlag(DXButtonStates.Pressed)
+            ? this.ScaleToDpi(1f)
+            : 0f;
+
+
+        // draw solid circle
+        var iconSize = MotionButtonRect.Height * 0.25f;
+        var iconRect = new RectangleF(
+            MotionButtonRect.X + MotionButtonRect.Width / 2 - iconSize / 2,
+            MotionButtonRect.Y + MotionButtonRect.Height / 2 - iconSize / 2 + iconY,
+            iconSize,
+            iconSize);
+        g.DrawEllipse(iconRect, ForeColor.WithAlpha(iconAlpha), null, this.ScaleToDpi(1f));
+
+
+        // draw dashed circle
+        iconSize = MotionButtonRect.Height * 0.5f;
+        iconRect = new RectangleF(
+            MotionButtonRect.X + MotionButtonRect.Width / 2 - iconSize / 2,
+            MotionButtonRect.Y + MotionButtonRect.Height / 2 - iconSize / 2 + iconY,
+            iconSize,
+            iconSize);
+
+        var ellipse = new D2D1_ELLIPSE(iconRect.X + iconRect.Width / 2, iconRect.Y + iconRect.Height / 2, iconRect.Width / 2, iconRect.Height / 2);
+
+
+        // draw ellipse border ------------------------------------
+        // create solid brush for border
+        var bdColor = DXHelper.FromColor(ForeColor.WithAlpha(iconAlpha));
+        using var bdBrush = g.DeviceContext.CreateSolidColorBrush(bdColor);
+
+        using var strokeStyle = g.D2DFactory.CreateStrokeStyle(new D2D1_STROKE_STYLE_PROPERTIES()
+        {
+            dashCap = D2D1_CAP_STYLE.D2D1_CAP_STYLE_ROUND,
+            dashStyle = D2D1_DASH_STYLE.D2D1_DASH_STYLE_CUSTOM,
+        }, [this.ScaleToDpi(1.5f), this.ScaleToDpi(1.5f)]);
+
+        // draw border
+        g.DeviceContext.DrawEllipse(ellipse, bdBrush, this.ScaleToDpi(1f), strokeStyle);
+    }
+
+
+    /// <summary>
     /// Draws text message.
     /// </summary>
     protected virtual void DrawMessageLayer(DXGraphics g)
@@ -1956,58 +2074,31 @@ public partial class ViewerCanvas : DXCanvas
     /// </summary>
     protected virtual void DrawNavigationLayer(DXGraphics g)
     {
-        if (NavDisplay == NavButtonDisplay.None) return;
+        if (NavDisplay == NavButtonDisplay.None || EnableSelection) return;
 
 
         // left navigation
         if (NavDisplay == NavButtonDisplay.Left || NavDisplay == NavButtonDisplay.Both)
         {
-            var iconOpacity = 1f;
-            var iconY = 0;
-            var leftColor = Color.Transparent;
-
-            if (_isNavLeftPressed)
+            if (_navLeftState != DXButtonStates.Normal)
             {
-                leftColor = ForeColor.InvertBlackOrWhite(240);
-                iconOpacity = 0.6f;
-                iconY = this.ScaleToDpi(1);
-            }
-            else if (_isNavLeftHovered)
-            {
-                leftColor = ForeColor.InvertBlackOrWhite(200);
-            }
+                _d2dNavLeftImage ??= DXHelper.ToD2D1Bitmap(Device, _wicNavLeftImage);
 
-            // draw background
-            if (leftColor != Color.Transparent)
-            {
-                var leftBgRect = new RectangleF()
-                {
-                    X = NavLeftPos.X - NavButtonSize.Width / 2,
-                    Y = NavLeftPos.Y - NavButtonSize.Height / 2,
-                    Width = NavButtonSize.Width,
-                    Height = NavButtonSize.Height,
-                };
-
-                g.DrawRectangle(leftBgRect, NavBorderRadius, leftColor.Blend(NavButtonColor, 0.35f, leftColor.A), leftColor.Blend(NavButtonColor, 0.5f, leftColor.A), this.ScaleToDpi(1f));
-            }
-
-            // draw icon
-            if (_isNavLeftHovered || _isNavLeftPressed)
-            {
-                if (_d2dNavLeftImage == null) return;
-
-                _d2dNavLeftImage.Object.GetSize(out var size);
-
-                var srcIconSize = DXHelper.ToSize(size);
-                var iconSize = Math.Min(NavButtonSize.Width, NavButtonSize.Height) / 2;
-
-                g.DrawBitmap(_d2dNavLeftImage, new RectangleF()
-                {
-                    X = NavLeftPos.X - iconSize / 2,
-                    Y = NavLeftPos.Y - iconSize / 2 + iconY,
-                    Width = iconSize,
-                    Height = iconSize,
-                }, new RectangleF(0, 0, srcIconSize.Width, srcIconSize.Height), InterpolationMode.Linear, iconOpacity);
+                // draw background
+                VHelper.DrawDXButton(g,
+                    new RectangleF()
+                    {
+                        X = NavLeftPos.X - NavButtonSize.Width / 2,
+                        Y = NavLeftPos.Y - NavButtonSize.Height / 2,
+                        Width = NavButtonSize.Width,
+                        Height = NavButtonSize.Height,
+                    },
+                    NavBorderRadius,
+                    ForeColor.InvertBlackOrWhite(),
+                    NavButtonColor,
+                    this.ScaleToDpi(1f),
+                    _d2dNavLeftImage,
+                    _navLeftState);
             }
         }
 
@@ -2015,53 +2106,26 @@ public partial class ViewerCanvas : DXCanvas
         // right navigation
         if (NavDisplay == NavButtonDisplay.Right || NavDisplay == NavButtonDisplay.Both)
         {
-            var iconOpacity = 1f;
-            var iconY = 0;
-            var rightColor = Color.Transparent;
-
-            if (_isNavRightPressed)
+            if (_navRightState != DXButtonStates.Normal)
             {
-                rightColor = ForeColor.InvertBlackOrWhite(240);
-                iconOpacity = 0.6f;
-                iconY = this.ScaleToDpi(1);
-            }
-            else if (_isNavRightHovered)
-            {
-                rightColor = ForeColor.InvertBlackOrWhite(200);
-            }
+                _d2dNavRightImage ??= DXHelper.ToD2D1Bitmap(Device, _wicNavRightImage);
 
-            // draw background
-            if (rightColor != Color.Transparent)
-            {
-                var rightBgRect = new RectangleF()
-                {
-                    X = NavRightPos.X - NavButtonSize.Width / 2,
-                    Y = NavRightPos.Y - NavButtonSize.Height / 2,
-                    Width = NavButtonSize.Width,
-                    Height = NavButtonSize.Height,
-                };
 
-                g.DrawRectangle(rightBgRect, NavBorderRadius, rightColor.Blend(NavButtonColor, 0.35f, rightColor.A), rightColor.Blend(NavButtonColor, 0.5f, rightColor.A), this.ScaleToDpi(1f));
-            }
-
-            // draw icon
-            if (_isNavRightHovered || _isNavRightPressed)
-            {
-                if (_d2dNavRightImage == null) return;
-
-                _d2dNavRightImage.Object.GetSize(out var size);
-
-                var srcIconSize = DXHelper.ToSize(size);
-                var iconSize = Math.Min(NavButtonSize.Width, NavButtonSize.Height) / 2;
-
-                g.DrawBitmap(_d2dNavRightImage, new RectangleF()
-                {
-                    X = NavRightPos.X - iconSize / 2,
-                    Y = NavRightPos.Y - iconSize / 2 + iconY,
-                    Width = iconSize,
-                    Height = iconSize,
-                }, new RectangleF(0, 0, srcIconSize.Width, srcIconSize.Height),
-                    InterpolationMode.Linear, iconOpacity);
+                // draw background
+                VHelper.DrawDXButton(g,
+                    new RectangleF()
+                    {
+                        X = NavRightPos.X - NavButtonSize.Width / 2,
+                        Y = NavRightPos.Y - NavButtonSize.Height / 2,
+                        Width = NavButtonSize.Width,
+                        Height = NavButtonSize.Height,
+                    },
+                    NavBorderRadius,
+                    ForeColor.InvertBlackOrWhite(),
+                    NavButtonColor,
+                    this.ScaleToDpi(1f),
+                    _d2dNavRightImage,
+                    _navRightState);
             }
         }
     }
@@ -2091,7 +2155,9 @@ public partial class ViewerCanvas : DXCanvas
             return;
         }
 
-        _shouldRecalculateDrawingRegion = true;
+        // update drawing regions
+        CalculateDrawingRegion();
+
         Invalidate();
 
         OnZoomChanged?.Invoke(this, new ZoomEventArgs()
@@ -2108,16 +2174,25 @@ public partial class ViewerCanvas : DXCanvas
     /// <summary>
     /// Calculates zoom factor by the input zoom mode, and source size.
     /// </summary>
+    public float CalculateZoomFactor(ZoomMode zoomMode, float srcWidth, float srcHeight)
+    {
+        return CalculateZoomFactor(zoomMode, srcWidth, srcHeight, (int)DrawingArea.Width, (int)DrawingArea.Height);
+    }
+
+
+    /// <summary>
+    /// Calculates zoom factor by the input zoom mode, and source size.
+    /// </summary>
     public float CalculateZoomFactor(ZoomMode zoomMode, float srcWidth, float srcHeight, int viewportW, int viewportH)
     {
-        if (srcWidth == 0 || srcHeight == 0) return _zoomFactor;
+        if (srcWidth == 0 || srcHeight == 0
+            || viewportW == 0 || viewportH == 0) return _zoomFactor;
 
-        var horizontalPadding = Padding.Left + Padding.Right;
-        var verticalPadding = Padding.Top + Padding.Bottom;
-        var widthScale = (viewportW - horizontalPadding) / srcWidth;
-        var heightScale = (viewportH - verticalPadding) / srcHeight;
 
+        var widthScale = viewportW / srcWidth;
+        var heightScale = viewportH / srcHeight;
         float zoomFactor;
+
 
         if (zoomMode == ZoomMode.ScaleToWidth)
         {
@@ -2162,19 +2237,22 @@ public partial class ViewerCanvas : DXCanvas
     /// </summary>
     public void SetZoomMode(ZoomMode? mode = null, bool isManualZoom = false, bool zoomedByResizing = false)
     {
-        // get zoom factor after applying the zoom mode
-        var zoomMode = mode ?? _zoomMode;
-        _zoomMode = zoomMode;
-        _zoomFactor = CalculateZoomFactor(zoomMode, SourceWidth, SourceHeight, Width, Height);
-        _isManualZoom = isManualZoom;
-        _shouldRecalculateDrawingRegion = true;
+        if (DrawingArea.IsEmpty) return;
 
+
+        // get zoom factor after applying the zoom mode
+        _zoomMode = mode ?? _zoomMode;
+        _zoomFactor = CalculateZoomFactor(_zoomMode, SourceWidth, SourceHeight);
+        _isManualZoom = isManualZoom;
+
+        // update drawing regions
+        CalculateDrawingRegion();
 
         // use webview
         if (UseWebview2)
         {
             var obj = new ExpandoObject();
-            _ = obj.TryAdd("ZoomMode", zoomMode.ToString());
+            _ = obj.TryAdd("ZoomMode", _zoomMode.ToString());
             _ = obj.TryAdd("IsManualZoom", isManualZoom);
 
             Web2.PostWeb2Message(Web2BackendMsgNames.SET_ZOOM_MODE, BHelper.ToJson(obj));
@@ -2338,8 +2416,10 @@ public partial class ViewerCanvas : DXCanvas
         if (_zoomFactor != newZoomFactor)
         {
             _zoomFactor = Math.Min(MaxZoom, Math.Max(newZoomFactor, MinZoom));
-            _shouldRecalculateDrawingRegion = true;
             _isManualZoom = true;
+
+            // update drawing regions
+            CalculateDrawingRegion();
 
             // if using Webview2
             if (UseWebview2)
@@ -2447,7 +2527,6 @@ public partial class ViewerCanvas : DXCanvas
 
         _oldZoomFactor = _zoomFactor;
         _zoomFactor = newZoomFactor;
-        _shouldRecalculateDrawingRegion = true;
         _isManualZoom = true;
         _zoommedPoint = location.ToVector2();
 
@@ -2459,6 +2538,8 @@ public partial class ViewerCanvas : DXCanvas
             return false;
         }
 
+        // update drawing regions
+        CalculateDrawingRegion();
 
         if (requestRerender)
         {
@@ -2573,8 +2654,6 @@ public partial class ViewerCanvas : DXCanvas
         }
 
         _zoommedPoint = new();
-        _shouldRecalculateDrawingRegion = true;
-
 
         if (_xOut == false)
         {
@@ -2592,6 +2671,10 @@ public partial class ViewerCanvas : DXCanvas
 
         // emit panning event
         Panning?.Invoke(this, new PanningEventArgs(loc, new PointF(_panHostFromPoint)));
+
+
+        // update drawing regions
+        CalculateDrawingRegion();
 
         if (requestRerender)
         {
@@ -3003,7 +3086,6 @@ public partial class ViewerCanvas : DXCanvas
     public void SetImage(IgImgData? imgData,
         uint frameIndex = 0,
         bool resetZoom = true,
-        bool enableFading = true,
         float initOpacity = 0.5f,
         float opacityStep = 0.05f,
         bool isForPreview = false,
@@ -3017,10 +3099,10 @@ public partial class ViewerCanvas : DXCanvas
         _animatorSource = AnimatorSource.None;
         _isPreviewing = isForPreview;
         _sourceSelection = default;
+        _isColorInverted = false;
 
 
         // disable animations
-        StopAnimation(AnimationSource.ImageFadeIn);
         StopCurrentAnimator();
         DisposeImageResources();
 
@@ -3039,7 +3121,6 @@ public partial class ViewerCanvas : DXCanvas
         {
             // initialize animator if the image source is AnimatedImage
             CreateAnimatorFromSource(imgData);
-
 
 
             // viewing single frame of animated image
@@ -3094,22 +3175,8 @@ public partial class ViewerCanvas : DXCanvas
                 SetZoomMode();
                 StartAnimator();
             }
-            else if (enableFading)
-            {
-
-                _imageOpacity = initOpacity;
-                _opacityStep = opacityStep;
-
-                if (resetZoom)
-                {
-                    SetZoomMode();
-                }
-
-                StartAnimation(AnimationSource.ImageFadeIn);
-            }
             else
             {
-                _imageOpacity = 1;
                 Refresh(resetZoom);
             }
         }
@@ -3230,6 +3297,34 @@ public partial class ViewerCanvas : DXCanvas
         {
             Refresh(resetZoom: false);
         }
+
+        return true;
+    }
+
+
+    /// <summary>
+    /// Inverts image colors.
+    /// </summary>
+    public bool InvertColor(bool requestRerender = true)
+    {
+        if (_d2dImage == null || IsImageAnimating) return false;
+
+        // create effect
+        using var effect = Device.CreateEffect(Direct2DEffects.CLSID_D2D1Invert);
+        effect.SetInput(_d2dImage, 0);
+
+        // apply the transformation
+        DXHelper.DisposeD2D1Bitmap(ref _d2dImage);
+        _d2dImage = effect.GetD2D1Bitmap1(Device, false);
+
+
+        // render the transformation
+        if (requestRerender)
+        {
+            Refresh(resetZoom: false);
+        }
+
+        _isColorInverted = !_isColorInverted;
 
         return true;
     }
@@ -3466,7 +3561,6 @@ public partial class ViewerCanvas : DXCanvas
 
             Source = ImageSource.Direct2D;
             UseHardwareAcceleration = true;
-            _imageOpacity = 1;
 
             Invalidate();
         }

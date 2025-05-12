@@ -14,7 +14,7 @@ echo:
 echo:
 
 
-set PATH=..\..\Source\ImageGlass\bin\Publish\net8.0-windows-arm64
+set PATH=..\..\Source\ImageGlass\bin\Publish\arm64
 
 :: Executable files
 set FILES[0]=ImageGlass.exe
@@ -35,7 +35,7 @@ set FILES[11]=ImageGlass.WinTouch.dll
 
 set FILES[12]=D2Phap.DXControl.dll
 set FILES[13]=DirectNStandard.dll
-set FILES[14]=ExplorerSortOrder.dll
+set FILES[14]=D2Phap.EggShell.dll
 set FILES[15]=FileWatcherEx.dll
 
 set FILES[16]=libsharpyuv.dll

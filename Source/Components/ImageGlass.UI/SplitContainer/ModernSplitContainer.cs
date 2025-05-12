@@ -1,6 +1,6 @@
 ﻿/*
 ImageGlass Project - Image viewer for Windows
-Copyright (C) 2010 - 2024 DUONG DIEU PHAP
+Copyright (C) 2010 - 2025 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
 
 This program is free software: you can redistribute it and/or modify
@@ -17,12 +17,15 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+using System.ComponentModel;
+
 namespace ImageGlass.UI;
 
 public class ModernSplitContainer : SplitContainer
 {
     private Color _splitterColor = Color.Transparent;
 
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     public Color SplitterBackColor
     {
         get => _splitterColor;

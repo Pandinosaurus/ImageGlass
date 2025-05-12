@@ -1,6 +1,6 @@
 ﻿/*
 ImageGlass Project - Image viewer for Windows
-Copyright (C) 2010 - 2024 DUONG DIEU PHAP
+Copyright (C) 2010 - 2025 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
 
 This program is free software: you can redistribute it and/or modify
@@ -116,9 +116,9 @@ public class ImageBooster : IDisposable
     public int Length => ImgList.Count;
 
     /// <summary>
-    /// Get filenames list
+    /// Get file paths list
     /// </summary>
-    public List<string> FileNames => ImgList.Select(i => i.Filename).ToList();
+    public List<string> FilePaths => ImgList.Select(i => i.FilePath).ToList();
 
     /// <summary>
     /// Gets, sets the list of formats that only load the first page forcefully.
@@ -205,12 +205,17 @@ public class ImageBooster : IDisposable
     /// Add index of the image to queue list
     /// </summary>
     /// <param name="index">Current index of image list</param>
-    private List<int> GetQueueList(int index)
+    /// <param name="includeCurrentIndex">Include current index in the queue list</param>
+    private List<int> GetQueueList(int index, bool includeCurrentIndex)
     {
         // check valid index
         if (index < 0 || index >= ImgList.Count) return [];
 
-        var list = new HashSet<int> { index };
+        var list = new HashSet<int>();
+        if (includeCurrentIndex)
+        {
+            list.Add(index);
+        }
 
         var maxCachedItems = (MaxQueue * 2) + 1;
         var iRight = index;
@@ -274,7 +279,7 @@ public class ImageBooster : IDisposable
             {
                 // use cache metadata
                 var metadata = ImgList[itemIndex].Metadata;
-                metadata ??= PhotoCodec.LoadMetadata(ImgList[itemIndex].Filename);
+                metadata ??= PhotoCodec.LoadMetadata(ImgList[itemIndex].FilePath);
 
                 // check image dimension
                 var notExceedDimension = MaxImageDimensionToCache <= 0
@@ -329,7 +334,7 @@ public class ImageBooster : IDisposable
                 || ImgList[index].Metadata.FrameIndex != frameIndex)
             {
                 ImgList[index].Metadata = PhotoCodec.LoadMetadata(
-                    ImgList[index].Filename,
+                    ImgList[index].FilePath,
                     ReadOptions with
                     {
                         FrameIndex = frameIndex,
@@ -366,8 +371,8 @@ public class ImageBooster : IDisposable
         // get image data from cache
         else
         {
-            // update queue list according to index
-            var queueItems = GetQueueList(index);
+            // get queue list according to index
+            var queueItems = GetQueueList(index, true);
 
             if (!queueItems.Contains(index))
             {
@@ -404,6 +409,20 @@ public class ImageBooster : IDisposable
         return null;
     }
 
+
+    /// <summary>
+    /// Start caching images.
+    /// </summary>
+    /// <param name="index">Current index of image list</param>
+    /// <param name="includeCurrentIndex">Include current index in the queue list</param>
+    public void StartCaching(int index, bool includeCurrentIndex)
+    {
+        // get queue list according to index
+        var queueItems = GetQueueList(index, includeCurrentIndex);
+
+        QueuedList.Clear();
+        QueuedList.AddRange(queueItems);
+    }
 
 
     /// <summary>
@@ -470,7 +489,7 @@ public class ImageBooster : IDisposable
         {
             if (ImgList.Count > 0 && ImgList[index] != null)
             {
-                return ImgList[index].Filename;
+                return ImgList[index].FilePath;
             }
         }
         catch (ArgumentOutOfRangeException)
@@ -489,7 +508,7 @@ public class ImageBooster : IDisposable
     {
         if (ImgList[index] != null)
         {
-            ImgList[index].Filename = filename;
+            ImgList[index].FilePath = filename;
         }
     }
 
@@ -520,7 +539,7 @@ public class ImageBooster : IDisposable
         }
 
         // case sensitivity, esp. if filename passed on command line
-        return ImgList.FindIndex(item => string.Equals(item.Filename, filename, StringComparison.InvariantCultureIgnoreCase));
+        return ImgList.FindIndex(item => string.Equals(item.FilePath, filename, StringComparison.InvariantCultureIgnoreCase));
     }
 
 
@@ -557,7 +576,7 @@ public class ImageBooster : IDisposable
         Clear();
 
         // Clear lists
-        FileNames.Clear();
+        FilePaths.Clear();
         QueuedList.Clear();
         FreeList.Clear();
     }
@@ -603,7 +622,7 @@ public class ImageBooster : IDisposable
             .Select(item => item.Index)
             .ToList();
 
-        // release the cachced images
+        // release the cached images
         foreach (var index in cachedIndexList)
         {
             ImgList[index].Dispose();
@@ -617,13 +636,11 @@ public class ImageBooster : IDisposable
     /// <summary>
     /// Check if the folder path of input filename exists in the list
     /// </summary>
-    /// <param name="filename"></param>
-    /// <returns></returns>
     public bool ContainsDirPathOf(string filename)
     {
         var target = Path.GetDirectoryName(filename)?.ToUpperInvariant();
 
-        var index = ImgList.FindIndex(item => Path.GetDirectoryName(item.Filename)?.ToUpperInvariant() == target);
+        var index = ImgList.FindIndex(item => Path.GetDirectoryName(item.FilePath)?.ToUpperInvariant() == target);
 
         return index != -1;
     }

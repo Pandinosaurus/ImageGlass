@@ -1,6 +1,6 @@
 ﻿/*
 ImageGlass Project - Image viewer for Windows
-Copyright (C) 2010 - 2024 DUONG DIEU PHAP
+Copyright (C) 2010 - 2025 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
 
 This program is free software: you can redistribute it and/or modify
@@ -38,8 +38,6 @@ public enum AnimationSource
     /// Zoom out animation. It does nothing if <see cref="ViewerCanvas.ZoomLevels"/> is set.
     /// </summary>
     ZoomOut = 1 << 6,
-
-    ImageFadeIn = 1 << 7,
 }
 
 
@@ -117,6 +115,14 @@ public enum AnimatorSource
     ImageAnimator,
 }
 
+[Flags]
+public enum DXButtonStates
+{
+    Normal = 0,
+    Hover = 1 << 1,
+    Pressed = 1 << 2,
+}
+
 
 public static class Web2BackendMsgNames
 {
@@ -138,6 +144,7 @@ public static class Web2FrontendMsgNames
     public static string ON_ZOOM_CHANGED => "ON_ZOOM_CHANGED";
     public static string ON_POINTER_DOWN => "ON_POINTER_DOWN";
     public static string ON_MOUSE_WHEEL => "ON_MOUSE_WHEEL";
+    public static string ON_CONTENT_SIZE_CHANGED => "ON_CONTENT_SIZE_CHANGED";
     public static string ON_FILE_DROP => "ON_FILE_DROP";
     public static string ON_NAV_CLICK => "ON_NAV_CLICK";
 

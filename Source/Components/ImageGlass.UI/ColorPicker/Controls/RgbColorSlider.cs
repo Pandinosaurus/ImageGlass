@@ -1,6 +1,6 @@
 ﻿/*
 ImageGlass Project - Image viewer for Windows
-Copyright (C) 2010 - 2024 DUONG DIEU PHAP
+Copyright (C) 2010 - 2025 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
 
 This program is free software: you can redistribute it and/or modify
@@ -45,6 +45,7 @@ public partial class RgbColorSlider : VSlider
     /// Gets, sets RGB color value.
     /// </summary>
     [Browsable(false)]
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     public Color ColorRGB
     {
         get => _colorRGB;
@@ -56,6 +57,7 @@ public partial class RgbColorSlider : VSlider
     /// Gets, sets, HSL color value.
     /// </summary>
     [Browsable(false)]
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     public HslColor ColorHSL
     {
         get => _colorHSL;
@@ -66,6 +68,7 @@ public partial class RgbColorSlider : VSlider
     /// <summary>
     /// Gets, set color mode
     /// </summary>
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     public ColorMode ColorMode
     {
         get => _colorMode;

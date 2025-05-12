@@ -1,6 +1,6 @@
 ﻿/*
 ImageGlass Project - Image viewer for Windows
-Copyright (C) 2010 - 2024 DUONG DIEU PHAP
+Copyright (C) 2010 - 2025 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
 
 This program is free software: you can redistribute it and/or modify
@@ -60,6 +60,7 @@ public partial class FrmSlideshow : ThemedForm
     /// <summary>
     /// Hotkeys list of main menu
     /// </summary>
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     public static Dictionary<string, List<Hotkey>> CurrentMenuHotkeys { get; set; } = new()
     {
         // Open context menu
@@ -301,19 +302,6 @@ public partial class FrmSlideshow : ThemedForm
     }
 
 
-    protected override void OnDpiChanged()
-    {
-        base.OnDpiChanged();
-        SuspendLayout();
-
-        // update picmain scaling
-        PicMain.NavButtonSize = this.ScaleToDpi(new SizeF(50f, 50f));
-        PicMain.CheckerboardCellSize = this.ScaleToDpi(Const.VIEWER_GRID_SIZE);
-
-        ResumeLayout(false);
-    }
-
-
     protected override void OnDpiChanged(DpiChangedEventArgs e)
     {
         base.OnDpiChanged(e);
@@ -439,7 +427,7 @@ public partial class FrmSlideshow : ThemedForm
         var bgY = PicMain.Height - bgSize.Height - padding;
 
         // draw background
-        var borderRadius = BHelper.IsOS(WindowsOS.Win11OrLater) ? 10 : 1;
+        var borderRadius = BHelper.IsOS(WindowsOS.Win11OrLater) ? PicMain.MessageBorderRadius : 1;
         var bgColor = Color.FromArgb(150, PicMain.BackColor);
         var bgRect = new RectangleF(bgX, bgY, bgSize.Width, bgSize.Height);
 
@@ -926,14 +914,9 @@ public partial class FrmSlideshow : ThemedForm
         // use native viewer to display image
         else if (!(photo?.ImgData.IsImageNull ?? true))
         {
-            var isImageBigForFading = photo.Metadata.RenderedWidth > 8000
-                || photo.Metadata.RenderedHeight > 8000;
-            var enableFading = !isImageBigForFading && Config.EnableImageTransition;
-
             // set the main image
             PicMain.SetImage(photo.ImgData,
                 resetZoom: true,
-                enableFading: enableFading,
                 initOpacity: 0.4f,
                 opacityStep: 0.02f);
 
@@ -1575,7 +1558,7 @@ public partial class FrmSlideshow : ThemedForm
             Config.ImageLoadingOrder = selectedOrder;
 
             // reload image list
-            _ = LoadImageListAsync(_images.FileNames, _images.GetFilePath(_currentIndex));
+            _ = LoadImageListAsync(_images.FilePaths, _images.GetFilePath(_currentIndex));
 
             // reload the state
             LoadMnuLoadingOrdersSubItems();
@@ -1594,7 +1577,7 @@ public partial class FrmSlideshow : ThemedForm
             Config.ImageLoadingOrderType = selectedType;
 
             // reload image list
-            _ = LoadImageListAsync(_images.FileNames, _images.GetFilePath(_currentIndex));
+            _ = LoadImageListAsync(_images.FilePaths, _images.GetFilePath(_currentIndex));
 
             // reload the state
             LoadMnuLoadingOrdersSubItems();

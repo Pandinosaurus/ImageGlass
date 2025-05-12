@@ -1,6 +1,6 @@
 ﻿/*
 ImageGlass Project - Image viewer for Windows
-Copyright (C) 2010 - 2024 DUONG DIEU PHAP
+Copyright (C) 2010 - 2025 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
 
 This program is free software: you can redistribute it and/or modify
@@ -174,9 +174,14 @@ public static class Config
     public static bool ShowWelcomeImage { get; set; } = true;
 
     /// <summary>
-    /// Gets, sets value of visibility of toolbar when start up
+    /// Gets, sets value of visibility of toolbar on start up
     /// </summary>
     public static bool ShowToolbar { get; set; } = true;
+
+    /// <summary>
+    /// Gets, sets value of visibility of Frame Navigation tool on startup
+    /// </summary>
+    public static bool ShowFrameNavTool { get; set; } = false;
 
     /// <summary>
     /// Gets, sets value of visibility of app icon
@@ -297,11 +302,6 @@ public static class Config
     /// Gets, sets value indicates that image preview is shown while the image is being loaded.
     /// </summary>
     public static bool ShowImagePreview { get; set; } = true;
-
-    /// <summary>
-    /// Gets, sets value indicates that image fading transition is used while it's being loaded.
-    /// </summary>
-    public static bool EnableImageTransition { get; set; } = false;
 
     /// <summary>
     /// Gets, sets value indicates that images should be loaded asynchronously.
@@ -700,6 +700,7 @@ public static class Config
         ShowGalleryFileName = items.GetValueEx(nameof(ShowGalleryFileName), ShowGalleryFileName);
         ShowWelcomeImage = items.GetValueEx(nameof(ShowWelcomeImage), ShowWelcomeImage);
         ShowToolbar = items.GetValueEx(nameof(ShowToolbar), ShowToolbar);
+        ShowFrameNavTool = items.GetValueEx(nameof(ShowFrameNavTool), ShowFrameNavTool);
         ShowAppIcon = items.GetValueEx(nameof(ShowAppIcon), ShowAppIcon);
         EnableLoopBackNavigation = items.GetValueEx(nameof(EnableLoopBackNavigation), EnableLoopBackNavigation);
         ShowCheckerboard = items.GetValueEx(nameof(ShowCheckerboard), ShowCheckerboard);
@@ -724,7 +725,6 @@ public static class Config
         UseEmbeddedThumbnailRawFormats = items.GetValueEx(nameof(UseEmbeddedThumbnailRawFormats), UseEmbeddedThumbnailRawFormats);
         UseEmbeddedThumbnailOtherFormats = items.GetValueEx(nameof(UseEmbeddedThumbnailOtherFormats), UseEmbeddedThumbnailOtherFormats);
         ShowImagePreview = items.GetValueEx(nameof(ShowImagePreview), ShowImagePreview);
-        EnableImageTransition = items.GetValueEx(nameof(EnableImageTransition), EnableImageTransition);
         EnableImageAsyncLoading = items.GetValueEx(nameof(EnableImageAsyncLoading), EnableImageAsyncLoading);
         EnableCopyMultipleFiles = items.GetValueEx(nameof(EnableCopyMultipleFiles), EnableCopyMultipleFiles);
         EnableCutMultipleFiles = items.GetValueEx(nameof(EnableCutMultipleFiles), EnableCutMultipleFiles);
@@ -1009,14 +1009,18 @@ public static class Config
         #endregion // Other types items
 
 
-        // initialize Magick.NET
-        PhotoCodec.InitMagickNET();
-
-        // listen to system events
-        SystemEvents.UserPreferenceChanged += SystemEvents_UserPreferenceChanged;
-
         // migrate user config file if config version is changed
         MigrateUserConfigFile();
+
+
+        Task.Run(() =>
+        {
+            // initialize Magick.NET
+            PhotoCodec.InitMagickNET();
+
+            // listen to system events
+            SystemEvents.UserPreferenceChanged += SystemEvents_UserPreferenceChanged;
+        });
 
 #nullable enable 
     }
@@ -1065,6 +1069,7 @@ public static class Config
         _ = settings.TryAdd(nameof(ShowGalleryFileName), ShowGalleryFileName);
         _ = settings.TryAdd(nameof(ShowWelcomeImage), ShowWelcomeImage);
         _ = settings.TryAdd(nameof(ShowToolbar), ShowToolbar);
+        _ = settings.TryAdd(nameof(ShowFrameNavTool), ShowFrameNavTool);
         _ = settings.TryAdd(nameof(ShowAppIcon), ShowAppIcon);
         _ = settings.TryAdd(nameof(EnableLoopBackNavigation), EnableLoopBackNavigation);
         _ = settings.TryAdd(nameof(ShowCheckerboard), ShowCheckerboard);
@@ -1089,7 +1094,6 @@ public static class Config
         _ = settings.TryAdd(nameof(UseEmbeddedThumbnailRawFormats), UseEmbeddedThumbnailRawFormats);
         _ = settings.TryAdd(nameof(UseEmbeddedThumbnailOtherFormats), UseEmbeddedThumbnailOtherFormats);
         _ = settings.TryAdd(nameof(ShowImagePreview), ShowImagePreview);
-        _ = settings.TryAdd(nameof(EnableImageTransition), EnableImageTransition);
         _ = settings.TryAdd(nameof(EnableImageAsyncLoading), EnableImageAsyncLoading);
         _ = settings.TryAdd(nameof(EnableCopyMultipleFiles), EnableCopyMultipleFiles);
         _ = settings.TryAdd(nameof(EnableCutMultipleFiles), EnableCutMultipleFiles);
@@ -1487,6 +1491,15 @@ public static class Config
                 Done = true;
             }
         }
+        // uint
+        else if (prop.PropertyType.Equals(typeof(uint)))
+        {
+            if (uint.TryParse(newValue, out var value))
+            {
+                prop.SetValue(null, value);
+                Done = true;
+            }
+        }
         // float
         else if (prop.PropertyType.Equals(typeof(float)))
         {
@@ -1558,7 +1571,7 @@ public static class Config
         else LightTheme = th.FolderName;
 
         // load theme settings
-        BHelper.RunSync(th.LoadThemeSettingsAsync);
+        th.LoadThemeSettings();
 
         // load theme colors
         th.LoadThemeColors();
@@ -1685,7 +1698,7 @@ public static class Config
             {
                 result.Add(item.Key, keyList);
             }
-        };
+        }
 
         return result;
     }
@@ -1916,7 +1929,7 @@ public static class Config
             : IgCommands.REMOVE_DEFAULT_PHOTO_VIEWER;
 
         // run command and show the results
-        _ = await Config.RunIgcmd($"{cmd} {extensions} {IgCommands.SHOW_UI}");
+        _ = await Config.RunIgcmd($"{cmd} {extensions} {IgCommands.PER_MACHINE} {IgCommands.SHOW_UI}");
     }
 
 
@@ -2124,7 +2137,7 @@ public static class Config
         if (Source.Version <= Version) return;
 
 
-        // migrate from 9
+        // migrate from 9.0
         if (Version == 9)
         {
             // MouseClickActions
@@ -2143,6 +2156,15 @@ public static class Config
             {
                 MouseClickActions[MouseClickEvent.XButton2Click] = new(new("MnuViewNext"));
             }
+        }
+
+
+        // migrate from < 9.2
+        if (Version <= 9.2)
+        {
+            FileFormats.Add(".jxr");
+            FileFormats.Add(".hdp");
+            FileFormats.Add(".wdp");
         }
     }
 

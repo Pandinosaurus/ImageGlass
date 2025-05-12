@@ -1,6 +1,6 @@
 ﻿/*
 ImageGlass Project - Image viewer for Windows
-Copyright (C) 2010 - 2024 DUONG DIEU PHAP
+Copyright (C) 2010 - 2025 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
 
 This program is free software: you can redistribute it and/or modify
@@ -35,6 +35,7 @@ public partial class ToolForm : ThemedForm
     /// <summary>
     /// Gets, sets the init location.
     /// </summary>
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     public Point InitLocation { get; set; }
 
 
@@ -308,7 +309,7 @@ public partial class ToolForm : ThemedForm
         if (loc.X < 0) { loc.X = 0; }
         if (loc.Y < 0) { loc.Y = 0; }
 
-        var workingArea = Screen.FromControl(this).WorkingArea;
+        var workingArea = Screen.FromControl(Owner).WorkingArea;
         if (loc.X + Width > workingArea.Right)
         {
             loc.X = workingArea.Right - Width;

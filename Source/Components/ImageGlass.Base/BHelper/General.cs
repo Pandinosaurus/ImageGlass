@@ -1,6 +1,6 @@
 ﻿/*
 ImageGlass Project - Image viewer for Windows
-Copyright (C) 2010 - 2024 DUONG DIEU PHAP
+Copyright (C) 2010 - 2025 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
 
 This program is free software: you can redistribute it and/or modify
@@ -16,6 +16,11 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
+
+using Cysharp.Text;
+using System.Security.Cryptography;
+using System.Text;
+using System.Windows.Input;
 
 namespace ImageGlass.Base;
 
@@ -218,5 +223,32 @@ public partial class BHelper
         }
     }
 
+
+    /// <summary>
+    /// Create an unique key for the input file.
+    /// </summary>
+    public static string CreateUniqueFileKey(string filePath, Size? size = null)
+    {
+        var fi = new FileInfo(filePath);
+        using var sb = ZString.CreateStringBuilder();
+
+        sb.Append(filePath);
+        sb.Append(':');
+        sb.Append(fi.LastWriteTimeUtc.ToBinary());
+
+        // Thumbnail size
+        if (size is Size s)
+        {
+            sb.Append(':');
+            sb.Append(s.Width);
+            sb.Append(',');
+            sb.Append(s.Height);
+        }
+
+
+        var hash = MD5.HashData(Encoding.ASCII.GetBytes(sb.ToString()));
+
+        return Convert.ToHexString(hash).ToLowerInvariant();
+    }
 
 }

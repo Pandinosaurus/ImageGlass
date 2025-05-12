@@ -1,6 +1,6 @@
 ﻿/*
 ImageGlass Project - Image viewer for Windows
-Copyright (C) 2010 - 2024 DUONG DIEU PHAP
+Copyright (C) 2010 - 2025 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
 
 This program is free software: you can redistribute it and/or modify
@@ -199,6 +199,13 @@ public partial class FrmQuickSetup : WebForm
             Config.ColorProfile = enableColorProfile
                 ? nameof(ColorProfileOption.CurrentMonitorProfile)
                 : nameof(ColorProfileOption.None);
+        }
+
+        if (dict.TryGetValue(nameof(Config.ShouldUseExplorerSortOrder), out var useExplorerSortOrder))
+        {
+            Config.ShouldUseExplorerSortOrder = useExplorerSortOrder
+                ?.ToString()
+                .Equals("true", StringComparison.InvariantCultureIgnoreCase) ?? true;
         }
 
         if (dict.TryGetValue(nameof(Config.UseEmbeddedThumbnailRawFormats), out var useThumbnailRawFormatsObj))

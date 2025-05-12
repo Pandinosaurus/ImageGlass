@@ -1,6 +1,6 @@
 ﻿/*
 ImageGlass Project - Image viewer for Windows
-Copyright (C) 2010 - 2024 DUONG DIEU PHAP
+Copyright (C) 2010 - 2025 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
 
 This program is free software: you can redistribute it and/or modify
@@ -21,6 +21,7 @@ using ImageGlass.Base;
 using ImageGlass.Base.WinApi;
 using ImageGlass.Settings;
 using ImageGlass.UI;
+using System.ComponentModel;
 
 namespace ImageGlass;
 
@@ -34,6 +35,7 @@ public partial class FrmToolNotFound : DialogForm
     /// <summary>
     /// Gets the executable path of the tool.
     /// </summary>
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     public string ExecutablePath { get; private set; } = string.Empty;
 
 

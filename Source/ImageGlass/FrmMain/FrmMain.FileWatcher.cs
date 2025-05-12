@@ -1,6 +1,6 @@
 ﻿/*
 ImageGlass Project - Image viewer for Windows
-Copyright (C) 2010 - 2024 DUONG DIEU PHAP
+Copyright (C) 2010 - 2025 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
 
 This program is free software: you can redistribute it and/or modify
@@ -249,9 +249,9 @@ public partial class FrmMain
     {
         // find the index of the new image
         var newFileIndex = BHelper.SortFilePathList(
-            [.. Local.Images.FileNames, filePath],
-            Local.ActiveImageLoadingOrder,
-            Local.ActiveImageLoadingOrderType,
+            [.. Local.Images.FilePaths, filePath],
+            Config.ImageLoadingOrder,
+            Config.ImageLoadingOrderType,
             Config.ShouldGroupImagesByDirectory)
             .IndexOf(i => i.Equals(filePath, StringComparison.OrdinalIgnoreCase));
 

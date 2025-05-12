@@ -1,6 +1,6 @@
 ﻿/*
 ImageGlass Project - Image viewer for Windows
-Copyright (C) 2010 - 2024 DUONG DIEU PHAP
+Copyright (C) 2010 - 2025 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
 
 This program is free software: you can redistribute it and/or modify
@@ -157,7 +157,7 @@ public record IgThemeSettings : IDisposable
     /// <summary>
     /// Sets, sets app logo
     /// </summary>
-    public Bitmap? AppLogo { get; set; } = Properties.Resources.DefaultLogo;
+    public Bitmap? AppLogo { get; set; } = null;
 
     /// <summary>
     /// The preview image of the theme

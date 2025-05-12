@@ -1,6 +1,6 @@
 ﻿/*
 ImageGlass Project - Image viewer for Windows
-Copyright (C) 2010 - 2024 DUONG DIEU PHAP
+Copyright (C) 2010 - 2025 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
 
 This program is free software: you can redistribute it and/or modify
@@ -17,6 +17,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 using ImageGlass.Base;
+using System.ComponentModel;
 using System.Drawing.Drawing2D;
 
 namespace ImageGlass.UI;
@@ -38,6 +39,7 @@ public class ColorView : Control
     /// <summary>
     /// Gets, sets left color value.
     /// </summary>
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     public Color Color1
     {
         get => _color1;
@@ -57,6 +59,7 @@ public class ColorView : Control
     /// <summary>
     /// Gets, sets right color value.
     /// </summary>
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     public Color Color2
     {
         get => _color2;
@@ -76,6 +79,7 @@ public class ColorView : Control
     /// <summary>
     /// Gets, sets dark mode for <see cref="VSlider"/>.
     /// </summary>
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     public bool DarkMode
     {
         get => _darkMode;

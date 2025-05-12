@@ -1,6 +1,6 @@
 ﻿/*
 ImageGlass Project - Image viewer for Windows
-Copyright (C) 2010 - 2024 DUONG DIEU PHAP
+Copyright (C) 2010 - 2025 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
 
 This program is free software: you can redistribute it and/or modify
@@ -48,6 +48,12 @@ public class ThemedForm : ModernForm
 
     public ThemedForm() : base()
     {
+    }
+
+    protected override void OnShown(EventArgs e)
+    {
+        base.OnShown(e);
+
         Config.RequestUpdatingColorMode += Config_RequestUpdatingColorMode;
         Config.RequestUpdatingTheme += Config_RequestUpdatingTheme;
         Config.RequestUpdatingLanguage += Config_RequestUpdatingLanguage;

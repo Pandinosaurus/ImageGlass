@@ -1,6 +1,6 @@
 ﻿/*
 ImageGlass Project - Image viewer for Windows
-Copyright (C) 2010 - 2024 DUONG DIEU PHAP
+Copyright (C) 2010 - 2025 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
 
 This program is free software: you can redistribute it and/or modify
@@ -144,7 +144,7 @@ public partial class GDIExtractor : IExtractor
         // extrack thumbnail from shell
         if (useEmbeddedThumbnails == UseEmbeddedThumbnails.Always)
         {
-            thumb = ShellThumbnailApi.GetThumbnail(filename, size.Width, size.Height, ShellThumbnailOptions.ThumbnailOnly);
+            thumb = ShellThumbnailApi.GetThumbnail(filename, size.Width, size.Height, ShellThumbnailOptions.ThumbnailOnly | ShellThumbnailOptions.BiggerSizeOk);
         }
 
         // get thumbnail from source file
@@ -154,7 +154,7 @@ public partial class GDIExtractor : IExtractor
         }
         else
         {
-            thumb = ShellThumbnailApi.GetThumbnail(filename, size.Width, size.Height, ShellThumbnailOptions.ThumbnailOnly);
+            thumb = ShellThumbnailApi.GetThumbnail(filename, size.Width, size.Height, ShellThumbnailOptions.ThumbnailOnly | ShellThumbnailOptions.BiggerSizeOk);
 
             if (thumb == null)
             {

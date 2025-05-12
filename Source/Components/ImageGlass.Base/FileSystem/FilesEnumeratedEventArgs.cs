@@ -1,6 +1,6 @@
 ﻿/*
 ImageGlass Project - Image viewer for Windows
-Copyright (C) 2010 - 2024 DUONG DIEU PHAP
+Copyright (C) 2010 - 2025 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
 
 This program is free software: you can redistribute it and/or modify
@@ -16,35 +16,24 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-namespace ImageGlass.Base;
-
-/// <summary>
-/// The loading order list.
-/// **If we need to rename, we MUST update the language string too.
-/// Because the name is also language keyword!
-/// </summary>
-public enum ImageOrderBy
-{
-    Name = 0,
-    Random,
-    FileSize,
-    Extension,
-    DateCreated,
-    DateAccessed,
-    DateModified,
-    ExifDateTaken,
-    ExifRating,
-}
+namespace ImageGlass.Base.FileSystem;
 
 
 /// <summary>
-/// The loading order types list
-/// **If we need to rename, we MUST update the language string too.
-/// Because the name is also language keyword!
+/// Event arguments for the <see cref="FileFinder.FilesEnumerated"/> event.
 /// </summary>
-public enum ImageOrderType
+public class FilesEnumeratedEventArgs(IEnumerable<string> filePaths) : EventArgs
 {
-    Asc = 0,
-    Desc = 1,
+    /// <summary>
+    /// Gets the file paths that have been enumerated.
+    /// </summary>
+    public IEnumerable<string> FilePaths { get; } = filePaths;
+
 }

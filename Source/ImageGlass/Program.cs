@@ -1,6 +1,6 @@
 ﻿/*
 ImageGlass Project - Image viewer for Windows
-Copyright (C) 2010 - 2024 DUONG DIEU PHAP
+Copyright (C) 2010 - 2025 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
 
 This program is free software: you can redistribute it and/or modify
@@ -16,6 +16,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+using D2Phap;
 using ImageGlass.Base;
 using ImageGlass.Base.InstanceManagement;
 using ImageGlass.Base.Update;
@@ -28,15 +29,53 @@ namespace ImageGlass;
 
 internal static class Program
 {
+    private static ExplorerView? _foregroundShell;
+    private static string _foregroundShellPath = "";
+    private static string _inputImagePathFromArgs = "";
+
     public static string APP_SINGLE_INSTANCE_ID => "{f2a83de1-b9ac-4461-81d0-cc4547b0b27b}";
 
+    /// <summary>
+    /// Gets the path of the image file from the arguments.
+    /// </summary>
+    public static string InputImagePathFromArgs => _inputImagePathFromArgs;
+
+    /// <summary>
+    /// Gets the Shell object of foreground window
+    /// </summary>
+    public static ExplorerView? ForegroundShell
+    {
+        get => _foregroundShell;
+        set
+        {
+            _foregroundShell?.Dispose();
+            _foregroundShell = value;
+
+            try
+            {
+                _foregroundShellPath = _foregroundShell?.GetTabViewPath() ?? "";
+                UpdateInputImagePath();
+            }
+            catch
+            {
+                _foregroundShellPath = "";
+                _foregroundShell?.Dispose();
+                _foregroundShell = null;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Gets the arguments passed to the application.
+    /// </summary>
+    public static string[] Args { get; set; } = [];
 
     /// <summary>
     /// Gets value to indicates this ImageGlass instance is in <see cref="IgCommands.STARTUP_BOOST"/> mode.
     /// In <see cref="IgCommands.STARTUP_BOOST"/> mode,
     /// ImageGlass UI is totally hiden and its process auto-closes after a few seconds, user settings are not saved.
     /// </summary>
-    public static bool IsStartupBoostMode => Environment.GetCommandLineArgs().Contains(IgCommands.STARTUP_BOOST);
+    public static bool IsStartupBoostMode => Program.Args.Contains(IgCommands.STARTUP_BOOST);
 
 
     /// <summary>
@@ -45,6 +84,9 @@ internal static class Program
     [STAThread]
     static void Main()
     {
+        Program.Args = Environment.GetCommandLineArgs();
+
+
         #region App configs
 
         // use independent culture for formatting or parsing a string
@@ -88,6 +130,11 @@ internal static class Program
             return;
         }
 
+
+        // get foreground shell
+        using var shell = new EggShell();
+        ForegroundShell = shell.GetForegroundWindowView();
+
         // check and run Quick setup
         if (CheckAndRunQuickSetup()) return;
 
@@ -96,6 +143,9 @@ internal static class Program
 
         // checks and runs app instance(s)
         RunAppInstances();
+
+        // dispose foreground shell
+        ForegroundShell = null;
     }
 
 
@@ -130,20 +180,19 @@ internal static class Program
     /// </summary>
     private static void CheckAndRunAutoUpdate()
     {
-        if (Config.AutoUpdate != "0")
+        if (Config.AutoUpdate == "0") return;
+
+        if (DateTime.TryParse(Config.AutoUpdate, out var lastUpdate))
         {
-            if (DateTime.TryParse(Config.AutoUpdate, out var lastUpdate))
-            {
-                // Check for update every 5 days
-                if (DateTime.UtcNow.Subtract(lastUpdate).TotalDays > 5)
-                {
-                    CheckForUpdate(false);
-                }
-            }
-            else
+            // Check for update every 5 days
+            if (DateTime.UtcNow.Subtract(lastUpdate).TotalDays > 5)
             {
                 CheckForUpdate(false);
             }
+        }
+        else
+        {
+            CheckForUpdate(false);
         }
     }
 
@@ -194,6 +243,7 @@ internal static class Program
         {
             // single instance is required
             using var instance = new SingleInstance(APP_SINGLE_INSTANCE_ID);
+
             if (instance.IsFirstInstance)
             {
                 instance.ArgsReceived += Instance_ArgumentsReceived;
@@ -208,6 +258,51 @@ internal static class Program
             }
         }
     }
+
+
+    /// <summary>
+    /// Check if we can use the foreground shell folder for loading images
+    /// </summary>
+    public static bool CanUseForegroundShell()
+    {
+        // check if we should load images from foreground window
+        var inputImageDirPath = Path.GetDirectoryName(InputImagePathFromArgs) ?? "";
+        var isFromSearchWindow = _foregroundShellPath.StartsWith(EggShell.SEARCH_MS_PROTOCOL, StringComparison.OrdinalIgnoreCase);
+        var isFromSavedSearch = _foregroundShellPath.EndsWith(".search-ms", StringComparison.OrdinalIgnoreCase);
+        var isFromSameDir = inputImageDirPath.Equals(_foregroundShellPath, StringComparison.OrdinalIgnoreCase);
+
+        var useForegroundWindow = ForegroundShell != null
+            && !string.IsNullOrEmpty(InputImagePathFromArgs)
+            && (isFromSearchWindow || isFromSavedSearch || isFromSameDir);
+
+        return useForegroundWindow;
+    }
+
+
+    /// <summary>
+    /// Update input path from arguments
+    /// </summary>
+    public static void UpdateInputImagePath(string? path = null)
+    {
+        var pathToLoad = path ?? string.Empty;
+
+        if (string.IsNullOrWhiteSpace(pathToLoad) && Program.Args.Length >= 2)
+        {
+            // get path from params
+            var cmdPath = Program.Args
+                .Skip(1)
+                .FirstOrDefault(i => !i.StartsWith(Const.CONFIG_CMD_PREFIX, StringComparison.Ordinal));
+
+            if (!string.IsNullOrEmpty(cmdPath))
+            {
+                pathToLoad = cmdPath;
+            }
+        }
+
+        _inputImagePathFromArgs = pathToLoad;
+    }
+
+
 
     private static void Instance_ArgumentsReceived(object? sender, ArgsReceivedEventArgs e)
     {
@@ -233,6 +328,12 @@ internal static class Program
     private static void ActivateWindow(string[] args)
     {
         if (Local.FrmMain == null) return;
+        Program.Args = args;
+
+
+        // get foreground shell
+        using var shell = new EggShell();
+        ForegroundShell = shell.GetForegroundWindowView();
 
 
         // load image file from arg
@@ -252,4 +353,7 @@ internal static class Program
             Local.FrmMain.TopMost = Config.EnableWindowTopMost;
         }
     }
+
+
+
 }

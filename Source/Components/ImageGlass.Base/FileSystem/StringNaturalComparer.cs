@@ -1,6 +1,6 @@
 ﻿/*
 ImageGlass Project - Image viewer for Windows
-Copyright (C) 2010 - 2024 DUONG DIEU PHAP
+Copyright (C) 2010 - 2025 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
 
 This program is free software: you can redistribute it and/or modify
@@ -18,7 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 using Windows.Win32;
 
-namespace ImageGlass.Base.DirectoryComparer;
+namespace ImageGlass.Base.FileSystem;
 
 
 public class StringNaturalComparer(bool orderByAsc = true, bool ignoreCase = false) : IComparer<string?>
