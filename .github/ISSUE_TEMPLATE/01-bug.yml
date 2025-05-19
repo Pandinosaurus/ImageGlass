@@ -1,0 +1,81 @@
+name: 🐞 Report a Bug
+description: Create a report to help us improve. Clearly attach screenshots or video to help reproduce the issue quickly. Include a sample file if the problem involves image formats.
+labels: ['🐞 bug']
+body:
+- type: markdown
+  attributes:
+    value: |
+      Before you fill in this template,
+      **please search** open/closed issues and discussions before submitting.
+      It might be already known and fixed before.
+
+- type: input
+  id: os-version
+  attributes:
+    label: Windows OS version
+    description: e.g. Windows 11 24H2
+  validations:
+    required: true
+
+- type: input
+  id: ig-version
+  attributes:
+    label: ImageGlass version
+    description: |
+      - ✅ Do provide full version number found in ImageGlass About dialog (press F1). E.g. v9.3.1.518
+      - ❌ Do not use "latest"
+  validations:
+    required: true
+
+- type: dropdown
+  id: ig-release
+  attributes:
+    label: ImageGlass release
+    options:
+      - Classic
+      - Store
+    description: Select "Store" if you installed ImageGlass from [MS Store](https://apps.microsoft.com/detail/9N33VZK3C7TH?launch=true&cid=ig_github_bug_report&mode=full).
+  validations:
+    required: true
+
+- type: textarea
+  id: reproduction-steps
+  attributes:
+    label: 1️⃣ Steps to reproduce
+    placeholder: |
+      1. Go to...
+      2. Click on...
+      3. Scroll down to...
+      4. See error when...
+  validations:
+    required: true
+
+- type: textarea
+  id: actual-behavior
+  attributes:
+    label: 2️⃣ Actual behavior
+    description: Use list bullets to make it clear and concise.
+  validations:
+    required: true
+
+- type: textarea
+  id: expected-behavior
+  attributes:
+    label: 3️⃣ Expected behavior
+    description: A clear and concise description of what you expected to happen.
+  validations:
+    required: true
+
+- type: textarea
+  id: media
+  attributes:
+    label: 4️⃣ Screenshots / Video / Sample image file
+    description: |
+      - ✅ Do attach SCREENSHOTS, VIDEO to help explain your problem quickly.
+      - ✅ Do attach a SAMPLE FILE if the problem involves image formats.
+      
+- type: textarea
+  id: additional-context
+  attributes:
+    label: 5️⃣ Additional context
+    description: Add any other context about the problem here.
