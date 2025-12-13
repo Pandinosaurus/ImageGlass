@@ -197,10 +197,10 @@ export default class HapplaBoxViewer {
     _zoomMode = e.ZoomMode;
 
     if (eventName === Web2BackendMsgNames.SET_IMAGE) {
-      await _boxEl.loadImage(e.Url, _zoomMode, e.ZoomFactor);
+      await _boxEl.loadImage(e.Url, _zoomMode, e.ZoomFactor, e.DirPath);
     }
     else if (eventName === Web2BackendMsgNames.SET_HTML) {
-      await _boxEl.loadHtml(e.Html, _zoomMode, e.ZoomFactor);
+      await _boxEl.loadHtml(e.Html, _zoomMode, e.ZoomFactor, e.DirPath);
     }
   }
 

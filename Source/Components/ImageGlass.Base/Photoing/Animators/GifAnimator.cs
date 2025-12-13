@@ -113,7 +113,7 @@ public class GifAnimator : ImgAnimator
             // KBR 20181127 10ms is only if the image has a delay of 0. Other delays should not
             // be modified (issue #458).
             if (_frameDelays[i] < 1)
-                _frameDelays[i] = 10;
+                _frameDelays[i] = 100;
         }
     }
 

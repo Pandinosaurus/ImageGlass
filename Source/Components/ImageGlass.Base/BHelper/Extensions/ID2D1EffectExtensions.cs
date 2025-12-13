@@ -1,6 +1,6 @@
 ﻿/*
 ImageGlass Project - Image viewer for Windows
-Copyright (C) 2010 - 2025 DUONG DIEU PHAP
+Copyright (C) 2010 - 2026 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
 
 This program is free software: you can redistribute it and/or modify
@@ -55,6 +55,7 @@ public static class ID2D1EffectExtensions
 
         // draw Image on Target
         dc.BeginDraw();
+        dc.Clear();
         if (ignoreAlpha)
         {
             // fill back background if alpha is ignored

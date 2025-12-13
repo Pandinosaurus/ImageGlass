@@ -1,6 +1,6 @@
 ﻿/*
 ImageGlass Project - Image viewer for Windows
-Copyright (C) 2010 - 2025 DUONG DIEU PHAP
+Copyright (C) 2010 - 2026 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
 
 This program is free software: you can redistribute it and/or modify
@@ -277,6 +277,16 @@ public partial class ViewerCanvas
             var obj = new ExpandoObject();
             _ = obj.TryAdd("ZoomMode", ZoomMode.ToString());
             _ = obj.TryAdd("ZoomFactor", ZoomFactor);
+            _ = obj.TryAdd("FilePath", data.FilePath);
+
+            // make sure dir path contains separator
+            var dirPath = Path.GetDirectoryName(data.FilePath);
+            if (!Path.EndsInDirectorySeparator(dirPath.AsSpan()))
+            {
+                dirPath += Path.DirectorySeparatorChar;
+            }
+            _ = obj.TryAdd("DirPath", dirPath);
+
 
             // if image file is SVG, we read its content
             if (!string.IsNullOrWhiteSpace(data.FilePath)

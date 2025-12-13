@@ -1,6 +1,6 @@
 ﻿/*
 ImageGlass Project - Image viewer for Windows
-Copyright (C) 2010 - 2025 DUONG DIEU PHAP
+Copyright (C) 2010 - 2026 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
 
 This program is free software: you can redistribute it and/or modify
@@ -94,7 +94,7 @@ public static class Functions
                     title: Config.Language[langPath],
                     heading: Config.Language[$"{langPath}._Success"],
                     note: note,
-                    icon: ShellStockIcon.SIID_INFO);
+                    icon: StockIconId.Info);
             }
         }, (error) =>
         {
@@ -355,7 +355,7 @@ public static class Functions
                     heading: Config.Language[$"{langPath}.{(enable ? "_Enabled" : "_Disabled")}"],
                     description: description,
                     note: note,
-                    icon: ShellStockIcon.SIID_INFO);
+                    icon: StockIconId.Info);
             }
         }, (error) =>
         {

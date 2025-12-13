@@ -1,6 +1,6 @@
 ﻿/*
 ImageGlass Project - Image viewer for Windows
-Copyright (C) 2010 - 2025 DUONG DIEU PHAP
+Copyright (C) 2010 - 2026 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
 
 This program is free software: you can redistribute it and/or modify
@@ -71,9 +71,9 @@ public class ImageLoadedEventArgs : ImageEventArgs
     public IgPhoto? Data { get; init; }
 
     /// <summary>
-    /// Gets the loaded image error.
+    /// Gets, sets the loaded image error.
     /// </summary>
-    public Exception? Error { get; init; }
+    public Exception? Error { get; set; }
 
     /// <summary>
     /// Gets the value indicating that the viewer should reset zoom value.

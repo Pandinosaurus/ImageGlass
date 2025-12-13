@@ -40,6 +40,8 @@ export enum ZoomMode {
 export type ILoadContentRequestedEventArgs = {
   ZoomMode: ZoomMode,
   ZoomFactor: number,
+  FilePath: string,
+  DirPath: string,
   Html?: string,
   Url?: string,
 };

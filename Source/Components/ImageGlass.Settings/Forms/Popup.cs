@@ -1,6 +1,6 @@
 ﻿/*
 ImageGlass Project - Image viewer for Windows
-Copyright (C) 2010 - 2025 DUONG DIEU PHAP
+Copyright (C) 2010 - 2026 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
 
 This program is free software: you can redistribute it and/or modify
@@ -265,7 +265,8 @@ public partial class Popup : DialogForm
             {
                 picThumbnail.Image = null;
                 return;
-            };
+            }
+            ;
 
             // draw thumbnail overlay
             var bmp = new Bitmap(picThumbnail.Width, picThumbnail.Height);
@@ -657,7 +658,7 @@ public partial class Popup : DialogForm
         string note = "",
         ColorStatusType? noteStatusType = null,
         PopupButton buttons = PopupButton.OK,
-        ShellStockIcon? icon = null,
+        StockIconId? icon = null,
         Image? thumbnail = null,
         string optionText = "",
         bool topMost = false,

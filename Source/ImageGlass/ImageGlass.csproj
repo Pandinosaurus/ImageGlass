@@ -2,7 +2,7 @@
 
     <PropertyGroup>
         <OutputType>WinExe</OutputType>
-        <TargetFramework>net9.0-windows10.0.17763.0</TargetFramework>
+        <TargetFramework>net10.0-windows10.0.17763.0</TargetFramework>
         <Nullable>enable</Nullable>
         <UseWindowsForms>true</UseWindowsForms>
         <ImplicitUsings>enable</ImplicitUsings>
@@ -12,9 +12,9 @@
 
         <AssemblyTitle>ImageGlass</AssemblyTitle>
         <Description>A lightweight, versatile image viewer</Description>
-        <Copyright>Copyright © 2010 - 2025 Duong Dieu Phap</Copyright>
+        <Copyright>Copyright © 2010 - 2026 Duong Dieu Phap</Copyright>
         <Company>Duong Dieu Phap</Company>
-        <Version>9.3.2.520</Version>
+        <Version>9.4.0.1120</Version>
         <FileVersion>$(Version)</FileVersion>
 
         <EntryPointExe>$(AssemblyName).exe</EntryPointExe>
@@ -170,12 +170,12 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="FileWatcherEx" Version="2.6.0" />
+        <PackageReference Include="FileWatcherEx" Version="2.7.0" />
         <PackageReference Include="IDisposableAnalyzers" Version="4.0.8">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="ImageGlass.Tools" Version="1.9200.1" />
+        <PackageReference Include="ImageGlass.Tools" Version="1.9200.2" />
         <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.14.15">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

@@ -1,6 +1,6 @@
 ﻿/*
 ImageGlass Project - Image viewer for Windows
-Copyright (C) 2010 - 2025 DUONG DIEU PHAP
+Copyright (C) 2010 - 2026 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
 
 This program is free software: you can redistribute it and/or modify
@@ -18,7 +18,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 using ImageGlass.Base;
-using ImageGlass.Base.WinApi;
 using ImageGlass.UI;
 using System.ComponentModel;
 
@@ -55,8 +54,8 @@ public partial class DialogForm : ThemedForm
     [DefaultValue(false)]
     public bool ShowAcceptButtonShieldIcon
     {
-        get => BtnAccept.SystemIcon == ShellStockIcon.SIID_SHIELD;
-        set => BtnAccept.SystemIcon = value ? ShellStockIcon.SIID_SHIELD : null;
+        get => BtnAccept.SystemIcon == StockIconId.Shield;
+        set => BtnAccept.SystemIcon = value ? StockIconId.Shield : null;
     }
 
 

@@ -1,6 +1,6 @@
 ﻿/*
 ImageGlass Project - Image viewer for Windows
-Copyright (C) 2010 - 2025 DUONG DIEU PHAP
+Copyright (C) 2010 - 2026 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
 
 This program is free software: you can redistribute it and/or modify
@@ -48,7 +48,7 @@ public class ModernButton : Button
     private static readonly int _padding = 4;
     private int _imagePadding = 2;
 
-    private ShellStockIcon? _systemIcon = null;
+    private StockIconId? _systemIcon = null;
     private IconName _svgIcon = IconName.None;
 
     #endregion // Private variables
@@ -77,7 +77,7 @@ public class ModernButton : Button
     /// Gets, sets the system icon.
     /// </summary>
     [DefaultValue(false)]
-    public ShellStockIcon? SystemIcon
+    public StockIconId? SystemIcon
     {
         get => _systemIcon;
         set
@@ -260,6 +260,14 @@ public class ModernButton : Button
         Image?.Dispose();
         Image = null;
     }
+
+
+    protected override void OnBackColorChanged(EventArgs e)
+    {
+        // disable system style
+        //base.OnBackColorChanged(e);
+    }
+
 
     protected override void OnPaint(PaintEventArgs e)
     {

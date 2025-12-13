@@ -1,6 +1,6 @@
 ﻿/*
 ImageGlass Project - Image viewer for Windows
-Copyright (C) 2010 - 2025 DUONG DIEU PHAP
+Copyright (C) 2010 - 2026 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
 
 This program is free software: you can redistribute it and/or modify
@@ -225,9 +225,9 @@ public partial class FrmSlideshow : ThemedForm
     }
 
 
-    protected override void OnClosing(CancelEventArgs e)
+    protected override void OnFormClosing(FormClosingEventArgs e)
     {
-        base.OnClosing(e);
+        base.OnFormClosing(e);
         _igTool.Dispose();
     }
 
@@ -783,6 +783,7 @@ public partial class FrmSlideshow : ThemedForm
             UseEmbeddedThumbnailOtherFormats = Config.UseEmbeddedThumbnailOtherFormats,
             EmbeddedThumbnailMinWidth = Config.EmbeddedThumbnailMinWidth,
             EmbeddedThumbnailMinHeight = Config.EmbeddedThumbnailMinHeight,
+            MinDimensionToUseWIC = Config.MinDimensionToUseWIC,
             FirstFrameOnly = true,
             CorrectRotation = true,
         };
@@ -2031,7 +2032,7 @@ public partial class FrmSlideshow : ThemedForm
         {
             Title = Config.Language[$"FrmMain.{nameof(MnuCustomZoom)}"],
             Value = oldZoom.ToString(),
-            Thumbnail = SystemIconApi.GetSystemIcon(ShellStockIcon.SIID_FIND),
+            Thumbnail = SystemIconApi.GetSystemIcon(StockIconId.Find),
 
             UnsignedFloatValueOnly = true,
             TopMost = TopMost,
@@ -2204,8 +2205,8 @@ public partial class FrmSlideshow : ThemedForm
                 : Config.Language[$"FrmMain.{nameof(MnuDeleteFromHardDisk)}._Description"];
 
             var overlayIcon = moveToRecycleBin
-                ? ShellStockIcon.SIID_RECYCLER
-                : ShellStockIcon.SIID_DELETE;
+                ? StockIconId.Recycler
+                : StockIconId.Delete;
 
             var fi = new FileInfo(filePath);
             var description = filePath + "\r\n" +

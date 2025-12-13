@@ -1,6 +1,6 @@
 ﻿/*
 ImageGlass Project - Image viewer for Windows
-Copyright (C) 2010 - 2025 DUONG DIEU PHAP
+Copyright (C) 2010 - 2026 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
 
 This program is free software: you can redistribute it and/or modify
@@ -24,7 +24,6 @@ using PhotoSauce.MagicScaler;
 using System.Runtime.CompilerServices;
 using System.Text;
 using WicNet;
-using ColorProfile = ImageMagick.ColorProfile;
 
 namespace ImageGlass.Base.Photoing.Codecs;
 
@@ -261,6 +260,7 @@ public static class PhotoCodec
         {
             Width = width,
             Height = height,
+            MinDimensionToUseWIC = 0,
             FirstFrameOnly = true,
             UseEmbeddedThumbnailRawFormats = true,
             UseEmbeddedThumbnailOtherFormats = true,
@@ -886,11 +886,17 @@ public static class PhotoCodec
             case ".FAX":
                 try
                 {
-                    // Note: Using FileStream is much faster than using MagickImageCollection
+                    // Note: Using WIC is much faster than using MagickImageCollection
                     if (result.CanAnimate)
                     {
                         result.Source = BHelper.ToGdiPlusBitmap(filePath);
                     }
+                    // multiple frame
+                    else if (result.FrameCount > 0)
+                    {
+                        result.Source = WicBitmapDecoder.Load(filePath);
+                    }
+                    // single frame
                     else
                     {
                         result.Image = WicBitmapSource.Load(filePath);
@@ -946,10 +952,13 @@ public static class PhotoCodec
                         var ms = BHelper.ToMemoryStream(wic);
 
                         var imgM = new MagickImage(ms);
-                        var processResult = ProcessMagickImage(imgM, options, ext, true);
-                        if (processResult.ThumbM != null)
+                        var profiles = GetProfiles(imgM);
+                        var thumbM = ProcessMagickImageAndReturnThumbnail(imgM, options, ext, true, profiles.ColorProfile, profiles.ExifProfile);
+
+                        if (thumbM != null)
                         {
-                            imgM = processResult.ThumbM;
+                            imgM?.Dispose();
+                            imgM = thumbM;
                         }
 
 
@@ -1053,7 +1062,7 @@ public static class PhotoCodec
             var i = 0;
             foreach (var imgFrameM in imgColl)
             {
-                ProcessMagickImage((MagickImage)imgFrameM, options, ext, false);
+                using var imgThumbFrameM = ProcessMagickImageAndReturnThumbnail((MagickImage)imgFrameM, options, ext, false, null, null);
 
                 // apply transformation
                 if (i == transform?.FrameIndex || transform?.FrameIndex == -1)
@@ -1072,6 +1081,11 @@ public static class PhotoCodec
         // read a single frame only
         var imgM = new MagickImage();
         var hasRequestedThumbnail = false;
+
+        // get image profiles
+        var profiles = GetProfiles(imgColl[0]);
+        result.ColorProfile = profiles.ColorProfile;
+        result.ExifProfile = profiles.ExifProfile;
 
 
         if (options.UseEmbeddedThumbnailRawFormats is true)
@@ -1101,26 +1115,52 @@ public static class PhotoCodec
         if (!hasRequestedThumbnail)
         {
             imgM.Dispose();
-            imgM = (MagickImage)await InitializeSingleMagickImageAsync(filePath,
-                imgColl[0].BaseWidth, imgColl[0].BaseHeight, settings, options, cancelToken);
+            imgM = null;
+
+            // check if the image size is not huge
+            var imgWidth = imgColl[0].BaseWidth;
+            var imgHeight = imgColl[0].BaseHeight;
+            var isHuge = imgWidth >= options.MinDimensionToUseWIC
+                || imgHeight >= options.MinDimensionToUseWIC;
+            var canOpenWithWIC = WicDecoder.SupportsFileExtensionForDecoding(ext);
+
+            // use WIC to load huge image
+            if (isHuge && canOpenWithWIC)
+            {
+                // we will open with WIC later
+            }
+            else
+            {
+                imgM = (MagickImage)await InitializeSingleMagickImageAsync(filePath,
+                    imgWidth, imgHeight, settings, options, cancelToken);
+            }
         }
 
-
-        // process image
-        var processResult = ProcessMagickImage(imgM, options, ext, true);
-
-        if (processResult.ThumbM != null)
+        if (imgM != null)
         {
-            imgM = processResult.ThumbM;
+            // process image
+            var thumbM = ProcessMagickImageAndReturnThumbnail(imgM, options, ext, true, result.ColorProfile, result.ExifProfile);
+            if (thumbM != null)
+            {
+                imgM.Dispose();
+                imgM = thumbM;
+            }
+
+            // apply final changes
+            TransformImage(imgM, transform);
+
+            result.SingleFrameImage = imgM;
         }
+        // use WIC to load huge image
+        else
+        {
+            var bmpSrc = WicBitmapSource.Load(filePath);
 
+            // apply final changes
+            TransformImage(bmpSrc, transform);
 
-        // apply final changes
-        TransformImage(imgM, transform);
-
-        result.SingleFrameImage = imgM;
-        result.ColorProfile = processResult.ColorProfile;
-        result.ExifProfile = processResult.ExifProfile;
+            result.SingleFrameSource = bmpSrc;
+        }
 
 
         imgColl.Dispose();
@@ -1244,27 +1284,39 @@ public static class PhotoCodec
 
 
     /// <summary>
-    /// Processes single-frame Magick image
+    /// Gets Color profile & Exif profile.
     /// </summary>
-    /// <param name="refImgM">Input Magick image to process</param>
-    private static (IColorProfile? ColorProfile, IExifProfile? ExifProfile, MagickImage? ThumbM) ProcessMagickImage(MagickImage refImgM, CodecReadOptions options, string ext, bool requestThumbnail)
+    public static (IColorProfile? ColorProfile, IExifProfile? ExifProfile) GetProfiles(IMagickImage imgM)
     {
         IColorProfile? colorProfile = null;
         IExifProfile? exifProfile = null;
-        IMagickImage? thumbM = null;
-
-        // preprocess image, read embedded thumbnail if any
-        refImgM.Quality = 100;
 
         try
         {
             // get the color profile of image
-            colorProfile = refImgM.GetColorProfile();
+            colorProfile = imgM.GetColorProfile();
 
             // Get Exif information
-            exifProfile = refImgM.GetExifProfile();
+            exifProfile = imgM.GetExifProfile();
         }
         catch { }
+
+        return (colorProfile, exifProfile);
+    }
+
+
+    /// <summary>
+    /// Processes single-frame Magick image
+    /// </summary>
+    /// <param name="refImgM">Input Magick image to process</param>
+    private static MagickImage? ProcessMagickImageAndReturnThumbnail(MagickImage refImgM,
+        CodecReadOptions options, string ext, bool requestThumbnail,
+        IColorProfile? colorProfile, IExifProfile? exifProfile)
+    {
+        IMagickImage? thumbM = null;
+
+        // preprocess image, read embedded thumbnail if any
+        refImgM.Quality = 100;
 
         // Use embedded thumbnails if specified
         if (requestThumbnail && exifProfile != null && options.UseEmbeddedThumbnailOtherFormats)
@@ -1306,7 +1358,7 @@ public static class PhotoCodec
                 {
                     refImgM.TransformColorSpace(
                         //set default color profile to sRGB
-                        colorProfile ?? ColorProfile.SRGB,
+                        colorProfile ?? ColorProfiles.SRGB,
                         imgColor);
                 }
             }
@@ -1320,7 +1372,7 @@ public static class PhotoCodec
         }
 
 
-        return (colorProfile, exifProfile, (MagickImage?)thumbM);
+        return (MagickImage?)thumbM;
     }
 
 

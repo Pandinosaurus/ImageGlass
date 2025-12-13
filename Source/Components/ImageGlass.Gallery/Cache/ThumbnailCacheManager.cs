@@ -1,6 +1,6 @@
 ﻿/*
 ImageGlass Project - Image viewer for Windows
-Copyright (C) 2010 - 2025 DUONG DIEU PHAP
+Copyright (C) 2010 - 2026 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
 
 This program is free software: you can redistribute it and/or modify
@@ -1001,13 +1001,17 @@ internal class ThumbnailCacheManager : IDisposable
             var fi = new FileInfo(filePath.ToString());
             var diskCacheKey = adaptor.GetUniqueIdentifier(filePath, thumbSize, useEmbeddedThumbnails, autoRotate);
 
-            // Check the disk cache
-            using var stream = _diskCache.Read(diskCacheKey);
-
-            if (stream.Length > 0)
+            try
             {
-                return new Bitmap(stream);
+                // Check the disk cache
+                using var stream = _diskCache.Read(diskCacheKey);
+
+                if (stream.Length > 0)
+                {
+                    return new Bitmap(stream);
+                }
             }
+            catch { }
 
             return null;
         }

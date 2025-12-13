@@ -1,6 +1,6 @@
 ﻿/*
 ImageGlass Project - Image viewer for Windows
-Copyright (C) 2010 - 2025 DUONG DIEU PHAP
+Copyright (C) 2010 - 2026 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
 
 This program is free software: you can redistribute it and/or modify
@@ -171,13 +171,8 @@ public partial class FrmMain
             // Update status bar title
             LoadImageInfo(ImageInfoUpdateTypes.Name | ImageInfoUpdateTypes.Path);
 
-            try
-            {
-                // Rename image in gallery
-                Gallery.Items[imgIndex].Text = Path.GetFileName(e.FullPath);
-                Gallery.Items[imgIndex].Tag = newFilePath;
-            }
-            catch { }
+            // Rename image in gallery
+            Gallery.Items[imgIndex].Rename(newFilePath);
 
             // User renamed the initial file - update in case of list reload
             if (oldFilePath == Local.InitialInputPath)

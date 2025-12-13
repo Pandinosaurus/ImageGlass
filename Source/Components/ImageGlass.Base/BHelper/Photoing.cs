@@ -1,6 +1,6 @@
 ﻿/*
 ImageGlass Project - Image viewer for Windows
-Copyright (C) 2010 - 2025 DUONG DIEU PHAP
+Copyright (C) 2010 - 2026 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
 
 This program is free software: you can redistribute it and/or modify
@@ -502,7 +502,7 @@ public partial class BHelper
 
             if (string.IsNullOrEmpty(colorProfilePath))
             {
-                return ColorProfile.SRGB;
+                return ColorProfiles.SRGB;
             }
 
             return new ColorProfile(colorProfilePath);
@@ -550,7 +550,7 @@ public partial class BHelper
             ".SVG" => "image/svg+xml",
             ".JPG" or ".JPEG" or ".JFIF" or ".JP2" => "image/jpeg",
             ".JXL" => "image/jxl",
-            ".TIF" or ".TIFF" or "FAX" => "image/tiff",
+            ".TIF" or ".TIFF" or ".FAX" => "image/tiff",
             ".ICO" or ".ICON" => "image/x-icon",
             _ => "image/png",
         };

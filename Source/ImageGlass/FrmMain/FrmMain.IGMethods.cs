@@ -1,6 +1,6 @@
 ﻿/*
 ImageGlass Project - Image viewer for Windows
-Copyright (C) 2010 - 2025 DUONG DIEU PHAP
+Copyright (C) 2010 - 2026 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
 
 This program is free software: you can redistribute it and/or modify
@@ -508,7 +508,7 @@ public partial class FrmMain
         {
             Title = Config.Language[$"{Name}.{nameof(MnuCustomZoom)}"],
             Value = oldZoom.ToString(),
-            Thumbnail = SystemIconApi.GetSystemIcon(ShellStockIcon.SIID_FIND),
+            Thumbnail = SystemIconApi.GetSystemIcon(StockIconId.Find),
 
             UnsignedFloatValueOnly = true,
             TopMost = TopMost,
@@ -1042,8 +1042,10 @@ public partial class FrmMain
         // rename ext FAX -> TIFF to multi-frame printing
         else if (ext.Equals(".FAX", StringComparison.OrdinalIgnoreCase))
         {
-            fileToPrint = App.ConfigDir(PathType.File, Dir.Temporary, Path.GetFileNameWithoutExtension(currentFile) + ".tiff");
+            var tempDir = App.ConfigDir(PathType.Dir, Dir.Temporary);
+            Directory.CreateDirectory(tempDir);
 
+            fileToPrint = Path.Combine(tempDir, Path.GetFileNameWithoutExtension(currentFile) + ".tiff");
             File.Copy(currentFile, fileToPrint, true);
         }
         else if (Local.Metadata?.FrameCount > 1
@@ -1325,10 +1327,11 @@ public partial class FrmMain
         // Is there a file in clipboard?
         if (Clipboard.ContainsFileDropList())
         {
-            var sFile = Clipboard.GetData(DataFormats.FileDrop) as string[];
-
-            // load file
-            PrepareLoading(sFile[0], true);
+            if (Clipboard.TryGetData<string[]>(DataFormats.FileDrop, out var sFile))
+            {
+                // load file
+                PrepareLoading(sFile[0], true);
+            }
         }
 
         // Is there a image in clipboard?
@@ -2039,7 +2042,7 @@ public partial class FrmMain
             Title = title,
             Value = newName,
             Thumbnail = Gallery.Items[Local.CurrentIndex].ThumbnailImage,
-            ThumbnailOverlay = SystemIconApi.GetSystemIcon(ShellStockIcon.SIID_RENAME),
+            ThumbnailOverlay = SystemIconApi.GetSystemIcon(StockIconId.Rename),
 
             FileNameValueOnly = true,
             TopMost = TopMost,
@@ -2074,8 +2077,8 @@ public partial class FrmMain
             if (!Config.EnableRealTimeFileUpdate)
             {
                 Local.Images.SetFileName(Local.CurrentIndex, newFilePath);
-                Gallery.Items[Local.CurrentIndex].FilePath = newFilePath;
-                Gallery.Items[Local.CurrentIndex].Text = newName;
+
+                Gallery.Items[Local.CurrentIndex].Rename(newFilePath);
                 LoadImageInfo(ImageInfoUpdateTypes.Name | ImageInfoUpdateTypes.Path);
             }
         }
@@ -2108,8 +2111,8 @@ public partial class FrmMain
                 : Config.Language[$"{Name}.{nameof(MnuDeleteFromHardDisk)}._Description"];
 
             var overlayIcon = moveToRecycleBin
-                ? ShellStockIcon.SIID_RECYCLER
-                : ShellStockIcon.SIID_DELETE;
+                ? StockIconId.Recycler
+                : StockIconId.Delete;
 
             var description = filePath + "\r\n" +
                     BHelper.FormatSize(Gallery.Items[Local.CurrentIndex].Details.FileSize);
@@ -3489,7 +3492,7 @@ public partial class FrmMain
 
 
         // apply color channels filter
-        if (PicMain.FilterColorChannels(channels, true))
+        if (PicMain.FilterColorChannels(channels, false))
         {
             Local.ImageChannels = channels;
 
@@ -3498,6 +3501,14 @@ public partial class FrmMain
             MnuViewChannelGreen.Checked = channels.HasFlag(ColorChannels.G);
             MnuViewChannelBlue.Checked = channels.HasFlag(ColorChannels.B);
             MnuViewChannelAlpha.Checked = channels.HasFlag(ColorChannels.A);
+
+            if (Local.ImageTransform.HasChanges)
+            {
+                _ = PicMain.RotateImage(Local.ImageTransform.Rotation, false);
+                _ = PicMain.FlipImage(Local.ImageTransform.Flips, false);
+            }
+
+            PicMain.Refresh(resetZoom: false);
         }
         else
         {

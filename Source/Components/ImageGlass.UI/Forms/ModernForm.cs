@@ -1,6 +1,6 @@
 ﻿/*
 ImageGlass Project - Image viewer for Windows
-Copyright (C) 2010 - 2025 DUONG DIEU PHAP
+Copyright (C) 2010 - 2026 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
 
 This program is free software: you can redistribute it and/or modify
@@ -304,6 +304,7 @@ public partial class ModernForm : Form
     {
         if (DesignMode) return;
 
+        Application.SetColorMode(darkMode ? SystemColorMode.Dark : SystemColorMode.Classic);
         DarkMode = darkMode;
         BackdropStyle = style ?? _backdropStyle;
     }

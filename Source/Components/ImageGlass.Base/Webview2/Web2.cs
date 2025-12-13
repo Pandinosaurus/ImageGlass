@@ -1,6 +1,6 @@
 ﻿/*
 ImageGlass Project - Image viewer for Windows
-Copyright (C) 2010 - 2025 DUONG DIEU PHAP
+Copyright (C) 2010 - 2026 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
 
 This program is free software: you can redistribute it and/or modify
@@ -562,7 +562,7 @@ public class Web2 : WebView2
             """);
         }
 
-
+        // update border radius
         var borderRadiusTask = Task.CompletedTask;
         if (BHelper.IsOS(WindowsOS.Win10))
         {
@@ -571,10 +571,24 @@ public class Web2 : WebView2
             """);
         }
 
+        // update font size
+        const float defaultSystemFontSize = 9f;
+        var fontSizeTask = Task.CompletedTask;
+        if (Font.Size != defaultSystemFontSize)
+        {
+            const float defaultWebFontSize = 12.5f;
+            var newWebFontSize = Math.Round(Font.Size / defaultSystemFontSize * defaultWebFontSize, 2);
+
+            fontSizeTask = this.ExecuteScriptAsync($"""
+                document.documentElement.style.setProperty('--fontSize', '{newWebFontSize}');
+            """);
+        }
+
+        // update color mode
         var darkModeTask = SetWeb2DarkModeAsync(DarkMode);
         var accentColorTask = SetWeb2AccentColorAsync(AccentColor);
 
-        await Task.WhenAll(logTask, borderRadiusTask, darkModeTask, accentColorTask);
+        await Task.WhenAll(logTask, borderRadiusTask, fontSizeTask, darkModeTask, accentColorTask);
         await OnWeb2NavigationCompleted();
     }
 

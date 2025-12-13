@@ -114,19 +114,19 @@ export class HapplaBoxHTMLElement extends HTMLElement {
     this.#box.enable();
   }
 
-  public async loadImage(url: string, zoomMode: ZoomMode = ZoomMode.AutoZoom, zoomLockFactor = -1) {
+  public async loadImage(url: string, zoomMode: ZoomMode = ZoomMode.AutoZoom, zoomLockFactor = -1, dirPath = '') {
     const html = imgTemplate({ src: url });
     await this.loadHtml(html, zoomMode, zoomLockFactor);
   }
 
-  public async loadHtml(html: string, zoomMode: ZoomMode = ZoomMode.AutoZoom, zoomLockFactor = -1) {
+  public async loadHtml(html: string, zoomMode: ZoomMode = ZoomMode.AutoZoom, zoomLockFactor = -1, dirPath = '') {
     this.#wrapperEl.style.transition = 'none';
     this.#boxContentEl.style.transform = 'scale(0.01)';
     this.#wrapperEl.style.opacity = '0';
 
     await this.#box.loadHtmlContent(html);
 
-    // fixed sixe of SVG
+    // fixed size of SVG
     const svgEls = Array.from(this.#boxContentEl.querySelectorAll('svg:not([width]), svg:not([height])'));
     svgEls.forEach((svgEl: SVGMarkerElement) => {
       const { width, height } = svgEl.viewBox.baseVal;
@@ -140,6 +140,22 @@ export class HapplaBoxHTMLElement extends HTMLElement {
         svgEl.setAttribute('height', height.toString());
       }
     });
+
+    // fix the path of image
+    const imageEls = Array.from(this.#boxContentEl.querySelectorAll('image[href]'));
+    imageEls.forEach((img: SVGImageElement) => {
+      const href = img.getAttribute('href') ?? '';
+
+      // check if the href is valid
+      if (!URL.canParse(href)) {
+        try {
+          const newHref = new URL(href, dirPath);
+          img.setAttribute('href', newHref.toString());
+        }
+        catch {}
+      }
+    });
+
 
     await this.setZoomMode(zoomMode, zoomLockFactor);
 

@@ -1,6 +1,6 @@
 ﻿/*
 ImageGlass Project - Image viewer for Windows
-Copyright (C) 2010 - 2025 DUONG DIEU PHAP
+Copyright (C) 2010 - 2026 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
 
 This program is free software: you can redistribute it and/or modify
@@ -20,18 +20,15 @@ using ImageGlass.Base;
 using ImageGlass.Base.WinApi;
 using System.ComponentModel;
 using System.Drawing.Drawing2D;
-using System.Reflection;
-using System.Security;
 
 namespace ImageGlass.UI;
 
 public class ModernNumericUpDown : NumericUpDown
 {
-    private bool _mouseDown = false;
     private bool _mouseHover = false;
     private bool _darkMode = false;
     private IColors ColorPalatte => BHelper.GetThemeColorPalatte(_darkMode);
-    private float BorderRadius => BHelper.IsOS(WindowsOS.Win11OrLater) ? 1f : 0;
+    private static float BorderRadius => BHelper.IsOS(WindowsOS.Win11OrLater) ? 1f : 0;
 
 
     // Public properties
@@ -83,29 +80,10 @@ public class ModernNumericUpDown : NumericUpDown
         base.ForeColor = ColorPalatte.AppText;
         base.BackColor = ColorPalatte.ControlBg;
 
-        Controls[0].Paint += UpDownControls_Paint;
         Controls[0].MouseEnter += Control_MouseEnter;
         Controls[0].MouseLeave += Control_MouseLeave;
         Controls[1].MouseEnter += Control_MouseEnter;
         Controls[1].MouseLeave += Control_MouseLeave;
-
-        try
-        {
-            // Prevent flickering, only if our assembly has reflection permission
-            var type = Controls[0].GetType();
-            var flags = BindingFlags.NonPublic | BindingFlags.Instance;
-            var method = type.GetMethod("SetStyle", flags);
-
-            if (method != null)
-            {
-                object[] @params = [ControlStyles.AllPaintingInWmPaint | ControlStyles.DoubleBuffer, true];
-                method.Invoke(Controls[0], @params);
-            }
-        }
-        catch (SecurityException)
-        {
-            // Don't do anything, we are running in a trusted context
-        }
     }
 
     private void Control_MouseEnter(object? sender, EventArgs e)
@@ -120,89 +98,12 @@ public class ModernNumericUpDown : NumericUpDown
         this.Invalidate();
     }
 
-    private void UpDownControls_Paint(object? sender, PaintEventArgs e)
-    {
-        PaintUpDownControls(e);
-    }
-
-
-    private void PaintUpDownControls(PaintEventArgs e)
-    {
-        var g = e.Graphics;
-        var rect = e.ClipRectangle;
-        g.CompositingQuality = CompositingQuality.HighQuality;
-        g.SmoothingMode = SmoothingMode.HighQuality;
-
-
-        // up/down background
-        using (var bgBrush = new SolidBrush(ColorPalatte.ControlBg))
-        {
-            var modRect = new Rectangle(rect.X - 2, rect.Y - 1, rect.Width + 2, rect.Height + 1);
-            g.FillRectangle(bgBrush, modRect);
-        }
-
-
-        // up arrow
-        var mousePos = Controls[0].PointToClient(Cursor.Position);
-        var upArea = new Rectangle(0, 0, rect.Width, rect.Height / 2);
-        var isUpHovered = upArea.Contains(mousePos);
-
-        // arrow
-        var arrowColor = isUpHovered
-            ? ColorPalatte.ControlBorder.WithBrightness(0.5f)
-            : ColorPalatte.ControlBorder.WithBrightness(0.3f);
-        if (isUpHovered && _mouseDown)
-        {
-            arrowColor = ColorPalatte.AppText;
-        }
-
-        using (var p = new Pen(arrowColor, DpiApi.Scale(1.1f)))
-        {
-            var x = upArea.Width / 2 - 3;
-            var y = upArea.Height / 2 - 2;
-
-            p.LineJoin = LineJoin.Round;
-            p.StartCap = LineCap.Round;
-            p.EndCap = LineCap.Round;
-
-            g.DrawLine(p, x, y + 3, x + 3, y);
-            g.DrawLine(p, x + 3, y, x + 6, y + 3);
-        }
-
-
-        // down arrow
-        var downArea = new Rectangle(0, rect.Height / 2, rect.Width, rect.Height / 2);
-        var isDownHovered = downArea.Contains(mousePos);
-
-        arrowColor = isDownHovered
-            ? ColorPalatte.ControlBorder.WithBrightness(0.5f)
-            : ColorPalatte.ControlBorder.WithBrightness(0.3f);
-        if (isDownHovered && _mouseDown)
-        {
-            arrowColor = ColorPalatte.AppText;
-        }
-
-        using (var p = new Pen(arrowColor, DpiApi.Scale(1.1f)))
-        {
-            var x = downArea.Width / 2 - 3;
-            var y = downArea.Top + downArea.Height / 2 - 2;
-
-            p.LineJoin = LineJoin.Round;
-            g.DrawLine(p, x, y, x + 3, y + 3);
-            g.DrawLine(p, x + 3, y + 3, x + 6, y);
-        }
-
-        g.SmoothingMode = SmoothingMode.None;
-        g.CompositingQuality = CompositingQuality.Default;
-    }
-
 
     // Protected override methods
     #region Protected override methods
 
     protected override void Dispose(bool disposing)
     {
-        Controls[0].Paint -= UpDownControls_Paint;
         Controls[0].MouseEnter -= Control_MouseEnter;
         Controls[0].MouseLeave -= Control_MouseLeave;
         Controls[1].MouseEnter -= Control_MouseEnter;
@@ -257,13 +158,11 @@ public class ModernNumericUpDown : NumericUpDown
 
     protected override void OnMouseDown(MouseEventArgs e)
     {
-        _mouseDown = true;
         Invalidate();
     }
 
     protected override void OnMouseUp(MouseEventArgs mevent)
     {
-        _mouseDown = false;
         Invalidate();
     }
 
