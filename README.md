@@ -4,14 +4,16 @@ ImageGlass - A lightweight, versatile image viewer
 [![Website](https://img.shields.io/badge/www-imageglass.org-0099BC.svg?maxAge=3600&color=%233097B8)](https://imageglass.org)
 [![GPL Licence](https://img.shields.io/badge/license-GPLv3-green.svg?maxAge=3600)](https://github.com/d2phap/ImageGlass/blob/master/LICENSE)
 [![Crowdin](https://d322cqt584bo4o.cloudfront.net/imageglass/localized.svg)](https://crowdin.com/project/imageglass)
+[![Total downloads](https://img.shields.io/github/downloads/d2phap/imageglass/total?color=%23d60068&label=Total%20downloads&&style=for-the-badge)](https://imageglass.org/download)
+[![Latest version downloads](https://img.shields.io/github/downloads/d2phap/imageglass/latest/total?color=%23e66700&label=Latest%20version&&style=for-the-badge)](https://imageglass.org/download)
 
 [![Discord](https://img.shields.io/discord/818852544859209748?label=chat&logo=discord&color=%233097B8&style=social)](https://discord.gg/tWjbynH2X8)
 [![Twitter Follow](https://img.shields.io/twitter/follow/duongdieuphap?style=social)](https://twitter.com/duongdieuphap)
 
 
-ImageGlass is a lightweight software designed for seamless viewing of images in a clean and intuitive interface. With support for over 88 common image formats including `WEBP`, `GIF`, `SVG`, `PNG`, `JXL`, `HEIC`,... ImageGlass also offers advanced features that cater to the needs of both regular users and designers, making it the excellent tool to enhance workflow efficiency.
+ImageGlass is a lightweight software designed for seamless viewing of images in a clean and intuitive interface. With support for over 90 common image formats including `WEBP`, `GIF`, `SVG`, `PNG`, `JXL`, `HEIC`,... ImageGlass also offers advanced features that cater to the needs of both regular users and designers, making it the excellent tool to enhance workflow efficiency.
 
-<a href="https://imageglass.org/news/announcing-imageglass-9-3-15-years-of-open-evolving-image-viewing-94">
+<a href="https://imageglass.org/news/announcing-imageglass-9-4-97">
 <img width="2400" height="809" alt="image" src="https://github.com/user-attachments/assets/4554f546-1f4d-4cfd-95b7-ac51d1caa3d9" />
 </a>
 
@@ -21,12 +23,6 @@ ImageGlass is a lightweight software designed for seamless viewing of images in 
 <a href="https://apps.microsoft.com/detail/9N33VZK3C7TH?launch=true&cid=GitHubRelease&mode=full">
   <img height="58" src="https://github.com/d2phap/ImageGlass/assets/3154213/08a071bb-a6ae-420c-b53b-2317004570d4" />
 </a>
-
-<br/>
-<a href="https://imageglass.org/download">
-  <img src="https://img.shields.io/github/downloads/d2phap/imageglass/total?color=%232A7C91&label=total%20downloads&style=for-the-badge" /></a>
-<a href="https://imageglass.org/download">
-  <img src="https://img.shields.io/github/downloads/d2phap/imageglass/latest/total?color=%232A7C91&label=latest%20version&style=for-the-badge" /></a>
 
 
 ### ImageGlass on Microsoft Store!
@@ -53,7 +49,7 @@ ImageGlass is a lightweight software designed for seamless viewing of images in 
 
 ## 👨‍💻 Development
 - Windows 11
-- Visual Studio 2022
+- Visual Studio 2026
 
 The `develop` branch contains the latest commits while the `prod` branch is for the final stable release.
 
@@ -73,10 +69,9 @@ ImageGlass is free for both personal and commercial use, except the Store versio
 For more information about ImageGlass, go to [ImageGlass Docs](https://imageglass.org/docs).
 
 
-## 🤼 Community and Support
+## 🧑‍🤝‍🧑 Community and Support
 - [GitHub issues](https://github.com/d2phap/ImageGlass/issues)
 - [ImageGlass Discord](https://discord.gg/tWjbynH2X8)
-- [Google forum](https://groups.google.com/forum/#!forum/imageglass)
 
 
 ## 💖 This project needs your help!
