@@ -21,10 +21,10 @@
     <ROW Property="MSIFASTINSTALL" MultiBuildValue="DefaultBuild:3"/>
     <ROW Property="Manufacturer" Value="Duong Dieu Phap"/>
     <ROW Property="MsiLogging" MultiBuildValue="DefaultBuild:vp"/>
-    <ROW Property="ProductCode" Value="1033:{33D97743-F1F1-4228-B80C-270D3F1AB172} " Type="16"/>
+    <ROW Property="ProductCode" Value="1033:{46A635B9-FE32-4AC9-8526-FE39C86D1004} " Type="16"/>
     <ROW Property="ProductLanguage" Value="1033"/>
     <ROW Property="ProductName" Value="ImageGlass"/>
-    <ROW Property="ProductVersion" Value="9.4.0.1120" Options="32"/>
+    <ROW Property="ProductVersion" Value="9.4.1.15" Options="32"/>
     <ROW Property="RUNAPPLICATION" Value="1" Type="4"/>
     <ROW Property="SecureCustomProperties" Value="OLDPRODUCTS;AI_NEWERPRODUCTFOUND"/>
     <ROW Property="UpgradeCode" Value="{877DB994-AB03-4025-B99D-41CE565E810B}"/>
@@ -375,7 +375,7 @@
     <ROW Component="libwebpdecoder.dll" ComponentId="{597F1483-B207-47D8-A36C-79330C333809}" Directory_="APPDIR" Attributes="256" KeyPath="libwebpdecoder.dll"/>
     <ROW Component="libwebpdemux.dll" ComponentId="{95F781C1-B256-4875-AFFF-41D66C1694F2}" Directory_="APPDIR" Attributes="256" KeyPath="libwebpdemux.dll"/>
     <ROW Component="mscordaccore.dll" ComponentId="{08684965-DF0B-45A8-9489-E567788EDB9A}" Directory_="APPDIR" Attributes="256" KeyPath="mscordaccore.dll"/>
-    <ROW Component="mscordaccore_amd64_amd64_10.0.25.52411.dll" ComponentId="{621FD27B-C34C-4D9B-85B8-66B3553BF2ED}" Directory_="APPDIR" Attributes="256" KeyPath="mscordaccore_amd64_amd64_10.0.25.52411.dll"/>
+    <ROW Component="mscordaccore_amd64_amd64_10.0.125.57005.dll" ComponentId="{AB6BF302-BE62-49E7-A601-95AF97C3D55A}" Directory_="APPDIR" Attributes="256" KeyPath="mscordaccore_amd64_amd64_10.0.125.57005.dll"/>
     <ROW Component="mscordbi.dll" ComponentId="{F4447044-CE25-4EF9-BC19-9E6858DD9D7F}" Directory_="APPDIR" Attributes="256" KeyPath="mscordbi.dll"/>
     <ROW Component="mscorlib.dll" ComponentId="{2B797DDA-8A28-4682-9EDC-576738DC8DB3}" Directory_="APPDIR" Attributes="0" KeyPath="mscorlib.dll"/>
     <ROW Component="mscorrc.dll" ComponentId="{7B5791D0-99D1-44E5-B62E-E45CAC1A9E78}" Directory_="APPDIR" Attributes="256" KeyPath="mscorrc.dll"/>
@@ -969,12 +969,12 @@
     <ROW File="ImageGlass.WebP.pdb" Component_="ImageGlass.WebP.dll" FileName="IMAGEG~7.PDB|ImageGlass.WebP.pdb" Attributes="0" SourcePath="..\..\Source\ImageGlass\bin\Publish\x64\ImageGlass.WebP.pdb" SelfReg="false"/>
     <ROW File="ImageGlass.WinTouch.pdb" Component_="ImageGlass.WinTouch.dll" FileName="IMAGEG~8.PDB|ImageGlass.WinTouch.pdb" Attributes="0" SourcePath="..\..\Source\ImageGlass\bin\Publish\x64\ImageGlass.WinTouch.pdb" SelfReg="false"/>
     <ROW File="default.webp" Component_="igcmd.dll.config" FileName="DEFAUL~1.WEB|default.webp" Attributes="0" SourcePath="..\..\Source\ImageGlass\bin\Publish\x64\default.webp" SelfReg="false"/>
-    <ROW File="mscordaccore_amd64_amd64_10.0.25.52411.dll" Component_="mscordaccore_amd64_amd64_10.0.25.52411.dll" FileName="MSCORD~2.DLL|mscordaccore_amd64_amd64_10.0.25.52411.dll" Attributes="0" SourcePath="..\..\Source\ImageGlass\bin\Publish\x64\mscordaccore_amd64_amd64_10.0.25.52411.dll" SelfReg="false"/>
     <ROW File="System.Linq.AsyncEnumerable.dll" Component_="System.Linq.AsyncEnumerable.dll" FileName="SYST~190.DLL|System.Linq.AsyncEnumerable.dll" Attributes="0" SourcePath="..\..\Source\ImageGlass\bin\Publish\x64\System.Linq.AsyncEnumerable.dll" SelfReg="false"/>
     <ROW File="System.Net.ServerSentEvents.dll" Component_="System.Net.ServerSentEvents.dll" FileName="SYST~191.DLL|System.Net.ServerSentEvents.dll" Attributes="0" SourcePath="..\..\Source\ImageGlass\bin\Publish\x64\System.Net.ServerSentEvents.dll" SelfReg="false"/>
     <ROW File="System.Private.Windows.GdiPlus.dll" Component_="System.Private.Windows.GdiPlus.dll" FileName="SYST~192.DLL|System.Private.Windows.GdiPlus.dll" Attributes="0" SourcePath="..\..\Source\ImageGlass\bin\Publish\x64\System.Private.Windows.GdiPlus.dll" SelfReg="false"/>
     <ROW File="System.Windows.Primitives.dll" Component_="System.Windows.Primitives.dll" FileName="SYST~193.DLL|System.Windows.Primitives.dll" Attributes="0" SourcePath="..\..\Source\ImageGlass\bin\Publish\x64\System.Windows.Primitives.dll" SelfReg="false"/>
     <ROW File="IG_Opera_Download.ps1" Component_="igcmd.dll.config" FileName="IG_OPE~1.PS1|IG_Opera_Download.ps1" Attributes="0" SourcePath="IG_Opera_Download.ps1" SelfReg="false"/>
+    <ROW File="mscordaccore_amd64_amd64_10.0.125.57005.dll" Component_="mscordaccore_amd64_amd64_10.0.125.57005.dll" FileName="MSCORD~2.DLL|mscordaccore_amd64_amd64_10.0.125.57005.dll" Attributes="0" SourcePath="..\..\Source\ImageGlass\bin\Publish\x64\mscordaccore_amd64_amd64_10.0.125.57005.dll" SelfReg="false"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.AiPersistentPropComponent">
     <ROW Property="AI_INSTALLPERUSER" Registry="AI_INSTALLPERUSER" HklmSearch="AI_INSTALLPERUSER" HkcuSearch="AI_INSTALLPERUSER_1" Hklm64Search="AI_INSTALLPERUSER_2" Hkcu64Search="AI_INSTALLPERUSER_3"/>
@@ -1660,11 +1660,11 @@
     <ROW Feature_="MainFeatures" Component_="WinRT.Runtime.dll"/>
     <ROW Feature_="MainFeatures" Component_="wpfgfx_cor3.dll"/>
     <ROW Feature_="MainFeatures" Component_="ZString.dll"/>
-    <ROW Feature_="MainFeatures" Component_="mscordaccore_amd64_amd64_10.0.25.52411.dll"/>
     <ROW Feature_="MainFeatures" Component_="System.Linq.AsyncEnumerable.dll"/>
     <ROW Feature_="MainFeatures" Component_="System.Net.ServerSentEvents.dll"/>
     <ROW Feature_="MainFeatures" Component_="System.Private.Windows.GdiPlus.dll"/>
     <ROW Feature_="MainFeatures" Component_="System.Windows.Primitives.dll"/>
+    <ROW Feature_="MainFeatures" Component_="mscordaccore_amd64_amd64_10.0.125.57005.dll"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiIconsComponent">
     <ROW Name="icon256.exe" SourcePath="..\..\Assets\Logo\2023\icon256.ico" Index="0"/>

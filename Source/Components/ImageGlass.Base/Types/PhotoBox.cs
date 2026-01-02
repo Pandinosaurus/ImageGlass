@@ -63,7 +63,7 @@ public enum ImageInterpolation : int
     /// <summary>
     /// Smooth scaling down (normal quality) and up (normal quality).
     /// </summary>
-    Antisotropic = 4,
+    Anisotropic = 4,
 
     /// <summary>
     /// Smooth scaling down (normal quality) and up (better quality).

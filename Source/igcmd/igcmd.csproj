@@ -7,11 +7,12 @@
         <UseWindowsForms>true</UseWindowsForms>
         <ImplicitUsings>enable</ImplicitUsings>
         <Platforms>x64;ARM64</Platforms>
+        <CetCompat>false</CetCompat>
 
         <AssemblyTitle>Igcmd: Command-line utility for ImageGlass</AssemblyTitle>
         <Copyright>Copyright © 2010 - 2026 Duong Dieu Phap</Copyright>
         <Company>Duong Dieu Phap</Company>
-        <Version>9.4.0.1120</Version>
+        <Version>9.4.1.15</Version>
         <FileVersion>$(Version)</FileVersion>
 
         <EntryPointExe>$(AssemblyName).exe</EntryPointExe>

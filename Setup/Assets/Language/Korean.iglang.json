@@ -426,7 +426,7 @@
     "FrmMain.MnuCutFile._Success": "{0} 개의 파일을 자릅니다.",
     "FrmSettings._ZoomSpeed": "확대/축소 속도",
     "FrmMain.MnuToggleTopMost._Disable": "항상 창을 맨 위에 사용 안 함",
-    "FrmSettings._ShouldUseExplorerSortOrder": "Use Explorer sort order if possible",
+    "FrmSettings._ShouldUseExplorerSortOrder": "가능하면 탐색기 정렬 순서 사용",
     "_.ImageInterpolation._Antisotropic": "반등방성",
     "FrmMain._ReachedFirstImage": "첫 번째 이미지에 도달했습니다.",
     "_._UnhandledException": "처리되지 않은 예외",

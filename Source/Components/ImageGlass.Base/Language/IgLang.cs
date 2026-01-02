@@ -16,7 +16,6 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-using Cysharp.Text;
 using ImageGlass.Base.PhotoBox;
 using ImageGlass.Base.Photoing.Codecs;
 using System.Collections;
@@ -361,7 +360,7 @@ public class IgLang : IDictionary<string, string>
             { $"_.{nameof(ImageInterpolation)}._{nameof(ImageInterpolation.Linear)}", "Linear" },
             { $"_.{nameof(ImageInterpolation)}._{nameof(ImageInterpolation.Cubic)}", "Cubic" },
             { $"_.{nameof(ImageInterpolation)}._{nameof(ImageInterpolation.MultiSampleLinear)}", "Multi-sample linear" },
-            { $"_.{nameof(ImageInterpolation)}._{nameof(ImageInterpolation.Antisotropic)}", "Antisotropic" },
+            { $"_.{nameof(ImageInterpolation)}._{nameof(ImageInterpolation.Anisotropic)}", "Anisotropic" },
             { $"_.{nameof(ImageInterpolation)}._{nameof(ImageInterpolation.HighQualityBicubic)}", "High quality bicubic" },
 
             #endregion // Enums

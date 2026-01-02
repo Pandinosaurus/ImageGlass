@@ -4,7 +4,7 @@
     "EnglishName": "German",
     "LocalName": "Deutsch",
     "Author": "Marcel Veronetzki (DasOni)",
-    "MinVersion": "9.1"
+    "MinVersion": "9.3"
   },
   "Items": {
     "FrmCrop.SelectionAspectRatio._Original": "Original",
@@ -426,7 +426,7 @@
     "FrmMain.MnuCutFile._Success": "{0} Datei(en) schneiden.",
     "FrmSettings._ZoomSpeed": "Zoomgeschwindigkeit",
     "FrmMain.MnuToggleTopMost._Disable": "Fenster immer oben deaktiviert",
-    "FrmSettings._ShouldUseExplorerSortOrder": "Use Explorer sort order if possible",
+    "FrmSettings._ShouldUseExplorerSortOrder": "Explorer-Sortierreihenfolge verwenden, wenn möglich",
     "_.ImageInterpolation._Antisotropic": "Antisotropisch",
     "FrmMain._ReachedFirstImage": "Erstes Bild erreicht",
     "_._UnhandledException": "Unbehandelte Ausnahme",
@@ -473,10 +473,10 @@
     "FrmMain.MnuRename": "Bild umbenennen…",
     "FrmMain.MnuViewLastFrame": "Letztes Bild anzeigen",
     "_._Webview2._NotFound": "Bitte installieren Sie die neueste Version von WebView2 Runtime.",
-    "FrmMain.MnuGetMoreTools": "Neue Fenster öffnen...",
+    "FrmMain.MnuGetMoreTools": "Weitere Tools erhalten…",
     "FrmSettings.Nav._Appearance": "Darstellung",
     "FrmSettings._SlideshowInterval": "Diashow-Intervall:",
-    "_.ImageInterpolation._HighQualityBicubic": "Hohe Qualität Bikubisch",
+    "_.ImageInterpolation._HighQualityBicubic": "Hohe Qualität bikubisch",
     "FrmColorPickerSettings.ChkShowHsvA": "HSV-Format mit Alpha-Wert verwenden",
     "FrmSettings.Tools._EditTool": "Externes Werkzeug bearbeiten",
     "_._Error": "Fehler",

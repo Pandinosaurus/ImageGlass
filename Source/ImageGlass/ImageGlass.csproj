@@ -9,12 +9,13 @@
         <Platforms>x64;ARM64</Platforms>
         <ApplicationIcon>icon256.ico</ApplicationIcon>
         <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+        <CetCompat>false</CetCompat>
 
         <AssemblyTitle>ImageGlass</AssemblyTitle>
         <Description>A lightweight, versatile image viewer</Description>
         <Copyright>Copyright © 2010 - 2026 Duong Dieu Phap</Copyright>
         <Company>Duong Dieu Phap</Company>
-        <Version>9.4.0.1120</Version>
+        <Version>9.4.1.15</Version>
         <FileVersion>$(Version)</FileVersion>
 
         <EntryPointExe>$(AssemblyName).exe</EntryPointExe>
