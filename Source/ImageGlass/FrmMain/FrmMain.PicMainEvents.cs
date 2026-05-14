@@ -102,7 +102,7 @@ public partial class FrmMain
         // get foreground shell
         if (Config.ShouldUseExplorerSortOrder)
         {
-            using var shell = new EggShell();
+            var shell = new EggShell();
             Program.ForegroundShell = shell.GetForegroundWindowView();
         }
 

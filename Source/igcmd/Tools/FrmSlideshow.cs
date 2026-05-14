@@ -1355,7 +1355,21 @@ public partial class FrmSlideshow : ThemedForm
             }
         }
 
-
+        // DPI
+        if (updateAll || types!.Value.HasFlag(ImageInfoUpdateTypes.DPI))
+        {
+            if (Config.ImageInfoTags.Contains(nameof(ImageInfo.DPI))
+                && _currentMetadata != null
+                && _currentMetadata.DpiX > 0
+                && _currentMetadata.DpiY > 0)
+            {
+                ImageInfo.DPI = $"{_currentMetadata.DpiX:n0}×{_currentMetadata.DpiY:n0} DPI";
+            }
+            else
+            {
+                ImageInfo.DPI = string.Empty;
+            }
+        }
 
         Text = ImageInfo.ToString(Config.ImageInfoTags, false);
     }

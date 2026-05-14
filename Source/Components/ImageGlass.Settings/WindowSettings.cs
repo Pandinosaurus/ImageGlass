@@ -46,7 +46,23 @@ public partial class WindowSettings
 
         if (isBoundsVisible)
         {
-            frm.Bounds = bounds;
+            frm.StartPosition = FormStartPosition.Manual;
+
+            if (frm.IsHandleCreated
+                && WindowApi.SetWindowPlacement(frm.Handle, bounds, formState))
+            {
+                // Let the pending WM_DPICHANGED / layout messages drain so
+                // the form is fully on the destination monitor at its new
+                // DPI before we re-apply the exact saved rectangle.
+                Application.DoEvents();
+
+                WindowApi.SetWindowPlacement(frm.Handle, bounds, formState);
+            }
+            else
+            {
+                frm.Bounds = bounds;
+                frm.WindowState = formState;
+            }
         }
         else
         {
@@ -54,9 +70,8 @@ public partial class WindowSettings
             // Prevent us from appearing off-screen.
             frm.StartPosition = FormStartPosition.WindowsDefaultLocation;
             frm.Size = new(bounds.Width, bounds.Height);
+            frm.WindowState = formState;
         }
-
-        frm.WindowState = formState;
 
         // flush all pending paint tasks
         Application.DoEvents();

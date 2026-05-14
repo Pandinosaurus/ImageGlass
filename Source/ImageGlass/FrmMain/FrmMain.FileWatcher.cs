@@ -17,8 +17,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+using D2Phap.FileWatcherEx;
 using DirectN;
-using FileWatcherEx;
 using ImageGlass.Base;
 using ImageGlass.Settings;
 

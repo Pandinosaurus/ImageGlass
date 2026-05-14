@@ -1,4 +1,4 @@
-﻿/*
+/*
 ImageGlass Project - Image viewer for Windows
 Copyright (C) 2010 - 2026 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
@@ -890,6 +890,7 @@ public class Local
         if (Config.SetFromJson(dict, nameof(Config.ShouldLoadHiddenImages)).Done) { reloadImgList = true; }
 
         _ = Config.SetFromJson(dict, nameof(Config.EnableLoopBackNavigation));
+        _ = Config.SetFromJson(dict, nameof(Config.EnableAutoSwitchSiblingDir));
         _ = Config.SetFromJson(dict, nameof(Config.ShowImagePreview));
         _ = Config.SetFromJson(dict, nameof(Config.EnableImageAsyncLoading));
 

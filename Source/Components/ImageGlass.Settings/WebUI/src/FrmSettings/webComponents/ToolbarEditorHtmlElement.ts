@@ -5,10 +5,10 @@ import { arrayMoveMutable, pause } from '@/helpers';
 export type TEditButtonFn = (btn: IToolbarButton) => Promise<IToolbarButton | null>;
 
 export class ToolbarEditorHtmlElement extends HTMLElement {
-  #listAvailableEl: HTMLUListElement;
+  #listAvailableEl!: HTMLUListElement;
 
-  #itemsCurrent: IToolbarButton[];
-  #listCurrentEl: HTMLUListElement;
+  #itemsCurrent!: IToolbarButton[];
+  #listCurrentEl!: HTMLUListElement;
 
   #hasChanges = false;
   #dragData: { fromSource: string, fromIndex: number } = {
@@ -16,7 +16,7 @@ export class ToolbarEditorHtmlElement extends HTMLElement {
     fromIndex: -1,
   };
 
-  #editButtonFn: TEditButtonFn;
+  #editButtonFn!: TEditButtonFn;
 
   constructor() {
     super();
@@ -300,8 +300,9 @@ export class ToolbarEditorHtmlElement extends HTMLElement {
 
   private onBtnToolbarDragStart(e: DragEvent) {
     const btnEl = e.target as HTMLButtonElement;
-    const fromIndex = +btnEl.parentElement.getAttribute('data-index');
-    const source = btnEl.closest('.toolbar-list').getAttribute('data-source');
+    const fromIndex = +(btnEl.parentElement?.getAttribute('data-index') || '-1');
+    const source = btnEl.closest('.toolbar-list')?.getAttribute('data-source') || '';
+    if (fromIndex < 0 || !source || !e.dataTransfer) return;
 
     // set drag data
     this.#dragData = { fromSource: source, fromIndex };
@@ -321,8 +322,10 @@ export class ToolbarEditorHtmlElement extends HTMLElement {
   private onToolbarItemDragEnter(e: DragEvent, dropEl: HTMLElement) {
     e.preventDefault();
     const { fromSource, fromIndex } = this.#dragData;
-    const toIndex = +dropEl.getAttribute('data-index');
-    const toSource = dropEl.closest('.toolbar-list').getAttribute('data-source');
+    const toIndex = +(dropEl.getAttribute('data-index') || '-1');
+    const toSource = dropEl.closest('.toolbar-list')?.getAttribute('data-source') || '';
+    if (toIndex < 0 || !toSource) return;
+
     if (fromIndex === toIndex) return;
 
     const cssClass = ['drag--enter'];
@@ -335,6 +338,8 @@ export class ToolbarEditorHtmlElement extends HTMLElement {
 
   private onToolbarItemDragOver(e: DragEvent) {
     e.preventDefault();
+    if (!e.dataTransfer) return;
+
     e.dataTransfer.dropEffect = 'move';
   }
 
@@ -359,8 +364,10 @@ export class ToolbarEditorHtmlElement extends HTMLElement {
     if (this.#dragData.fromIndex === -1) return;
 
     const { fromSource, fromIndex } = this.#dragData;
-    const toIndex = +toDropEl.getAttribute('data-index');
-    const toSource = toDropEl.closest('.toolbar-list').getAttribute('data-source');
+    const toIndex = +(toDropEl.getAttribute('data-index') || '-1');
+    const toSource = toDropEl.closest('.toolbar-list')?.getAttribute('data-source') || '';
+    if (toIndex < 0 || !toSource) return;
+
     this.#dragData = { fromSource: '', fromIndex: -1 };
 
     // move item
@@ -379,8 +386,9 @@ export class ToolbarEditorHtmlElement extends HTMLElement {
     e.preventDefault();
 
     const el = e.target as HTMLButtonElement;
-    const action = el.getAttribute('data-action').toLocaleLowerCase();
-    const btnIndex = +el.closest('.toolbar-item').getAttribute('data-index');
+    const action = (el.getAttribute('data-action') || '').toLocaleLowerCase();
+    const btnIndex = +(el.closest('.toolbar-item')?.getAttribute('data-index') || '-1');
+    if (!action || btnIndex < 0) return;
 
     if (action === 'move_up') {
       this.moveToolbarButton(btnIndex, btnIndex - 1);
@@ -446,7 +454,7 @@ export class ToolbarEditorHtmlElement extends HTMLElement {
 
     const newBtn = await Promise.resolve(this.#editButtonFn({
       ...btn,
-      ImageUrl: undefined,
+      ImageUrl: '',
     }));
     if (!newBtn) return;
 

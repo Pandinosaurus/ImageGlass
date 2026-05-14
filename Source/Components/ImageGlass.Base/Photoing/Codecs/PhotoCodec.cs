@@ -115,6 +115,11 @@ public static class PhotoCodec
                     meta.RenderedHeight = imgM.Height;
                 }
 
+                // DPI
+                var density = imgM.Density;
+                // Convert units to inch
+                meta.DpiX = (float)density.X * 2.54f;
+                meta.DpiY = (float)density.Y * 2.54f;
 
                 // image color
                 meta.HasAlpha = imgC.Any(i => i.HasAlpha);

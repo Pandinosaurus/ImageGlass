@@ -108,6 +108,7 @@ export default class TabFileAssocs {
       el.addEventListener('click', async () => {
         const action = el.getAttribute('data-action');
         const trEl = el.closest('tr');
+        if (!trEl) return;
 
         if (action === 'delete') {
           trEl.remove();

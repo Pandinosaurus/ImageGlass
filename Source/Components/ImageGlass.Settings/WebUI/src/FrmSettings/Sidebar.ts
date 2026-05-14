@@ -35,8 +35,8 @@ export default class Sidebar {
     tabPageEl.classList.add('active');
 
     // select the active nav item
-    const allNavItems = queryAll('input[type="radio"]');
-    allNavItems.forEach((item: HTMLInputElement) => item.checked = false);
+    const allNavItems = queryAll<HTMLInputElement>('input[type="radio"]');
+    allNavItems.forEach(item => item.checked = false);
     const navItem = query(`input[type="radio"][value="${tabPageName}"]`) as HTMLInputElement;
     if (navItem) navItem.checked = true;
 

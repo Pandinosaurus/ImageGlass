@@ -90,7 +90,7 @@ export class ToolDialogHtmlElement extends HTMLDialogElement {
       query('[name="_ToolId"]', this).toggleAttribute('disabled', false);
 
       const hotkeyListEl = query<HTMLUListElement>('.ig-list-horizontal', this);
-      await renderHotkeyListEl(hotkeyListEl, defaultTool.Hotkeys);
+      await renderHotkeyListEl(hotkeyListEl, defaultTool.Hotkeys || []);
     });
 
     return isSubmitted;
@@ -123,7 +123,7 @@ export class ToolDialogHtmlElement extends HTMLDialogElement {
       query('[name="_ToolId"]', this).toggleAttribute('disabled', true);
 
       const hotkeyListEl = query<HTMLUListElement>('.ig-list-horizontal', this);
-      await renderHotkeyListEl(hotkeyListEl, tool.Hotkeys);
+      await renderHotkeyListEl(hotkeyListEl, tool.Hotkeys || []);
     });
 
     return isSubmitted;

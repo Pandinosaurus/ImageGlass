@@ -25,7 +25,8 @@ export default class TabTools {
    * Adds events for tab Tools.
    */
   static addEvents() {
-    query('#Btn_AddTool').addEventListener('click', () => TabTools.openToolDialog(), false);
+    const addToolEl = query('#Btn_AddTool');
+    addToolEl?.addEventListener('click', () => TabTools.openToolDialog(), false);
   }
 
 
@@ -53,7 +54,9 @@ export default class TabTools {
   private static loadToolList(list?: ITool[], toolIdHighlight = '') {
     const toolList: ITool[] = list ?? _pageSettings.toolList ?? [];
 
-    const tbodyEl = query<HTMLTableElement>('#Table_ToolList > tbody');
+    const tbodyEl = query<HTMLTableSectionElement>('#Table_ToolList > tbody');
+    if (!tbodyEl) return;
+
     let tbodyHtml = '';
     const btnDeleteHtml = `
       <button type="button" class="btn--icon px-1 ms-1" lang-title="_._Delete" data-action="delete">
@@ -116,13 +119,15 @@ export default class TabTools {
       el.addEventListener('click', async () => {
         const action = el.getAttribute('data-action');
         const trEl = el.closest('tr');
+        if (!trEl) return;
+
         const toolId = trEl.getAttribute('data-toolId');
 
         if (action === 'delete') {
           trEl.remove();
           TabTools._areToolsChanged = true;
         }
-        else if (action === 'edit') {
+        else if (action === 'edit' && toolId) {
           await TabTools.openToolDialog(toolId);
           el.focus();
         }
@@ -151,12 +156,12 @@ export default class TabTools {
     const trEls = queryAll<HTMLTableRowElement>('#Table_ToolList > tbody > tr');
     const toolList = trEls.map(trEl => {
       const toolId = trEl.getAttribute('data-toolId') || '';
-      const toolName = query('[name="_ToolName"]', trEl).innerText || '';
-      const toolIntegrated = (query('[name="_IsIntegrated"]', trEl).innerText) === 'true';
-      const toolExecutable = query('[name="_Executable"]', trEl).innerText || '';
-      const toolArgument = query('[name="_Argument"]', trEl).innerText || '';
+      const toolName = query('[name="_ToolName"]', trEl)?.innerText || '';
+      const toolIntegrated = (query('[name="_IsIntegrated"]', trEl)?.innerText || '') === 'true';
+      const toolExecutable = query('[name="_Executable"]', trEl)?.innerText || '';
+      const toolArgument = query('[name="_Argument"]', trEl)?.innerText || '';
 
-      const hotkeysStr = query('[name="_Hotkeys"]', trEl).innerText || '';
+      const hotkeysStr = query('[name="_Hotkeys"]', trEl)?.innerText || '';
       const toolHotkeys = hotkeysStr.split(TabTools.HOTKEY_SEPARATOR).filter(Boolean);
 
       return {
@@ -177,19 +182,22 @@ export default class TabTools {
    * Open tool dialog for create or edit.
    */
   private static async openToolDialog(toolId?: string) {
+    const toolDialog = TabTools.#toolDialog;
+    if (!toolDialog) return;
+
     let isSubmitted = false;
 
     if (toolId) {
-      isSubmitted = await TabTools.#toolDialog.openEdit(toolId);
+      isSubmitted = await toolDialog.openEdit(toolId);
     }
     else {
-      isSubmitted = await TabTools.#toolDialog.openCreate();
+      isSubmitted = await toolDialog.openCreate();
     }
 
     if (isSubmitted) {
       TabTools._areToolsChanged = true;
 
-      const tool = TabTools.#toolDialog.getDialogData();
+      const tool = toolDialog.getDialogData();
       TabTools.setToolItemToList(tool.ToolId, tool);
     }
   }

@@ -1,4 +1,4 @@
-﻿/*
+/*
 ImageGlass Project - Image viewer for Windows
 Copyright (C) 2010 - 2026 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
@@ -43,6 +43,8 @@ public partial class FrmMain : ThemedForm
     private MovableForm? _movableForm;
     private FileFinder? _fileFinder = new();
     string? _inputFilePath;
+    private bool _pendingNavigateToLast;
+    private string? _pendingSwitchDirMessage;
 
 
     // variable to back up / restore window layout when changing window mode
@@ -440,6 +442,86 @@ public partial class FrmMain : ThemedForm
 
 
     /// <summary>
+    /// Gets the next or previous sibling directory relative to the current one.
+    /// </summary>
+    /// <param name="direction">+1 for next, -1 for previous</param>
+    /// <returns>Full path of the sibling directory, or <c>null</c> if none exists.</returns>
+    private static string? GetSiblingDirectory(int direction)
+    {
+        // prefer deriving directory from the current image path
+        string? currentDir = null;
+
+        if (Local.CurrentIndex >= 0 && Local.CurrentIndex < Local.Images.Length)
+        {
+            var imgPath = Local.Images.GetFilePath(Local.CurrentIndex);
+            if (!string.IsNullOrEmpty(imgPath))
+            {
+                currentDir = Path.GetDirectoryName(imgPath);
+            }
+        }
+
+        if (string.IsNullOrEmpty(currentDir))
+        {
+            currentDir = Local.InitialInputPath;
+        }
+
+        if (string.IsNullOrEmpty(currentDir)) return null;
+
+        // ensure we have a directory path, not a file path
+        if (File.Exists(currentDir))
+        {
+            currentDir = Path.GetDirectoryName(currentDir);
+            if (string.IsNullOrEmpty(currentDir)) return null;
+        }
+
+        var parentDir = Directory.GetParent(currentDir)?.FullName;
+        if (string.IsNullOrEmpty(parentDir)) return null;
+
+        try
+        {
+            var siblingDirs = Directory.GetDirectories(parentDir)
+                .OrderBy(d => d, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            var currentIndex = siblingDirs.FindIndex(d =>
+                string.Equals(d, currentDir, StringComparison.OrdinalIgnoreCase));
+            if (currentIndex < 0) return null;
+
+            var nextIndex = currentIndex + direction;
+            while (nextIndex >= 0 && nextIndex < siblingDirs.Count)
+            {
+                if (DirectoryContainsImages(siblingDirs[nextIndex]))
+                    return siblingDirs[nextIndex];
+                nextIndex += direction;
+            }
+        }
+        catch (UnauthorizedAccessException) { }
+        catch (IOException) { }
+
+        return null;
+    }
+
+
+    /// <summary>
+    /// Checks if a directory contains at least one supported image file.
+    /// </summary>
+    private static bool DirectoryContainsImages(string dirPath)
+    {
+        try
+        {
+            return Directory.EnumerateFiles(dirPath)
+                .Any(f =>
+                {
+                    var ext = Path.GetExtension(f).ToLowerInvariant();
+                    return ext.Length > 0 && Config.FileFormats.Contains(ext);
+                });
+        }
+        catch (UnauthorizedAccessException) { return false; }
+        catch (IOException) { return false; }
+    }
+
+
+    /// <summary>
     /// Load the images list.
     /// </summary>
     /// <param name="inputPaths">The list of files to load</param>
@@ -700,6 +782,19 @@ public partial class FrmMain : ThemedForm
                             FilePath = oldImgPath,
                         }, nameof(Local.RaiseLastImageReachedEvent)));
 
+                        if (Config.EnableAutoSwitchSiblingDir)
+                        {
+                            var nextDir = GetSiblingDirectory(1);
+                            if (nextDir != null)
+                            {
+                                _pendingSwitchDirMessage = string.Format(
+                                    Config.Language[$"{Name}._SwitchedToNextDirectory"],
+                                    Path.GetFileName(nextDir));
+                                PrepareLoading(nextDir, true);
+                                return;
+                            }
+                        }
+
                         if (!Config.EnableLoopBackNavigation || Local.Images.Length == 1)
                         {
                             // if the image is not rendered yet
@@ -722,6 +817,19 @@ public partial class FrmMain : ThemedForm
                             FilePath = oldImgPath,
                         }, nameof(Local.RaiseFirstImageReachedEvent)));
 
+                        if (Config.EnableAutoSwitchSiblingDir)
+                        {
+                            var prevDir = GetSiblingDirectory(-1);
+                            if (prevDir != null)
+                            {
+                                _pendingSwitchDirMessage = string.Format(
+                                    Config.Language[$"{Name}._SwitchedToPrevDirectory"],
+                                    Path.GetFileName(prevDir));
+                                _pendingNavigateToLast = true;
+                                PrepareLoading(prevDir, true);
+                                return;
+                            }
+                        }
 
                         if (!Config.EnableLoopBackNavigation || Local.Images.Length == 1)
                         {
@@ -1134,6 +1242,12 @@ public partial class FrmMain : ThemedForm
         LoadImageInfo(ImageInfoUpdateTypes.Dimension | ImageInfoUpdateTypes.FrameCount);
 
 
+        if (_pendingSwitchDirMessage != null)
+        {
+            PicMain.ShowMessage(_pendingSwitchDirMessage, Config.InAppMessageDuration);
+            _pendingSwitchDirMessage = null;
+        }
+
         // Collect system garbage
         Local.GcCollect();
     }
@@ -1144,6 +1258,13 @@ public partial class FrmMain : ThemedForm
         if (!string.IsNullOrEmpty(e.InitFilePath))
         {
             UpdateCurrentIndex(e.InitFilePath);
+        }
+
+        if (_pendingNavigateToLast && Local.Images.Length > 0)
+        {
+            _pendingNavigateToLast = false;
+            Local.CurrentIndex = Local.Images.Length - 1;
+            _ = ViewNextCancellableAsync(0);
         }
 
         LoadImageInfo(ImageInfoUpdateTypes.ListCount);
@@ -1159,6 +1280,8 @@ public partial class FrmMain : ThemedForm
 
     private void HandleImage_FirstReached()
     {
+        if (Config.EnableAutoSwitchSiblingDir) return;
+
         if (!Config.EnableLoopBackNavigation || Local.Images.Length == 1)
         {
             PicMain.ShowMessage(Config.Language[$"{Name}._ReachedFirstImage"],
@@ -1169,6 +1292,8 @@ public partial class FrmMain : ThemedForm
 
     private void HandleImage_LastReached()
     {
+        if (Config.EnableAutoSwitchSiblingDir) return;
+
         if (!Config.EnableLoopBackNavigation || Local.Images.Length == 1)
         {
             PicMain.ShowMessage(Config.Language[$"{Name}._ReachedLastLast"],
@@ -1567,8 +1692,22 @@ public partial class FrmMain : ThemedForm
                 }
             }
 
+            // DPI
+            if (updateAll || types!.Value.HasFlag(ImageInfoUpdateTypes.DPI))
+            {
+                if (Config.ImageInfoTags.Contains(nameof(ImageInfo.DPI))
+                    && Local.Metadata != null
+                    && Local.Metadata.DpiX > 0
+                    && Local.Metadata.DpiY > 0)
+                {
+                    ImageInfo.DPI = $"{Local.Metadata.DpiX:n0}×{Local.Metadata.DpiY:n0} DPI";
+                }
+                else
+                {
+                    ImageInfo.DPI = string.Empty;
+                }
+            }
         }
-
 
         Text = ImageInfo.ToString(Config.ImageInfoTags, Local.ClipboardImage != null, clipboardImageText);
     }

@@ -19,7 +19,10 @@ export default class TabToolbar {
    * Loads settings for tab Toolbar.
    */
   static loadSettings() {
-    TabToolbar.#toolbarEditor.initialize(TabToolbar.onEditToolbarButton);
+    const toolbarEditor = TabToolbar.#toolbarEditor;
+    if (!toolbarEditor) return;
+
+    toolbarEditor.initialize(TabToolbar.onEditToolbarButton);
   }
 
 
@@ -27,8 +30,11 @@ export default class TabToolbar {
    * Adds events for tab Toolbar.
    */
   static addEvents() {
-    query('#Btn_AddCustomToolbarButton').addEventListener('click', TabToolbar.onBtnAddCustomToolbarButtonClick, false);
-    query('#Btn_ResetToolbarButtons').addEventListener('click', TabToolbar.onBtnResetToolbarButtonsClick, false);
+    const addBtnEl = query('#Btn_AddCustomToolbarButton');
+    const resetBtnEl = query('#Btn_ResetToolbarButtons');
+
+    addBtnEl?.addEventListener('click', TabToolbar.onBtnAddCustomToolbarButtonClick, false);
+    resetBtnEl?.addEventListener('click', TabToolbar.onBtnResetToolbarButtonsClick, false);
   }
 
 
@@ -37,9 +43,11 @@ export default class TabToolbar {
    */
   static exportSettings() {
     const settings = getChangedSettingsFromTab('toolbar');
+    const toolbarEditor = TabToolbar.#toolbarEditor;
+    if (!toolbarEditor) return settings;
 
-    if (TabToolbar.#toolbarEditor.hasChanges) {
-      settings.ToolbarButtons = TabToolbar.#toolbarEditor.currentButtons;
+    if (toolbarEditor.hasChanges) {
+      settings.ToolbarButtons = toolbarEditor.currentButtons;
     }
     else {
       delete settings.ToolbarButtons;
@@ -50,17 +58,24 @@ export default class TabToolbar {
 
 
   private static async onBtnResetToolbarButtonsClick() {
+    const toolbarEditor = TabToolbar.#toolbarEditor;
+    if (!toolbarEditor) return;
+
     const defaultToolbarIds = await postAsync<string[]>('Btn_ResetToolbarButtons');
-    TabToolbar.#toolbarEditor.loadItemsByIds(defaultToolbarIds);
+    toolbarEditor.loadItemsByIds(defaultToolbarIds);
   }
 
   private static async onBtnAddCustomToolbarButtonClick() {
-    const isSubmitted = await TabToolbar.#toolbarBtnDialog.openCreate();
+    const toolbarEditor = TabToolbar.#toolbarEditor;
+    const toolbarBtnDialog = TabToolbar.#toolbarBtnDialog;
+    if (!toolbarEditor || !toolbarBtnDialog) return;
+
+    const isSubmitted = await toolbarBtnDialog.openCreate();
     if (!isSubmitted) return;
 
-    const data = TabToolbar.#toolbarBtnDialog.getDialogData();
+    const data = toolbarBtnDialog.getDialogData();
     const btn = JSON.parse(data.ButtonJson) as IToolbarButton;
-    const themeBtnIconUrl = TabToolbar.currentTheme.ToolbarIcons[btn.Image];
+    const themeBtnIconUrl = TabToolbar.currentTheme?.ToolbarIcons?.[btn.Image] ?? '';
 
     // image is theme icon
     if (themeBtnIconUrl) {
@@ -72,16 +87,19 @@ export default class TabToolbar {
       btn.ImageUrl = imgUrl.toString();
     }
 
-    TabToolbar.#toolbarEditor.insertItems(btn, 0);
+    toolbarEditor.insertItems(btn, 0);
   }
 
   private static async onEditToolbarButton(toolbarBtn: IToolbarButton) {
-    const isSubmitted = await TabToolbar.#toolbarBtnDialog.openEdit(toolbarBtn);
+    const toolbarBtnDialog = TabToolbar.#toolbarBtnDialog;
+    if (!toolbarBtnDialog) return null;
+
+    const isSubmitted = await toolbarBtnDialog.openEdit(toolbarBtn);
     if (!isSubmitted) return null;
 
-    const data = TabToolbar.#toolbarBtnDialog.getDialogData();
+    const data = toolbarBtnDialog.getDialogData();
     const btn = JSON.parse(data.ButtonJson) as IToolbarButton;
-    const themeBtnIconUrl = TabToolbar.currentTheme.ToolbarIcons[btn.Image];
+    const themeBtnIconUrl = TabToolbar.currentTheme?.ToolbarIcons?.[btn.Image] ?? '';
 
     // image is theme icon
     if (themeBtnIconUrl) {

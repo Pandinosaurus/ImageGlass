@@ -41,4 +41,6 @@ public enum ImageInfoUpdateTypes
 
     ExifRating = 1 << 13,
     ColorSpace = 1 << 14,
+    
+    DPI = 1 << 15
 }

@@ -112,6 +112,11 @@ public class CustomDateTimeConverter(string format) : JsonConverter<DateTime>
 
     public override DateTime Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        return DateTime.ParseExact(reader.GetString(), Format, null);
+        if (DateTime.TryParse(reader.GetString(), out var dt))
+        {
+            return dt;
+        }
+
+        return default;
     }
 }

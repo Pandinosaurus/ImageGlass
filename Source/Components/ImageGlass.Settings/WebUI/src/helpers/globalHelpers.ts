@@ -5,11 +5,20 @@ import { WebviewEventHandlerFn } from './webview';
 /**
  * Gets the first matched element with the query selector.
  */
-export const query = <T = HTMLElement>(
+export function query<T = HTMLElement>(
   selector: string,
-  parentEl: HTMLElement = null,
+  parentEl?: HTMLElement | Document | null,
+): T;
+export function query<T = HTMLElement>(
+  selector: string,
+  parentEl: HTMLElement | Document | null,
+  hideWarning: true,
+): T | null;
+export function query<T = HTMLElement>(
+  selector: string,
+  parentEl: HTMLElement | Document | null = null,
   hideWarning = false,
-): T | null => {
+): T | null {
   try {
     const fromEl = parentEl ?? document;
     const el = fromEl.querySelector(selector) as T;
@@ -23,7 +32,7 @@ export const query = <T = HTMLElement>(
   catch {}
 
   return null;
-};
+}
 
 
 /**
@@ -31,7 +40,7 @@ export const query = <T = HTMLElement>(
  */
 export const queryAll = <T = HTMLElement>(
   selector: string,
-  parentEl: HTMLElement = null,
+  parentEl: HTMLElement | Document | null = null,
   hideWarning = false,
 ) => {
   try {
@@ -91,7 +100,7 @@ export const post = (name: string, data?: any, convertToJson = false) => {
  */
 export const postAsync = async <T = unknown>(name: string, data?: any, convertToJson = false) => {
   let hasResult = false;
-  let result: T = null;
+  let result: T | undefined = undefined;
 
   on(name, (eventName, eventData) => {
     if (eventName !== name) return;
@@ -108,5 +117,5 @@ export const postAsync = async <T = unknown>(name: string, data?: any, convertTo
     await pause(100);
   }
 
-  return result;
+  return result as T;
 };

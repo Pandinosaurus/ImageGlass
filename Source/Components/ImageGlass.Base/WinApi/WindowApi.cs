@@ -17,7 +17,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 using System.Runtime.InteropServices;
-using System.Windows.Forms;
 using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.Graphics.Dwm;
@@ -370,29 +369,66 @@ public class WindowApi
     /// </summary>
     public static (Rectangle Bounds, FormWindowState State) GetWindowPlacement(Form frm)
     {
-        var bounds = new Rectangle();
         var state = FormWindowState.Normal;
         var wp = new WINDOWPLACEMENT();
 
-        if (frm.WindowState == FormWindowState.Normal)
-        {
-            bounds = frm.Bounds;
-        }
-        else if (PInvoke.GetWindowPlacement(new(frm.Handle), ref wp))
+        if (PInvoke.GetWindowPlacement(new(frm.Handle), ref wp))
         {
             if (wp.showCmd == Windows.Win32.UI.WindowsAndMessaging.SHOW_WINDOW_CMD.SW_MAXIMIZE)
             {
                 state = FormWindowState.Maximized;
             }
 
-            bounds = new(
+            var bounds = new Rectangle(
                 wp.rcNormalPosition.X,
                 wp.rcNormalPosition.Y,
                 wp.rcNormalPosition.Width,
                 wp.rcNormalPosition.Height);
+
+            return (bounds, state);
         }
 
-        return (bounds, state);
+        // Fallback if the Win32 call fails for any reason.
+        return (frm.Bounds, frm.WindowState);
+    }
+
+
+    /// <summary>
+    /// Restores a window's normal-state bounds and show state via the Win32
+    /// <c>SetWindowPlacement</c> API.
+    /// </summary>
+    /// <remarks>
+    /// Bypasses WinForms' automatic DPI rescaling that occurs when assigning
+    /// <see cref="Form.Bounds"/> on a per-monitor-DPI form. Setting
+    /// <c>Form.Bounds</c> on such a form triggers <c>WM_DPICHANGED</c> /
+    /// <c>PerformAutoScale</c> when the new bounds resolve to a monitor with a
+    /// different DPI than the form's current scale, causing the size to grow
+    /// (or shrink) by the DPI ratio every launch. <c>SetWindowPlacement</c>
+    /// places the window in screen (physical) coordinates without that
+    /// rescale. The window's handle must already be created.
+    /// </remarks>
+    public static bool SetWindowPlacement(IntPtr handle, Rectangle normalBounds, FormWindowState state)
+    {
+        var wp = new WINDOWPLACEMENT
+        {
+            length = (uint)Marshal.SizeOf<WINDOWPLACEMENT>(),
+            flags = 0,
+            showCmd = state switch
+            {
+                FormWindowState.Maximized => Windows.Win32.UI.WindowsAndMessaging.SHOW_WINDOW_CMD.SW_SHOWMAXIMIZED,
+                FormWindowState.Minimized => Windows.Win32.UI.WindowsAndMessaging.SHOW_WINDOW_CMD.SW_SHOWMINIMIZED,
+                _ => Windows.Win32.UI.WindowsAndMessaging.SHOW_WINDOW_CMD.SW_SHOWNORMAL,
+            },
+            rcNormalPosition = new RECT
+            {
+                left = normalBounds.Left,
+                top = normalBounds.Top,
+                right = normalBounds.Right,
+                bottom = normalBounds.Bottom,
+            },
+        };
+
+        return PInvoke.SetWindowPlacement(new HWND(handle), in wp);
     }
 }
 

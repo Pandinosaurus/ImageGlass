@@ -1,16 +1,16 @@
 {
   "compilerOptions": {
     "typeRoots": ["./node_modules/@types", "./src/@types"],
+    "rootDir": "./",
     "outDir": "./dist/dist",
     "noImplicitAny": true,
     "declaration": true,
     "esModuleInterop": true,
+    "skipLibCheck": true,
     "sourceMap": true,
     "module": "ESNext",
     "target": "ESNext",
     "allowJs": true,
-    "moduleResolution": "node",
-    "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
     }

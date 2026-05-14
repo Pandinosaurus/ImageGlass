@@ -1,3 +1,5 @@
+@use "../basis/mixins" as *;
+
 select {
   @include baseControl();
 

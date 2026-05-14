@@ -1,4 +1,4 @@
-﻿{
+{
   "_Metadata": {
     "Code": "zh-CN",
     "EnglishName": "Chinese (Simplified)",
@@ -499,6 +499,9 @@
     "FrmMain.MnuLayout": "布局",
     "_._Website": "网站",
     "FrmMain.MnuPasteImage": "粘贴图像",
-    "FrmSettings._ShowGalleryScrollbars": "显示相册滚动条"
+    "FrmSettings._ShowGalleryScrollbars": "显示相册滚动条",
+    "FrmSettings._EnableAutoSwitchSiblingDir": "当前目录图片加载完毕后自动切换到下/上一个目录",
+    "FrmMain._SwitchedToNextDirectory": "已切换到下一个目录：{0}",
+    "FrmMain._SwitchedToPrevDirectory": "已切换到上一个目录：{0}"
   }
 }

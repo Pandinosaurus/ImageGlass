@@ -10,13 +10,9 @@ ImageGlass - A lightweight, versatile image viewer
 [![GPL Licence](https://img.shields.io/badge/license-GPLv3-green.svg?maxAge=3600)](https://github.com/d2phap/ImageGlass/blob/master/LICENSE)
 [![Crowdin](https://d322cqt584bo4o.cloudfront.net/imageglass/localized.svg)](https://crowdin.com/project/imageglass)
 
-
 ImageGlass is a lightweight software designed for seamless viewing of images in a clean and intuitive interface. With support for over 90 common image formats including `WEBP`, `GIF`, `SVG`, `PNG`, `JXL`, `HEIC`,... ImageGlass also offers advanced features that cater to the needs of both regular users and designers, making it the excellent tool to enhance workflow efficiency.
 
-<a href="https://imageglass.org/news/announcing-imageglass-9-4-97">
-<img width="2400" height="809" alt="image" src="https://github.com/user-attachments/assets/4554f546-1f4d-4cfd-95b7-ac51d1caa3d9" />
-</a>
-
+[![ImageGlass 10 beta 1](https://github.com/user-attachments/assets/3f9c3c6e-e1ee-4ab2-a8e1-2feb2df41e73)](https://imageglass.org/news/imageglass-10-beta-1-is-here-99)
 
 ## 📥 Download
 
@@ -74,7 +70,12 @@ For more information about ImageGlass, go to [ImageGlass Docs](https://imageglas
 - [ImageGlass Discord](https://discord.gg/tWjbynH2X8)
 
 
+## 🛣️ ImageGlass Roadmap Update – 2026
+[![ig_timeline](https://github.com/user-attachments/assets/9cf2a8a4-18f4-4852-ad83-5df79239d93f)](https://github.com/d2phap/ImageGlass/discussions/2287)
+
+
 ## 💖 This project needs your help!
 If you find ImageGlass useful and would like to support its ongoing development, consider making a donation. Your support, whether financial or simply sharing ImageGlass with others, means the world to me. Every bit helps keep the project alive and free for everyone.
 
 Explorer the ways to support at: https://imageglass.org/donate
+

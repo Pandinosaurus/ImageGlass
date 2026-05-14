@@ -95,13 +95,15 @@ export default class TabEdit {
       el.addEventListener('click', async () => {
         const action = el.getAttribute('data-action');
         const trEl = el.closest('tr');
+        if (!trEl) return;
+
         const extKey = trEl.getAttribute('data-extkey');
 
         if (action === 'delete') {
           trEl.remove();
           TabEdit._areEditAppsChanged = true;
         }
-        else if (action === 'edit') {
+        else if (action === 'edit' && extKey) {
           await TabEdit.openEditAppDialog(extKey);
           el.focus();
         }

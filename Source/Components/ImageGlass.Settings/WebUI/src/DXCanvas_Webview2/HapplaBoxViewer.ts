@@ -30,7 +30,7 @@ enum Web2FrontendMsgNames {
 }
 
 const _transitionDuration = 300;
-let _boxEl: HapplaBoxHTMLElement = undefined;
+let _boxEl!: HapplaBoxHTMLElement;
 let _zoomMode: ZoomMode = ZoomMode.AutoZoom;
 let _isPointerDown = false;
 let _navHitTest: 'left' | 'right' | '' = '';
@@ -39,7 +39,10 @@ export default class HapplaBoxViewer {
 
   static initialize() {
     defineHapplaBoxHTMLElement();
-    _boxEl = document.querySelector('happla-box').shadowRoot.host as HapplaBoxHTMLElement;
+    const boxEl = document.querySelector('happla-box') as HapplaBoxHTMLElement | null;
+    if (!boxEl) return;
+
+    _boxEl = boxEl;
 
     _boxEl.initialize({
       zoomFactor: 1,
@@ -78,12 +81,15 @@ export default class HapplaBoxViewer {
   private static onFileDragOver(e: DragEvent) {
     e.stopPropagation();
     e.preventDefault();
+    if (!e.dataTransfer) return;
+
     e.dataTransfer.dropEffect = 'link';
   }
 
   private static onFileDropped(e: DragEvent) {
     e.stopPropagation();
     e.preventDefault();
+    if (!e.dataTransfer) return;
 
     post(Web2FrontendMsgNames.ON_FILE_DROP, e.dataTransfer.files, false);
   }
@@ -191,20 +197,20 @@ export default class HapplaBoxViewer {
   }
 
   private static async onWeb2LoadContentRequested(
-    eventName: Web2BackendMsgNames,
+    eventName: string,
     e: ILoadContentRequestedEventArgs,
   ) {
     _zoomMode = e.ZoomMode;
 
     if (eventName === Web2BackendMsgNames.SET_IMAGE) {
-      await _boxEl.loadImage(e.Url, _zoomMode, e.ZoomFactor, e.DirPath);
+      await _boxEl.loadImage(e.Url ?? '', _zoomMode, e.ZoomFactor, e.DirPath);
     }
     else if (eventName === Web2BackendMsgNames.SET_HTML) {
-      await _boxEl.loadHtml(e.Html, _zoomMode, e.ZoomFactor, e.DirPath);
+      await _boxEl.loadHtml(e.Html ?? '', _zoomMode, e.ZoomFactor, e.DirPath);
     }
   }
 
-  private static async onWeb2ZoomModeChanged(_: Web2BackendMsgNames, e: {
+  private static async onWeb2ZoomModeChanged(_: string, e: {
     ZoomMode: ZoomMode,
     IsManualZoom: boolean,
   }) {
@@ -212,7 +218,7 @@ export default class HapplaBoxViewer {
     await _boxEl.setZoomMode(e.ZoomMode, -1, _transitionDuration);
   }
 
-  private static async onWeb2ZoomFactorChanged(_: Web2BackendMsgNames, e: {
+  private static async onWeb2ZoomFactorChanged(_: string, e: {
     ZoomFactor: number,
     IsManualZoom: boolean,
     ZoomDelta: number,
@@ -220,14 +226,14 @@ export default class HapplaBoxViewer {
     await _boxEl.setZoomFactor(e.ZoomFactor, e.IsManualZoom, e.ZoomDelta, _transitionDuration);
   }
 
-  private static async onWeb2StartPanAnimationRequested(_: Web2BackendMsgNames, e: {
+  private static async onWeb2StartPanAnimationRequested(_: string, e: {
     PanSpeed: number,
     Direction: PanDirection,
   }) {
     await _boxEl.startPanningAnimation(e.Direction, e.PanSpeed);
   }
 
-  private static async onWeb2StartZoomAnimationRequested(_: Web2BackendMsgNames, e: {
+  private static async onWeb2StartZoomAnimationRequested(_: string, e: {
     IsZoomOut: boolean,
     ZoomSpeed: number,
   }) {
@@ -238,7 +244,7 @@ export default class HapplaBoxViewer {
     _boxEl.stopAnimations();
   }
 
-  private static onWeb2SetMessage(_: Web2BackendMsgNames, e: {
+  private static onWeb2SetMessage(_: string, e: {
     Heading: string,
     Text: string,
   }) {
@@ -260,7 +266,7 @@ export default class HapplaBoxViewer {
     textEl.hidden = isTextHidden;
   }
 
-  private static onWeb2SetNavigation(_: Web2BackendMsgNames, e: {
+  private static onWeb2SetNavigation(_: string, e: {
     Visible: boolean,
     LeftImageUrl: string,
     RightImageUrl: string,

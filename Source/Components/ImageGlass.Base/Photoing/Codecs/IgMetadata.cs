@@ -52,6 +52,10 @@ public class IgMetadata
     public uint RenderedWidth { get; set; } = 0;
     public uint RenderedHeight { get; set; } = 0;
 
+    // DPI
+    public float DpiX { get; set; } = 0;
+    public float DpiY { get; set; } = 0;
+
     /// <summary>
     /// Gets the frame index of this metadata.
     /// </summary>

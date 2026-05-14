@@ -53,7 +53,7 @@ export default class Settings {
         (el as HTMLSelectElement).value = configValue.toString();
       }
       else if (tagName === 'input') {
-        const inputType = el.getAttribute('type').toLowerCase();
+        const inputType = (el.getAttribute('type') || '').toLowerCase();
         const inputEl = el as HTMLInputElement;
 
         if (inputType === 'radio' || inputType === 'checkbox') {
@@ -75,6 +75,8 @@ export default class Settings {
     // load icon element: <i icon="">
     queryAll('i[icon]').forEach(el => {
       const iconName = el.getAttribute('icon');
+      if (!iconName) return;
+
       const iconSvg = _pageSettings.icons[iconName];
 
       if (iconSvg) {

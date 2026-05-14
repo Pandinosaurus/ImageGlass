@@ -1,4 +1,4 @@
-﻿/*
+/*
 ImageGlass Project - Image viewer for Windows
 Copyright (C) 2010 - 2026 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
@@ -555,6 +555,8 @@ public class IgLang : IDictionary<string, string>
             { "FrmMain._OpenWith", "Open with {0}" }, //v9.0
             { "FrmMain._ReachedFirstImage", "Reached the first image" }, // v4.0
             { "FrmMain._ReachedLastLast", "Reached the last image" }, // v4.0
+            { "FrmMain._SwitchedToNextDirectory", "Switched to next folder: {0}" },
+            { "FrmMain._SwitchedToPrevDirectory", "Switched to previous folder: {0}" },
             { "FrmMain._ClipboardImage", "Clipboard image" }, //v9.0
 
             #endregion
@@ -648,6 +650,7 @@ public class IgLang : IDictionary<string, string>
             { "FrmSettings._ShouldGroupImagesByDirectory", "Group images by directory" },
             { "FrmSettings._ShouldLoadHiddenImages", "Load hidden images" },
             { "FrmSettings._EnableLoopBackNavigation", "Loop back to the first image when reaching the end of the image list" },
+            { "FrmSettings._EnableAutoSwitchSiblingDir", "Automatically switch to the next/previous sibling directory when reaching the end of the image list" },
             { "FrmSettings._ShowImagePreview", "Display image preview while it's being loaded" },
             { "FrmSettings._EnableImageAsyncLoading", "Enable image asynchronous loading" },
 

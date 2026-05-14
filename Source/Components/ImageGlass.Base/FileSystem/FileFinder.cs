@@ -108,9 +108,6 @@ public class FileFinder
                     includeHidden,
                     filterFn,
                     nonShellSortFn);
-
-                // dispose shell object
-                folderShellView.Dispose();
             }
 
             // without shell
@@ -204,8 +201,13 @@ public class FileFinder
         FilesEnumerated?.Invoke(this, new FilesEnumeratedEventArgs(filePaths));
 
 
-        // search all sub-directories if root dir is not empty
-        if (searchSubDirectories && !string.IsNullOrWhiteSpace(rootDir))
+        // search all sub-directories if root dir is a real filesystem directory.
+        // Skip for shell URIs like `search-ms:` or `shell:` which are not valid paths
+        // for Directory.EnumerateDirectories and would throw IOException.
+        if (searchSubDirectories
+            && !string.IsNullOrWhiteSpace(rootDir)
+            && Path.IsPathFullyQualified(rootDir)
+            && Directory.Exists(rootDir))
         {
             // search files for the sub dirs
             // get sub folders
@@ -233,7 +235,7 @@ public class FileFinder
     {
         var folderPath = "";
         ExplorerFolderView? folderView = null;
-        using var shell = new EggShell();
+        var shell = new EggShell();
 
 
         // if no dir path, get the explorer's folder view where the application opened from

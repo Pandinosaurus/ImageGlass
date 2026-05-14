@@ -39,6 +39,7 @@ public static class ImageInfo
 
     public static string? DateTimeAuto { get; set; } = null;
     public static string? ColorSpace { get; set; } = null;
+    public static string? DPI { get; set; } = null;
 
 
     public static bool IsNull => AppName == null
@@ -56,7 +57,9 @@ public static class ImageInfo
         && ExifDateTimeOriginal == null
 
         && ExifRating == null
-        && ColorSpace == null;
+        && ColorSpace == null
+
+        && DPI == null;
 
 
     /// <summary>
@@ -80,7 +83,8 @@ public static class ImageInfo
                 ExifDateTime =
                 ExifDateTimeOriginal =
                 DateTimeAuto =
-                ColorSpace = null;
+                ColorSpace = 
+                DPI = null;
 
             if (!string.IsNullOrEmpty(clipboardImageText))
             {

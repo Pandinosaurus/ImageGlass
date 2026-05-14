@@ -213,7 +213,7 @@ export default class TabAppearance {
   private static handleBackgroundColorChanged() {
     let colorHex = query<HTMLInputElement>('[name="BackgroundColor"]').value;
     if (!colorHex) {
-      colorHex = TabAppearance.currentTheme.BgColor;
+      colorHex = TabAppearance.currentTheme?.BgColor ?? '#00000000';
     }
 
     query<HTMLInputElement>('#Btn_BackgroundColor > .color-display').style.setProperty('--color-picker-value', colorHex);
@@ -222,7 +222,7 @@ export default class TabAppearance {
 
   private static async onBtn_BackgroundColor() {
     const colorEl = query<HTMLInputElement>('[name="BackgroundColor"]');
-    const colorHex = colorEl.value || TabAppearance.currentTheme.BgColor;
+    const colorHex = colorEl.value || TabAppearance.currentTheme?.BgColor || '#00000000';
 
     const newColorHex = await postAsync<string>('Btn_BackgroundColor', colorHex);
 

@@ -48,7 +48,6 @@ internal static class Program
         get => _foregroundShell;
         set
         {
-            _foregroundShell?.Dispose();
             _foregroundShell = value;
 
             try
@@ -58,7 +57,6 @@ internal static class Program
             catch
             {
                 _foregroundShellPath = "";
-                _foregroundShell?.Dispose();
                 _foregroundShell = null;
             }
         }
@@ -133,7 +131,7 @@ internal static class Program
         // get foreground shell
         if (Config.ShouldUseExplorerSortOrder)
         {
-            using var shell = new EggShell();
+            var shell = new EggShell();
             ForegroundShell = shell.GetForegroundWindowView();
         }
 
@@ -340,7 +338,7 @@ internal static class Program
         // get foreground shell
         if (Config.ShouldUseExplorerSortOrder)
         {
-            using var shell = new EggShell();
+            var shell = new EggShell();
             ForegroundShell = shell.GetForegroundWindowView();
         }
 

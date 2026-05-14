@@ -1,4 +1,4 @@
-﻿/*
+/*
 ImageGlass Project - Image viewer for Windows
 Copyright (C) 2010 - 2026 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
@@ -192,6 +192,13 @@ public static class Config
     /// Gets, sets value indicating that ImageGlass will loop back viewer to the first image when reaching the end of the list.
     /// </summary>
     public static bool EnableLoopBackNavigation { get; set; } = true;
+
+    /// <summary>
+    /// Gets, sets value indicating that ImageGlass will automatically switch
+    /// to the next or previous sibling directory when reaching the boundary
+    /// of the current image list.
+    /// </summary>
+    public static bool EnableAutoSwitchSiblingDir { get; set; } = false;
 
     /// <summary>
     /// Gets, sets value indicating that checker board is shown or not
@@ -708,6 +715,7 @@ public static class Config
         ShowFrameNavTool = items.GetValueEx(nameof(ShowFrameNavTool), ShowFrameNavTool);
         ShowAppIcon = items.GetValueEx(nameof(ShowAppIcon), ShowAppIcon);
         EnableLoopBackNavigation = items.GetValueEx(nameof(EnableLoopBackNavigation), EnableLoopBackNavigation);
+        EnableAutoSwitchSiblingDir = items.GetValueEx(nameof(EnableAutoSwitchSiblingDir), EnableAutoSwitchSiblingDir);
         ShowCheckerboard = items.GetValueEx(nameof(ShowCheckerboard), ShowCheckerboard);
         ShowCheckerboardOnlyImageRegion = items.GetValueEx(nameof(ShowCheckerboardOnlyImageRegion), ShowCheckerboardOnlyImageRegion);
         EnableMultiInstances = items.GetValueEx(nameof(EnableMultiInstances), EnableMultiInstances);
@@ -1080,6 +1088,7 @@ public static class Config
         _ = settings.TryAdd(nameof(ShowFrameNavTool), ShowFrameNavTool);
         _ = settings.TryAdd(nameof(ShowAppIcon), ShowAppIcon);
         _ = settings.TryAdd(nameof(EnableLoopBackNavigation), EnableLoopBackNavigation);
+        _ = settings.TryAdd(nameof(EnableAutoSwitchSiblingDir), EnableAutoSwitchSiblingDir);
         _ = settings.TryAdd(nameof(ShowCheckerboard), ShowCheckerboard);
         _ = settings.TryAdd(nameof(ShowCheckerboardOnlyImageRegion), ShowCheckerboardOnlyImageRegion);
         _ = settings.TryAdd(nameof(EnableMultiInstances), EnableMultiInstances);

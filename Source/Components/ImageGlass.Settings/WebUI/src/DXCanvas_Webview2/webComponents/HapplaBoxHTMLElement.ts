@@ -51,11 +51,11 @@ const imgTemplate = taggedTemplate<{
 
 
 export class HapplaBoxHTMLElement extends HTMLElement {
-  #box: HapplaBox;
+  #box!: HapplaBox;
 
-  #boxEl: HTMLDivElement;
-  #wrapperEl: HTMLDivElement;
-  #boxContentEl: HTMLDivElement;
+  #boxEl!: HTMLDivElement;
+  #wrapperEl!: HTMLDivElement;
+  #boxContentEl!: HTMLDivElement;
 
   constructor() {
     super();
@@ -78,11 +78,11 @@ export class HapplaBoxHTMLElement extends HTMLElement {
 
   private createTemplate() {
     // initialize component
-    this.attachShadow({ mode: 'open' });
+    const shadowRoot = this.attachShadow({ mode: 'open' });
 
     const css = new CSSStyleSheet();
     css.replaceSync(styles);
-    this.shadowRoot.adoptedStyleSheets = [css];
+    shadowRoot.adoptedStyleSheets = [css];
 
 
     // content
@@ -104,7 +104,7 @@ export class HapplaBoxHTMLElement extends HTMLElement {
     this.#wrapperEl = wrapperEl;
     this.#boxEl = boxEl;
 
-    this.shadowRoot.appendChild(this.#boxEl);
+    shadowRoot.appendChild(this.#boxEl);
   }
 
 
@@ -127,7 +127,7 @@ export class HapplaBoxHTMLElement extends HTMLElement {
     await this.#box.loadHtmlContent(html);
 
     // fixed size of SVG
-    const svgEls = Array.from(this.#boxContentEl.querySelectorAll('svg:not([width]), svg:not([height])'));
+    const svgEls = Array.from<SVGMarkerElement>(this.#boxContentEl.querySelectorAll('svg:not([width]), svg:not([height])'));
     svgEls.forEach((svgEl: SVGMarkerElement) => {
       const { width, height } = svgEl.viewBox.baseVal;
 
@@ -142,7 +142,7 @@ export class HapplaBoxHTMLElement extends HTMLElement {
     });
 
     // fix the path of image
-    const imageEls = Array.from(this.#boxContentEl.querySelectorAll('image[href]'));
+    const imageEls = Array.from<SVGImageElement>(this.#boxContentEl.querySelectorAll('image[href]'));
     imageEls.forEach((img: SVGImageElement) => {
       const href = img.getAttribute('href') ?? '';
 

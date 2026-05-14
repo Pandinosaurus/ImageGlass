@@ -15,11 +15,17 @@ export default class TabSlideshow {
    * Adds events for tab Slideshow.
    */
   static addEvents() {
-    query('[name="UseRandomIntervalForSlideshow"]').addEventListener('input', TabSlideshow.handleUseRandomIntervalForSlideshowChanged, false);
-    query('[name="SlideshowInterval"]').addEventListener('input', TabSlideshow.handleSlideshowIntervalsChanged, false);
-    query('[name="SlideshowIntervalTo"]').addEventListener('input', TabSlideshow.handleSlideshowIntervalsChanged, false);
-    query('#Lnk_ResetSlideshowBackgroundColor').addEventListener('click', TabSlideshow.resetSlideshowBackgroundColor, false);
-    query('#Btn_SlideshowBackgroundColor').addEventListener('click', TabSlideshow.onBtn_SlideshowBackgroundColor, false);
+    const useRandomEl = query('[name="UseRandomIntervalForSlideshow"]');
+    const fromEl = query('[name="SlideshowInterval"]');
+    const toEl = query('[name="SlideshowIntervalTo"]');
+    const resetColorEl = query('#Lnk_ResetSlideshowBackgroundColor');
+    const btnColorEl = query('#Btn_SlideshowBackgroundColor');
+
+    useRandomEl?.addEventListener('input', TabSlideshow.handleUseRandomIntervalForSlideshowChanged, false);
+    fromEl?.addEventListener('input', TabSlideshow.handleSlideshowIntervalsChanged, false);
+    toEl?.addEventListener('input', TabSlideshow.handleSlideshowIntervalsChanged, false);
+    resetColorEl?.addEventListener('click', TabSlideshow.resetSlideshowBackgroundColor, false);
+    btnColorEl?.addEventListener('click', TabSlideshow.onBtn_SlideshowBackgroundColor, false);
   }
 
 
@@ -37,7 +43,11 @@ export default class TabSlideshow {
   private static handleSlideshowIntervalsChanged() {
     const fromEl = query<HTMLInputElement>('[name="SlideshowInterval"]');
     const toEl = query<HTMLInputElement>('[name="SlideshowIntervalTo"]');
-    const useRandomInterval = query<HTMLInputElement>('[name="UseRandomIntervalForSlideshow"]').checked;
+    const useRandomEl = query<HTMLInputElement>('[name="UseRandomIntervalForSlideshow"]');
+    const lblIntervalEl = query('#Lbl_SlideshowInterval');
+    if (!fromEl || !toEl || !useRandomEl || !lblIntervalEl) return;
+
+    const useRandomInterval = useRandomEl.checked;
 
     if (useRandomInterval) {
       fromEl.max = toEl.value;
@@ -53,10 +63,10 @@ export default class TabSlideshow {
     const intervalToText = TabSlideshow.toTimeString(intervalTo);
 
     if (useRandomInterval) {
-      query('#Lbl_SlideshowInterval').innerText = `${intervalFromText} - ${intervalToText}`;
+      lblIntervalEl.innerText = `${intervalFromText} - ${intervalToText}`;
     }
     else {
-      query('#Lbl_SlideshowInterval').innerText = intervalFromText;
+      lblIntervalEl.innerText = intervalFromText;
     }
   }
 
@@ -67,10 +77,15 @@ export default class TabSlideshow {
   private static handleUseRandomIntervalForSlideshowChanged() {
     const fromEl = query<HTMLInputElement>('[name="SlideshowInterval"]');
     const toEl = query<HTMLInputElement>('[name="SlideshowIntervalTo"]');
-    const useRandomInterval = query<HTMLInputElement>('[name="UseRandomIntervalForSlideshow"]').checked;
+    const useRandomEl = query<HTMLInputElement>('[name="UseRandomIntervalForSlideshow"]');
+    const lblFromEl = query('#Lbl_SlideshowIntervalFrom');
+    const sectionToEl = query('#Section_SlideshowIntervalTo');
+    if (!fromEl || !toEl || !useRandomEl || !lblFromEl || !sectionToEl) return;
+
+    const useRandomInterval = useRandomEl.checked;
   
-    query('#Lbl_SlideshowIntervalFrom').hidden = !useRandomInterval;
-    query('#Section_SlideshowIntervalTo').hidden = !useRandomInterval;
+    lblFromEl.hidden = !useRandomInterval;
+    sectionToEl.hidden = !useRandomInterval;
 
     const intervalFrom = +fromEl.value || 5;
     const intervalTo = +toEl.value || 5;
@@ -97,23 +112,33 @@ export default class TabSlideshow {
 
   // Reset slideshow background color to black
   private static resetSlideshowBackgroundColor() {
-    query<HTMLInputElement>('[name="SlideshowBackgroundColor"]').value = '#000000';
+    const colorEl = query<HTMLInputElement>('[name="SlideshowBackgroundColor"]');
+    if (!colorEl) return;
+
+    colorEl.value = '#000000';
     TabSlideshow.handleSlideshowBackgroundColorChanged();
   }
 
 
   // Handles when `SlideshowBackgroundColor` is changed.
   private static handleSlideshowBackgroundColorChanged() {
-    const colorHex = query<HTMLInputElement>('[name="SlideshowBackgroundColor"]').value;
+    const colorInputEl = query<HTMLInputElement>('[name="SlideshowBackgroundColor"]');
+    const colorDisplayEl = query<HTMLInputElement>('#Btn_SlideshowBackgroundColor > .color-display');
+    const colorLabelEl = query('#Lbl_SlideshowBackgroundColorValue');
+    if (!colorInputEl || !colorDisplayEl || !colorLabelEl) return;
+
+    const colorHex = colorInputEl.value;
     if (!colorHex) return;
 
-    query<HTMLInputElement>('#Btn_SlideshowBackgroundColor > .color-display').style.setProperty('--color-picker-value', colorHex);
-    query('#Lbl_SlideshowBackgroundColorValue').innerText = colorHex;
+    colorDisplayEl.style.setProperty('--color-picker-value', colorHex);
+    colorLabelEl.innerText = colorHex;
   }
 
 
   private static async onBtn_SlideshowBackgroundColor() {
     const colorEL = query<HTMLInputElement>('[name="SlideshowBackgroundColor"]');
+    if (!colorEL) return;
+
     const colorValue = await postAsync<string>('Btn_SlideshowBackgroundColor', colorEL.value);
 
     if (colorValue) {

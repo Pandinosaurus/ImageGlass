@@ -3,6 +3,8 @@ import { IHapplaBoxOptions, InterpolationMode, PanDirection, ZoomMode } from './
 import { pause } from '@/helpers';
 import { DOMPadding } from './DOMPadding';
 
+type THapplaBoxResolvedOptions = Required<IHapplaBoxOptions>;
+
 export class HapplaBox {
   private boxEl: HTMLElement;
   private boxContentEl: HTMLElement;
@@ -15,13 +17,12 @@ export class HapplaBox {
   #isContentElDOMChanged = false;
   #pointerLocation: { x?: number, y?: number } = {};
 
-  private panningAnimationFrame: number;
-  private zoomingAnimationFrame: number;
+  private panningAnimationFrame = 0;
+  private zoomingAnimationFrame = 0;
   private isPanning = false;
   private isZooming = false;
 
-  #options: IHapplaBoxOptions = {};
-  #defaultOptions: IHapplaBoxOptions = {
+  #options: THapplaBoxResolvedOptions = {
     imageRendering: InterpolationMode.Auto,
 
     allowZoom: true,
@@ -36,6 +37,33 @@ export class HapplaBox {
 
     onBeforeContentReady() {},
     onContentReady() {},
+    onContentSizeChanged() {},
+    onResizing() {},
+    onMouseWheel() {},
+
+    onBeforeZoomChanged() {},
+    onAfterZoomChanged() {},
+    onAfterTransformed() {},
+
+    onPanning() {},
+    onAfterPanned() {},
+  };
+  #defaultOptions: THapplaBoxResolvedOptions = {
+    imageRendering: InterpolationMode.Auto,
+
+    allowZoom: true,
+    minZoom: 0.01,
+    maxZoom: 100,
+    zoomFactor: 1,
+    panOffset: new DOMPoint(0, 0),
+
+    allowPan: true,
+    scaleRatio: window.devicePixelRatio,
+    padding: new DOMPadding(),
+
+    onBeforeContentReady() {},
+    onContentReady() {},
+    onContentSizeChanged() {},
     onResizing() {},
     onMouseWheel() {},
 
@@ -57,7 +85,7 @@ export class HapplaBox {
   constructor(boxEl: HTMLElement, boxContentEl: HTMLElement, options?: IHapplaBoxOptions) {
     this.boxEl = boxEl;
     this.boxContentEl = boxContentEl;
-    this.#options = merge({}, this.#defaultOptions, options);
+    this.#options = merge({}, this.#defaultOptions, options) as THapplaBoxResolvedOptions;
 
     // correct zoomFactor after calculating scaleRatio
     this.#options.zoomFactor /= this.#options.scaleRatio;
@@ -516,6 +544,8 @@ export class HapplaBox {
     isZoomModeChanged?: boolean,
   } = {}) {
     let { x, y } = options;
+    x ??= this.domMatrix.e;
+    y ??= this.domMatrix.f;
     let newZoomFactor = this.dpi(factor);
     const oldZoomFactor = this.#options.zoomFactor;
     const needRecenter = this.checkIfNeedRecenter();
@@ -624,7 +654,7 @@ export class HapplaBox {
     this.#resizeObserver.disconnect();
     this.#contentDOMObserver.disconnect();
 
-    this.boxEl.removeEventListener('mousewheel', this.onMouseWheel);
+    this.boxEl.removeEventListener('wheel', this.onMouseWheel);
 
     this.boxEl.removeEventListener('pointerenter', this.onPointerEnter);
     this.boxEl.removeEventListener('pointerleave', this.onPointerLeave);

@@ -1,3 +1,5 @@
+@use "../basis/mixins" as *;
+
 @mixin controlOptions() {
   opacity: 0 !important;
   position: absolute;

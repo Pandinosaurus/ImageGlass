@@ -7,7 +7,7 @@
     "MinVersion": "9.3"
   },
   "Items": {
-    "FrmCrop.SelectionAspectRatio._Original": "Original",
+    "FrmCrop.SelectionAspectRatio._Original": "الأصل",
     "FrmMain.MnuShare._Error": "Could not open Share dialog.",
     "_.Metadata._FileLastAccessTime": "Date accessed",
     "FrmAbout._License": "Software license",

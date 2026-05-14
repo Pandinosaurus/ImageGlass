@@ -1504,6 +1504,10 @@ public partial class ViewerCanvas : DXCanvas
         {
             Refresh(true, false, true);
         }
+        else
+        {
+            Invalidate();
+        }
     }
 
     protected override void OnFrame(FrameEventArgs e)

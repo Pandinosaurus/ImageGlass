@@ -72,7 +72,7 @@ export default class TabLayout {
   private static loadLayoutConfigs() {
     const layout = TabLayout.convertRawLayoutToLayoutObject();
 
-    Object.keys(layout).forEach((controlName: LayoutControlName) => {
+    (Object.keys(layout) as LayoutControlName[]).forEach((controlName) => {
       const { position, order } = layout[controlName];
 
       query<HTMLSelectElement>(`[name="_Layout.${controlName}.Position"]`).value = position;
@@ -129,14 +129,14 @@ export default class TabLayout {
 
 
   private static convertRawLayoutToLayoutObject(rawLayout?: Partial<Record<LayoutControlName, string>>): ILayoutObject {
-    rawLayout ||= _pageSettings.config?.Layout || {};
+    const layoutSource = rawLayout || _pageSettings.config?.Layout || {};
     const layout = TabLayout.defaultLayout;
 
     for (const key in layout) {
       if (!Object.prototype.hasOwnProperty.call(layout, key)) continue;
       const controlName = key as LayoutControlName;
 
-      const arr = rawLayout[controlName]?.split(';').filter(Boolean) || [];
+      const arr = layoutSource[controlName]?.split(';').filter(Boolean) || [];
       const position = arr[0] ?? layout[controlName].position;
       const order = arr[1] ?? layout[controlName].order;
 
@@ -154,7 +154,8 @@ export default class TabLayout {
   }) => any): ILayoutObject {
     const layout: Partial<ILayoutObject> = {};
 
-    ['Toolbar', 'ToolbarContext', 'Gallery'].forEach((controlName: LayoutControlName) => {
+    const controls: LayoutControlName[] = ['Toolbar', 'ToolbarContext', 'Gallery'];
+    controls.forEach((controlName) => {
       const position = query<HTMLSelectElement>(`[name="_Layout.${controlName}.Position"]`).value || '0';
       const order = query<HTMLSelectElement>(`[name="_Layout.${controlName}.Order"]`).value || '0';
       if (callbackFn) callbackFn({ controlName, position, order });
@@ -180,9 +181,10 @@ export default class TabLayout {
 
   private static handleLayoutItemDragStart(e: DragEvent) {
     const btnEl = e.target as HTMLButtonElement;
-    const fromControlName = btnEl.getAttribute('data-control');
-    const fromPosition = btnEl.closest('[data-position]').getAttribute('data-position');
-    const fromOrder = btnEl.closest('[data-order]').getAttribute('data-order');
+    const fromControlName = btnEl.getAttribute('data-control') || '';
+    const fromPosition = btnEl.closest('[data-position]')?.getAttribute('data-position') || '';
+    const fromOrder = btnEl.closest('[data-order]')?.getAttribute('data-order') || '';
+    if (!fromControlName || !fromPosition || !fromOrder || !e.dataTransfer) return;
 
     const data = JSON.stringify({ fromControlName, fromPosition, fromOrder });
     e.dataTransfer.setData('application/json', data);
@@ -208,6 +210,8 @@ export default class TabLayout {
 
   private static handleLayoutItemDragOver(e: DragEvent) {
     e.preventDefault();
+    if (!e.dataTransfer) return;
+
     e.dataTransfer.dropEffect = 'move';
   }
 
@@ -240,6 +244,8 @@ export default class TabLayout {
   private static handleLayoutItemDrop(e: DragEvent, toDropEl: HTMLElement) {
     e.stopImmediatePropagation();
     e.preventDefault();
+    if (!e.dataTransfer) return;
+
     toDropEl.classList.remove('drag--enter');
 
     const toBtnEl = toDropEl.querySelector('button[draggable="true"]') as (HTMLButtonElement | null);
@@ -251,8 +257,9 @@ export default class TabLayout {
     if (!fromControlName || !fromPosition || !fromOrder) return;
 
     // get the new drop data
-    const position = toDropEl.closest('[data-position]').getAttribute('data-position');
-    const order = toDropEl.getAttribute('data-order');
+    const position = toDropEl.closest('[data-position]')?.getAttribute('data-position') || '';
+    const order = toDropEl.getAttribute('data-order') || '';
+    if (!position || !order) return;
 
 
     // don't allow to drop toolbar to left/right position

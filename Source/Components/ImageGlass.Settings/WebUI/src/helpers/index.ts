@@ -128,8 +128,8 @@ export const openModalDialogEl = async (
   dialogEl: HTMLDialogElement,
   purpose: 'create' | 'edit',
   data: Record<string, any> = {},
-  onOpen?: (el: HTMLDialogElement) => any,
-  onSubmit?: (e: SubmitEvent) => boolean | Promise<boolean>) => {
+  onOpen?: ((el: HTMLDialogElement) => any) | null,
+  onSubmit?: ((e: SubmitEvent) => boolean | Promise<boolean>) | null) => {
   dialogEl.returnValue = '';
   dialogEl.classList.remove('dialog--create', 'dialog--edit');
   dialogEl.classList.add(`dialog--${purpose}`);
@@ -210,8 +210,8 @@ export const openModalDialog = (
   selector: string,
   purpose: 'create' | 'edit',
   data: Record<string, any> = {},
-  onOpen?: (el: HTMLDialogElement) => any,
-  onSubmit?: (e: SubmitEvent) => boolean | Promise<boolean>) => {
+  onOpen?: ((el: HTMLDialogElement) => any) | null,
+  onSubmit?: ((e: SubmitEvent) => boolean | Promise<boolean>) | null) => {
   const dialogEl = query<HTMLDialogElement>(selector);
   return openModalDialogEl(dialogEl, purpose, data, onOpen, onSubmit);
 };

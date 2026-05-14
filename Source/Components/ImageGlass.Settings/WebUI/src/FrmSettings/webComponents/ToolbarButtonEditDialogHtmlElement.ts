@@ -58,6 +58,7 @@ export class ToolbarButtonEditDialogHtmlElement extends HTMLDialogElement {
       Type: 'Button',
       Text: '',
       Image: 'C:\\path\\to\\icon.svg',
+      ImageUrl: '',
       Alignment: 'Left',
       CheckableConfigBinding: '',
       DisplayStyle: 'Image',

@@ -1,4 +1,6 @@
 
+@use "../basis/mixins" as *;
+
 .ig-list-horizontal {
   list-style: none;
   margin-bottom: 0;

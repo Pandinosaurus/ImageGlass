@@ -171,3 +171,7 @@ BundleArtifactsUpload
 node_modules/
 launchSettings.json
 Setup/Assets/WebView2_Runtime/
+*/**/.github/*-instructions.md
+*/**/.github/skills/*
+/v10/artifacts
+/v10/.github/instructions

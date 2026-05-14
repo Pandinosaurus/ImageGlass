@@ -1,3 +1,5 @@
+@use "../basis/mixins" as *;
+
 button,
 .btn {
   --controlWidth: none;

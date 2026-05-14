@@ -1,3 +1,5 @@
+@use "../basis/mixins" as *;
+
 [page="settings"] {
   #app {
     display: grid;

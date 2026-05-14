@@ -390,15 +390,6 @@ public partial class FrmMain
 
     private void FrmMainConfig_SizeChanged(object? sender, EventArgs e)
     {
-        if (WindowState == FormWindowState.Normal
-            && !Config.EnableFullScreen)
-        {
-            Config.FrmMainPositionX = Location.X;
-            Config.FrmMainPositionY = Location.Y;
-            Config.FrmMainWidth = Size.Width;
-            Config.FrmMainHeight = Size.Height;
-        }
-
         UpdateGallerySize();
     }
 

@@ -1,4 +1,6 @@
 
+@use "../basis/mixins" as *;
+
 toolbar-editor {
   display: flex;
 

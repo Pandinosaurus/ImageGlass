@@ -23,7 +23,10 @@ export default class Language {
         let html = langValue;
 
         for (let i = 0; i < el.childElementCount; i++) {
-          html = html.replaceAll(`{${i}}`, el.children.item(i).outerHTML);
+          const childEl = el.children.item(i);
+          if (!childEl) continue;
+
+          html = html.replaceAll(`{${i}}`, childEl.outerHTML);
         }
 
         el.innerHTML = html;
@@ -65,7 +68,10 @@ export default class Language {
         let html = langValue;
 
         for (let i = 0; i < el.childElementCount; i++) {
-          html = html.replaceAll(`{${i}}`, el.children.item(i).outerHTML);
+          const childEl = el.children.item(i);
+          if (!childEl) continue;
+
+          html = html.replaceAll(`{${i}}`, childEl.outerHTML);
         }
 
         el.innerHTML = html;
