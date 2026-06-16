@@ -7,7 +7,7 @@ Files used to build and distribute ImageGlass as a Flatpak.
 | `io.github.d2phap.imageglass.yaml` | Flatpak manifest (submitted to Flathub). |
 | `io.github.d2phap.imageglass.metainfo.xml` | AppStream metadata (required by Flathub). |
 | `io.github.d2phap.imageglass.desktop` | Desktop launcher entry. |
-| `io.github.d2phap.imageglass.svg` / `.png` | Icons, generated from `_assets/logo.*` by the pack script. |
+| `io.github.d2phap.imageglass.svg` / `.png` | Icons, generated from `_assets/logo_c.*` by the pack script. |
 
 Build script: [`../script-pack-linux-x64-flatpak.sh`](../script-pack-linux-x64-flatpak.sh) (VS Code task: `pack-linux-x64-flatpak`).
 

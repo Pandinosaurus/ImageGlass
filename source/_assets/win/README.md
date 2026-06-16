@@ -15,7 +15,7 @@ every payload `.exe`/`.dll` *and* the package itself.
 
 - [`script-pack-win-msix.ps1`](script-pack-win-msix.ps1) — the packer (PowerShell 7+).
 - [`script-generate-msix-assets.ps1`](script-generate-msix-assets.ps1) — renders the
-  `Assets-signed` logo set from [`_assets/Logo512.png`](../Logo512.png).
+  `Assets-signed` logo set from [`_assets/logo_c_512.png`](../logo_c_512.png).
 - [`appxmanifest/AppxManifest.xml`](appxmanifest/AppxManifest.xml) — manifest template
   with `{{...}}` placeholders filled in at pack time.
 - [`appxmanifest/Assets-msstore/`](appxmanifest/Assets-msstore/) — Store artwork (used by the msstore build).
@@ -79,7 +79,7 @@ a trust chain) but **not** package-signed — only the `.msixbundle` itself is s
   ([`ImageGlass.Lib/Common/Types/Const.cs`](../../ImageGlass.Lib/Common/Types/Const.cs)).
   If that list changes, update the `<uap:FileType>` entries in the manifest template.
 - **Signed artwork.** `Assets-signed` is generated from the app logo. Re-run
-  `script-generate-msix-assets.ps1` after changing `_assets/Logo512.png`; it mirrors
+  `script-generate-msix-assets.ps1` after changing `_assets/logo_c_512.png`; it mirrors
   the `Assets-msstore` filename set so the manifest resolves identically.
 - **Publisher must match the certificate.** For the signed build the script reads
   the certificate's exact Subject DN and writes it into the manifest `Publisher`;

@@ -72,11 +72,11 @@ if [[ ! -x "$PUBLISH_DIR/ImageGlass" ]]; then
 fi
 
 # --- Prepare app-id-named icons from the shared assets ---
-if [[ -f "$WORKSPACE_DIR/_assets/logo.svg" ]]; then
-	cp "$WORKSPACE_DIR/_assets/logo.svg" "$FLATPAK_DIR/$APP_ID.svg"
+if [[ -f "$WORKSPACE_DIR/_assets/logo_c.svg" ]]; then
+	cp "$WORKSPACE_DIR/_assets/logo_c.svg" "$FLATPAK_DIR/$APP_ID.svg"
 fi
-if [[ -f "$WORKSPACE_DIR/_assets/logo512.png" ]]; then
-	cp "$WORKSPACE_DIR/_assets/logo512.png" "$FLATPAK_DIR/$APP_ID.png"
+if [[ -f "$WORKSPACE_DIR/_assets/logo_c_512.png" ]]; then
+	cp "$WORKSPACE_DIR/_assets/logo_c_512.png" "$FLATPAK_DIR/$APP_ID.png"
 fi
 
 # --- Stage the payload and build the tarball ---

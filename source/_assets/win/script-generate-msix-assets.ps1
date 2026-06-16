@@ -5,7 +5,7 @@
 
 .DESCRIPTION
     The signed (GitHub) release uses logos rendered from the current app logo
-    (_assets/Logo512.png) rather than the Store-supplied artwork. This script
+    (_assets/logo_c_512.png) rather than the Store-supplied artwork. This script
     mirrors a REFERENCE asset folder filename-for-filename: for every
     "<LogoName>.<qualifiers>.png" in -ReferenceDir it works out the target pixel
     size from the logo name + qualifiers, renders it from -Source, and writes it
@@ -21,7 +21,7 @@
         canvas of the full (wide) dimensions.
 
 .PARAMETER Source
-    Source image (square, high-res). Default: _assets/Logo512.png.
+    Source image (square, high-res). Default: _assets/logo_c_512.png.
 
 .PARAMETER ReferenceDir
     Folder whose filenames are mirrored. Default: appxmanifest/Assets-msstore.
@@ -31,7 +31,7 @@
 
 .EXAMPLE
     pwsh _assets/win/script-generate-msix-assets.ps1
-    # Regenerate appxmanifest/Assets-signed from _assets/Logo512.png.
+    # Regenerate appxmanifest/Assets-signed from _assets/logo_c_512.png.
 #>
 
 [CmdletBinding()]
@@ -45,7 +45,7 @@ $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
 $WorkspaceDir = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
-if (-not $Source)       { $Source = Join-Path $WorkspaceDir '_assets\Logo512.png' }
+if (-not $Source)       { $Source = Join-Path $WorkspaceDir '_assets\logo_c_512.png' }
 if (-not $ReferenceDir) { $ReferenceDir = Join-Path $PSScriptRoot 'appxmanifest\Assets-msstore' }
 if (-not $OutDir)       { $OutDir = Join-Path $PSScriptRoot 'appxmanifest\Assets-signed' }
 
