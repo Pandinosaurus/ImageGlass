@@ -47,6 +47,9 @@
     <PublishAot>True</PublishAot>
     <AnalysisLevel>latest</AnalysisLevel>
     <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
+
+    <!-- for Win10 LTSC 2021 -->
+    <CETCompat>false</CETCompat>
   </PropertyGroup>
 
 
