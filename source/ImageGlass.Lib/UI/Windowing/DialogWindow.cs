@@ -180,7 +180,7 @@ public partial class DialogWindow : PhWindow
         CanMinimize = false;
 
         SizeToContent = SizeToContent.WidthAndHeight;
-        BackdropStyle = BackdropStyle.MicaAlt;
+        BackdropStyle = BHelper.OS == OSType.Windows ? BackdropStyle.MicaAlt : BackdropStyle.None;
         WindowStartupLocation = WindowStartupLocation.CenterOwner;
         CloseWindowHotkeys = [new(Avalonia.Input.Key.Escape)];
 
@@ -512,7 +512,16 @@ public partial class DialogWindow : PhWindow
         // content bg
         var contentAlpha = isDarkMode ? 180 : 220;
         var contentBg = bg.WithAlpha(contentAlpha);
-        _contentEl.Background = new SolidColorBrush(contentBg);
+        _contentEl.Background = contentBg.ToBrush();
+
+        // footer bg
+        if (!_canUseBackdrop)
+        {
+            var footerBg = bg
+                .WithBrightness(isDarkMode ? 0.075f : -0.075f)
+                .WithAlpha(contentAlpha);
+            _footerEl.Background = footerBg.ToBrush();
+        }
     }
 
 
