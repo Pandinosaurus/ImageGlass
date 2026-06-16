@@ -992,6 +992,29 @@ public partial class Config : PhReactive
         return (T)value!;
     }
 
+
+    /// <summary>
+    /// Merges extensions into <see cref="FileFormats"/> (normalized to a leading dot,
+    /// case-insensitive). Returns the newly added ones; no-op if all already exist.
+    /// </summary>
+    public IReadOnlyList<string> MergeFileFormats(IEnumerable<string> extensions)
+    {
+        var merged = new HashSet<string>(FileFormats, StringComparer.OrdinalIgnoreCase);
+        var added = new List<string>();
+
+        foreach (var ext in extensions)
+        {
+            if (string.IsNullOrWhiteSpace(ext)) continue;
+            var normalized = ext.StartsWith('.') ? ext : "." + ext;
+            if (merged.Add(normalized)) added.Add(normalized);
+        }
+
+        if (added.Count == 0) return [];
+
+        FileFormats = merged;
+        return added;
+    }
+
     #endregion // Public Methods
 
 

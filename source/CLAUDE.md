@@ -306,7 +306,7 @@ Occurs in `Program.cs` before Avalonia app setup (Linux/Mac have equivalent regi
 ## Code Style & Best Practices
 
 ### General
-- **Comments**: Explain *why*, not what; only add if needed
+- **Comments**: Explain *why*, not what; only add if needed. Keep comments short, direct, and straightforward — never write long-winded comments.
 - **XML documentation comments**: For C# classes, methods, and public properties in infrastructure / coordination code (plugins, tools, host bridges, process managers, IPC handlers, similar files), keep XML docs present and current.
 - **XML summary format**: Never use single-line XML summaries like `/// <summary>Text</summary>`. Always use the multi-line form:
   ```csharp

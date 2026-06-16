@@ -303,19 +303,23 @@ public static class Core
             var pluginsDir = BHelper.ConfigDir(Dir.Plugins);
             var discovered = PluginRegistry.DiscoverManifests(pluginsDir);
 
+            // Extensions from registered codecs, merged into Config.FileFormats after discovery.
+            var pluginExtensions = new List<string>();
+
             foreach (var (manifest, dir) in discovered)
             {
                 try
                 {
                     // Loads a single plugin and registers all of its codecs into the registry.
                     var handle = PluginRegistry.LoadAndProbe(manifest, dir);
-                    if (handle is null) return;
+                    if (handle is null) continue;
 
                     foreach (var proxy in PluginRegistry.CreateProxies(handle))
                     {
                         try
                         {
                             CodecRegistry.Register(proxy);
+                            pluginExtensions.AddRange(proxy.SupportedExtensions);
                         }
                         catch (Exception ex)
                         {
@@ -327,6 +331,12 @@ public static class Core
                 {
                     Debug.WriteLine($"[Core.DiscoverNativePlugins] '{manifest.Id}' failed: {ex.Message}");
                 }
+            }
+
+            // Merge on the UI thread; discovery runs on a background thread.
+            if (pluginExtensions.Count > 0)
+            {
+                Dispatcher.UIThread.Post(() => Config.MergeFileFormats(pluginExtensions));
             }
         });
     }
