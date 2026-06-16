@@ -2528,6 +2528,13 @@ public partial class AppAPIProvider
             Core.Slideshow = null;
         }
 
+        // release the forced look-ahead image the slideshow preloaded; when no memory
+        // budget is set, a normal cache pass would early-return without unloading it
+        if (Core.Config.CacheMaxMemoryInMb == 0)
+        {
+            Core.Photos.ClearCache();
+        }
+
 
         // 3. restore window state
         if (Core.Config.EnableFullscreenSlideshow && !_isFullScreenBeforeSlideshow)

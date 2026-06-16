@@ -94,13 +94,18 @@ public partial class PhotoManager
             token = _cacheCts.Token;
         }
 
-        if (Core.Config.CacheMaxMemoryInMb == 0
+        // during a slideshow, always preload at least the next image so transitions
+        // are seamless — even when general caching is disabled (budget = 0)
+        var isSlideshow = Core.Slideshow?.IsRunning == true;
+
+        if (!isSlideshow
+            && (Core.Config.CacheMaxMemoryInMb == 0
             || Core.Config.CacheMaxFileSizeInMb == 0
-            || Core.Config.CacheMaxDimension == 0) return;
+            || Core.Config.CacheMaxDimension == 0)) return;
 
         // run on a dedicated thread to avoid thread pool starvation
         _ = Task.Factory.StartNew(
-            () => RunCacheAroundAsync(centerIndex, token),
+            () => RunCacheAroundAsync(centerIndex, token, isSlideshow),
             token,
             TaskCreationOptions.LongRunning,
             TaskScheduler.Default);
@@ -170,7 +175,7 @@ public partial class PhotoManager
     /// Core caching loop. Loads photos in center-right-left expanding pattern
     /// until the memory budget is exhausted or all reachable photos are cached.
     /// </summary>
-    private async Task RunCacheAroundAsync(int centerIndex, CancellationToken token)
+    private async Task RunCacheAroundAsync(int centerIndex, CancellationToken token, bool isSlideshow)
     {
         try
         {
@@ -184,9 +189,15 @@ public partial class PhotoManager
             // determine how far we can reach (at most half the list on each side)
             var maxRange = Math.Min(totalCount / 2 + 1, totalCount);
 
-            // generate ordered indexes in spiral pattern:
-            // right-1, left-1, right-2, left-2, ...
-            var indexes = GenerateSpiralIndexes(centerIndex, maxRange, totalCount);
+            // during a slideshow, preload forward (the direction it advances) and respect
+            // its loop setting; otherwise use the balanced spiral for back/forward browsing
+            var canLoop = !isSlideshow || Core.Config.EnableLoopSlideshow;
+            var indexes = GenerateSpiralIndexes(centerIndex, maxRange, totalCount,
+                primaryDirection: isSlideshow ? 1 : 0, canLoop);
+
+            // the immediate next image is always preloaded during a slideshow, regardless
+            // of the memory budget or caps, so the next transition is seamless
+            var guaranteedIndex = isSlideshow ? GetForwardIndex(centerIndex, totalCount, canLoop) : -1;
 
             // estimate current memory usage from already-cached photos
             var usedMemory = EstimateCachedMemory(centerIndex);
@@ -204,11 +215,15 @@ public partial class PhotoManager
                 var photo = Get(idx);
                 if (photo is null) continue;
 
+                // the guaranteed next image bypasses the budget so a slideshow stays
+                // seamless even when general caching is disabled (budget = 0)
+                var isGuaranteed = idx == guaranteedIndex;
+
                 // already loaded (either by a previous cache pass or by the viewer)
                 if (photo.State == PhotoState.Loaded)
                 {
                     var photoMem = EstimatePhotoMemory(photo);
-                    if (usedMemory + photoMem > maxMemoryBytes) break;
+                    if (!isGuaranteed && usedMemory + photoMem > maxMemoryBytes) break;
 
                     usedMemory += photoMem;
                     newCachedSet.Add(idx);
@@ -223,27 +238,39 @@ public partial class PhotoManager
                     continue;
                 }
 
-                // check file size constraint
-                if (maxFileSizeBytes > 0 && !SatisfiesFileSizeLimit(photo.FilePath, maxFileSizeBytes))
+                if (!isSlideshow)
                 {
-                    continue;
-                }
-
-                // check dimension constraint (requires metadata)
-                if (maxDimension > 0)
-                {
-                    await photo.LoadMetadataAsync(useCache: true);
-                    if (token.IsCancellationRequested) return;
-
-                    if (photo.Metadata.Width > maxDimension || photo.Metadata.Height > maxDimension)
+                    // file-size and dimension caps gate normal browsing cache
+                    if (maxFileSizeBytes > 0 && !SatisfiesFileSizeLimit(photo.FilePath, maxFileSizeBytes))
                     {
                         continue;
                     }
+
+                    // check dimension constraint (requires metadata)
+                    if (maxDimension > 0)
+                    {
+                        await photo.LoadMetadataAsync(useCache: true);
+                        if (token.IsCancellationRequested) return;
+
+                        if (photo.Metadata.Width > maxDimension || photo.Metadata.Height > maxDimension)
+                        {
+                            continue;
+                        }
+                    }
+                }
+                else
+                {
+                    // a slideshow's forward look-ahead bypasses the caps (those images will
+                    // be shown full-res momentarily anyway); metadata is still needed below
+                    // for an accurate memory estimate
+                    await photo.LoadMetadataAsync(useCache: true);
+                    if (token.IsCancellationRequested) return;
                 }
 
-                // estimate memory before loading
+                // estimate memory before loading; the guaranteed next image loads even if it
+                // exceeds the budget, every other image stops the pass once the budget is hit
                 var estimatedMem = EstimatePhotoMemoryFromMetadata(photo);
-                if (usedMemory + estimatedMem > maxMemoryBytes) break;
+                if (!isGuaranteed && usedMemory + estimatedMem > maxMemoryBytes) break;
 
                 // load the photo
                 await photo.LoadAsync(useCache: true, skipLoadingEvent: true);
@@ -285,33 +312,78 @@ public partial class PhotoManager
 
 
     /// <summary>
-    /// Generates an ordered list of indexes in the spiral pattern:
-    /// right-1, left-1, right-2, left-2, ...
+    /// Generates an ordered list of indexes around <paramref name="centerIndex"/>.
+    /// <para>
+    /// <paramref name="primaryDirection"/> controls the ordering:
+    /// <c>0</c> = balanced spiral (right-1, left-1, right-2, left-2, ...),
+    /// <c>+1</c> = forward-first (right-1, right-2, ..., then left-1, left-2, ...),
+    /// <c>-1</c> = backward-first. When <paramref name="canLoop"/> is <c>false</c>,
+    /// offsets that fall outside the list are skipped instead of wrapping around.
+    /// </para>
     /// This preserves insertion order, unlike <see cref="BHelper.GenerateWrappedIndexes"/>
     /// which uses an unordered HashSet.
     /// </summary>
-    private static List<int> GenerateSpiralIndexes(int centerIndex, int maxRange, int totalCount)
+    private static List<int> GenerateSpiralIndexes(int centerIndex, int maxRange, int totalCount,
+        int primaryDirection = 0, bool canLoop = true)
     {
         var result = new List<int>(maxRange * 2);
         var seen = new HashSet<int>();
 
-        for (var i = 1; i <= maxRange; i++)
+        // resolve a raw offset into a valid index, honoring wrap-around
+        void TryAdd(int rawIndex)
         {
-            var rightIndex = BHelper.ComputeIndexInRange(centerIndex + i, (uint)totalCount, true);
-            var leftIndex = BHelper.ComputeIndexInRange(centerIndex - i, (uint)totalCount, true);
-
-            // right first, then left — order is preserved by List
-            if (rightIndex != centerIndex && seen.Add(rightIndex))
+            int idx;
+            if (canLoop)
             {
-                result.Add(rightIndex);
+                idx = BHelper.ComputeIndexInRange(rawIndex, (uint)totalCount, true);
             }
-            if (leftIndex != centerIndex && seen.Add(leftIndex))
+            else
             {
-                result.Add(leftIndex);
+                if (rawIndex < 0 || rawIndex >= totalCount) return;
+                idx = rawIndex;
+            }
+
+            if (idx != centerIndex && seen.Add(idx))
+            {
+                result.Add(idx);
+            }
+        }
+
+        if (primaryDirection > 0)
+        {
+            // forward-first (slideshow): all forward, then all backward
+            for (var i = 1; i <= maxRange; i++) TryAdd(centerIndex + i);
+            for (var i = 1; i <= maxRange; i++) TryAdd(centerIndex - i);
+        }
+        else if (primaryDirection < 0)
+        {
+            // backward-first: all backward, then all forward
+            for (var i = 1; i <= maxRange; i++) TryAdd(centerIndex - i);
+            for (var i = 1; i <= maxRange; i++) TryAdd(centerIndex + i);
+        }
+        else
+        {
+            // balanced spiral: right-1, left-1, right-2, left-2, ...
+            for (var i = 1; i <= maxRange; i++)
+            {
+                TryAdd(centerIndex + i);
+                TryAdd(centerIndex - i);
             }
         }
 
         return result;
+    }
+
+
+    /// <summary>
+    /// Gets the index of the immediate next image in the forward direction,
+    /// or <c>-1</c> when there is none (end of a non-looping list).
+    /// </summary>
+    private static int GetForwardIndex(int centerIndex, int totalCount, bool canLoop)
+    {
+        var raw = centerIndex + 1;
+        if (canLoop) return BHelper.ComputeIndexInRange(raw, (uint)totalCount, true);
+        return raw < totalCount ? raw : -1;
     }
 
 
