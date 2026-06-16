@@ -568,6 +568,16 @@ public static class Core
         Resx.Set(ResxId.SystemAccentColorDark3, accentDark3);
 
 
+        // accent button text: pick black/white based on the accent brightness so
+        // it stays readable when the system accent is dark (fixes contrast issue)
+        var accentText = accent.InvertBlackOrWhite();
+        var accentTextBrush = accentText.ToBrush();
+        Resx.Set(ResxId.AccentButtonForeground, accentTextBrush);
+        Resx.Set(ResxId.AccentButtonForegroundPointerOver, accentTextBrush);
+        Resx.Set(ResxId.AccentButtonForegroundPressed, accentTextBrush);
+        Resx.Set(ResxId.AccentButtonForegroundDisabled, accentText.A(128).ToBrush());
+
+
         // border hover styles
         var borderHoverBrush = accentLight1.ToBrush();
         Resx.Set(ResxId.TextControlBorderBrushPointerOver, borderHoverBrush);

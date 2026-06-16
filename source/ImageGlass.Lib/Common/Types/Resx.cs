@@ -88,6 +88,12 @@ public enum ResxId
     SystemAccentColorDark2,
     SystemAccentColorDark3,
 
+    // accent button text (contrasts with the accent background)
+    AccentButtonForeground,
+    AccentButtonForegroundPointerOver,
+    AccentButtonForegroundPressed,
+    AccentButtonForegroundDisabled,
+
 
     // control styles
     ControlCornerRadius,

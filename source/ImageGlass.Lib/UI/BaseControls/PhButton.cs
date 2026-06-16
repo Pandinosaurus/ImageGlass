@@ -213,8 +213,21 @@ public class PhButton : Button
         }
         else if (e.Property == IsAccentProperty)
         {
-            if (IsAccent) Classes.Add("accent");
-            else Classes.Remove("accent");
+            if (IsAccent)
+            {
+                Classes.Add("accent");
+
+                // The Fluent accent style only colors the inner ContentPresenter, not the
+                // button's Foreground. Our custom content (icon + text) binds to Foreground,
+                // so drive it from the accent-aware AccentButtonForeground resource to keep
+                // the text readable on dark/light system accents.
+                this[!ForegroundProperty] = Resx.CreateBinding(ResxId.AccentButtonForeground);
+            }
+            else
+            {
+                Classes.Remove("accent");
+                ClearValue(ForegroundProperty);
+            }
         }
     }
 
