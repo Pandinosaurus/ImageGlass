@@ -82,7 +82,8 @@ public sealed class SettingsNavItem
         [
             CreateNavItem("general", LangId.FrmSettings_Nav_General, ICON_GENERAL, 0,
                 vm => new GeneralSettingsPage(vm, "general")),
-            CreateNavItem("image", LangId.FrmSettings_Nav_Image, ICON_IMAGE, 0),
+            CreateNavItem("image", LangId.FrmSettings_Nav_Image, ICON_IMAGE, 0,
+                vm => new ImageSettingsPage(vm, "image")),
             CreateNavItem("slideshow", LangId.FrmSettings_Nav_Slideshow, ICON_SLIDESHOW, 0),
             CreateNavItem("edit", LangId.FrmSettings_Nav_Edit, ICON_EDIT, 0),
             CreateNavItem("layout", LangId.FrmSettings_Nav_Layout, ICON_LAYOUT, 0),

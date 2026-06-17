@@ -15,6 +15,30 @@
     HorizontalAlignment="Stretch"
     VerticalAlignment="Stretch">
 
+    <!--  Shared values reused across all settings pages  -->
+    <ui:PhControl.Resources>
+        <!--  Left indentation of the content under a group/sub-group heading  -->
+        <Thickness x:Key="SettingsGroupIndent">20,0,0,0</Thickness>
+        <!--  Vertical gap between a setting's label and its input control  -->
+        <x:Double x:Key="SettingsLabelInputGap">5</x:Double>
+    </ui:PhControl.Resources>
+
+    <!--  Shared styles for all settings pages (cascade to the hosted page content)  -->
+    <ui:PhControl.Styles>
+        <!--  Setting group heading: semibold, subtitle size  -->
+        <Style Selector="TextBlock.group">
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="FontSize" Value="{x:Static types:Const.FONT_SIZE_SUBTITLE}" />
+            <Setter Property="Margin" Value="0,20,0,8" />
+        </Style>
+
+        <!--  Setting sub-group heading: semibold, body size  -->
+        <Style Selector="TextBlock.subgroup">
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Margin" Value="0,14,0,4" />
+        </Style>
+    </ui:PhControl.Styles>
+
     <!--  sidebar | content  -->
     <Grid ColumnDefinitions="Auto, *">
 
@@ -64,7 +88,7 @@
                     x:Name="PART_Title"
                     Grid.Column="0"
                     VerticalAlignment="Center"
-                    FontSize="18"
+                    FontSize="{x:Static types:Const.FONT_SIZE_TITLE}"
                     FontWeight="SemiBold"
                     TextTrimming="CharacterEllipsis" />
 
@@ -77,7 +101,7 @@
                                 Height="14"
                                 Margin="8,0,2,0"
                                 Data="{StaticResource IconSearch}"
-                                Opacity="0.55" />
+                                Opacity="0.6" />
                         </ui:PhTextBox.InnerLeftContent>
 
                         <!--  Clear button inside the textbox (right)  -->
@@ -95,7 +119,7 @@
                                     Width="8"
                                     Height="8"
                                     Data="{StaticResource IconClose}"
-                                    Opacity="0.55"
+                                    Opacity="0.6"
                                     Stretch="Uniform"
                                     Stroke="{Binding $parent[Button].Foreground}"
                                     StrokeLineCap="Round"

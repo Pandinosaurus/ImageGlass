@@ -10,26 +10,10 @@
     d:DesignWidth="600"
     HorizontalAlignment="Stretch">
 
-    <ui:PhControl.Styles>
-        <!--  Setting group heading: semibold, subtitle size, default text color  -->
-        <Style Selector="TextBlock.group">
-            <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="FontSize" Value="{x:Static types:Const.FONT_SIZE_SUBTITLE}" />
-            <Setter Property="Margin" Value="0,18,0,8" />
-        </Style>
-
-        <!--  Compact checkboxes (reduced vertical gap)  -->
-        <Style Selector="CheckBox.compact">
-            <Setter Property="MinHeight" Value="0" />
-            <Setter Property="Padding" Value="8,1,0,1" />
-        </Style>
-    </ui:PhControl.Styles>
-
-
     <StackPanel Orientation="Vertical">
 
         <!--  Locations (no heading): button links, tooltip = full path, click = open  -->
-        <StackPanel Margin="10,0,0,0" HorizontalAlignment="Left">
+        <StackPanel Margin="{DynamicResource SettingsGroupIndent}" HorizontalAlignment="Left">
             <ui:PhButton x:Name="PART_StartupDir" IsLink="True" />
             <ui:PhButton x:Name="PART_ConfigDir" IsLink="True" />
             <ui:PhButton x:Name="PART_UserConfig" IsLink="True" />
@@ -38,14 +22,14 @@
 
         <!--  Startup  -->
         <ui:PhTextBlock Classes="group" LangKey="FrmSettings_Startup" />
-        <StackPanel Margin="10,0,0,0">
-            <CheckBox x:Name="PART_WelcomeImage" Classes="compact">
+        <StackPanel Margin="{DynamicResource SettingsGroupIndent}">
+            <CheckBox x:Name="PART_WelcomeImage">
                 <ui:PhTextBlock LangKey="FrmSettings_EnableWelcomeImage" TextWrapping="Wrap" />
             </CheckBox>
-            <CheckBox x:Name="PART_LastSeenImage" Classes="compact">
+            <CheckBox x:Name="PART_LastSeenImage">
                 <ui:PhTextBlock LangKey="FrmSettings_EnableLastSeenImage" TextWrapping="Wrap" />
             </CheckBox>
-            <CheckBox x:Name="PART_MultiInstances" Classes="compact">
+            <CheckBox x:Name="PART_MultiInstances">
                 <ui:PhTextBlock LangKey="FrmSettings_EnableMultiInstances" TextWrapping="Wrap" />
             </CheckBox>
         </StackPanel>
@@ -53,8 +37,8 @@
 
         <!--  App update  -->
         <ui:PhTextBlock Classes="group" LangKey="FrmSettings_AppUpdate" />
-        <StackPanel Margin="10,0,0,0">
-            <CheckBox x:Name="PART_AutoUpdate" Classes="compact">
+        <StackPanel Margin="{DynamicResource SettingsGroupIndent}">
+            <CheckBox x:Name="PART_AutoUpdate">
                 <ui:PhTextBlock LangKey="FrmSettings_AutoUpdate" TextWrapping="Wrap" />
             </CheckBox>
         </StackPanel>
@@ -62,8 +46,8 @@
 
         <!--  Others  -->
         <ui:PhTextBlock Classes="group" LangKey="FrmSettings_Others" />
-        <StackPanel Margin="10,0,0,0">
-            <StackPanel Spacing="5">
+        <StackPanel Margin="{DynamicResource SettingsGroupIndent}">
+            <StackPanel Spacing="{DynamicResource SettingsLabelInputGap}">
                 <ui:PhTextBlock LangKey="FrmSettings_InAppMessageDuration" TextWrapping="Wrap" />
                 <ui:PhTextBox
                     x:Name="PART_MsgDuration"

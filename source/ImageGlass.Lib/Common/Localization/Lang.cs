@@ -715,8 +715,8 @@ public class Lang
 
             
         #region FrmSettings > Tab Image
-        // Image > Image loading
-        new(LangId.FrmSettings_ImageLoading, "Image loading"),
+        // Image > Image browsing
+        new(LangId.FrmSettings_ImageBrowsing, "Image browsing"),
         new(LangId.FrmSettings_ImageLoadingOrder, "Image loading order"),
         new(LangId.FrmSettings_EnableExplorerSortOrder, "Use Explorer sort order"),
         new(LangId.FrmSettings_EnableSubfoldersLoading, "Load images in subfolders"),
@@ -725,6 +725,7 @@ public class Lang
         new(LangId.FrmSettings_EnableLoopBackNavigation, "Loop back to the first image when reaching the end of the image list"),
         new(LangId.FrmSettings_EnableImagePreview, "Display image preview while it's being loaded"),
 
+        new(LangId.FrmSettings_ImagePreview, "Image preview"),
         new(LangId.FrmSettings_EmbeddedThumbnail, "Embedded thumbnail"),
         new(LangId.FrmSettings_EnableOnlyLoadRawPreview, "Load only the embedded thumbnail for RAW formats"),
         new(LangId.FrmSettings_EnableOnlyLoadNonRawPreview, "Load only the embedded thumbnail for other formats"),
@@ -735,6 +736,7 @@ public class Lang
         // Image > Image Booster
         new(LangId.FrmSettings_ImageBooster, "Image Booster"),
         new(LangId.FrmSettings_ImageBoosterCacheCount, "Number of images cached by Image Booster (one direction)"),
+        new(LangId.FrmSettings_ImageBoosterCacheMaxMemoryInMb, "Maximum memory used for caching images (in megabytes)"),
         new(LangId.FrmSettings_ImageBoosterCacheMaxDimension, "Maximum image dimension to be cached (in pixels)"),
         new(LangId.FrmSettings_ImageBoosterCacheMaxFileSizeInMb, "Maximum image file size to be cached (in megabytes)"),
 

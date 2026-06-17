@@ -456,7 +456,7 @@ public enum LangId
 
     #region FrmSettings > Tab Image
     // Image > Image loading
-    FrmSettings_ImageLoading,
+    FrmSettings_ImageBrowsing,
     FrmSettings_ImageLoadingOrder,
     FrmSettings_EnableExplorerSortOrder,
     FrmSettings_EnableSubfoldersLoading,
@@ -465,6 +465,7 @@ public enum LangId
     FrmSettings_EnableLoopBackNavigation,
     FrmSettings_EnableImagePreview,
 
+    FrmSettings_ImagePreview,
     FrmSettings_EmbeddedThumbnail,
     FrmSettings_EnableOnlyLoadRawPreview,
     FrmSettings_EnableOnlyLoadNonRawPreview,
@@ -475,6 +476,7 @@ public enum LangId
     // Image > Image Booster
     FrmSettings_ImageBooster,
     FrmSettings_ImageBoosterCacheCount,
+    FrmSettings_ImageBoosterCacheMaxMemoryInMb,
     FrmSettings_ImageBoosterCacheMaxDimension,
     FrmSettings_ImageBoosterCacheMaxFileSizeInMb,
 
