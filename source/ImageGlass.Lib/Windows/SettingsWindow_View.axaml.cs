@@ -183,6 +183,11 @@ public partial class SettingsWindowView : PhControl
         PART_Search.PlaceholderText = Core.Lang[LangId.FrmSettings_SearchPlaceholder];
         PART_Search.TextChanged += TxtSearch_TextChanged;
         PART_Search.KeyDown += TxtSearch_KeyDown;
+        PART_ClearSearch.Click += (_, _) =>
+        {
+            PART_Search.Text = string.Empty;
+            PART_Search.Focus();
+        };
         PART_SearchResults.Tapped += SearchResults_Tapped;
 
         // sidebar

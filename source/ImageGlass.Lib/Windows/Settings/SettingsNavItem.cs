@@ -42,7 +42,7 @@ public sealed class SettingsNavItem
     public required LangId Label { get; init; }
 
     /// <summary>
-    /// Gets the sidebar icon geometry.
+    /// Gets the sidebar icon geometry. Rendered stroked (outline), not filled.
     /// </summary>
     public Geometry? Icon { get; init; }
 
