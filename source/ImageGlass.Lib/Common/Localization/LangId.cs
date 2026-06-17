@@ -395,6 +395,7 @@ public enum LangId
 
     FrmSettings_ResetSettings,
     FrmSettings_UnmanagedSettingReminder,
+    FrmSettings_SearchPlaceholder,
 
     #region FrmSettings > Navbar
     FrmSettings_Nav_General,

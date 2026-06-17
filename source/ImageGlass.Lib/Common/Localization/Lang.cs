@@ -654,6 +654,7 @@ public class Lang
 
         new(LangId.FrmSettings_ResetSettings, "Reset settings"), // v9.1
         new(LangId.FrmSettings_UnmanagedSettingReminder, "This setting is not managed by ImageGlass. Don't forget to disable it before you remove or relocate the app because ImageGlass does not handle this automatically."), // v9.1
+        new(LangId.FrmSettings_SearchPlaceholder, "Search settings…"), // v10.0
 
 
         #region FrmSettings > Navbar
