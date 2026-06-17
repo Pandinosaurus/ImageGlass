@@ -21,28 +21,20 @@ using Avalonia.Platform.Storage;
 using ImageGlass.Common.Localization;
 using ImageGlass.Common.Photoing;
 using ImageGlass.Common.Types;
-using ImageGlass.UI;
 using System;
-using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace ImageGlass.Common.Windows;
 
 /// <summary>
-/// XAML UI for the "Image" settings page (image loading, preview, Image Booster cache,
-/// color management). Wires its controls to the staging <see cref="SettingsViewModel"/>
-/// and registers each row into the search index.
+/// The "Image" settings page: image browsing/order, preview &amp; embedded thumbnails,
+/// Image Booster cache, and color management. Shared binding/registration logic lives in
+/// <see cref="SettingsPageView"/>; only the color-profile widget (custom file path + Browse)
+/// needs bespoke handling here.
 /// </summary>
-public partial class ImageSettingsView : PhControl
+public partial class ImageSettingsView : SettingsPageView
 {
-    private readonly SettingsViewModel _vm = null!;
-    private readonly string _navId = string.Empty;
-    private readonly LangId? _pageLabel;
-
-    // combo items whose Content text must refresh on language change (enum dropdowns)
-    private readonly Dictionary<ComboBoxItem, LangId> _comboItemLabels = [];
-
     // current custom .icc/.icm profile path (used when the dropdown is on "Custom")
     private string _customProfilePath = string.Empty;
 
@@ -61,37 +53,13 @@ public partial class ImageSettingsView : PhControl
     /// </summary>
     public ImageSettingsView(SettingsViewModel vm, string navId, LangId? pageLabel = null) : this()
     {
-        _vm = vm;
-        _navId = navId;
-        _pageLabel = pageLabel;
-        Build();
+        Initialize(vm, navId, pageLabel);
     }
 
 
-
-    #region Override Methods
-
-    protected override void OnIgLanguageChanged()
+    protected override void Build()
     {
-        base.OnIgLanguageChanged();
-
-        // PhTextBlock labels refresh themselves; refresh the enum combo items + Browse button manually
-        foreach (var (item, label) in _comboItemLabels)
-        {
-            item.Content = Core.Lang[label];
-        }
-        PART_BrowseColorProfile.Text = Core.Lang[LangId._Browse];
-    }
-
-    #endregion // Override Methods
-
-
-
-    #region Methods
-
-    private void Build()
-    {
-        // Image loading
+        // Image browsing
         BindEnumDropdown(PART_OrderBy, ConfigId.ImageLoadingOrder, ImageOrderBy.Name,
             LangId.FrmSettings_ImageLoadingOrder, LangId.FrmSettings_ImageBrowsing);
         BindEnumDropdown(PART_OrderType, ConfigId.ImageLoadingOrderType, ImageOrderType.Asc,
@@ -127,12 +95,12 @@ public partial class ImageSettingsView : PhControl
             LangId.FrmSettings_MinEmbeddedThumbnailSize, LangId.FrmSettings_ImagePreview);
 
         // Image Booster
-        BindUIntInput(PART_CacheMaxMemory, ConfigId.CacheMaxMemoryInMb, 0u,
+        BindUIntInput(PART_CacheMaxMemory, ConfigId.CacheMaxMemoryInMb,
             LangId.FrmSettings_ImageBoosterCacheMaxMemoryInMb, LangId.FrmSettings_ImageBooster);
-        BindUIntInput(PART_CacheMaxDimension, ConfigId.CacheMaxDimension, 8_000u,
-            LangId.FrmSettings_ImageBoosterCacheMaxDimension, LangId.FrmSettings_ImageBooster);
-        BindDoubleInput(PART_CacheMaxFileSize, ConfigId.CacheMaxFileSizeInMb, 100d,
-            LangId.FrmSettings_ImageBoosterCacheMaxFileSizeInMb, LangId.FrmSettings_ImageBooster);
+        BindUIntInput(PART_CacheMaxDimension, ConfigId.CacheMaxDimension,
+            LangId.FrmSettings_ImageBoosterCacheMaxDimension, LangId.FrmSettings_ImageBooster, 8_000u);
+        BindDoubleInput(PART_CacheMaxFileSize, ConfigId.CacheMaxFileSizeInMb,
+            LangId.FrmSettings_ImageBoosterCacheMaxFileSizeInMb, LangId.FrmSettings_ImageBooster, 100d);
 
         // Color management
         BindToggle(PART_AlwaysApplyColorProfile, ConfigId.EnableAlwaysApplyColorProfile,
@@ -153,109 +121,13 @@ public partial class ImageSettingsView : PhControl
 
 
     /// <summary>
-    /// Binds a checkbox to a boolean config id (staged on change).
-    /// </summary>
-    private void BindToggle(CheckBox chk, ConfigId id, LangId label, LangId? section, bool defaultValue = false)
-    {
-        chk.IsChecked = _vm.GetValue(id, defaultValue);
-        chk.IsCheckedChanged += (_, _) => _vm.SetValue(id, chk.IsChecked ?? false);
-
-        Register(chk, label, id, section);
-    }
-
-
-    /// <summary>
-    /// Binds a text box to an unsigned-integer config id (staged on valid change).
-    /// </summary>
-    private void BindUIntInput(PhTextBox box, ConfigId id, uint defaultValue, LangId label, LangId? section)
-    {
-        box.Text = _vm.GetValue(id, defaultValue).ToString(CultureInfo.InvariantCulture);
-        box.TextChanged += (_, _) =>
-        {
-            if (uint.TryParse(box.Text, out var v)) _vm.SetValue(id, v);
-        };
-
-        Register(box, label, id, section);
-    }
-
-
-    /// <summary>
-    /// Binds a text box to an integer config id (staged on valid change).
-    /// </summary>
-    private void BindIntInput(PhTextBox box, ConfigId id, LangId label, LangId? section)
-    {
-        box.Text = _vm.GetValue(id, 0).ToString(CultureInfo.InvariantCulture);
-        box.TextChanged += (_, _) =>
-        {
-            if (int.TryParse(box.Text, out var v)) _vm.SetValue(id, v);
-        };
-
-        Register(box, label, id, section);
-    }
-
-
-    /// <summary>
-    /// Binds a text box to a double config id (staged on valid change).
-    /// </summary>
-    private void BindDoubleInput(PhTextBox box, ConfigId id, double defaultValue, LangId label, LangId? section)
-    {
-        box.Text = _vm.GetValue(id, defaultValue).ToString(CultureInfo.InvariantCulture);
-        box.TextChanged += (_, _) =>
-        {
-            if (double.TryParse(box.Text, NumberStyles.Float, CultureInfo.InvariantCulture, out var v))
-                _vm.SetValue(id, v);
-        };
-
-        Register(box, label, id, section);
-    }
-
-
-    /// <summary>
-    /// Populates an enum dropdown with localized labels and binds the selection to a config id.
-    /// Option display text comes from the <c>{EnumType}_{Value}</c> language key.
-    /// </summary>
-    private void BindEnumDropdown<TEnum>(ComboBox combo, ConfigId id, TEnum defaultValue,
-        LangId label, LangId? section) where TEnum : struct, Enum
-    {
-        var current = _vm.GetValue(id, defaultValue);
-        var selectedIndex = 0;
-
-        var names = Enum.GetNames<TEnum>();
-        for (var i = 0; i < names.Length; i++)
-        {
-            var name = names[i];
-            var value = Enum.Parse<TEnum>(name);
-            var itemLabel = Lang.GetKey($"{typeof(TEnum).Name}_{name}");
-
-            var item = new ComboBoxItem
-            {
-                Content = itemLabel is { } lk ? Core.Lang[lk] : name,
-                Tag = value,
-            };
-            if (itemLabel is { } key) _comboItemLabels[item] = key;
-
-            combo.Items.Add(item);
-            if (EqualityComparer<TEnum>.Default.Equals(value, current)) selectedIndex = i;
-        }
-        combo.SelectedIndex = selectedIndex;
-
-        combo.SelectionChanged += (_, _) =>
-        {
-            if (combo.SelectedItem is ComboBoxItem { Tag: TEnum value }) _vm.SetValue(id, value);
-        };
-
-        Register(combo, label, id, section);
-    }
-
-
-    /// <summary>
     /// Builds the color-profile dropdown (the <see cref="ColorProfileOption"/> values) plus the
     /// Browse button + custom-file link. The <c>ColorProfile</c> config stores either an enum
     /// name or a custom file path (a value containing a '.').
     /// </summary>
     private void BuildColorProfile()
     {
-        var current = _vm.GetValue(ConfigId.ColorProfile, nameof(ColorProfileOption.CurrentMonitorProfile));
+        var current = VM.GetValue(ConfigId.ColorProfile, nameof(ColorProfileOption.CurrentMonitorProfile));
         var isCustomPath = current.Contains('.', StringComparison.Ordinal);
         if (isCustomPath)
         {
@@ -270,14 +142,9 @@ public partial class ImageSettingsView : PhControl
         for (var i = 0; i < names.Length; i++)
         {
             var name = names[i];
-            var itemLabel = Lang.GetKey($"{nameof(ColorProfileOption)}_{name}");
+            var item = new ComboBoxItem { Tag = name };
 
-            var item = new ComboBoxItem
-            {
-                Content = itemLabel is { } lk ? Core.Lang[lk] : name,
-                Tag = name,
-            };
-            if (itemLabel is { } key) _comboItemLabels[item] = key;
+            BindComboItemText(item, Lang.GetKey($"{nameof(ColorProfileOption)}_{name}"), name);
             PART_ColorProfile.Items.Add(item);
 
             var match = isCustomPath
@@ -293,7 +160,7 @@ public partial class ImageSettingsView : PhControl
             UpdateColorProfileVisibility();
         };
 
-        PART_BrowseColorProfile.Text = Core.Lang[LangId._Browse];
+        SetLocalizedText(PART_BrowseColorProfile, LangId._Browse);
         PART_BrowseColorProfile.Click += async (_, _) => await BrowseColorProfileAsync();
         PART_CustomColorProfile.Click += (_, _) =>
         {
@@ -316,12 +183,12 @@ public partial class ImageSettingsView : PhControl
         var selected = SelectedColorProfileName();
         if (selected == nameof(ColorProfileOption.Custom))
         {
-            _vm.SetValue(ConfigId.ColorProfile,
+            VM.SetValue(ConfigId.ColorProfile,
                 string.IsNullOrEmpty(_customProfilePath) ? selected : _customProfilePath);
         }
         else
         {
-            _vm.SetValue(ConfigId.ColorProfile, selected);
+            VM.SetValue(ConfigId.ColorProfile, selected);
         }
     }
 
@@ -352,7 +219,7 @@ public partial class ImageSettingsView : PhControl
     /// <summary>
     /// Opens a file picker for an .icc/.icm color profile and stages the chosen path.
     /// </summary>
-    private async System.Threading.Tasks.Task BrowseColorProfileAsync()
+    private async Task BrowseColorProfileAsync()
     {
         var topLevel = TopLevel.GetTopLevel(this);
         if (topLevel is null) return;
@@ -377,21 +244,5 @@ public partial class ImageSettingsView : PhControl
         StageColorProfile();
         UpdateColorProfileVisibility();
     }
-
-
-    private void Register(Control target, LangId label, ConfigId? id, LangId? section)
-    {
-        _vm.Index.Register(new SettingItem
-        {
-            Id = id,
-            Label = label,
-            PageNavId = _navId,
-            Page = _pageLabel,
-            Section = section,
-            Target = target,
-        });
-    }
-
-    #endregion // Methods
 
 }

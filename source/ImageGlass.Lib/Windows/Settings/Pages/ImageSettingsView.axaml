@@ -1,4 +1,4 @@
-<ui:PhControl
+<windows:SettingsPageView
     x:Class="ImageGlass.Common.Windows.ImageSettingsView"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -6,6 +6,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:types="using:ImageGlass.Common.Types"
     xmlns:ui="using:ImageGlass.UI"
+    xmlns:windows="using:ImageGlass.Common.Windows"
     mc:Ignorable="d"
     d:DesignWidth="600"
     HorizontalAlignment="Stretch">
@@ -151,4 +152,4 @@
         </StackPanel>
 
     </StackPanel>
-</ui:PhControl>
+</windows:SettingsPageView>

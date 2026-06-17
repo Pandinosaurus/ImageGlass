@@ -18,27 +18,17 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 using Avalonia.Controls;
 using ImageGlass.Common.Localization;
-using ImageGlass.UI;
 using System;
-using System.Collections.Generic;
 using System.IO;
 
 namespace ImageGlass.Common.Windows;
 
 /// <summary>
-/// XAML UI for the "General" settings page. Wires its controls to the staging
-/// <see cref="SettingsViewModel"/> and registers each row into the search index.
+/// The "General" settings page: app locations, startup options, app update, and misc settings.
+/// Shared binding/registration logic lives in <see cref="SettingsPageView"/>.
 /// </summary>
-public partial class GeneralSettingsView : PhControl
+public partial class GeneralSettingsView : SettingsPageView
 {
-    private readonly SettingsViewModel _vm = null!;
-    private readonly string _navId = string.Empty;
-    private readonly LangId? _pageLabel;
-
-    // link buttons whose Text must refresh on language change
-    private readonly Dictionary<PhButton, LangId> _linkLabels = [];
-
-
     /// <summary>
     /// Parameterless constructor for the XAML loader / designer.
     /// </summary>
@@ -53,34 +43,11 @@ public partial class GeneralSettingsView : PhControl
     /// </summary>
     public GeneralSettingsView(SettingsViewModel vm, string navId, LangId? pageLabel = null) : this()
     {
-        _vm = vm;
-        _navId = navId;
-        _pageLabel = pageLabel;
-        Build();
+        Initialize(vm, navId, pageLabel);
     }
 
 
-
-    #region Override Methods
-
-    protected override void OnIgLanguageChanged()
-    {
-        base.OnIgLanguageChanged();
-
-        // PhTextBlock labels refresh themselves; only the link button texts need a nudge
-        foreach (var (btn, label) in _linkLabels)
-        {
-            btn.Text = Core.Lang[label];
-        }
-    }
-
-    #endregion // Override Methods
-
-
-
-    #region Methods
-
-    private void Build()
+    protected override void Build()
     {
         var startupDir = BHelper.BasePath;
         var configDir = BHelper.ConfigDir();
@@ -113,72 +80,16 @@ public partial class GeneralSettingsView : PhControl
 
 
     /// <summary>
-    /// Configures a link-style button: localized text, full-path tooltip, click action.
-    /// The link appearance (accent foreground, hand cursor) comes from <see cref="PhButton.IsLink"/>.
-    /// </summary>
-    private void BindLink(PhButton btn, LangId label, string fullPath, Action onClick)
-    {
-        _linkLabels[btn] = label;
-        btn.Text = Core.Lang[label];
-        ToolTip.SetTip(btn, fullPath);
-        btn.Click += (_, _) => onClick();
-
-        Register(btn, label, null, null);
-    }
-
-
-    /// <summary>
-    /// Binds a checkbox to a boolean config id (staged on change).
-    /// </summary>
-    private void BindToggle(CheckBox chk, ConfigId id, LangId label, LangId? section)
-    {
-        chk.IsChecked = _vm.GetValue(id, false);
-        chk.IsCheckedChanged += (_, _) => _vm.SetValue(id, chk.IsChecked ?? false);
-
-        Register(chk, label, id, section);
-    }
-
-
-    /// <summary>
     /// Binds a checkbox to the string-based <c>AutoUpdate</c> config (date string vs. "0").
     /// </summary>
     private void BindAutoUpdateToggle(CheckBox chk, ConfigId id, LangId label, LangId? section)
     {
-        var current = _vm.GetValue(id, "0");
+        var current = VM.GetValue(id, "0");
         chk.IsChecked = !string.Equals(current, "0", StringComparison.OrdinalIgnoreCase);
         chk.IsCheckedChanged += (_, _) =>
-            _vm.SetValue(id, (chk.IsChecked ?? false) ? DateTime.UtcNow.ToString() : "0");
+            VM.SetValue(id, (chk.IsChecked ?? false) ? DateTime.UtcNow.ToString() : "0");
 
         Register(chk, label, id, section);
-    }
-
-
-    /// <summary>
-    /// Binds a text box to an integer config id (staged on valid change).
-    /// </summary>
-    private void BindIntInput(PhTextBox box, ConfigId id, LangId label, LangId? section)
-    {
-        box.Text = _vm.GetValue(id, 0).ToString();
-        box.TextChanged += (_, _) =>
-        {
-            if (int.TryParse(box.Text, out var v)) _vm.SetValue(id, v);
-        };
-
-        Register(box, label, id, section);
-    }
-
-
-    private void Register(Control target, LangId label, ConfigId? id, LangId? section)
-    {
-        _vm.Index.Register(new SettingItem
-        {
-            Id = id,
-            Label = label,
-            PageNavId = _navId,
-            Page = _pageLabel,
-            Section = section,
-            Target = target,
-        });
     }
 
 
@@ -207,7 +118,5 @@ public partial class GeneralSettingsView : PhControl
         // no associated editor (or no shell provider) → reveal in explorer instead
         BHelper.OpenFilePath(filePath);
     }
-
-    #endregion // Methods
 
 }

@@ -71,8 +71,8 @@ public abstract class SettingsPage : PhControl
 
 
     /// <summary>
-    /// Builds the page content. Subclasses use <see cref="SettingsBuilder"/> and register
-    /// their setting rows into <see cref="VM"/>'s <see cref="SettingsIndex"/>.
+    /// Builds the page content. Subclasses return a <see cref="SettingsPageView"/> that wires its
+    /// controls to <see cref="VM"/> and registers its setting rows into the shared <see cref="SettingsIndex"/>.
     /// </summary>
     protected abstract Control BuildContent();
 
