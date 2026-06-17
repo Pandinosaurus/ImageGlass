@@ -110,7 +110,7 @@ public enum ConfigId
     ColorProfile,
     LastSeenImagePath,
     LastOpenedTool,
-    // LastOpenedSetting,
+    LastOpenedSetting,
     BackgroundColor,
     SlideshowBackgroundColor,
     DarkTheme,

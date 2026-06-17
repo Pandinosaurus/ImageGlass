@@ -47,6 +47,8 @@ namespace ImageGlass.Common.ServiceProviders;
 public partial class AppAPIProvider
 {
     private MainWindow _mainWindow;
+    private SettingsWindow? _settingsWindow;
+
 
     // wallpaper formats
     private static FrozenSet<string> _desktopNativeFormats => [".bmp", ".jpg", ".jpeg", ".png", ".gif"];
@@ -118,38 +120,26 @@ public partial class AppAPIProvider
 
 
     /// <summary>
-    /// Open app settings.
+    /// Opens the app settings window.
     /// </summary>
-    public static async Task IG_OpenSettingsAsync()
+    public async Task IG_OpenSettingsAsync()
     {
-        var configPath = BHelper.ConfigDir(Config.CONFIG_USER);
-
-        // The user config (igconfig.json) is only written on save/exit, so it can
-        // be missing on a fresh run. Create it first so there is a real file to open.
-        if (!File.Exists(configPath))
+        // reuse the existing window if it is already open
+        if (_settingsWindow is not null)
         {
-            await Core.Config.SaveAsync();
+            _settingsWindow.Activate();
+            return;
         }
 
-        if (BHelper.OS == OSType.Windows)
+        _settingsWindow = new SettingsWindow();
+
+        try
         {
-            var proc = new Process();
-            proc.StartInfo.FileName = configPath;
-            proc.StartInfo.UseShellExecute = true;
-            proc.Start();
+            await _settingsWindow.ShowAsync(null);
         }
-        else if (BHelper.OS == OSType.Linux)
+        finally
         {
-            // Most Linux desktops have no default app for ".json", so opening it
-            // directly via the OpenURI portal does nothing. Reveal & select the
-            // file in the file manager instead, so the user can open it with any
-            // editor of their choice.
-            BHelper.OpenFilePath(configPath);
-        }
-        else
-        {
-            // macOS: 'open' launches the file's default associated app.
-            _ = Core.ShellProvider?.OpenDefaultEditingAppAsync(configPath);
+            _settingsWindow = null;
         }
     }
 

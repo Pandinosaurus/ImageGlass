@@ -669,10 +669,13 @@ public partial class Config : PhReactive
         set => Set(ConfigId.LastOpenedTool, value);
     }
 
-    ///// <summary>
-    ///// Gets, sets the last view of settings window.
-    ///// </summary>
-    //public string LastOpenedSetting { get; set; } = string.Empty;
+    /// <summary>
+    /// Gets, sets the last view of settings window.
+    /// </summary>
+    public string LastOpenedSetting {
+        get => Get(ConfigId.LastOpenedSetting, string.Empty);
+        set => Set(ConfigId.LastOpenedSetting, value);
+    }
 
     /// <summary>
     /// Gets, sets background color of of the main window
