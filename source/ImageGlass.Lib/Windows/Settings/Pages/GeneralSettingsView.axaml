@@ -1,0 +1,77 @@
+<ui:PhControl
+    x:Class="ImageGlass.Common.Windows.GeneralSettingsView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:types="using:ImageGlass.Common.Types"
+    xmlns:ui="using:ImageGlass.UI"
+    mc:Ignorable="d"
+    d:DesignWidth="600"
+    HorizontalAlignment="Stretch">
+
+    <ui:PhControl.Styles>
+        <!--  Setting group heading: semibold, subtitle size, default text color  -->
+        <Style Selector="TextBlock.group">
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="FontSize" Value="{x:Static types:Const.FONT_SIZE_SUBTITLE}" />
+            <Setter Property="Margin" Value="0,18,0,8" />
+        </Style>
+
+        <!--  Compact checkboxes (reduced vertical gap)  -->
+        <Style Selector="CheckBox.compact">
+            <Setter Property="MinHeight" Value="0" />
+            <Setter Property="Padding" Value="8,1,0,1" />
+        </Style>
+    </ui:PhControl.Styles>
+
+
+    <StackPanel Orientation="Vertical">
+
+        <!--  Locations (no heading): button links, tooltip = full path, click = open  -->
+        <StackPanel Margin="10,0,0,0" HorizontalAlignment="Left">
+            <ui:PhButton x:Name="PART_StartupDir" IsLink="True" />
+            <ui:PhButton x:Name="PART_ConfigDir" IsLink="True" />
+            <ui:PhButton x:Name="PART_UserConfig" IsLink="True" />
+        </StackPanel>
+
+
+        <!--  Startup  -->
+        <ui:PhTextBlock Classes="group" LangKey="FrmSettings_Startup" />
+        <StackPanel Margin="10,0,0,0">
+            <CheckBox x:Name="PART_WelcomeImage" Classes="compact">
+                <ui:PhTextBlock LangKey="FrmSettings_EnableWelcomeImage" TextWrapping="Wrap" />
+            </CheckBox>
+            <CheckBox x:Name="PART_LastSeenImage" Classes="compact">
+                <ui:PhTextBlock LangKey="FrmSettings_EnableLastSeenImage" TextWrapping="Wrap" />
+            </CheckBox>
+            <CheckBox x:Name="PART_MultiInstances" Classes="compact">
+                <ui:PhTextBlock LangKey="FrmSettings_EnableMultiInstances" TextWrapping="Wrap" />
+            </CheckBox>
+        </StackPanel>
+
+
+        <!--  App update  -->
+        <ui:PhTextBlock Classes="group" LangKey="FrmSettings_AppUpdate" />
+        <StackPanel Margin="10,0,0,0">
+            <CheckBox x:Name="PART_AutoUpdate" Classes="compact">
+                <ui:PhTextBlock LangKey="FrmSettings_AutoUpdate" TextWrapping="Wrap" />
+            </CheckBox>
+        </StackPanel>
+
+
+        <!--  Others  -->
+        <ui:PhTextBlock Classes="group" LangKey="FrmSettings_Others" />
+        <StackPanel Margin="10,0,0,0">
+            <StackPanel Spacing="5">
+                <ui:PhTextBlock LangKey="FrmSettings_InAppMessageDuration" TextWrapping="Wrap" />
+                <ui:PhTextBox
+                    x:Name="PART_MsgDuration"
+                    Width="200"
+                    HorizontalAlignment="Left"
+                    AcceptValue="UnsignedIntValueOnly" />
+            </StackPanel>
+        </StackPanel>
+
+    </StackPanel>
+</ui:PhControl>

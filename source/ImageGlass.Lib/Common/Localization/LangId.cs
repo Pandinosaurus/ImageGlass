@@ -440,6 +440,9 @@ public enum LangId
     FrmSettings_EnableFileWatcher,
     FrmSettings_EnableAutoOpenNewAddedImage,
 
+    // General > App update
+    FrmSettings_AppUpdate,
+
     // General > Others
     FrmSettings_Others,
     FrmSettings_AutoUpdate,

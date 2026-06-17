@@ -22,7 +22,6 @@
             x:Name="PART_Sidebar"
             Grid.Column="0"
             Width="200"
-            Margin="0,40,0,0"
             Background="Transparent">
             <ListBox.Styles>
                 <Style Selector="ListBoxItem">

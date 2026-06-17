@@ -700,6 +700,9 @@ public class Lang
         new(LangId.FrmSettings_EnableFileWatcher, "Monitor file changes in the viewing folder and update in realtime"),
         new(LangId.FrmSettings_EnableAutoOpenNewAddedImage, "Open the new added image automatically"),
 
+        // General > App update
+        new(LangId.FrmSettings_AppUpdate, "App update"),
+
         // General > Others
         new(LangId.FrmSettings_Others, "Others"),
         new(LangId.FrmSettings_AutoUpdate, "Check for update automatically"),

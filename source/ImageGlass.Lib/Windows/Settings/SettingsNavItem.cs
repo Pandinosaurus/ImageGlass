@@ -80,7 +80,8 @@ public sealed class SettingsNavItem
     {
         return
         [
-            CreateNavItem("general", LangId.FrmSettings_Nav_General, ICON_GENERAL, 0),
+            CreateNavItem("general", LangId.FrmSettings_Nav_General, ICON_GENERAL, 0,
+                vm => new GeneralSettingsPage(vm, "general")),
             CreateNavItem("image", LangId.FrmSettings_Nav_Image, ICON_IMAGE, 0),
             CreateNavItem("slideshow", LangId.FrmSettings_Nav_Slideshow, ICON_SLIDESHOW, 0),
             CreateNavItem("edit", LangId.FrmSettings_Nav_Edit, ICON_EDIT, 0),
@@ -98,7 +99,8 @@ public sealed class SettingsNavItem
     }
 
 
-    private static SettingsNavItem CreateNavItem(string navId, LangId label, string iconData, int indent)
+    private static SettingsNavItem CreateNavItem(string navId, LangId label, string iconData, int indent,
+        Func<SettingsViewModel, SettingsPage>? createPage = null)
     {
         return new SettingsNavItem
         {
@@ -106,7 +108,7 @@ public sealed class SettingsNavItem
             Label = label,
             Icon = ParseIcon(iconData),
             IndentLevel = indent,
-            CreatePage = vm => new PlaceholderSettingsPage(vm, navId),
+            CreatePage = createPage ?? (vm => new PlaceholderSettingsPage(vm, navId)),
         };
     }
 

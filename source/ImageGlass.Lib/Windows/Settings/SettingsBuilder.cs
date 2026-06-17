@@ -24,7 +24,6 @@ using ImageGlass.Common.Localization;
 using ImageGlass.UI;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 
 namespace ImageGlass.Common.Windows;
 
