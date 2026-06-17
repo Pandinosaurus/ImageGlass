@@ -18,6 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 using Avalonia.Controls;
 using ImageGlass.Common.Localization;
+using System.Collections.Generic;
 
 namespace ImageGlass.Common.Windows;
 
@@ -44,6 +45,11 @@ public sealed class SettingItem
     public string PageNavId { get; init; } = string.Empty;
 
     /// <summary>
+    /// Gets the localization key of the page (sidebar tab) that hosts this setting.
+    /// </summary>
+    public LangId? Page { get; init; }
+
+    /// <summary>
     /// Gets the localization key of the section heading this setting belongs to.
     /// </summary>
     public LangId? Section { get; init; }
@@ -60,7 +66,17 @@ public sealed class SettingItem
     public string LabelText => Core.Lang[Label];
 
     /// <summary>
-    /// Gets the localized section text (empty when no section).
+    /// Gets the localized breadcrumb path of this setting, e.g. "General &gt; Startup".
+    /// Includes the page (tab) name and the section heading when present.
     /// </summary>
-    public string SectionText => Section is null ? string.Empty : Core.Lang[Section];
+    public string SectionText
+    {
+        get
+        {
+            var parts = new List<string>(2);
+            if (Page is { } p) parts.Add(Core.Lang[p]);
+            if (Section is { } s) parts.Add(Core.Lang[s]);
+            return string.Join(" > ", parts);
+        }
+    }
 }

@@ -33,6 +33,7 @@ public partial class GeneralSettingsView : PhControl
 {
     private readonly SettingsViewModel _vm = null!;
     private readonly string _navId = string.Empty;
+    private readonly LangId? _pageLabel;
 
     // link buttons whose Text must refresh on language change
     private readonly Dictionary<PhButton, LangId> _linkLabels = [];
@@ -50,10 +51,11 @@ public partial class GeneralSettingsView : PhControl
     /// <summary>
     /// Creates the page bound to the given working-copy view model.
     /// </summary>
-    public GeneralSettingsView(SettingsViewModel vm, string navId) : this()
+    public GeneralSettingsView(SettingsViewModel vm, string navId, LangId? pageLabel = null) : this()
     {
         _vm = vm;
         _navId = navId;
+        _pageLabel = pageLabel;
         Build();
     }
 
@@ -173,6 +175,7 @@ public partial class GeneralSettingsView : PhControl
             Id = id,
             Label = label,
             PageNavId = _navId,
+            Page = _pageLabel,
             Section = section,
             Target = target,
         });

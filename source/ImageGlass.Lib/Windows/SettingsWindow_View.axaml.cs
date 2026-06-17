@@ -95,24 +95,66 @@ public partial class SettingsWindowView : PhControl
         var results = _vm.Index.Search(PART_Search.Text).Take(25).ToList();
         PART_SearchResults.ItemsSource = results;
         PART_SearchPopup.IsOpen = results.Count > 0;
+
+        // pre-select the first result so Enter works immediately and gives a default highlight
+        PART_SearchResults.SelectedIndex = results.Count > 0 ? 0 : -1;
     }
 
 
     private void TxtSearch_KeyDown(object? sender, KeyEventArgs e)
     {
-        // Enter jumps to the first search result (if any)
-        if (e.Key != Key.Enter || !PART_SearchPopup.IsOpen) return;
+        if (!PART_SearchPopup.IsOpen) return;
 
-        if (PART_SearchResults.Items.Count > 0 && PART_SearchResults.Items[0] is SettingItem item)
+        switch (e.Key)
         {
-            e.Handled = true;
-            JumpToSetting(item);
+            // move the highlighted result while keeping focus in the search box
+            case Key.Down:
+                MoveSearchSelection(1);
+                e.Handled = true;
+                break;
+            case Key.Up:
+                MoveSearchSelection(-1);
+                e.Handled = true;
+                break;
+
+            // navigate to the highlighted result (the first is pre-selected on each search)
+            case Key.Enter:
+                if (PART_SearchResults.SelectedItem is SettingItem item)
+                {
+                    e.Handled = true;
+                    JumpToSetting(item);
+                }
+                break;
+
+            case Key.Escape:
+                PART_SearchPopup.IsOpen = false;
+                e.Handled = true;
+                break;
         }
     }
 
 
-    private void SearchResults_SelectionChanged(object? sender, SelectionChangedEventArgs e)
+    /// <summary>
+    /// Moves the search-result selection by <paramref name="delta"/>, wrapping around.
+    /// </summary>
+    private void MoveSearchSelection(int delta)
     {
+        var count = PART_SearchResults.ItemCount;
+        if (count == 0) return;
+
+        var index = PART_SearchResults.SelectedIndex + delta;
+        if (index < 0) index = count - 1;
+        else if (index >= count) index = 0;
+
+        PART_SearchResults.SelectedIndex = index;
+        PART_SearchResults.ScrollIntoView(index);
+    }
+
+
+    private void SearchResults_Tapped(object? sender, TappedEventArgs e)
+    {
+        // navigate on a real tap (press + release on the same item), not on pointer-press,
+        // so press-and-hold does not trigger navigation
         if (PART_SearchResults.SelectedItem is SettingItem item) JumpToSetting(item);
     }
 
@@ -132,6 +174,7 @@ public partial class SettingsWindowView : PhControl
         foreach (var navItem in _navItems)
         {
             var page = navItem.CreatePage(_vm);
+            page.NavLabel = navItem.Label; // for search breadcrumbs ("General > Startup")
             page.EnsureBuilt();
             _pages[navItem.NavId] = page;
         }
@@ -140,7 +183,7 @@ public partial class SettingsWindowView : PhControl
         PART_Search.PlaceholderText = Core.Lang[LangId.FrmSettings_SearchPlaceholder];
         PART_Search.TextChanged += TxtSearch_TextChanged;
         PART_Search.KeyDown += TxtSearch_KeyDown;
-        PART_SearchResults.SelectionChanged += SearchResults_SelectionChanged;
+        PART_SearchResults.Tapped += SearchResults_Tapped;
 
         // sidebar
         PART_Sidebar.ItemsSource = _navItems;

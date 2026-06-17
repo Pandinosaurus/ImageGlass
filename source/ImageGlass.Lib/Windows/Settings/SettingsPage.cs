@@ -17,7 +17,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Media;
+using Avalonia.Threading;
+using ImageGlass.Common.Localization;
 using ImageGlass.UI;
 
 namespace ImageGlass.Common.Windows;
@@ -40,6 +43,12 @@ public abstract class SettingsPage : PhControl
     /// Gets the unique nav id of this page (matches the sidebar item / <see cref="Config.LastOpenedSetting"/>).
     /// </summary>
     public string NavId { get; }
+
+    /// <summary>
+    /// Gets, sets the localization key of this page's sidebar label (used for search breadcrumbs).
+    /// Assigned by the host before <see cref="EnsureBuilt"/>.
+    /// </summary>
+    public LangId? NavLabel { get; set; }
 
 
     protected SettingsPage(SettingsViewModel vm, string navId)
@@ -69,11 +78,20 @@ public abstract class SettingsPage : PhControl
 
 
     /// <summary>
-    /// Scrolls the given setting into view.
+    /// Scrolls the given setting into view and focuses it (themed focus ring) so the user
+    /// can spot where the search/config navigation landed.
     /// </summary>
     public virtual void ScrollToItem(SettingItem item)
     {
-        item.Target?.BringIntoView();
+        var target = item.Target;
+        if (target is null) return;
+
+        // defer until the freshly shown page has completed a layout pass
+        Dispatcher.UIThread.Post(() =>
+        {
+            target.BringIntoView();
+            target.Focus(NavigationMethod.Tab); // shows the themed focus ring
+        }, DispatcherPriority.Loaded);
     }
 }
 

@@ -32,5 +32,5 @@ public sealed class GeneralSettingsPage : SettingsPage
     }
 
 
-    protected override Control BuildContent() => new GeneralSettingsView(VM, NavId);
+    protected override Control BuildContent() => new GeneralSettingsView(VM, NavId, NavLabel);
 }

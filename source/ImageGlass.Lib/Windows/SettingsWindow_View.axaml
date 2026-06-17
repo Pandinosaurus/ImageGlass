@@ -5,6 +5,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:conv="clr-namespace:Avalonia.Data.Converters;assembly=Avalonia.Base"
+    xmlns:types="using:ImageGlass.Common.Types"
     xmlns:ui="using:ImageGlass.UI"
     xmlns:windows="using:ImageGlass.Common.Windows"
     mc:Ignorable="d"
@@ -76,21 +77,25 @@
                         Placement="BottomEdgeAlignedRight"
                         PlacementTarget="{Binding #PART_Search}">
                         <Border
-                            Padding="2"
-                            Background="{DynamicResource IG_ThemeMenuBackgroundBrush}"
-                            BorderBrush="{DynamicResource IG_BorderControlBrush}"
+                            Background="{DynamicResource MenuFlyoutPresenterBackground}"
+                            BorderBrush="{DynamicResource MenuFlyoutPresenterBorderBrush}"
                             BorderThickness="1"
-                            CornerRadius="7">
+                            CornerRadius="{DynamicResource OverlayCornerRadius}">
                             <ListBox
                                 x:Name="PART_SearchResults"
                                 Width="320"
-                                MaxHeight="360">
+                                MaxHeight="360"
+                                Padding="0,4"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                ClipToBounds="True"
+                                CornerRadius="{DynamicResource OverlayCornerRadius}">
                                 <ListBox.ItemTemplate>
                                     <DataTemplate x:DataType="windows:SettingItem">
                                         <StackPanel Spacing="1">
                                             <TextBlock Text="{Binding LabelText}" />
                                             <TextBlock
-                                                FontSize="12"
+                                                FontSize="{x:Static types:Const.FONT_SIZE_SMALL}"
                                                 IsVisible="{Binding SectionText, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}"
                                                 Opacity="0.6"
                                                 Text="{Binding SectionText}" />

@@ -118,6 +118,53 @@
 
 
 
+        <!--  ListBoxItem: match the main-menu item look  -->
+        <Style Selector="ListBoxItem">
+            <Setter Property="Margin" Value="4, 0" />
+            <Setter Property="Padding" Value="{DynamicResource MenuFlyoutItemThemePaddingNarrow}" />
+            <Setter Property="MinHeight" Value="0" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="{DynamicResource ControlCornerRadius}" />
+
+            <!--  background/border hover transition (like MenuItem PART_LayoutRoot)  -->
+            <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
+                <Setter Property="Transitions">
+                    <Transitions>
+                        <BrushTransition Property="Background" Duration="0:0:0.05" />
+                        <BrushTransition Property="BorderBrush" Duration="0:0:0.05" />
+                    </Transitions>
+                </Setter>
+            </Style>
+
+            <!--  pointer-over (fill + border outline, like MenuItem)  -->
+            <Style Selector="^:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+                <Setter Property="Background" Value="{DynamicResource MenuFlyoutItemBackgroundPointerOver}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource IG_ToolButtonBackgroundHover}" />
+            </Style>
+
+            <!--  pressed  -->
+            <Style Selector="^:pressed /template/ ContentPresenter#PART_ContentPresenter">
+                <Setter Property="Background" Value="{DynamicResource MenuFlyoutItemBackgroundPressed}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource IG_ToolButtonBackgroundHover}" />
+            </Style>
+
+            <!--  selected (active) uses the tool-button checked background  -->
+            <Style Selector="^:selected /template/ ContentPresenter#PART_ContentPresenter">
+                <Setter Property="Background" Value="{DynamicResource IG_ToolButtonBackgroundChecked}" />
+            </Style>
+            <Style Selector="^:selected:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+                <Setter Property="Background" Value="{DynamicResource IG_ToolButtonBackgroundChecked}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource IG_ToolButtonBackgroundHover}" />
+            </Style>
+            <Style Selector="^:selected:pressed /template/ ContentPresenter#PART_ContentPresenter">
+                <Setter Property="Background" Value="{DynamicResource MenuFlyoutItemBackgroundPressed}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource IG_ToolButtonBackgroundHover}" />
+            </Style>
+        </Style>
+
+
+
         <!--  Fixed: focus style  -->
         <Style Selector="Button, ToggleButton, CheckBox, RadioButton, TextBox, SelectableTextBlock, ComboBox, ContextMenu, MenuItem">
             <Setter Property="FocusAdorner">
