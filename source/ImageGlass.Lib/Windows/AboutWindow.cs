@@ -295,6 +295,7 @@ public partial class AboutWindow : DialogWindow
             MinWidth = 80,
             HorizontalContentAlignment = HorizontalAlignment.Center,
             VerticalContentAlignment = VerticalAlignment.Center,
+            IsVisible = BHelper.OS != OSType.Mac,
         };
         _btnDonate.Click += (_, _) =>
         {
