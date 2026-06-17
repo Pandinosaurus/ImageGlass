@@ -18,13 +18,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Controls.Primitives;
-using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
-using Avalonia.Media;
 using ImageGlass.Common.Localization;
-using ImageGlass.Common.Types;
 using ImageGlass.UI;
 using ImageGlass.UI.Windowing;
 
@@ -197,11 +193,7 @@ public partial class SettingsWindow : DialogWindow
         var btn = new PhButton
         {
             Text = text,
-            Background = Brushes.Transparent,
-            BorderThickness = new(0),
-            Padding = new(4, 2),
-            Cursor = new Cursor(StandardCursorType.Hand),
-            [!TemplatedControl.ForegroundProperty] = Resx.CreateBinding(ResxId.SystemAccentColor),
+            IsLink = true,
         };
         btn.Click += (_, _) => onClick();
 

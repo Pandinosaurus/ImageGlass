@@ -18,6 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using ImageGlass.Common;
@@ -81,6 +82,19 @@ public class PhButton : Button
     }
     public static readonly StyledProperty<bool> IsAccentProperty =
         AvaloniaProperty.Register<PhButton, bool>(nameof(IsAccent));
+
+
+    /// <summary>
+    /// Gets, sets the value indicating that the button is rendered as a borderless,
+    /// link-style button (transparent background, accent-colored text, hand cursor).
+    /// </summary>
+    public bool IsLink
+    {
+        get => GetValue(IsLinkProperty);
+        set => SetValue(IsLinkProperty, value);
+    }
+    public static readonly StyledProperty<bool> IsLinkProperty =
+        AvaloniaProperty.Register<PhButton, bool>(nameof(IsLink));
 
 
     /// <summary>
@@ -226,6 +240,30 @@ public class PhButton : Button
             else
             {
                 Classes.Remove("accent");
+                ClearValue(ForegroundProperty);
+            }
+        }
+        else if (e.Property == IsLinkProperty)
+        {
+            if (IsLink)
+            {
+                Classes.Add("link");
+
+                // borderless, transparent, accent-colored text with a hand cursor
+                Background = Brushes.Transparent;
+                BorderThickness = new Thickness(0);
+                Padding = new Thickness(4, 2);
+                Cursor = new Cursor(StandardCursorType.Hand);
+                this[!ForegroundProperty] = Resx.CreateBinding(ResxId.SystemAccentColor);
+            }
+            else
+            {
+                Classes.Remove("link");
+
+                ClearValue(BackgroundProperty);
+                ClearValue(BorderThicknessProperty);
+                ClearValue(PaddingProperty);
+                ClearValue(CursorProperty);
                 ClearValue(ForegroundProperty);
             }
         }

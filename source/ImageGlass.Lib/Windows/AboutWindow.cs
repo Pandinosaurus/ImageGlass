@@ -19,7 +19,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
-using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Svg.Skia;
 using ImageGlass.Common.AppThemes;
@@ -334,13 +333,11 @@ public partial class AboutWindow : DialogWindow
     {
         var btn = new PhButton
         {
+            // link appearance (transparent bg, accent text, hand cursor) comes from IsLink
+            IsLink = true,
             Padding = new Thickness(6, 2),
             Margin = new Thickness(1),
-            Background = Brushes.Transparent,
-            BorderThickness = new Thickness(0),
-            Cursor = new Avalonia.Input.Cursor(Avalonia.Input.StandardCursorType.Hand),
             FontSize = Const.FONT_SIZE_SMALL,
-            [!PhButton.ForegroundProperty] = Resx.CreateBinding(ResxId.SystemAccentColor),
         };
 
         btn.Click += (_, _) => clickFn();
