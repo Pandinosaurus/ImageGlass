@@ -122,16 +122,21 @@ public partial class AppAPIProvider
     /// <summary>
     /// Opens the app settings window.
     /// </summary>
-    public async Task IG_OpenSettingsAsync()
+    /// <param name="configId">
+    /// Optional <see cref="ConfigId"/> name to navigate to directly,
+    /// e.g. <c>"EnableLoopSlideshow"</c>.
+    /// </param>
+    public async Task IG_OpenSettingsAsync(string? configId = null)
     {
         // reuse the existing window if it is already open
         if (_settingsWindow is not null)
         {
             _settingsWindow.Activate();
+            if (!string.IsNullOrWhiteSpace(configId)) _settingsWindow.NavigateToConfig(configId);
             return;
         }
 
-        _settingsWindow = new SettingsWindow();
+        _settingsWindow = new SettingsWindow(configId);
 
         try
         {

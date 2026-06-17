@@ -1,4 +1,4 @@
-﻿/*
+/*
 ImageGlass - A Fast, Seamless Photo Viewer
 Copyright (C) 2010 - 2026 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
@@ -16,33 +16,82 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
+using Avalonia.Input;
+using Avalonia.Interactivity;
 using Avalonia.Layout;
+using Avalonia.Media;
 using ImageGlass.Common.Localization;
+using ImageGlass.Common.Types;
+using ImageGlass.UI;
 using ImageGlass.UI.Windowing;
 
 namespace ImageGlass.Common.Windows;
 
 public partial class SettingsWindow : DialogWindow
 {
+    private readonly SettingsViewModel _vm = new();
+    private readonly SettingsWindowView _viewEl;
+    private readonly string? _targetConfigId;
 
-    public SettingsWindow()
+    private PhButton _btnGetHelp = null!;
+    private PhButton _btnResetSettings = null!;
+
+
+    // override dialog window default settings
+    protected override int MIN_WIDTH => 760;
+    protected override int MAX_WIDTH => 2400;
+    protected override Thickness ContentPadding => new(14);
+
+
+
+    public SettingsWindow(string? targetConfigId = null)
     {
+        _targetConfigId = targetConfigId;
+
         IsButton1Visible = true;
         IsButton2Visible = true;
         IsButton3Visible = true;
 
         DefaultButton = DialogButton.Button1;
-        DefaultFocus = DialogFocus.Button1;
+        DefaultFocus = DialogFocus.Default;
         ShowInTaskbar = true;
+        PressEnterToSubmit = false;
 
-        DialogContent = new SettingsWindowView();
+        // resizable window
+        CanResize = true;
+        CanMinimize = true;
+        CanMaximize = true;
+        SizeToContent = SizeToContent.Manual;
+        Width = 900;
+        Height = 580;
+        MinWidth = 760;  // keep at/above the dialog content min width (no horizontal overflow)
+        MinHeight = 400; // allow shrinking; the sidebar & content scroll internally
+
+        _viewEl = new SettingsWindowView(_vm);
+        DialogContent = _viewEl;
         DialogFooterLeftContent = CreateDialogFooterLeftContentElement();
     }
 
 
 
     #region Override Methods
+
+    protected override void OnLoaded(RoutedEventArgs e)
+    {
+        base.OnLoaded(e);
+
+        // a specific setting was requested → jump to it (overrides the restored page)
+        if (!string.IsNullOrWhiteSpace(_targetConfigId))
+        {
+            _viewEl.NavigateToConfig(_targetConfigId);
+        }
+
+        // focus the search box on open
+        _viewEl.FocusSearch();
+    }
 
 
     protected override void OnIgLanguageChanged()
@@ -53,30 +102,113 @@ public partial class SettingsWindow : DialogWindow
         Button1Text = Core.Lang[LangId._OK];
         Button2Text = Core.Lang[LangId._Cancel];
         Button3Text = Core.Lang[LangId._Apply];
+
+        if (_btnGetHelp is not null) _btnGetHelp.Text = Core.Lang[LangId._GetHelp];
+        if (_btnResetSettings is not null) _btnResetSettings.Text = Core.Lang[LangId.FrmSettings_ResetSettings];
+    }
+
+
+    protected override async void OnDialogSubmitted(DialogEventArgs e)
+    {
+        if (!e.CanProceed) return;
+
+        await _vm.CommitAsync();
+        base.OnDialogSubmitted(e);
+    }
+
+
+    protected override async void OnDialogApplied(DialogEventArgs e)
+    {
+        if (!e.CanProceed) return;
+
+        await _vm.CommitAsync();
+        base.OnDialogApplied(e);
+    }
+
+
+    protected override void OnDialogCancelled(DialogEventArgs e)
+    {
+        _vm.Discard();
+        base.OnDialogCancelled(e);
+    }
+
+
+    protected override void OnDialogAborted()
+    {
+        _vm.Discard();
+        base.OnDialogAborted();
     }
 
     #endregion // Override Methods
 
 
 
-    #region Private Methods
+    #region Public Methods
 
+    /// <summary>
+    /// Navigates the settings window to the page hosting the given config id and scrolls to it.
+    /// </summary>
+    public void NavigateToConfig(string? configId) => _viewEl.NavigateToConfig(configId);
+
+    #endregion // Public Methods
+
+
+
+    #region Private Methods
 
     private StackPanel CreateDialogFooterLeftContentElement()
     {
+        _btnGetHelp = CreateLinkButton(Core.Lang[LangId._GetHelp], async () =>
+        {
+            var campaign = string.IsNullOrEmpty(_viewEl.CurrentNavId)
+                ? "from_setting"
+                : $"from_setting_{_viewEl.CurrentNavId}";
+            await BHelper.OpenUrlAsync(this, "https://imageglass.org/docs", campaign);
+        });
+
+        _btnResetSettings = CreateLinkButton(Core.Lang[LangId.FrmSettings_ResetSettings], async () =>
+        {
+            // TODO: perform the actual reset-to-defaults.
+            // For now, confirm the action so the UX/wiring is in place.
+            _ = await ModalWindow.ShowWarningAsync(this, new ModalWindowOptions
+            {
+                Title = Core.Lang[LangId.FrmSettings_ResetSettings],
+                Heading = Core.Lang[LangId.FrmSettings_ResetSettings],
+            }, ModalWindowButton.Yes_No);
+        });
+
         var footerLeftPanel = new StackPanel
         {
             Orientation = Orientation.Horizontal,
+            VerticalAlignment = VerticalAlignment.Center,
             Spacing = 8,
         };
+        footerLeftPanel.Children.AddRange([_btnGetHelp, _btnResetSettings]);
 
         return footerLeftPanel;
     }
 
 
+    /// <summary>
+    /// Creates a borderless, link-style button.
+    /// </summary>
+    private static PhButton CreateLinkButton(string text, System.Action onClick)
+    {
+        var btn = new PhButton
+        {
+            Text = text,
+            Background = Brushes.Transparent,
+            BorderThickness = new(0),
+            Padding = new(4, 2),
+            Cursor = new Cursor(StandardCursorType.Hand),
+            [!TemplatedControl.ForegroundProperty] = Resx.CreateBinding(ResxId.SystemAccentColor),
+        };
+        btn.Click += (_, _) => onClick();
+
+        return btn;
+    }
+
     #endregion // Private Methods
-
-
 
 
 }
