@@ -168,7 +168,7 @@
 
 
         <!--  Fixed: focus style  -->
-        <Style Selector="Button, ToggleButton, CheckBox, RadioButton, TextBox, SelectableTextBlock, ComboBox, ContextMenu, MenuItem">
+        <Style Selector="Button, ToggleButton, CheckBox, RadioButton, TextBox, SelectableTextBlock, ComboBox, ContextMenu, MenuItem, ListBoxItem, ComboBoxItem">
             <Setter Property="FocusAdorner">
                 <FocusAdornerTemplate>
                     <Border

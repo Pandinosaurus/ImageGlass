@@ -16,8 +16,12 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Interactivity;
+using Avalonia.Threading;
+using Avalonia.VisualTree;
 using ImageGlass.Common.Localization;
 using ImageGlass.UI;
 using System.Collections.Generic;
@@ -30,6 +34,12 @@ public partial class SettingsWindowView : PhControl
     private SettingsViewModel _vm = null!;
     private List<SettingsNavItem> _navItems = [];
     private readonly Dictionary<string, SettingsPage> _pages = [];
+
+    // sidebar mouse-click gating: a ListBox commits selection on pointer-press, so we
+    // defer the page swap to pointer-release (Tapped) to get click semantics. These two
+    // flags distinguish a real click from a press-then-drag-away.
+    private bool _sidebarPressing;
+    private bool _sidebarTapped;
 
 
     /// <summary>
@@ -86,11 +96,104 @@ public partial class SettingsWindowView : PhControl
 
     private void Sidebar_SelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
+        // a mouse-driven selection swaps the page on release (Tapped), not here on press;
+        // keyboard and programmatic selection changes swap immediately
+        if (_sidebarPressing) return;
         if (PART_Sidebar.SelectedItem is SettingsNavItem nav) ShowPage(nav);
     }
 
 
+    // tunnel handler so the flag is set before the ListBoxItem selects on press
+    private void Sidebar_PointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        _sidebarPressing = true;
+        _sidebarTapped = false;
+    }
+
+
+    private void Sidebar_Tapped(object? sender, TappedEventArgs e)
+    {
+        _sidebarTapped = true;
+        if (PART_Sidebar.SelectedItem is SettingsNavItem nav) ShowPage(nav);
+    }
+
+
+    private void Sidebar_PointerReleased(object? sender, PointerReleasedEventArgs e)
+    {
+        if (!_sidebarPressing) return;
+        _sidebarPressing = false;
+
+        // run after Tapped (if any) has fired; when the press was released away from any
+        // item (drag-away, no Tapped), restore the highlight to the page actually shown
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (!_sidebarTapped
+                && PART_Sidebar.SelectedItem is SettingsNavItem nav
+                && nav.NavId != CurrentNavId)
+            {
+                NavigateTo(CurrentNavId);
+            }
+        }, DispatcherPriority.Input);
+    }
+
+
     private void TxtSearch_TextChanged(object? sender, TextChangedEventArgs e)
+    {
+        UpdateSearchResults();
+    }
+
+
+    // re-focusing the box (Tab, or a click that moves focus in) re-opens the dropdown when
+    // it already holds a query (light-dismiss closed it, but the unchanged text won't
+    // re-fire TextChanged). Focus moves on pointer-press, so the clear-button guard matters.
+    private void TxtSearch_GotFocus(object? sender, FocusChangedEventArgs e)
+    {
+        TryReopenSearchPopup();
+    }
+
+
+    // a click re-opens the dropdown even when the box already has focus (GotFocus won't fire)
+    private void TxtSearch_PointerReleased(object? sender, PointerReleasedEventArgs e)
+    {
+        TryReopenSearchPopup();
+    }
+
+
+    // close the dropdown when focus leaves the search box for something outside the popup
+    // (Tab / Shift+Tab); keep it open when focus moves into the popup (clicking a result)
+    private void TxtSearch_LostFocus(object? sender, RoutedEventArgs e)
+    {
+        if (!PART_SearchPopup.IsOpen) return;
+
+        var focused = TopLevel.GetTopLevel(this)?.FocusManager?.GetFocusedElement() as Visual;
+        if (focused is not null && focused.GetSelfAndVisualAncestors().Contains(PART_SearchResults))
+            return;
+
+        PART_SearchPopup.IsOpen = false;
+    }
+
+
+    /// <summary>
+    /// Re-opens the results dropdown for the current query, unless the user is interacting
+    /// with the inner clear (X) button (which manages the popup itself by clearing the text).
+    /// </summary>
+    private void TryReopenSearchPopup()
+    {
+        // the clear button closes the popup via its Click; pressing/clicking it must not
+        // reopen the dropdown (focus moves to the box on press, before the Click fires)
+        if (PART_ClearSearch.IsPointerOver) return;
+
+        if (!PART_SearchPopup.IsOpen && !string.IsNullOrEmpty(PART_Search.Text))
+        {
+            UpdateSearchResults();
+        }
+    }
+
+
+    /// <summary>
+    /// Runs the search for the current query text and shows/hides the results popup.
+    /// </summary>
+    private void UpdateSearchResults()
     {
         var results = _vm.Index.Search(PART_Search.Text).Take(25).ToList();
         PART_SearchResults.ItemsSource = results;
@@ -155,7 +258,13 @@ public partial class SettingsWindowView : PhControl
     {
         // navigate on a real tap (press + release on the same item), not on pointer-press,
         // so press-and-hold does not trigger navigation
-        if (PART_SearchResults.SelectedItem is SettingItem item) JumpToSetting(item);
+        if (PART_SearchResults.SelectedItem is SettingItem item)
+        {
+            e.Handled = true;
+            // defer so the ListBox finishes processing this pointer event before we close
+            // the popup / clear its selection (otherwise it throws ArgumentOutOfRangeException)
+            Dispatcher.UIThread.Post(() => JumpToSetting(item));
+        }
     }
 
     #endregion // Control Events
@@ -183,6 +292,11 @@ public partial class SettingsWindowView : PhControl
         PART_Search.PlaceholderText = Core.Lang[LangId.FrmSettings_SearchPlaceholder];
         PART_Search.TextChanged += TxtSearch_TextChanged;
         PART_Search.KeyDown += TxtSearch_KeyDown;
+        PART_Search.GotFocus += TxtSearch_GotFocus;
+        PART_Search.LostFocus += TxtSearch_LostFocus;
+        // clicking the box re-opens the dropdown even when it is already focused
+        // (GotFocus won't fire again after a light-dismiss left focus in place)
+        PART_Search.AddHandler(PointerReleasedEvent, TxtSearch_PointerReleased, RoutingStrategies.Tunnel);
         PART_ClearSearch.Click += (_, _) =>
         {
             PART_Search.Text = string.Empty;
@@ -193,6 +307,9 @@ public partial class SettingsWindowView : PhControl
         // sidebar
         PART_Sidebar.ItemsSource = _navItems;
         PART_Sidebar.SelectionChanged += Sidebar_SelectionChanged;
+        PART_Sidebar.AddHandler(PointerPressedEvent, Sidebar_PointerPressed, RoutingStrategies.Tunnel);
+        PART_Sidebar.AddHandler(PointerReleasedEvent, Sidebar_PointerReleased, RoutingStrategies.Tunnel);
+        PART_Sidebar.Tapped += Sidebar_Tapped;
 
         // default selection: restore the last opened page, else the first item
         var restoreId = _navItems.Any(i => i.NavId == Core.Config.LastOpenedSetting)
@@ -250,8 +367,14 @@ public partial class SettingsWindowView : PhControl
 
     private void JumpToSetting(SettingItem item)
     {
-        PART_SearchPopup.IsOpen = false;
+        // Move focus OUT of the popup before closing it. Clicking a result focuses its
+        // ListBoxItem, which then owns the focus adorner. Tearing down the popup while a
+        // child still owns the adorner mutates the adorner layer mid-detach and throws
+        // ArgumentOutOfRangeException (Popup.Close → PopupRoot.SetChild → detach).
+        PART_Search.Focus();
+
         PART_SearchResults.SelectedItem = null;
+        PART_SearchPopup.IsOpen = false;
 
         NavigateTo(item.PageNavId);
         if (_pages.TryGetValue(item.PageNavId, out var page))
