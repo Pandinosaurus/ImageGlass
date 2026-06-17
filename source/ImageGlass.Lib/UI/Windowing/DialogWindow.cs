@@ -34,8 +34,10 @@ namespace ImageGlass.UI.Windowing;
 
 public partial class DialogWindow : PhWindow
 {
-    internal readonly int MIN_WIDTH = 400;
-    internal readonly int MAX_WIDTH = 600;
+    protected virtual int MIN_WIDTH => 400;
+    protected virtual int MAX_WIDTH => 600;
+    protected virtual Thickness ContentPadding => new(24, 14, 24, 20);
+
 
     protected Grid _contentEl;
     protected Border _footerEl;
@@ -165,6 +167,12 @@ public partial class DialogWindow : PhWindow
 
 
     /// <summary>
+    /// Gets, sets the value indicates that pression ENTER key to submit the window.
+    /// </summary>
+    public bool PressEnterToSubmit { get; set; } = true;
+
+
+    /// <summary>
     /// Gets or sets the result for the dialog.
     /// </summary>
     public DialogExitCode DialogResult { get; set; } = DialogExitCode.None;
@@ -230,7 +238,9 @@ public partial class DialogWindow : PhWindow
     protected override void OnKeyDown(KeyEventArgs e)
     {
         base.OnKeyDown(e);
+        if (!PressEnterToSubmit) return;
 
+        // press Enter to submit
         var hk = new Hotkey(e.KeyModifiers, e.Key);
         if (hk.IsSame(Key.Enter))
         {
@@ -289,9 +299,13 @@ public partial class DialogWindow : PhWindow
     protected Grid CreateContentElement()
     {
         // 1. create content slot
+        // stretch the content so resizable dialogs (e.g. Settings) can fill/shrink and
+        // let their own scrollers take over instead of overflowing and centering.
         var dialogContentSlot = new ContentControl
         {
-            Padding = new Thickness(24, 14, 24, 20),
+            Padding = ContentPadding,
+            HorizontalContentAlignment = Avalonia.Layout.HorizontalAlignment.Stretch,
+            VerticalContentAlignment = Avalonia.Layout.VerticalAlignment.Stretch,
             [!ContentControl.ContentProperty] = this[!DialogContentProperty],
         };
         _contentEl = new Grid();
@@ -530,19 +544,22 @@ public partial class DialogWindow : PhWindow
     /// </summary>
     protected void SetDefaultButton(DialogButton btn)
     {
+        // Only make the button the Enter-key default when submission via Enter is allowed.
+        // Avalonia routes Enter to any IsDefault button regardless of OnKeyDown, so this
+        // is what actually honors PressEnterToSubmit = false.
         if (btn == DialogButton.Button1)
         {
-            _btn1.IsDefault = true;
+            _btn1.IsDefault = PressEnterToSubmit;
             _btn1.IsAccent = true;
         }
         else if (btn == DialogButton.Button2)
         {
-            _btn2.IsDefault = true;
+            _btn2.IsDefault = PressEnterToSubmit;
             _btn2.IsAccent = true;
         }
         else if (btn == DialogButton.Button3)
         {
-            _btn3.IsDefault = true;
+            _btn3.IsDefault = PressEnterToSubmit;
             _btn3.IsAccent = true;
         }
     }
