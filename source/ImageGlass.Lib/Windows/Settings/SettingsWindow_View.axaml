@@ -47,13 +47,16 @@
 
 
     <!--  sidebar | content  -->
-    <Grid ColumnDefinitions="Auto, *">
+    <Grid ClipToBounds="True">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" MinWidth="200" />
+            <ColumnDefinition Width="*" MinWidth="400" />
+        </Grid.ColumnDefinitions>
 
         <!--  Sidebar  -->
         <ListBox
             x:Name="PART_Sidebar"
             Grid.Column="0"
-            MinWidth="200"
             Padding="14"
             Background="Transparent">
             <ListBox.Styles>

@@ -81,7 +81,9 @@
             <!--  apps table (rows built in code-behind)  -->
             <Border
                 x:Name="PART_AppsTable"
+                MaxWidth="1500"
                 Margin="0,10,0,0"
+                HorizontalAlignment="Left"
                 Background="{DynamicResource IG_BackgroundNeutralBrush}"
                 BorderBrush="{DynamicResource IG_BorderControlBrush}"
                 BorderThickness="1"
