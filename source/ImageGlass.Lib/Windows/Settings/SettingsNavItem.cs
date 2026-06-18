@@ -17,6 +17,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Media;
 using ImageGlass.Common.Localization;
 using System;
@@ -70,24 +71,21 @@ public sealed class SettingsNavItem
 
 
     /// <summary>
-    /// Builds the default sidebar item list.
-    /// <para>
-    /// Currently ships <see cref="PlaceholderSettingsPage"/> for every item; the real per-tab
-    /// pages are swapped in by replacing each <c>CreatePage</c> factory.
-    /// </para>
+    /// Builds the default sidebar item list. Items without a content factory show a placeholder
+    /// until their real per-tab view is implemented.
     /// </summary>
     public static List<SettingsNavItem> CreateDefaultList()
     {
         return
         [
             CreateNavItem("general", LangId.FrmSettings_Nav_General, ICON_GENERAL, 0,
-                vm => new GeneralSettingsPage(vm, "general")),
+                (vm, navId, label) => new GeneralSettingsView(vm, navId, label)),
             CreateNavItem("image", LangId.FrmSettings_Nav_Image, ICON_IMAGE, 0,
-                vm => new ImageSettingsPage(vm, "image")),
+                (vm, navId, label) => new ImageSettingsView(vm, navId, label)),
             CreateNavItem("slideshow", LangId.FrmSettings_Nav_Slideshow, ICON_SLIDESHOW, 0,
-                vm => new SlideshowSettingsPage(vm, "slideshow")),
+                (vm, navId, label) => new SlideshowSettingsView(vm, navId, label)),
             CreateNavItem("edit", LangId.FrmSettings_Nav_Edit, ICON_EDIT, 0,
-                vm => new EditSettingsPage(vm, "edit")),
+                (vm, navId, label) => new EditSettingsView(vm, navId, label)),
             CreateNavItem("layout", LangId.FrmSettings_Nav_Layout, ICON_LAYOUT, 0),
             CreateNavItem("viewer", LangId.FrmSettings_Nav_Viewer, ICON_VIEWER, 1),
             CreateNavItem("toolbar", LangId.FrmSettings_Nav_Toolbar, ICON_TOOLBAR, 1),
@@ -103,7 +101,7 @@ public sealed class SettingsNavItem
 
 
     private static SettingsNavItem CreateNavItem(string navId, LangId label, string iconData, int indent,
-        Func<SettingsViewModel, SettingsPage>? createPage = null)
+        Func<SettingsViewModel, string, LangId?, Control>? createView = null)
     {
         return new SettingsNavItem
         {
@@ -111,9 +109,16 @@ public sealed class SettingsNavItem
             Label = label,
             Icon = ParseIcon(iconData),
             IndentLevel = indent,
-            CreatePage = createPage ?? (vm => new PlaceholderSettingsPage(vm, navId)),
+            CreatePage = vm => new SettingsPage(vm, navId, createView ?? CreatePlaceholderView),
         };
     }
+
+
+    /// <summary>
+    /// Placeholder content for nav items whose real per-tab view isn't implemented yet.
+    /// </summary>
+    private static Control CreatePlaceholderView(SettingsViewModel vm, string navId, LangId? label)
+        => new TextBlock { Text = "TODO", Opacity = 0.6, TextWrapping = TextWrapping.Wrap };
 
 
     /// <summary>

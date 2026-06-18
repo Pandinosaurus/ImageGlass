@@ -18,26 +18,25 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 using Avalonia.Controls;
 using Avalonia.Input;
-using Avalonia.Media;
 using Avalonia.Threading;
 using ImageGlass.Common.Localization;
 using ImageGlass.UI;
+using System;
 
 namespace ImageGlass.Common.Windows;
 
 /// <summary>
-/// Base class for a single settings page (tab). Builds its content lazily and registers
-/// its <see cref="SettingItem"/>s into the shared <see cref="SettingsIndex"/>.
+/// A single settings page (tab) in the navigation. It hosts a content view created lazily by the
+/// <c>createView</c> factory (so the search index can be populated up front), and provides
+/// scroll-to-setting support. The per-tab content lives in a <see cref="SettingsPageView"/>; this
+/// wrapper exists once and is parameterized per nav item — see <see cref="SettingsNavItem"/>.
 /// </summary>
-public abstract class SettingsPage : PhControl
+public sealed class SettingsPage : PhControl
 {
     private bool _isBuilt;
+    private readonly SettingsViewModel _vm;
+    private readonly Func<SettingsViewModel, string, LangId?, Control> _createView;
 
-
-    /// <summary>
-    /// Gets the shared settings working-copy view model.
-    /// </summary>
-    protected SettingsViewModel VM { get; }
 
     /// <summary>
     /// Gets the unique nav id of this page (matches the sidebar item / <see cref="Config.LastOpenedSetting"/>).
@@ -51,37 +50,36 @@ public abstract class SettingsPage : PhControl
     public LangId? NavLabel { get; set; }
 
 
-    protected SettingsPage(SettingsViewModel vm, string navId)
+    /// <param name="createView">
+    /// Factory that builds the page content from the view model, nav id and (resolved) nav label.
+    /// </param>
+    public SettingsPage(SettingsViewModel vm, string navId,
+        Func<SettingsViewModel, string, LangId?, Control> createView)
     {
-        VM = vm;
+        _vm = vm;
         NavId = navId;
+        _createView = createView;
     }
 
 
     /// <summary>
-    /// Builds the page content once and registers its setting items.
+    /// Builds the page content once; the view registers its setting items into the shared
+    /// <see cref="SettingsIndex"/> as it builds.
     /// </summary>
     public void EnsureBuilt()
     {
         if (_isBuilt) return;
         _isBuilt = true;
 
-        Content = BuildContent();
+        Content = _createView(_vm, NavId, NavLabel);
     }
-
-
-    /// <summary>
-    /// Builds the page content. Subclasses return a <see cref="SettingsPageView"/> that wires its
-    /// controls to <see cref="VM"/> and registers its setting rows into the shared <see cref="SettingsIndex"/>.
-    /// </summary>
-    protected abstract Control BuildContent();
 
 
     /// <summary>
     /// Scrolls the given setting into view and focuses it (themed focus ring) so the user
     /// can spot where the search/config navigation landed.
     /// </summary>
-    public virtual void ScrollToItem(SettingItem item)
+    public void ScrollToItem(SettingItem item)
     {
         var target = item.Target;
         if (target is null) return;
@@ -92,29 +90,5 @@ public abstract class SettingsPage : PhControl
             target.BringIntoView();
             target.Focus(NavigationMethod.Tab); // shows the themed focus ring
         }, DispatcherPriority.Loaded);
-    }
-}
-
-
-
-/// <summary>
-/// Temporary placeholder page used until the real per-tab page is implemented.
-/// The page title is shown in the window header, so this only shows a note.
-/// </summary>
-public sealed class PlaceholderSettingsPage : SettingsPage
-{
-    public PlaceholderSettingsPage(SettingsViewModel vm, string navId) : base(vm, navId)
-    {
-    }
-
-
-    protected override Control BuildContent()
-    {
-        return new TextBlock
-        {
-            Text = "TODO",
-            Opacity = 0.6,
-            TextWrapping = TextWrapping.Wrap,
-        };
     }
 }
