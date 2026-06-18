@@ -61,10 +61,18 @@ public partial class SettingsWindow : DialogWindow
         CanMinimize = true;
         CanMaximize = true;
         SizeToContent = SizeToContent.Manual;
-        Width = 900;
-        Height = 580;
         MinWidth = 760;  // keep at/above the dialog content min width (no horizontal overflow)
         MinHeight = 400; // allow shrinking; the sidebar & content scroll internally
+
+        // restore window size & position
+        var bounds = Core.Config.SettingsWindowBounds;
+        Width = bounds.Width;
+        Height = bounds.Height;
+        WindowStartupLocation = WindowStartupLocation.Manual;
+        Position = new((int)bounds.X, (int)bounds.Y);
+
+        // restore window maximized state
+        if (Core.Config.EnableSettingsWindowMaximized) WindowState = WindowState.Maximized;
 
         _viewEl = new SettingsWindowView(_vm);
         DialogContent = _viewEl;
@@ -126,6 +134,26 @@ public partial class SettingsWindow : DialogWindow
     {
         _vm.Discard();
         base.OnDialogCancelled(e);
+    }
+
+
+    protected override void OnClosed(System.EventArgs e)
+    {
+        // save state regardless of how the dialog was closed
+        Core.Config.EnableSettingsWindowMaximized = WindowState == WindowState.Maximized;
+
+        // save window bounds only when in normal state (don't store maximized size as the restore size)
+        if (WindowState == WindowState.Normal)
+        {
+            var size = ClientSize;
+            Core.Config.SettingsWindowBounds = new(Position.X, Position.Y,
+                (int)size.Width,
+                (int)size.Height);
+        }
+
+        _ = Core.Config.SaveAsync();
+
+        base.OnClosed(e);
     }
 
 

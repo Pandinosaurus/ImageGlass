@@ -115,6 +115,15 @@ public partial class Config : PhReactive
     }
 
     /// <summary>
+    /// Gets, sets maximized state of the settings window.
+    /// </summary>
+    public bool EnableSettingsWindowMaximized
+    {
+        get => Get(ConfigId.EnableSettingsWindowMaximized, false);
+        set => Set(ConfigId.EnableSettingsWindowMaximized, value);
+    }
+
+    /// <summary>
     /// Gets, sets value indicating whether the slideshow mode is enabled or not.
     /// </summary>
     [JsonIgnore]
@@ -821,6 +830,16 @@ public partial class Config : PhReactive
     {
         get => Get(ConfigId.MainWindowBounds, new Rect(200, 200, 800, 500));
         set => Set(ConfigId.MainWindowBounds, value);
+    }
+
+    /// <summary>
+    /// Gets, sets the size and position of the settings window.
+    /// </summary>
+    [JsonConverter(typeof(JsonArrayToRectConverter))]
+    public Rect SettingsWindowBounds
+    {
+        get => Get(ConfigId.SettingsWindowBounds, new Rect(200, 200, 900, 580));
+        set => Set(ConfigId.SettingsWindowBounds, value);
     }
 
     /// <summary>

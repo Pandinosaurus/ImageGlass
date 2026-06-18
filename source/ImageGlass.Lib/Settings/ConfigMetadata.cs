@@ -38,6 +38,7 @@ public enum ConfigId
     ShowGalleryFileName,
     ShowAppIcon,
     EnableMainWindowMaximized,
+    EnableSettingsWindowMaximized,
     EnableSlideshow,
     EnableSlideshowCountdown,
     EnableSlideshowRandomInterval,
@@ -137,6 +138,7 @@ public enum ConfigId
     #region Array settings
 
     MainWindowBounds,
+    SettingsWindowBounds,
     ZoomLevels,
     EditApps,
     SingleFrameFormats,
