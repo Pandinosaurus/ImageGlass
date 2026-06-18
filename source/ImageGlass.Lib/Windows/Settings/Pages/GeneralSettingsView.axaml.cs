@@ -107,15 +107,13 @@ public partial class GeneralSettingsView : SettingsPageView
 
         try
         {
-            if (Core.ShellProvider is not null)
-            {
-                await Core.ShellProvider.OpenDefaultEditingAppAsync(filePath);
-                return;
-            }
+            // open the JSON file in the app associated with its file type (shell-execute)
+            var exitCode = await BHelper.RunExeAsync(filePath, "");
+            if (exitCode == 0) return;
         }
         catch { }
 
-        // no associated editor (or no shell provider) → reveal in explorer instead
+        // no associated editor → reveal in explorer instead
         BHelper.OpenFilePath(filePath);
     }
 
