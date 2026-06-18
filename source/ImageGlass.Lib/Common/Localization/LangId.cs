@@ -511,13 +511,13 @@ public enum LangId
 
 
     #region FrmSettings > Tab Edit
-    // Edit > Edit
+    // Edit > Saving
+    FrmSettings_Edit_Saving,
     FrmSettings_EnableDeleteConfirmation,
     FrmSettings_EnableSaveConfirmation,
     FrmSettings_EnablePreserveModifiedDate,
     FrmSettings_EnableOpenSaveAsInCurrentFolder,
     FrmSettings_ImageEditQuality,
-    FrmSettings_AfterEditingAction,
 
     // Edit > Clipboard
     FrmSettings_Clipboard,
@@ -525,6 +525,7 @@ public enum LangId
     FrmSettings_EnableCutMultipleFiles,
 
     // Edit > Image editing apps
+    FrmSettings_AfterEditingAction,
     FrmSettings_EditApps,
     FrmSettings_EditApps_AppName,
     FrmSettings_EditAppDialog_AddApp,

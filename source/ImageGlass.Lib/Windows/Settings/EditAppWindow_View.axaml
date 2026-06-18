@@ -1,0 +1,74 @@
+<ui:PhControl
+    x:Class="ImageGlass.Common.Windows.EditAppWindowView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:types="using:ImageGlass.Common.Types"
+    xmlns:ui="using:ImageGlass.UI"
+    mc:Ignorable="d"
+    d:DesignWidth="480">
+
+    <StackPanel Orientation="Vertical" Spacing="14">
+
+        <!--  File extension  -->
+        <StackPanel Spacing="5">
+            <ui:PhTextBlock LangKey="_FileExtension" />
+            <ui:PhTextBox
+                x:Name="PART_Extension"
+                IsRequired="True"
+                PlaceholderText=".jpg;.png;.svg" />
+        </StackPanel>
+
+        <!--  App name  -->
+        <StackPanel Spacing="5">
+            <ui:PhTextBlock LangKey="FrmSettings_EditApps_AppName" />
+            <ui:PhTextBox
+                x:Name="PART_AppName"
+                IsRequired="True"
+                PlaceholderText="MS Paint" />
+        </StackPanel>
+
+        <!--  Executable  -->
+        <StackPanel Spacing="5">
+            <ui:PhTextBlock LangKey="_Executable" />
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                <ui:PhTextBox
+                    x:Name="PART_Executable"
+                    Grid.Column="0"
+                    IsRequired="True"
+                    PlaceholderText="mspaint.exe" />
+                <ui:PhButton
+                    x:Name="PART_Browse"
+                    Grid.Column="1"
+                    VerticalAlignment="Top" />
+            </Grid>
+        </StackPanel>
+
+        <!--  Argument  -->
+        <StackPanel Spacing="5">
+            <ui:PhTextBlock LangKey="_Argument" />
+            <ui:PhTextBox
+                x:Name="PART_Argument"
+                FontFamily="{x:Static types:Const.FONT_CODE}"
+                PlaceholderText="&lt;file&gt;" />
+        </StackPanel>
+
+        <!--  Command preview  -->
+        <StackPanel Spacing="5">
+            <ui:PhTextBlock LangKey="_CommandPreview" />
+            <Border
+                Padding="10,7"
+                Background="{DynamicResource IG_BackgroundNeutralBrush}"
+                BorderBrush="{DynamicResource IG_BorderControlBrush}"
+                BorderThickness="1"
+                CornerRadius="{DynamicResource ControlCornerRadius}">
+                <SelectableTextBlock
+                    x:Name="PART_CommandPreview"
+                    FontFamily="{x:Static types:Const.FONT_CODE}"
+                    TextWrapping="Wrap" />
+            </Border>
+        </StackPanel>
+
+    </StackPanel>
+</ui:PhControl>

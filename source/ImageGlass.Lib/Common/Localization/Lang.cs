@@ -771,13 +771,13 @@ public class Lang
 
 
         #region FrmSettings > Tab Edit
-        // Edit > Edit
+        // Edit > Saving
+        new(LangId.FrmSettings_Edit_Saving, "Saving"),
         new(LangId.FrmSettings_EnableDeleteConfirmation, "Show confirmation dialog when deleting file"),
         new(LangId.FrmSettings_EnableSaveConfirmation, "Show confirmation dialog when overriding file"),
         new(LangId.FrmSettings_EnablePreserveModifiedDate, "Preserve the image's modified date on save"),
         new(LangId.FrmSettings_EnableOpenSaveAsInCurrentFolder, "Open the Save As dialog in the current image directory"), // v9.1
         new(LangId.FrmSettings_ImageEditQuality, "Image quality"),
-        new(LangId.FrmSettings_AfterEditingAction, "After opening editing app"),
 
         // Edit > Clipboard
         new(LangId.FrmSettings_Clipboard, "Clipboard"),
@@ -785,6 +785,7 @@ public class Lang
         new(LangId.FrmSettings_EnableCutMultipleFiles, "Enable the cutting of multiple files at once"),
 
         // Edit > Image editing apps
+        new(LangId.FrmSettings_AfterEditingAction, "After opening editing app"),
         new(LangId.FrmSettings_EditApps, "Image editing apps"),
         new(LangId.FrmSettings_EditApps_AppName, "App name"),
         new(LangId.FrmSettings_EditAppDialog_AddApp, "Add an app for editing"),

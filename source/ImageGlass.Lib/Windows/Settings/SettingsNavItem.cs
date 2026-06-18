@@ -32,7 +32,7 @@ public sealed class SettingsNavItem
 {
     /// <summary>
     /// Gets the unique nav id (also used as <see cref="Config.LastOpenedSetting"/> value
-    /// and the docs help campaign suffix). Mirrors the v9 sidebar item values.
+    /// and the docs help campaign suffix).
     /// </summary>
     public required string NavId { get; init; }
 
@@ -86,7 +86,8 @@ public sealed class SettingsNavItem
                 vm => new ImageSettingsPage(vm, "image")),
             CreateNavItem("slideshow", LangId.FrmSettings_Nav_Slideshow, ICON_SLIDESHOW, 0,
                 vm => new SlideshowSettingsPage(vm, "slideshow")),
-            CreateNavItem("edit", LangId.FrmSettings_Nav_Edit, ICON_EDIT, 0),
+            CreateNavItem("edit", LangId.FrmSettings_Nav_Edit, ICON_EDIT, 0,
+                vm => new EditSettingsPage(vm, "edit")),
             CreateNavItem("layout", LangId.FrmSettings_Nav_Layout, ICON_LAYOUT, 0),
             CreateNavItem("viewer", LangId.FrmSettings_Nav_Viewer, ICON_VIEWER, 1),
             CreateNavItem("toolbar", LangId.FrmSettings_Nav_Toolbar, ICON_TOOLBAR, 1),

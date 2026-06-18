@@ -117,7 +117,7 @@ public partial class ImageSettingsView : SettingsPageView
 
     /// <summary>
     /// Toggles the visibility of the minimum embedded-thumbnail size inputs: shown only
-    /// when at least one "load only embedded thumbnail" option is enabled (matches v9).
+    /// when at least one "load only embedded thumbnail" option is enabled.
     /// </summary>
     private void UpdatePreviewSizeVisibility()
     {

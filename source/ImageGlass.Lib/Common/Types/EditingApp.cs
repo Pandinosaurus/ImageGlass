@@ -67,20 +67,27 @@ public class EditingApp
 
 
     /// <summary>
-    /// Gets an editing app from the given extension.
+    /// Gets an editing app from the given extension. An exact extension match wins; a
+    /// <c>.*</c> (all-extensions) entry is used as a fallback.
     /// </summary>
     /// <param name="ext">An extension. E.g. <c>.jpg</c></param>
     public static EditingApp? GetFromExtension(string? ext)
     {
         if (string.IsNullOrWhiteSpace(ext)) return null;
 
-        var appItem = Core.Config.EditApps.FirstOrDefault(i =>
-        {
-            var exts = i.Key.Split(';', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
-            return exts.Contains(ext);
-        });
+        EditingApp? wildcardApp = null;
 
-        return appItem.Value;
+        foreach (var (key, app) in Core.Config.EditApps)
+        {
+            if (app is null) continue;
+
+            var exts = key.Split(';', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+
+            if (exts.Contains(ext)) return app;         // exact extension match wins
+            if (exts.Contains(".*")) wildcardApp = app; // remember the catch-all as a fallback
+        }
+
+        return wildcardApp;
     }
 
 
