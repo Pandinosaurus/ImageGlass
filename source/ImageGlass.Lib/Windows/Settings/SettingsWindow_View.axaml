@@ -53,7 +53,7 @@
         <ListBox
             x:Name="PART_Sidebar"
             Grid.Column="0"
-            Width="200"
+            MinWidth="200"
             Padding="14"
             Background="Transparent">
             <ListBox.Styles>
@@ -152,8 +152,8 @@
                             CornerRadius="{DynamicResource OverlayCornerRadius}">
                             <ListBox
                                 x:Name="PART_SearchResults"
-                                Width="320"
-                                MaxHeight="360"
+                                Width="400"
+                                MaxHeight="350"
                                 Padding="0,4"
                                 Background="Transparent"
                                 BorderThickness="0"
@@ -162,12 +162,13 @@
                                 <ListBox.ItemTemplate>
                                     <DataTemplate x:DataType="windows:SettingItem">
                                         <StackPanel Spacing="1">
-                                            <TextBlock Text="{Binding LabelText}" />
+                                            <TextBlock Text="{Binding LabelText}" TextTrimming="CharacterEllipsis" />
                                             <TextBlock
                                                 FontSize="{x:Static types:Const.FONT_SIZE_SMALL}"
                                                 IsVisible="{Binding SectionText, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}"
                                                 Opacity="0.6"
-                                                Text="{Binding SectionText}" />
+                                                Text="{Binding SectionText}"
+                                                TextTrimming="CharacterEllipsis" />
                                         </StackPanel>
                                     </DataTemplate>
                                 </ListBox.ItemTemplate>

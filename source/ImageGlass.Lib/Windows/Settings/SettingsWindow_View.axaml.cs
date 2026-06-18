@@ -23,6 +23,7 @@ using Avalonia.Interactivity;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using ImageGlass.Common.Localization;
+using ImageGlass.Common.Types;
 using ImageGlass.UI;
 using System.Collections.Generic;
 using System.Linq;
@@ -34,6 +35,10 @@ public partial class SettingsWindowView : PhControl
     private SettingsViewModel _vm = null!;
     private List<SettingsNavItem> _navItems = [];
     private readonly Dictionary<string, SettingsPage> _pages = [];
+
+    // hotkey to active the search box
+    private static readonly Hotkey _searchHotkey = new(Hotkey.Ctrl, Key.K);
+    private TopLevel? _topLevel;
 
     // sidebar mouse-click gating: a ListBox commits selection on pointer-press, so we
     // defer the page swap to pointer-release (Tapped) to get click semantics. These two
@@ -70,13 +75,32 @@ public partial class SettingsWindowView : PhControl
 
     #region Override Methods
 
+    protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
+    {
+        base.OnAttachedToVisualTree(e);
+
+        // listen on the top level so the search hotkey works no matter what has focus
+        _topLevel = TopLevel.GetTopLevel(this);
+        _topLevel?.AddHandler(KeyDownEvent, TopLevel_KeyDown, RoutingStrategies.Tunnel);
+    }
+
+
+    protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
+    {
+        _topLevel?.RemoveHandler(KeyDownEvent, TopLevel_KeyDown);
+        _topLevel = null;
+
+        base.OnDetachedFromVisualTree(e);
+    }
+
+
     protected override void OnIgLanguageChanged()
     {
         base.OnIgLanguageChanged();
 
         if (PART_Search is not null)
         {
-            PART_Search.PlaceholderText = Core.Lang[LangId.FrmSettings_SearchPlaceholder];
+            PART_Search.PlaceholderText = GetSearchPlaceholder();
         }
 
         // re-template the sidebar so the localized labels refresh
@@ -134,6 +158,17 @@ public partial class SettingsWindowView : PhControl
                 NavigateTo(CurrentNavId);
             }
         }, DispatcherPriority.Input);
+    }
+
+
+    // Ctrl+K / Cmd+K: focus the search box and select any existing query
+    private void TopLevel_KeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.Key != _searchHotkey.Key || e.KeyModifiers != _searchHotkey.Modifiers) return;
+
+        FocusSearch();
+        PART_Search.SelectAll();
+        e.Handled = true;
     }
 
 
@@ -289,7 +324,7 @@ public partial class SettingsWindowView : PhControl
         }
 
         // search box
-        PART_Search.PlaceholderText = Core.Lang[LangId.FrmSettings_SearchPlaceholder];
+        PART_Search.PlaceholderText = GetSearchPlaceholder();
         PART_Search.TextChanged += TxtSearch_TextChanged;
         PART_Search.KeyDown += TxtSearch_KeyDown;
         PART_Search.GotFocus += TxtSearch_GotFocus;
@@ -325,6 +360,12 @@ public partial class SettingsWindowView : PhControl
     /// Moves keyboard focus to the search box.
     /// </summary>
     public void FocusSearch() => PART_Search?.Focus();
+
+
+    /// <summary>
+    /// Builds the search box placeholder, appending the focus hotkey (e.g. "Search settings… (Ctrl+K)").
+    /// </summary>
+    private static string GetSearchPlaceholder() => $"{Core.Lang[LangId.FrmSettings_SearchPlaceholder]} ({_searchHotkey.KeyString})";
 
 
     /// <summary>
