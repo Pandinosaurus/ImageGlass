@@ -36,10 +36,10 @@ public partial class SettingsWindow : DialogWindow
     private PhButton _btnResetSettings = null!;
 
 
-    // override dialog window default settings
-    protected override int MIN_WIDTH => 760;
-    protected override int MAX_WIDTH => 2400;
-    protected override Thickness ContentPadding => new(14);
+    // override dialog window default settings — no width clamping (free resize)
+    protected override int MIN_WIDTH => 0;
+    protected override int MAX_WIDTH => int.MaxValue;
+    protected override Thickness ContentPadding => new(0);
 
 
 
@@ -61,8 +61,7 @@ public partial class SettingsWindow : DialogWindow
         CanMinimize = true;
         CanMaximize = true;
         SizeToContent = SizeToContent.Manual;
-        MinWidth = 760;  // keep at/above the dialog content min width (no horizontal overflow)
-        MinHeight = 400; // allow shrinking; the sidebar & content scroll internally
+        // no min size: let the window be resized as small as the OS allows
 
         // restore window size & position
         var bounds = Core.Config.SettingsWindowBounds;
@@ -137,8 +136,11 @@ public partial class SettingsWindow : DialogWindow
     }
 
 
-    protected override void OnClosed(System.EventArgs e)
+    protected override void OnClosing(WindowClosingEventArgs e)
     {
+        // capture bounds here (not OnClosed) — the native window is still alive,
+        // so Position/ClientSize are valid; by OnClosed they read (0,0).
+
         // save state regardless of how the dialog was closed
         Core.Config.EnableSettingsWindowMaximized = WindowState == WindowState.Maximized;
 
@@ -153,7 +155,7 @@ public partial class SettingsWindow : DialogWindow
 
         _ = Core.Config.SaveAsync();
 
-        base.OnClosed(e);
+        base.OnClosing(e);
     }
 
 

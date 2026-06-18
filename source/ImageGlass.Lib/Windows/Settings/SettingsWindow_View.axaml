@@ -23,6 +23,7 @@
         <x:Double x:Key="SettingsLabelInputGap">5</x:Double>
     </ui:PhControl.Resources>
 
+
     <!--  Shared styles for all settings pages (cascade to the hosted page content)  -->
     <ui:PhControl.Styles>
         <!--  Setting group heading: semibold, subtitle size  -->
@@ -32,12 +33,18 @@
             <Setter Property="Margin" Value="0,20,0,8" />
         </Style>
 
+        <!--  First group heading on a page: no top margin (the page already has top padding)  -->
+        <Style Selector="TextBlock.group:nth-child(1)">
+            <Setter Property="Margin" Value="0,0,0,8" />
+        </Style>
+
         <!--  Setting sub-group heading: semibold, body size  -->
         <Style Selector="TextBlock.subgroup">
             <Setter Property="FontWeight" Value="SemiBold" />
             <Setter Property="Margin" Value="0,14,0,4" />
         </Style>
     </ui:PhControl.Styles>
+
 
     <!--  sidebar | content  -->
     <Grid ColumnDefinitions="Auto, *">
@@ -47,6 +54,7 @@
             x:Name="PART_Sidebar"
             Grid.Column="0"
             Width="200"
+            Padding="14"
             Background="Transparent">
             <ListBox.Styles>
                 <Style Selector="ListBoxItem">
@@ -83,7 +91,11 @@
             Margin="28,0,0,0">
 
             <!--  Header  -->
-            <Grid Grid.Row="0" ColumnDefinitions="*, Auto">
+            <Grid
+                Grid.Row="0"
+                ColumnDefinitions="*, Auto"
+                Margin="0,14,14,14"
+                ColumnSpacing="8">
                 <TextBlock
                     x:Name="PART_Title"
                     Grid.Column="0"
@@ -169,10 +181,9 @@
             <!--  Scrollable page content  -->
             <ScrollViewer
                 Grid.Row="1"
-                Margin="0,14,0,0"
                 HorizontalScrollBarVisibility="Disabled"
                 VerticalScrollBarVisibility="Auto">
-                <ContentControl x:Name="PART_ContentHost" Padding="0,0,4,8" />
+                <ContentControl x:Name="PART_ContentHost" Padding="0,0,14,32" />
             </ScrollViewer>
 
         </Grid>
