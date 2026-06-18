@@ -438,7 +438,7 @@ public static class Core
             Resx.Set(ResxId.IG_BackgroundDangerBrush, AppThemeColors.BackgroundDangerLight.ToBrush());
         }
 
-        var bgNeutralAlpha = Core.Theme.Settings.IsDarkMode ? 100 : 150;
+        var bgNeutralAlpha = 100;
         var bgColor = AppThemeColors.BgBrush.Color.NoAlpha();
         var bgNeutral = bgColor.Blend(Core.Theme.InvertedBaseColor, 0.9f, bgNeutralAlpha);
         var borderNeutral = bgColor.Blend(Core.Theme.InvertedBaseColor, 0.8f, bgNeutralAlpha);

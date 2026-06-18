@@ -270,6 +270,7 @@ public partial class EditSettingsView : SettingsPageView
             Padding = CELL_PADDING,
             VerticalAlignment = VerticalAlignment.Center,
             TextTrimming = TextTrimming.CharacterEllipsis,
+            IsTabStop = false,
         };
         if (maxWidth > 0) tb.MaxWidth = maxWidth;
         if (!string.IsNullOrEmpty(text)) ToolTip.SetTip(tb, text);
@@ -288,7 +289,7 @@ public partial class EditSettingsView : SettingsPageView
     };
 
 
-    private Control ActionsCell(string extKey)
+    private Border ActionsCell(string extKey)
     {
         var btnEdit = new PhButton { IsLink = true, Text = Core.Lang[LangId._Edit] };
         btnEdit.Click += async (_, _) => await AddOrEditAppAsync(extKey);
@@ -304,7 +305,11 @@ public partial class EditSettingsView : SettingsPageView
         };
         panel.Children.AddRange([btnEdit, btnDelete]);
 
-        return new Border { Padding = new Thickness(8, 2), Child = panel };
+        return new Border
+        {
+            Padding = new Thickness(8, 2),
+            Child = panel,
+        };
     }
 
     #endregion // Table cell builders

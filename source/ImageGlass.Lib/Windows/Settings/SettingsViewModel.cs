@@ -104,13 +104,8 @@ public sealed class SettingsViewModel : PhReactive
     /// <summary>
     /// Runs explicit follow-up actions for committed settings that don't propagate on
     /// their own via <see cref="Core.Config"/> bindings.
-    /// <para>
-    /// Image browsing/order changes re-scan the folder (the current photo stays put);
-    /// preview and color-management changes re-decode the current photo. Theme / language
-    /// will be wired here too.
-    /// </para>
     /// </summary>
-    private void RunApplyActions(IReadOnlyList<ConfigId> changedIds)
+    private static void RunApplyActions(IReadOnlyList<ConfigId> changedIds)
     {
         // changes require reloading photo list
         var reloadList = changedIds.Any(static id => id

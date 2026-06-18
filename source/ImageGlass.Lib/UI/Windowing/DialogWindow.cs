@@ -524,18 +524,21 @@ public partial class DialogWindow : PhWindow
         var bg = AppThemeColors.BgBrush.Color.NoAlpha();
 
         // content bg
-        var contentAlpha = isDarkMode ? 180 : 220;
+        var contentAlpha = Math.Max(isDarkMode ? 180 : 220, bg.A);
         var contentBg = bg.WithAlpha(contentAlpha);
         _contentEl.Background = contentBg.ToBrush();
 
         // footer bg
-        if (!_canUseBackdrop)
-        {
-            var footerBg = bg
-                .WithBrightness(isDarkMode ? 0.075f : -0.075f)
-                .WithAlpha(contentAlpha);
-            _footerEl.Background = footerBg.ToBrush();
-        }
+        var footerAlpha = _canUseBackdrop ? Math.Max(180, contentAlpha / 2) : contentAlpha;
+        var footerBg = bg
+            .WithBrightness(isDarkMode ? 0.075f : -0.075f)
+            .WithAlpha(footerAlpha);
+        _footerEl.Background = footerBg.ToBrush();
+
+        // footer border
+        _footerEl.BorderBrush = footerBg
+            .WithBrightness(isDarkMode ? 0.075f : -0.075f)
+            .ToBrush();
     }
 
 
