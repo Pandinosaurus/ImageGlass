@@ -102,12 +102,40 @@ public sealed class SettingsViewModel : PhReactive
 
 
     /// <summary>
-    /// Hook for settings that don't propagate automatically via config bindings
-    /// (e.g. theme / language / image-list reload).
+    /// Runs explicit follow-up actions for committed settings that don't propagate on
+    /// their own via <see cref="Core.Config"/> bindings.
+    /// <para>
+    /// Image browsing/order changes re-scan the folder (the current photo stays put);
+    /// preview and color-management changes re-decode the current photo. Theme / language
+    /// will be wired here too.
+    /// </para>
     /// </summary>
     private void RunApplyActions(IReadOnlyList<ConfigId> changedIds)
     {
-        // Most settings update live via Core.Config.PropertyChanged + compiled bindings.
-        // Special cases (DarkTheme/LightTheme/Language/ImageLoadingOrder/…) will be wired here.
+        // changes require reloading photo list
+        var reloadList = changedIds.Any(static id => id
+            is ConfigId.ImageLoadingOrder
+            or ConfigId.ImageLoadingOrderType
+            or ConfigId.EnableExplorerSortOrder
+            or ConfigId.EnableSubfoldersLoading
+            or ConfigId.EnableImageFolderGrouping
+            or ConfigId.EnableHiddenImagesLoading);
+
+        // changes require reloading current photo
+        var reloadPhoto = changedIds.Any(static id => id
+            is ConfigId.EnableOnlyLoadRawPreview
+            or ConfigId.EnableOnlyLoadNonRawPreview
+            or ConfigId.EnableAlwaysApplyColorProfile
+            or ConfigId.ColorProfile);
+
+        // the new color profile must reach Core.DestColorProfile before the photo re-decodes
+        if (changedIds.Contains(ConfigId.ColorProfile))
+        {
+            Core.UpdateDestColorProfile();
+        }
+
+
+        if (reloadList) Core.API.IG_ReloadList();
+        if (reloadPhoto) Core.API.IG_Reload();
     }
 }
