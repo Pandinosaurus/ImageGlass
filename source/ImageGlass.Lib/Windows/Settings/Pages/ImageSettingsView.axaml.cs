@@ -59,22 +59,22 @@ public partial class ImageSettingsView : SettingsPageView
 
     protected override void Build()
     {
-        // Image browsing
+        // Browsing
         BindEnumDropdown(PART_OrderBy, ConfigId.ImageLoadingOrder, ImageOrderBy.Name,
-            LangId.FrmSettings_ImageLoadingOrder, LangId.FrmSettings_ImageBrowsing);
+            LangId.FrmSettings_ImageLoadingOrder, LangId.FrmSettings_Browsing);
         BindEnumDropdown(PART_OrderType, ConfigId.ImageLoadingOrderType, ImageOrderType.Asc,
-            LangId.FrmSettings_ImageLoadingOrder, LangId.FrmSettings_ImageBrowsing);
+            LangId.FrmSettings_ImageLoadingOrder, LangId.FrmSettings_Browsing);
 
         BindToggle(PART_ExplorerSortOrder, ConfigId.EnableExplorerSortOrder,
-            LangId.FrmSettings_EnableExplorerSortOrder, LangId.FrmSettings_ImageBrowsing, true);
+            LangId.FrmSettings_EnableExplorerSortOrder, LangId.FrmSettings_Browsing, true);
         BindToggle(PART_SubfoldersLoading, ConfigId.EnableSubfoldersLoading,
-            LangId.FrmSettings_EnableSubfoldersLoading, LangId.FrmSettings_ImageBrowsing);
+            LangId.FrmSettings_EnableSubfoldersLoading, LangId.FrmSettings_Browsing);
         BindToggle(PART_FolderGrouping, ConfigId.EnableImageFolderGrouping,
-            LangId.FrmSettings_EnableImageFolderGrouping, LangId.FrmSettings_ImageBrowsing);
+            LangId.FrmSettings_EnableImageFolderGrouping, LangId.FrmSettings_Browsing);
         BindToggle(PART_HiddenImages, ConfigId.EnableHiddenImagesLoading,
-            LangId.FrmSettings_EnableHiddenImagesLoading, LangId.FrmSettings_ImageBrowsing);
+            LangId.FrmSettings_EnableHiddenImagesLoading, LangId.FrmSettings_Browsing);
         BindToggle(PART_LoopBack, ConfigId.EnableLoopBackNavigation,
-            LangId.FrmSettings_EnableLoopBackNavigation, LangId.FrmSettings_ImageBrowsing, true);
+            LangId.FrmSettings_EnableLoopBackNavigation, LangId.FrmSettings_Browsing, true);
 
         // Image preview
         BindToggle(PART_ImagePreview, ConfigId.EnableImagePreview,
@@ -94,18 +94,24 @@ public partial class ImageSettingsView : SettingsPageView
         BindIntInput(PART_PreviewMinHeight, ConfigId.PreviewMinHeight,
             LangId.FrmSettings_MinEmbeddedThumbnailSize, LangId.FrmSettings_ImagePreview);
 
-        // Image Booster
-        BindUIntInput(PART_CacheMaxMemory, ConfigId.CacheMaxMemoryInMb,
-            LangId.FrmSettings_ImageBoosterCacheMaxMemoryInMb, LangId.FrmSettings_ImageBooster);
-        BindUIntInput(PART_CacheMaxDimension, ConfigId.CacheMaxDimension,
-            LangId.FrmSettings_ImageBoosterCacheMaxDimension, LangId.FrmSettings_ImageBooster, 8_000u);
-        BindDoubleInput(PART_CacheMaxFileSize, ConfigId.CacheMaxFileSizeInMb,
-            LangId.FrmSettings_ImageBoosterCacheMaxFileSizeInMb, LangId.FrmSettings_ImageBooster, 100d);
+        // File watcher
+        BindToggle(PART_FileWatcher, ConfigId.EnableFileWatcher,
+            LangId.FrmSettings_EnableFileWatcher, LangId.FrmSettings_FileWatcher, true);
+        BindToggle(PART_AutoOpenNewAddedImage, ConfigId.EnableAutoOpenNewAddedImage,
+            LangId.FrmSettings_EnableAutoOpenNewAddedImage, LangId.FrmSettings_FileWatcher);
 
         // Color management
         BindToggle(PART_AlwaysApplyColorProfile, ConfigId.EnableAlwaysApplyColorProfile,
             LangId.FrmSettings_EnableAlwaysApplyColorProfile, LangId.FrmSettings_ColorManagement);
         BuildColorProfile();
+
+        // Caching
+        BindUIntInput(PART_CacheMaxMemory, ConfigId.CacheMaxMemoryInMb,
+            LangId.FrmSettings_ImageBoosterCacheMaxMemoryInMb, LangId.FrmSettings_Caching);
+        BindUIntInput(PART_CacheMaxDimension, ConfigId.CacheMaxDimension,
+            LangId.FrmSettings_ImageBoosterCacheMaxDimension, LangId.FrmSettings_Caching, 8_000u);
+        BindDoubleInput(PART_CacheMaxFileSize, ConfigId.CacheMaxFileSizeInMb,
+            LangId.FrmSettings_ImageBoosterCacheMaxFileSizeInMb, LangId.FrmSettings_Caching, 100d);
     }
 
 

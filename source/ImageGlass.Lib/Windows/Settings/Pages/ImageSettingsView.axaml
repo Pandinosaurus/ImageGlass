@@ -13,8 +13,8 @@
 
     <StackPanel Orientation="Vertical">
 
-        <!--  Image loading  -->
-        <ui:PhTextBlock Classes="group" LangKey="FrmSettings_ImageBrowsing" />
+        <!--  Browsing  -->
+        <ui:PhTextBlock Classes="group" LangKey="FrmSettings_Browsing" />
         <StackPanel Margin="{DynamicResource SettingsGroupIndent}">
 
             <!--  Loading order + order type (side by side)  -->
@@ -89,33 +89,15 @@
         </StackPanel>
 
 
-        <!--  Image Booster  -->
-        <ui:PhTextBlock Classes="group" LangKey="FrmSettings_ImageBooster" />
-        <StackPanel Margin="{DynamicResource SettingsGroupIndent}" Spacing="10">
-            <StackPanel Spacing="{DynamicResource SettingsLabelInputGap}">
-                <ui:PhTextBlock LangKey="FrmSettings_ImageBoosterCacheMaxMemoryInMb" TextWrapping="Wrap" />
-                <ui:PhTextBox
-                    x:Name="PART_CacheMaxMemory"
-                    Width="200"
-                    HorizontalAlignment="Left"
-                    AcceptValue="UnsignedIntValueOnly" />
-            </StackPanel>
-            <StackPanel Spacing="{DynamicResource SettingsLabelInputGap}">
-                <ui:PhTextBlock LangKey="FrmSettings_ImageBoosterCacheMaxDimension" TextWrapping="Wrap" />
-                <ui:PhTextBox
-                    x:Name="PART_CacheMaxDimension"
-                    Width="200"
-                    HorizontalAlignment="Left"
-                    AcceptValue="UnsignedIntValueOnly" />
-            </StackPanel>
-            <StackPanel Spacing="{DynamicResource SettingsLabelInputGap}">
-                <ui:PhTextBlock LangKey="FrmSettings_ImageBoosterCacheMaxFileSizeInMb" TextWrapping="Wrap" />
-                <ui:PhTextBox
-                    x:Name="PART_CacheMaxFileSize"
-                    Width="200"
-                    HorizontalAlignment="Left"
-                    AcceptValue="UnsignedFloatValueOnly" />
-            </StackPanel>
+        <!--  File watcher  -->
+        <ui:PhTextBlock Classes="group" LangKey="FrmSettings_FileWatcher" />
+        <StackPanel Margin="{DynamicResource SettingsGroupIndent}">
+            <CheckBox x:Name="PART_FileWatcher">
+                <ui:PhTextBlock LangKey="FrmSettings_EnableFileWatcher" TextWrapping="Wrap" />
+            </CheckBox>
+            <CheckBox x:Name="PART_AutoOpenNewAddedImage">
+                <ui:PhTextBlock LangKey="FrmSettings_EnableAutoOpenNewAddedImage" TextWrapping="Wrap" />
+            </CheckBox>
         </StackPanel>
 
 
@@ -148,6 +130,36 @@
                     LangKey="FrmSettings_CurrentMonitorProfile_Description"
                     Opacity="0.6"
                     TextWrapping="Wrap" />
+            </StackPanel>
+        </StackPanel>
+
+
+        <!--  Caching  -->
+        <ui:PhTextBlock Classes="group" LangKey="FrmSettings_Caching" />
+        <StackPanel Margin="{DynamicResource SettingsGroupIndent}" Spacing="10">
+            <StackPanel Spacing="{DynamicResource SettingsLabelInputGap}">
+                <ui:PhTextBlock LangKey="FrmSettings_ImageBoosterCacheMaxMemoryInMb" TextWrapping="Wrap" />
+                <ui:PhTextBox
+                    x:Name="PART_CacheMaxMemory"
+                    Width="200"
+                    HorizontalAlignment="Left"
+                    AcceptValue="UnsignedIntValueOnly" />
+            </StackPanel>
+            <StackPanel Spacing="{DynamicResource SettingsLabelInputGap}">
+                <ui:PhTextBlock LangKey="FrmSettings_ImageBoosterCacheMaxDimension" TextWrapping="Wrap" />
+                <ui:PhTextBox
+                    x:Name="PART_CacheMaxDimension"
+                    Width="200"
+                    HorizontalAlignment="Left"
+                    AcceptValue="UnsignedIntValueOnly" />
+            </StackPanel>
+            <StackPanel Spacing="{DynamicResource SettingsLabelInputGap}">
+                <ui:PhTextBlock LangKey="FrmSettings_ImageBoosterCacheMaxFileSizeInMb" TextWrapping="Wrap" />
+                <ui:PhTextBox
+                    x:Name="PART_CacheMaxFileSize"
+                    Width="200"
+                    HorizontalAlignment="Left"
+                    AcceptValue="UnsignedFloatValueOnly" />
             </StackPanel>
         </StackPanel>
 

@@ -715,8 +715,8 @@ public class Lang
 
             
         #region FrmSettings > Tab Image
-        // Image > Image browsing
-        new(LangId.FrmSettings_ImageBrowsing, "Image browsing"),
+        // Image > Browsing
+        new(LangId.FrmSettings_Browsing, "Browsing"),
         new(LangId.FrmSettings_ImageLoadingOrder, "Image loading order"),
         new(LangId.FrmSettings_EnableExplorerSortOrder, "Use Explorer sort order"),
         new(LangId.FrmSettings_EnableSubfoldersLoading, "Load images in subfolders"),
@@ -733,8 +733,11 @@ public class Lang
         new(LangId.FrmSettings_MinEmbeddedThumbnailSize_Width, "Width"),
         new(LangId.FrmSettings_MinEmbeddedThumbnailSize_Height, "Height"),
 
-        // Image > Image Booster
-        new(LangId.FrmSettings_ImageBooster, "Image Booster"),
+        // Image > File watcher
+        new(LangId.FrmSettings_FileWatcher, "File watcher"),
+
+        // Image > Caching
+        new(LangId.FrmSettings_Caching, "Caching"),
         new(LangId.FrmSettings_ImageBoosterCacheCount, "Number of images cached by Image Booster (one direction)"),
         new(LangId.FrmSettings_ImageBoosterCacheMaxMemoryInMb, "Maximum memory used for caching images (in megabytes)"),
         new(LangId.FrmSettings_ImageBoosterCacheMaxDimension, "Maximum image dimension to be cached (in pixels)"),
