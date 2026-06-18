@@ -749,17 +749,20 @@ public class Lang
 
 
         #region FrmSettings > Tab Slideshow
-        // Slideshow > Slideshow
+        // Slideshow > Appearance
+        new(LangId.FrmSettings_Slideshow_Appearance, "Appearance"),
         new(LangId.FrmSettings_EnableSlideshowCountdown, "Show slideshow countdown"),
         new(LangId.FrmSettings_EnableFullscreenSlideshow, "Start slideshow in Full Screen mode"),
+        new(LangId.FrmSettings_SlideshowBackgroundColor, "Slideshow background color"),
+
+        // Slideshow > Playback
+        new(LangId.FrmSettings_Slideshow_Playback, "Playback"),
+        new(LangId.FrmSettings_EnableLoopSlideshow, "Loop back to the first image when reaching the end of the slideshow"),
         new(LangId.FrmSettings_EnableSlideshowRandomInterval, "Use random interval"),
         new(LangId.FrmSettings_SlideshowInterval, "Slideshow interval:"),
         new(LangId.FrmSettings_SlideshowInterval_From, "From"),
         new(LangId.FrmSettings_SlideshowInterval_To, "To"),
-        new(LangId.FrmSettings_SlideshowBackgroundColor, "Slideshow background color"),
 
-        // Slideshow > Slideshow notification
-        new(LangId.FrmSettings_SlideshowNotification, "Slideshow notification"),
         new(LangId.FrmSettings_SlideshowImagesToNotifySound, "Number of images to trigger a notification sound"),
         #endregion // FrmSettings > Tab Slideshow
 

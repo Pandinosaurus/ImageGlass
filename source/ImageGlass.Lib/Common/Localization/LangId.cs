@@ -489,17 +489,20 @@ public enum LangId
 
 
     #region FrmSettings > Tab Slideshow
-    // Slideshow > Slideshow
+    // Slideshow > Appearance
+    FrmSettings_Slideshow_Appearance,
     FrmSettings_EnableSlideshowCountdown,
     FrmSettings_EnableFullscreenSlideshow,
+    FrmSettings_SlideshowBackgroundColor,
+
+    // Slideshow > Playback
+    FrmSettings_Slideshow_Playback,
+    FrmSettings_EnableLoopSlideshow,
     FrmSettings_EnableSlideshowRandomInterval,
     FrmSettings_SlideshowInterval,
     FrmSettings_SlideshowInterval_From,
     FrmSettings_SlideshowInterval_To,
-    FrmSettings_SlideshowBackgroundColor,
 
-    // Slideshow > Slideshow notification
-    FrmSettings_SlideshowNotification,
     FrmSettings_SlideshowImagesToNotifySound,
     #endregion // FrmSettings > Tab Slideshow
 

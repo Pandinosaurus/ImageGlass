@@ -1,0 +1,124 @@
+/*
+ImageGlass - A Fast, Seamless Photo Viewer
+Copyright (C) 2010 - 2026 DUONG DIEU PHAP
+Project homepage: https://imageglass.org
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+using Avalonia.Media;
+using ImageGlass.Common.Localization;
+using System;
+using System.Globalization;
+
+namespace ImageGlass.Common.Windows;
+
+/// <summary>
+/// The "Slideshow" settings page: appearance (fullscreen, countdown, background color) and
+/// playback (loop, interval, notification sound). Shared binding/registration logic lives in
+/// <see cref="SettingsPageView"/>; only the live interval heading needs bespoke handling here.
+/// </summary>
+public partial class SlideshowSettingsView : SettingsPageView
+{
+    /// <summary>
+    /// Parameterless constructor for the XAML loader / designer.
+    /// </summary>
+    public SlideshowSettingsView()
+    {
+        InitializeComponent();
+    }
+
+
+    /// <summary>
+    /// Creates the page bound to the given working-copy view model.
+    /// </summary>
+    public SlideshowSettingsView(SettingsViewModel vm, string navId, LangId? pageLabel = null) : this()
+    {
+        Initialize(vm, navId, pageLabel);
+    }
+
+
+    protected override void Build()
+    {
+        // Appearance
+        BindToggle(PART_FullscreenSlideshow, ConfigId.EnableFullscreenSlideshow,
+            LangId.FrmSettings_EnableFullscreenSlideshow, LangId.FrmSettings_Slideshow_Appearance, true);
+        BindToggle(PART_SlideshowCountdown, ConfigId.EnableSlideshowCountdown,
+            LangId.FrmSettings_EnableSlideshowCountdown, LangId.FrmSettings_Slideshow_Appearance, true);
+        BindColorPicker(PART_BgColorButton, PART_BgColorSwatch, PART_BgColorHex, PART_ResetBgColor,
+            ConfigId.SlideshowBackgroundColor, "#000000", LangId.FrmSettings_SlideshowBackgroundColor,
+            LangId.FrmSettings_Slideshow_Appearance, Colors.Black);
+
+        // Playback
+        BindToggle(PART_LoopSlideshow, ConfigId.EnableLoopSlideshow,
+            LangId.FrmSettings_EnableLoopSlideshow, LangId.FrmSettings_Slideshow_Playback, true);
+        BindToggle(PART_RandomInterval, ConfigId.EnableSlideshowRandomInterval,
+            LangId.FrmSettings_EnableSlideshowRandomInterval, LangId.FrmSettings_Slideshow_Playback);
+
+        BindDoubleInput(PART_SlideshowInterval, ConfigId.SlideshowInterval,
+            LangId.FrmSettings_SlideshowInterval, LangId.FrmSettings_Slideshow_Playback, 5d);
+        BindDoubleInput(PART_SlideshowIntervalTo, ConfigId.SlideshowIntervalTo,
+            LangId.FrmSettings_SlideshowInterval, LangId.FrmSettings_Slideshow_Playback, 5d);
+
+        // the "to" interval + the heading range only apply when random interval is on
+        PART_RandomInterval.IsCheckedChanged += (_, _) => UpdateIntervalUI();
+        PART_SlideshowInterval.TextChanged += (_, _) => UpdateIntervalHeading();
+        PART_SlideshowIntervalTo.TextChanged += (_, _) => UpdateIntervalHeading();
+        AddLangRefresher(UpdateIntervalHeading); // refresh the localized prefix on language change
+        UpdateIntervalUI();
+
+        // Notification
+        BindUIntInput(PART_NotifySound, ConfigId.SlideshowImagesToNotifySound,
+            LangId.FrmSettings_SlideshowImagesToNotifySound, LangId.FrmSettings_Slideshow_Playback);
+    }
+
+
+    /// <summary>
+    /// Shows the "to" interval input (and the "from" label) only when random interval is enabled,
+    /// then refreshes the heading. With random off there's a single value, so the "from" label is redundant.
+    /// </summary>
+    private void UpdateIntervalUI()
+    {
+        var isRandom = PART_RandomInterval.IsChecked ?? false;
+        PART_IntervalToSection.IsVisible = isRandom;
+        PART_IntervalFromLabel.IsVisible = isRandom;
+        UpdateIntervalHeading();
+    }
+
+
+    /// <summary>
+    /// Updates the interval sub-group heading to show the live range, e.g.
+    /// "Slideshow interval: 00:05.000 - 00:10.000" (the "to" part only when random is on).
+    /// </summary>
+    private void UpdateIntervalHeading()
+    {
+        var heading = $"{Core.Lang[LangId.FrmSettings_SlideshowInterval]} {FormatInterval(PART_SlideshowInterval.Text)}";
+        if (PART_RandomInterval.IsChecked ?? false)
+        {
+            heading += $" - {FormatInterval(PART_SlideshowIntervalTo.Text)}";
+        }
+
+        PART_IntervalHeading.Text = heading;
+    }
+
+
+    /// <summary>
+    /// Formats a seconds value (as typed in the box) as <c>mm:ss.fff</c>.
+    /// </summary>
+    private static string FormatInterval(string? secondsText)
+    {
+        _ = double.TryParse(secondsText, NumberStyles.Float, CultureInfo.InvariantCulture, out var seconds);
+        return TimeSpan.FromSeconds(seconds).ToString(@"mm\:ss\.fff", CultureInfo.InvariantCulture);
+    }
+
+}
