@@ -32,13 +32,13 @@
                     Spacing="10">
                     <Button
                         x:Name="PART_BgColorButton"
-                        Padding="3"
+                        Padding="4"
                         CornerRadius="{DynamicResource ControlCornerRadius}"
                         Cursor="Hand">
                         <!--  checkerboard (for alpha) underneath the selected color  -->
                         <Border
-                            Width="44"
-                            Height="22"
+                            Width="80"
+                            Height="26"
                             BorderBrush="#40808080"
                             BorderThickness="1"
                             CornerRadius="4">

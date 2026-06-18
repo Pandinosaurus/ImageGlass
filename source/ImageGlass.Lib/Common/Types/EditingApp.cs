@@ -37,6 +37,12 @@ public partial class EditingAppJsonContext : JsonSerializerContext { }
 public class EditingApp
 {
     /// <summary>
+    /// The extension key that matches all file extensions (catch-all).
+    /// </summary>
+    public const string ALL_EXTENSIONS = ".*";
+
+
+    /// <summary>
     /// Gets, sets friendly app name.
     /// </summary>
     public string AppName { get; set; } = string.Empty;
@@ -83,8 +89,8 @@ public class EditingApp
 
             var exts = key.Split(';', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
 
-            if (exts.Contains(ext)) return app;         // exact extension match wins
-            if (exts.Contains(".*")) wildcardApp = app; // remember the catch-all as a fallback
+            if (exts.Contains(ext)) return app;                  // exact extension match wins
+            if (exts.Contains(ALL_EXTENSIONS)) wildcardApp = app; // remember the catch-all as a fallback
         }
 
         return wildcardApp;

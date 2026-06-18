@@ -195,8 +195,11 @@ public partial class EditSettingsView : SettingsPageView
         AddCell(HLine(ResxId.IG_BorderControlBrush, VerticalAlignment.Bottom), 0, 0, 5);
 
 
-        // 2. data rows (sorted by extension)
-        var extKeys = _apps.Keys.OrderBy(k => k, StringComparer.OrdinalIgnoreCase).ToList();
+        // 2. data rows (sorted by extension; the ".*" catch-all is forced to the bottom)
+        var extKeys = _apps.Keys
+            .OrderBy(IsWildcardKey) // false (specific) sorts before true (catch-all)
+            .ThenBy(k => k, StringComparer.OrdinalIgnoreCase)
+            .ToList();
         for (var i = 0; i < extKeys.Count; i++)
         {
             var extKey = extKeys[i];
@@ -207,13 +210,24 @@ public partial class EditSettingsView : SettingsPageView
             // separator above every row except the first
             if (i > 0) AddCell(HLine(ResxId.IG_BorderNeutralBrush, VerticalAlignment.Top), row, 0, 5);
 
-            AddCell(TextCell(extKey, maxWidth: 160), row, 0);
+            var extCell = TextCell(extKey, maxWidth: 160);
+            extCell.FontFamily = Const.FONT_CODE;
+            AddCell(extCell, row, 0);
+
             AddCell(TextCell(app.AppName, maxWidth: 160), row, 1);
             AddCell(TextCell(app.Executable), row, 2);
             AddCell(string.IsNullOrEmpty(app.Argument) ? EmptyCell() : TextCell(app.Argument, maxWidth: 180), row, 3);
             AddCell(ActionsCell(extKey), row, 4);
         }
     }
+
+
+    /// <summary>
+    /// Whether an extension key includes the <c>.*</c> catch-all segment.
+    /// </summary>
+    private static bool IsWildcardKey(string extKey) => extKey
+        .Split(';', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
+        .Contains(EditingApp.ALL_EXTENSIONS);
 
 
     #region Table cell builders
