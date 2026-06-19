@@ -1,0 +1,65 @@
+<Styles xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Styles.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key="Light">
+                    <!--  focused: field lifts to a solid fill  -->
+                    <SolidColorBrush x:Key="IG_TextBoxBackgroundFocused" Color="#FFFFFFFF" />
+
+                    <!--  focused border: subtle top/sides, accent 2px underline at the bottom (WinUI)  -->
+                    <LinearGradientBrush x:Key="IG_TextBoxBorderBrushFocused" StartPoint="0%,0%" EndPoint="0%,100%">
+                        <GradientStop Offset="0.0" Color="#0F000000" />
+                        <GradientStop Offset="0.9" Color="#0F000000" />
+                        <GradientStop Offset="1.0" Color="{DynamicResource SystemAccentColor}" />
+                    </LinearGradientBrush>
+                </ResourceDictionary>
+
+                <ResourceDictionary x:Key="Dark">
+                    <!--  focused: slightly more opaque fill so the field reads as active  -->
+                    <SolidColorBrush x:Key="IG_TextBoxBackgroundFocused" Color="#26FFFFFF" />
+
+                    <!--  dark: a black hairline is invisible, so top/sides use a faint white  -->
+                    <LinearGradientBrush x:Key="IG_TextBoxBorderBrushFocused" StartPoint="0%,0%" EndPoint="0%,100%">
+                        <GradientStop Offset="0.0" Color="#14FFFFFF" />
+                        <GradientStop Offset="0.9" Color="#14FFFFFF" />
+                        <GradientStop Offset="1.0" Color="{DynamicResource SystemAccentColor}" />
+                    </LinearGradientBrush>
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+        </ResourceDictionary>
+    </Styles.Resources>
+
+
+    <Style Selector="TextBox">
+
+        <!--  resting  -->
+        <Setter Property="Background" Value="{DynamicResource IG_ButtonBackground}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource IG_ButtonBorderBrush}" />
+
+        <!--  hover/focus transition on the border part  -->
+        <Style Selector="^ /template/ Border#PART_BorderElement">
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.1" />
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.1" />
+                </Transitions>
+            </Setter>
+        </Style>
+
+        <!--  hover  -->
+        <Style Selector="^:pointerover /template/ Border#PART_BorderElement">
+            <Setter Property="Background" Value="{DynamicResource IG_ButtonBackgroundPointerOver}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource IG_ButtonBorderBrush}" />
+        </Style>
+
+        <!--  focused (active): solid fill + accent underline  -->
+        <Style Selector="^:focus-within /template/ Border#PART_BorderElement">
+            <Setter Property="Background" Value="{DynamicResource IG_TextBoxBackgroundFocused}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource IG_TextBoxBorderBrushFocused}" />
+            <Setter Property="BorderThickness" Value="1,1,1,2" />
+        </Style>
+
+    </Style>
+
+</Styles>
