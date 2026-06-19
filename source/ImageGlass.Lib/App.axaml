@@ -3,13 +3,15 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:ImageGlass.UI"
-    RequestedThemeVariant="Default"
-    Name="ImageGlass">
+    Name="ImageGlass"
+    RequestedThemeVariant="Default">
 
-    <!--  macOS application (⌘) menu.
+    <!--
+        macOS application (⌘) menu.
         Items are declared here so they exist at startup
         and Avalonia composes them with its standard system items (Services, Hide, Quit).
-        Headers are localized in code-behind (see App.LocalizeAppMenu).  -->
+        Headers are localized in code-behind (see App.LocalizeAppMenu).
+    -->
     <NativeMenu.Menu>
         <NativeMenu>
             <NativeMenuItem
@@ -29,6 +31,7 @@
     <Application.Styles>
         <FluentTheme />
         <StyleInclude Source="avares://Avalonia.Controls.ColorPicker/Themes/Fluent/Fluent.xaml" />
+        <StyleInclude Source="avares://ImageGlass.Lib/UI/Styles/PhButtonStyle.axaml" />
 
 
         <!--  Menu Dropdown animation  -->

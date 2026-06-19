@@ -306,7 +306,7 @@ Occurs in `Program.cs` before Avalonia app setup (Linux/Mac have equivalent regi
 ## Code Style & Best Practices
 
 ### General
-- **Comments**: Explain *why*, not what; only add if needed. Keep comments short, direct, and straightforward — never write long-winded comments.
+- **Comments**: Explain *why*, not what; only add if needed. Keep comments short and straight to the point — never write long-winded/verbose comments.
 - **XML documentation comments**: For C# classes, methods, and public properties in infrastructure / coordination code (plugins, tools, host bridges, process managers, IPC handlers, similar files), keep XML docs present and current.
 - **XML summary format**: Never use single-line XML summaries like `/// <summary>Text</summary>`. Always use the multi-line form:
   ```csharp
@@ -320,6 +320,7 @@ Occurs in `Program.cs` before Avalonia app setup (Linux/Mac have equivalent regi
 - **Cancellation**: Always check `token.IsCancellationRequested` in loops; throw on cancellation
 
 ### Avalonia-Specific
+- **Reuse UI components**: when building UI, always check and reuse the existing controls in `ImageGlass.Lib/UI/` (e.g. `PhButton`, `PhTextBox`, `PhTextBlock` in `UI/BaseControls/`) instead of raw Avalonia controls; use the app's style resources via `Resx`/`ResxId` (`Common/Types/Resx.cs`) rather than hardcoding colors/brushes.
 - **Compiled bindings**: `AvaloniaUseCompiledBindingsByDefault = true` (type-safe, zero-runtime cost)
 - **Attached behaviors**: Prefer to UI trigger patterns for event handling
 - **Threading**: Use `Dispatcher.UIThread.Post()` or `Dispatcher.UIThread.InvokeAsync()` for cross-thread updates

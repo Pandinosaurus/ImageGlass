@@ -1,0 +1,151 @@
+<Styles xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Styles.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key="Light">
+                    <!--  fills  -->
+                    <SolidColorBrush x:Key="IG_ButtonBackground" Color="#B3FFFFFF" />
+                    <SolidColorBrush x:Key="IG_ButtonBackgroundPointerOver" Color="#80F9F9F9" />
+                    <SolidColorBrush x:Key="IG_ButtonBackgroundPressed" Color="#4DF9F9F9" />
+
+                    <!--  elevation border: subtle top/sides, darker hairline at the bottom  -->
+                    <LinearGradientBrush x:Key="IG_ButtonBorderBrush" StartPoint="0%,0%" EndPoint="0%,100%">
+                        <GradientStop Offset="0.0" Color="#0F000000" />
+                        <GradientStop Offset="0.9" Color="#0F000000" />
+                        <GradientStop Offset="1.0" Color="#29000000" />
+                    </LinearGradientBrush>
+                    <LinearGradientBrush x:Key="IG_ButtonBorderBrushPressed" StartPoint="0%,0%" EndPoint="0%,100%">
+                        <GradientStop Offset="0.0" Color="#0F000000" />
+                        <GradientStop Offset="0.9" Color="#0F000000" />
+                        <GradientStop Offset="1.0" Color="#0F000000" />
+                    </LinearGradientBrush>
+
+                    <!--  accent fills use the system accent  -->
+                    <SolidColorBrush x:Key="IG_AccentButtonBackground" Color="{DynamicResource SystemAccentColorDark1}" />
+                    <SolidColorBrush
+                        x:Key="IG_AccentButtonBackgroundPointerOver"
+                        Opacity="0.9"
+                        Color="{DynamicResource SystemAccentColorDark1}" />
+                    <SolidColorBrush
+                        x:Key="IG_AccentButtonBackgroundPressed"
+                        Opacity="0.8"
+                        Color="{DynamicResource SystemAccentColorDark1}" />
+                </ResourceDictionary>
+
+                <ResourceDictionary x:Key="Dark">
+                    <!--  fills  -->
+                    <SolidColorBrush x:Key="IG_ButtonBackground" Color="#0FFFFFFF" />
+                    <SolidColorBrush x:Key="IG_ButtonBackgroundPointerOver" Color="#15FFFFFF" />
+                    <SolidColorBrush x:Key="IG_ButtonBackgroundPressed" Color="#08FFFFFF" />
+
+                    <!--
+                        dark: a black hairline is invisible on a dark fill, so the
+                        bottom edge uses a brighter white to stay readable
+                    -->
+                    <LinearGradientBrush x:Key="IG_ButtonBorderBrush" StartPoint="0%,0%" EndPoint="0%,100%">
+                        <GradientStop Offset="0.0" Color="#14FFFFFF" />
+                        <GradientStop Offset="0.9" Color="#14FFFFFF" />
+                        <GradientStop Offset="1.0" Color="#33FFFFFF" />
+                    </LinearGradientBrush>
+                    <LinearGradientBrush x:Key="IG_ButtonBorderBrushPressed" StartPoint="0%,0%" EndPoint="0%,100%">
+                        <GradientStop Offset="0.0" Color="#14FFFFFF" />
+                        <GradientStop Offset="0.9" Color="#14FFFFFF" />
+                        <GradientStop Offset="1.0" Color="#14FFFFFF" />
+                    </LinearGradientBrush>
+
+                    <!--  accent fills use the system accent  -->
+                    <SolidColorBrush x:Key="IG_AccentButtonBackground" Color="{DynamicResource SystemAccentColorLight2}" />
+                    <SolidColorBrush
+                        x:Key="IG_AccentButtonBackgroundPointerOver"
+                        Opacity="0.9"
+                        Color="{DynamicResource SystemAccentColorLight2}" />
+                    <SolidColorBrush
+                        x:Key="IG_AccentButtonBackgroundPressed"
+                        Opacity="0.8"
+                        Color="{DynamicResource SystemAccentColorLight2}" />
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+
+            <!--  accent elevation border (same highlight/shadow in both themes)  -->
+            <LinearGradientBrush x:Key="IG_AccentButtonBorderBrush" StartPoint="0%,0%" EndPoint="0%,100%">
+                <GradientStop Offset="0.0" Color="#14FFFFFF" />
+                <GradientStop Offset="0.9" Color="#14FFFFFF" />
+                <GradientStop Offset="1.0" Color="#66000000" />
+            </LinearGradientBrush>
+        </ResourceDictionary>
+    </Styles.Resources>
+
+
+    <Style Selector="Button.phbutton:not(.link)">
+
+        <!--  base look + the hover transition  -->
+        <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource IG_ButtonBackground}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource IG_ButtonBorderBrush}" />
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.1" />
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.1" />
+                </Transitions>
+            </Setter>
+        </Style>
+
+        <Style Selector="^:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource IG_ButtonBackgroundPointerOver}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource IG_ButtonBorderBrush}" />
+        </Style>
+
+        <!--  pressed: snappier transition so the press reads instantly (covers accent too)  -->
+        <Style Selector="^:pressed /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource IG_ButtonBackgroundPressed}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource IG_ButtonBorderBrushPressed}" />
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.02" />
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.02" />
+                </Transitions>
+            </Setter>
+        </Style>
+
+        <!--  suppress Fluent's press-scale for UpdatePressedVisual method  -->
+        <Style Selector="^:pressed">
+            <Setter Property="RenderTransform" Value="none" />
+        </Style>
+
+
+        <!--  accent variant  -->
+        <Style Selector="^.accent /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource IG_AccentButtonBackground}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource IG_AccentButtonBorderBrush}" />
+        </Style>
+        <Style Selector="^.accent:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource IG_AccentButtonBackgroundPointerOver}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource IG_AccentButtonBorderBrush}" />
+        </Style>
+        <Style Selector="^.accent:pressed /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource IG_AccentButtonBackgroundPressed}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource IG_AccentButtonBorderBrush}" />
+        </Style>
+    </Style>
+
+
+    <!--  link variant: borderless text button. Underline + content nudge/dim are in PhButton code  -->
+    <Style Selector="Button.phbutton.link">
+        <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+        <Style Selector="^:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+        <Style Selector="^:pressed /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+
+        <!--  no press-scale  -->
+        <Style Selector="^:pressed">
+            <Setter Property="RenderTransform" Value="none" />
+        </Style>
+    </Style>
+
+</Styles>

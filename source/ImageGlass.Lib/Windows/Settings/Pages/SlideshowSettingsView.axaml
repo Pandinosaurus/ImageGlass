@@ -30,7 +30,7 @@
                     VerticalAlignment="Center"
                     Orientation="Horizontal"
                     Spacing="10">
-                    <Button
+                    <ui:PhButton
                         x:Name="PART_BgColorButton"
                         Padding="6"
                         CornerRadius="{DynamicResource ControlCornerRadius}"
@@ -45,7 +45,7 @@
                                 <Border x:Name="PART_BgColorSwatch" CornerRadius="3" />
                             </Grid>
                         </Border>
-                    </Button>
+                    </ui:PhButton>
                     <SelectableTextBlock
                         x:Name="PART_BgColorHex"
                         VerticalAlignment="Center"

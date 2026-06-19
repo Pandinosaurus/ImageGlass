@@ -32,6 +32,9 @@ public class PhButton : Button
 {
     protected override Type StyleKeyOverride => typeof(Button);
 
+    // text element of the default content, kept to toggle the link underline
+    private TextBlock? _textEl;
+
 
     // events
     public event TEventHandler<ContextMenu, CancelEventArgs>? DropdownOpening;
@@ -163,6 +166,10 @@ public class PhButton : Button
 
     public PhButton()
     {
+        // marker class so app styles can target PhButton; a type selector can't,
+        // because StyleKeyOverride reports this control's style key as Button.
+        Classes.Add("phbutton");
+
         Content = CreateContentElement();
     }
 
@@ -243,6 +250,10 @@ public class PhButton : Button
                 ClearValue(ForegroundProperty);
             }
         }
+        else if (e.Property == IsPressedProperty || e.Property == IsPointerOverProperty)
+        {
+            UpdateContentVisual();
+        }
         else if (e.Property == IsLinkProperty)
         {
             if (IsLink)
@@ -266,6 +277,8 @@ public class PhButton : Button
                 ClearValue(CursorProperty);
                 ClearValue(ForegroundProperty);
             }
+
+            UpdateContentVisual();
         }
     }
 
@@ -378,7 +391,7 @@ public class PhButton : Button
             [!PathIcon.IsVisibleProperty] = this[!IsIconVisibleProperty],
         };
 
-        var textEl = new TextBlock
+        var textEl = _textEl = new TextBlock
         {
             [!TextBlock.TextProperty] = this[!TextProperty],
             [!TextBlock.ForegroundProperty] = this[!ForegroundProperty],
@@ -394,6 +407,29 @@ public class PhButton : Button
         panel.Children.AddRange([pathEl, textEl]);
 
         return panel;
+    }
+
+
+    /// <summary>
+    /// Press/hover feedback on the content (not the control, so the chrome stays
+    /// put): nudge down + dim on press, and an underline on hover/press for links.
+    /// </summary>
+    private void UpdateContentVisual()
+    {
+        if (Content is Visual content)
+        {
+            var nudge = IsLink ? 0.5 : 1d;
+            content.RenderTransform = IsPressed ? new TranslateTransform(0, nudge) : null;
+            content.Opacity = IsPressed ? 0.6 : 1d;
+        }
+
+        // link: underline on hover/press only
+        if (IsLink && _textEl is not null)
+        {
+            _textEl.TextDecorations = IsPointerOver || IsPressed
+                ? TextDecorations.Underline
+                : null;
+        }
     }
 
 
