@@ -1,0 +1,79 @@
+<Styles xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!--
+        The radio is three stacked 20x20 ellipses: OuterEllipse (shown unchecked),
+        CheckOuterEllipse (the ring shown when checked) and CheckGlyph (the inner dot).
+
+        The template assigns their fills/strokes at Template priority, which OUTRANKS a
+        plain style. So every override below is gated behind a pseudoclass (:not(:checked),
+        :checked, :pointerover, ...) to run at the higher StyleTrigger priority — a bare
+        "^ /template/ ..." setter would be ignored at rest. Transitions are not set by the
+        template, so those can stay on a plain selector.
+    -->
+    <Style Selector="RadioButton">
+
+        <!-- ===== unchecked outer ring: match the CheckBox box (default Button face) ===== -->
+        <Style Selector="^ /template/ Ellipse#OuterEllipse">
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Fill" Duration="0:0:0.1" />
+                    <BrushTransition Property="Stroke" Duration="0:0:0.1" />
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="^:not(:checked) /template/ Ellipse#OuterEllipse">
+            <Setter Property="Fill" Value="{DynamicResource IG_ButtonBackground}" />
+            <Setter Property="Stroke" Value="{DynamicResource IG_ButtonBorderBrush}" />
+        </Style>
+        <Style Selector="^:not(:checked):pointerover /template/ Ellipse#OuterEllipse">
+            <Setter Property="Fill" Value="{DynamicResource IG_ButtonBackgroundPointerOver}" />
+            <Setter Property="Stroke" Value="{DynamicResource IG_ButtonBorderBrush}" />
+        </Style>
+        <Style Selector="^:not(:checked):pressed /template/ Ellipse#OuterEllipse">
+            <Setter Property="Fill" Value="{DynamicResource IG_ButtonBackgroundPressed}" />
+            <Setter Property="Stroke" Value="{DynamicResource IG_ButtonBorderBrushPressed}" />
+        </Style>
+
+        <!-- ===== checked ring: normal box background + thin 1px accent outline ===== -->
+        <Style Selector="^ /template/ Ellipse#CheckOuterEllipse">
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Fill" Duration="0:0:0.1" />
+                    <BrushTransition Property="Stroke" Duration="0:0:0.1" />
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="^:checked /template/ Ellipse#CheckOuterEllipse">
+            <!--  thin 1px outline (StyleTrigger so it beats the template thickness)  -->
+            <Setter Property="StrokeThickness" Value="1" />
+            <Setter Property="Fill" Value="{DynamicResource IG_ButtonBackground}" />
+            <Setter Property="Stroke" Value="{DynamicResource CheckBoxCheckBackgroundFillChecked}" />
+        </Style>
+        <Style Selector="^:checked:pointerover /template/ Ellipse#CheckOuterEllipse">
+            <Setter Property="Fill" Value="{DynamicResource IG_ButtonBackgroundPointerOver}" />
+            <Setter Property="Stroke" Value="{DynamicResource CheckBoxCheckBackgroundFillCheckedPointerOver}" />
+        </Style>
+        <Style Selector="^:checked:pressed /template/ Ellipse#CheckOuterEllipse">
+            <Setter Property="Fill" Value="{DynamicResource IG_ButtonBackgroundPressed}" />
+            <Setter Property="Stroke" Value="{DynamicResource CheckBoxCheckBackgroundFillCheckedPressed}" />
+        </Style>
+
+        <!-- ===== inner dot: bigger solid disc, same color as the checked CheckBox ===== -->
+        <Style Selector="^:checked /template/ Ellipse#CheckGlyph">
+            <Setter Property="Width" Value="10" />
+            <Setter Property="Height" Value="10" />
+            <Setter Property="Fill" Value="{DynamicResource CheckBoxCheckBackgroundFillChecked}" />
+            <Setter Property="Stroke" Value="{DynamicResource CheckBoxCheckBackgroundFillChecked}" />
+        </Style>
+        <Style Selector="^:checked:pointerover /template/ Ellipse#CheckGlyph">
+            <Setter Property="Fill" Value="{DynamicResource CheckBoxCheckBackgroundFillCheckedPointerOver}" />
+            <Setter Property="Stroke" Value="{DynamicResource CheckBoxCheckBackgroundFillCheckedPointerOver}" />
+        </Style>
+        <Style Selector="^:checked:pressed /template/ Ellipse#CheckGlyph">
+            <Setter Property="Fill" Value="{DynamicResource CheckBoxCheckBackgroundFillCheckedPressed}" />
+            <Setter Property="Stroke" Value="{DynamicResource CheckBoxCheckBackgroundFillCheckedPressed}" />
+        </Style>
+
+    </Style>
+
+</Styles>
