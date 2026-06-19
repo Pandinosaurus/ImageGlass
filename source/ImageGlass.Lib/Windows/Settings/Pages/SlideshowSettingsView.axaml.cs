@@ -92,6 +92,9 @@ public partial class SlideshowSettingsView : SettingsPageView
         var isRandom = PART_RandomInterval.IsChecked ?? false;
         PART_IntervalToSection.IsVisible = isRandom;
         PART_IntervalFromLabel.IsVisible = isRandom;
+
+        // with random off there's a single value, so let the "from" box fill the wider space
+        PART_SlideshowInterval.Width = isRandom ? 150 : 200;
         UpdateIntervalHeading();
     }
 

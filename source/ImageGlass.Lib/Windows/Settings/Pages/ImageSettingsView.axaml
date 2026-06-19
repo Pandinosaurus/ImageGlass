@@ -31,7 +31,7 @@
                 </StackPanel>
             </StackPanel>
 
-            <CheckBox x:Name="PART_ExplorerSortOrder">
+            <CheckBox x:Name="PART_ExplorerSortOrder" IsVisible="{OnPlatform False, Windows=True, x:TypeArguments=x:Boolean}">
                 <ui:PhTextBlock LangKey="FrmSettings_EnableExplorerSortOrder" TextWrapping="Wrap" />
             </CheckBox>
             <CheckBox x:Name="PART_SubfoldersLoading">

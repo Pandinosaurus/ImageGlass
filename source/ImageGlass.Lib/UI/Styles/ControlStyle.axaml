@@ -1,0 +1,26 @@
+<Styles xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!--  Fixed: focus style  -->
+    <Style Selector="Button, ToggleButton, CheckBox, RadioButton, SelectableTextBlock, ComboBox, ContextMenu, MenuItem, ListBoxItem, ComboBoxItem">
+        <Setter Property="FocusAdorner">
+            <FocusAdornerTemplate>
+                <Border
+                    BorderBrush="{DynamicResource SystemControlForegroundBaseHighBrush}"
+                    BorderThickness="2"
+                    CornerRadius="{DynamicResource ControlCornerRadius}">
+                    <Border
+                        BorderBrush="{DynamicResource SystemControlBackgroundAltHighBrush}"
+                        BorderThickness="1"
+                        CornerRadius="{DynamicResource ControlCornerRadius}" />
+                </Border>
+            </FocusAdornerTemplate>
+        </Setter>
+    </Style>
+
+
+    <!--  Disabled style for buttons  -->
+    <Style Selector="Button:disabled /template/ ContentPresenter#PART_ContentPresenter, ToggleButton:disabled /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Opacity" Value="0.5" />
+    </Style>
+
+</Styles>

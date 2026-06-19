@@ -79,4 +79,13 @@
 
     </Style>
 
+
+    <!--  ComboBoxItem  -->
+    <Style Selector="ComboBoxItem">
+        <Setter Property="Margin" Value="4, 0" />
+        <Setter Property="BorderBrush" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="{DynamicResource ControlCornerRadius}" />
+    </Style>
+
 </Styles>
