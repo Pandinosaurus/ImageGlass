@@ -65,7 +65,7 @@
                                 TextElement.FontWeight="Bold">
                                 <TextBlock
                                     Grid.Column="0"
-                                    Foreground="{DynamicResource SystemAccentColor}"
+                                    Foreground="{DynamicResource IG_TextAccentColor}"
                                     Text="{CompiledBinding Metadata.FileName}"
                                     TextWrapping="Wrap" />
 

@@ -77,7 +77,7 @@ public partial class UpdateWindow : ModalWindow
             Background = Brushes.Transparent,
             BorderThickness = new Thickness(0),
             Cursor = new Avalonia.Input.Cursor(Avalonia.Input.StandardCursorType.Hand),
-            [!PhButton.ForegroundProperty] = Resx.CreateBinding(ResxId.SystemAccentColor),
+            [!PhButton.ForegroundProperty] = Resx.CreateBinding(ResxId.IG_TextAccentColor),
         };
         btnSkip.Click += (_, _) =>
         {

@@ -446,7 +446,7 @@ public partial class ModalWindow : DialogWindow
             FontWeight = Avalonia.Media.FontWeight.Medium,
             [!TextBlock.TextProperty] = this[!HeadingProperty],
             [!TextBlock.IsVisibleProperty] = this[!IsHeadingVisibleProperty],
-            [!TextBlock.ForegroundProperty] = Resx.CreateBinding(ResxId.SystemAccentColor),
+            [!TextBlock.ForegroundProperty] = Resx.CreateBinding(ResxId.IG_TextAccentColor),
         };
         var lblDescription = new TextBlock
         {

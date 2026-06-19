@@ -172,7 +172,7 @@ public partial class AboutWindow : DialogWindow
             FontWeight = Avalonia.Media.FontWeight.SemiBold,
             HorizontalAlignment = HorizontalAlignment.Center,
             Margin = new Thickness(0, 12, 0, 0),
-            [!TextBlock.ForegroundProperty] = Resx.CreateBinding(ResxId.SystemAccentColor),
+            [!TextBlock.ForegroundProperty] = Resx.CreateBinding(ResxId.IG_TextAccentColor),
         };
 
 

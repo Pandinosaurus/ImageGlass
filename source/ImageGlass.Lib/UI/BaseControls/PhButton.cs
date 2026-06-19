@@ -265,7 +265,7 @@ public class PhButton : Button
                 BorderThickness = new Thickness(0);
                 Padding = new Thickness(4, 2);
                 Cursor = new Cursor(StandardCursorType.Hand);
-                this[!ForegroundProperty] = Resx.CreateBinding(ResxId.SystemAccentColor);
+                this[!ForegroundProperty] = Resx.CreateBinding(ResxId.IG_TextAccentColor);
             }
             else
             {

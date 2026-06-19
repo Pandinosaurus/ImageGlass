@@ -567,6 +567,11 @@ public static class Core
         Resx.Set(ResxId.SystemAccentColorDark2, accentDark2);
         Resx.Set(ResxId.SystemAccentColorDark3, accentDark3);
 
+        // accent-colored text: the raw accent is too dark on a dark background,
+        // so lighten it in dark mode and darken it in light mode for contrast
+        var textAccent = Core.Theme.Settings.IsDarkMode ? accentLight3 : accentDark1;
+        Resx.Set(ResxId.IG_TextAccentColor, textAccent);
+
 
         // accent button text: pick black/white based on the accent brightness so
         // it stays readable when the system accent is dark (fixes contrast issue)
