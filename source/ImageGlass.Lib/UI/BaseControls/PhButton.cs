@@ -166,10 +166,6 @@ public class PhButton : Button
 
     public PhButton()
     {
-        // marker class so app styles can target PhButton; a type selector can't,
-        // because StyleKeyOverride reports this control's style key as Button.
-        Classes.Add("phbutton");
-
         Content = CreateContentElement();
     }
 

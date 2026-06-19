@@ -438,11 +438,11 @@ public static class Core
             Resx.Set(ResxId.IG_BackgroundDangerBrush, AppThemeColors.BackgroundDangerLight.ToBrush());
         }
 
-        var bgNeutralAlpha = 100;
+        var bgNeutralAlpha = 60;
         var bgColor = AppThemeColors.BgBrush.Color.NoAlpha();
         var bgNeutral = bgColor.Blend(Core.Theme.InvertedBaseColor, 0.9f, bgNeutralAlpha);
-        var borderNeutral = bgColor.Blend(Core.Theme.InvertedBaseColor, 0.8f, bgNeutralAlpha);
-        var borderControl = bgColor.Blend(Core.Theme.InvertedBaseColor, 0.5f, bgNeutralAlpha);
+        var borderNeutral = bgColor.Blend(Core.Theme.InvertedBaseColor, 0.8f, bgNeutralAlpha / 2);
+        var borderControl = bgColor.Blend(Core.Theme.InvertedBaseColor, 0.5f, bgNeutralAlpha / 2);
 
         Resx.Set(ResxId.IG_BackgroundNeutralBrush, bgNeutral.ToBrush());
         Resx.Set(ResxId.IG_BorderNeutralBrush, borderNeutral.ToBrush());

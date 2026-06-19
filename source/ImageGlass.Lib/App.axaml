@@ -31,7 +31,7 @@
     <Application.Styles>
         <FluentTheme />
         <StyleInclude Source="avares://Avalonia.Controls.ColorPicker/Themes/Fluent/Fluent.xaml" />
-        <StyleInclude Source="avares://ImageGlass.Lib/UI/Styles/PhButtonStyle.axaml" />
+        <StyleInclude Source="avares://ImageGlass.Lib/UI/Styles/ButtonStyle.axaml" />
         <StyleInclude Source="avares://ImageGlass.Lib/UI/Styles/ComboBoxStyle.axaml" />
         <StyleInclude Source="avares://ImageGlass.Lib/UI/Styles/TextBoxStyle.axaml" />
 
@@ -114,11 +114,6 @@
             <Setter Property="BorderBrush" Value="Transparent" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="{DynamicResource ControlCornerRadius}" />
-
-            <Style Selector="^ /template/ PathIcon#DropDownGlyph">
-                <Setter Property="Width" Value="10" />
-                <Setter Property="Height" Value="10" />
-            </Style>
         </Style>
 
 

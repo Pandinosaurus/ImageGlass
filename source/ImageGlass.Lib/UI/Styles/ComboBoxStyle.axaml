@@ -10,6 +10,18 @@
         <Setter Property="Background" Value="{DynamicResource IG_ButtonBackground}" />
         <Setter Property="BorderBrush" Value="{DynamicResource IG_ButtonBorderBrush}" />
 
+        <!--
+            chevron: smaller than the Fluent 12px default. The template hard-codes the
+            glyph Width/Height as literals (which a style can't outrank), so scale it
+            down via RenderTransform instead. 0.8 ≈ 9.6px; centered so it shrinks in place.
+        -->
+        <Style Selector="^ /template/ PathIcon#DropDownGlyph">
+            <Setter Property="RenderTransformOrigin" Value="50%,50%" />
+            <Setter Property="RenderTransform">
+                <ScaleTransform ScaleX="0.8" ScaleY="0.8" />
+            </Setter>
+        </Style>
+
         <!--  base hover transition on the button face  -->
         <Style Selector="^ /template/ Border#Background">
             <Setter Property="Transitions">
@@ -56,8 +68,12 @@
         </Style>
         <Style Selector="^:pressed /template/ PathIcon#DropDownGlyph">
             <Setter Property="Opacity" Value="0.6" />
+            <!--  keep the chevron's scale (above) while nudging it down on press  -->
             <Setter Property="RenderTransform">
-                <TranslateTransform Y="0.5" />
+                <TransformGroup>
+                    <ScaleTransform ScaleX="0.8" ScaleY="0.8" />
+                    <TranslateTransform Y="0.5" />
+                </TransformGroup>
             </Setter>
         </Style>
 

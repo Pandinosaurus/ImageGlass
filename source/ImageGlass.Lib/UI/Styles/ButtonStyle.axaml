@@ -77,7 +77,8 @@
     </Styles.Resources>
 
 
-    <Style Selector="Button.phbutton:not(.link)">
+    <!--  applies to every Avalonia Button (and PhButton); link variant opts out  -->
+    <Style Selector="Button:not(.link)">
 
         <!--  base look + the hover transition  -->
         <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
@@ -130,8 +131,14 @@
     </Style>
 
 
+    <!--  normal button text uses the theme foreground (accent/link have their own)  -->
+    <Style Selector="Button:not(.link):not(.accent)">
+        <Setter Property="Foreground" Value="{DynamicResource IG_ThemeForegroundBrush}" />
+    </Style>
+
+
     <!--  link variant: borderless text button. Underline + content nudge/dim are in PhButton code  -->
-    <Style Selector="Button.phbutton.link">
+    <Style Selector="Button.link">
         <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
             <Setter Property="Background" Value="Transparent" />
         </Style>
