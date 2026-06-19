@@ -1,0 +1,43 @@
+<Styles xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Style Selector="CheckBox">
+
+        <!--
+            half of ControlCornerRadius (7). The template binds both PART_Border and
+            the NormalRectangle box CornerRadius to the control's CornerRadius, so this
+            rounds the box; PART_Border is transparent so it has no visible effect.
+        -->
+        <Setter Property="CornerRadius" Value="3.5" />
+
+        <!--
+            unchecked box: match the default Button face (IG_ButtonBackground /
+            IG_ButtonBorderBrush). Excludes checked/indeterminate so their accent
+            fill is left untouched. The template sets these at Template priority, so
+            this app-level /template/ style wins.
+        -->
+        <Style Selector="^:not(:checked):not(:indeterminate) /template/ Border#NormalRectangle">
+            <Setter Property="Background" Value="{DynamicResource IG_ButtonBackground}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource IG_ButtonBorderBrush}" />
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.1" />
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.1" />
+                </Transitions>
+            </Setter>
+        </Style>
+
+        <!--  unchecked hover  -->
+        <Style Selector="^:not(:checked):not(:indeterminate):pointerover /template/ Border#NormalRectangle">
+            <Setter Property="Background" Value="{DynamicResource IG_ButtonBackgroundPointerOver}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource IG_ButtonBorderBrush}" />
+        </Style>
+
+        <!--  unchecked pressed  -->
+        <Style Selector="^:not(:checked):not(:indeterminate):pressed /template/ Border#NormalRectangle">
+            <Setter Property="Background" Value="{DynamicResource IG_ButtonBackgroundPressed}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource IG_ButtonBorderBrushPressed}" />
+        </Style>
+
+    </Style>
+
+</Styles>
