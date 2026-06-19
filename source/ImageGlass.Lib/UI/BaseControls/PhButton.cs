@@ -418,8 +418,7 @@ public class PhButton : Button
     {
         if (Content is Visual content)
         {
-            var nudge = IsLink ? 0.5 : 1d;
-            content.RenderTransform = IsPressed ? new TranslateTransform(0, nudge) : null;
+            content.RenderTransform = IsPressed ? new TranslateTransform(0, 0.5) : null;
             content.Opacity = IsPressed ? 0.6 : 1d;
         }
 

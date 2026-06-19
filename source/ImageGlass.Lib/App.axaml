@@ -32,6 +32,7 @@
         <FluentTheme />
         <StyleInclude Source="avares://Avalonia.Controls.ColorPicker/Themes/Fluent/Fluent.xaml" />
         <StyleInclude Source="avares://ImageGlass.Lib/UI/Styles/PhButtonStyle.axaml" />
+        <StyleInclude Source="avares://ImageGlass.Lib/UI/Styles/ComboBoxStyle.axaml" />
 
 
         <!--  Menu Dropdown animation  -->

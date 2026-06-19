@@ -1,0 +1,66 @@
+<Styles xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Style Selector="ComboBox">
+
+        <!--
+            resting chrome: TemplateBinding propagates these onto Border#Background.
+            Driving it through the control's own properties keeps the Fluent :disabled
+            state working (its conditional setter still wins over this).
+        -->
+        <Setter Property="Background" Value="{DynamicResource IG_ButtonBackground}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource IG_ButtonBorderBrush}" />
+
+        <!--  base hover transition on the button face  -->
+        <Style Selector="^ /template/ Border#Background">
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.1" />
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.1" />
+                </Transitions>
+            </Setter>
+        </Style>
+
+        <Style Selector="^:pointerover /template/ Border#Background">
+            <Setter Property="Background" Value="{DynamicResource IG_ButtonBackgroundPointerOver}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource IG_ButtonBorderBrush}" />
+        </Style>
+
+        <!--  pressed / dropdown-open: snappier transition so the press reads instantly  -->
+        <Style Selector="^:pressed /template/ Border#Background">
+            <Setter Property="Background" Value="{DynamicResource IG_ButtonBackgroundPressed}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource IG_ButtonBorderBrushPressed}" />
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.02" />
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.02" />
+                </Transitions>
+            </Setter>
+        </Style>
+
+        <!--
+            pressed content feedback (matches PhButton.UpdateContentVisual): dim and
+            nudge the text + glyph down while the chrome stays put. Applied to the
+            content parts only, never Border#Background.
+        -->
+        <Style Selector="^:pressed /template/ ContentControl#ContentPresenter">
+            <Setter Property="Opacity" Value="0.6" />
+            <Setter Property="RenderTransform">
+                <TranslateTransform Y="0.5" />
+            </Setter>
+        </Style>
+        <Style Selector="^:pressed /template/ TextBlock#PlaceholderTextBlock">
+            <Setter Property="Opacity" Value="0.6" />
+            <Setter Property="RenderTransform">
+                <TranslateTransform Y="0.5" />
+            </Setter>
+        </Style>
+        <Style Selector="^:pressed /template/ PathIcon#DropDownGlyph">
+            <Setter Property="Opacity" Value="0.6" />
+            <Setter Property="RenderTransform">
+                <TranslateTransform Y="0.5" />
+            </Setter>
+        </Style>
+
+    </Style>
+
+</Styles>
