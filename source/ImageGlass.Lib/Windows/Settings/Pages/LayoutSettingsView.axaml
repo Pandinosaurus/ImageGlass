@@ -27,6 +27,7 @@
         <SolidColorBrush x:Key="ZoneAccentBorder" Color="{DynamicResource SystemAccentColor}" />
     </windows:SettingsPageView.Resources>
 
+
     <windows:SettingsPageView.Styles>
         <!--  An empty drop slot in the layout arranger  -->
         <Style Selector="Border.zone">
@@ -78,13 +79,17 @@
         </Style>
     </windows:SettingsPageView.Styles>
 
+
     <StackPanel Orientation="Vertical">
 
-        <!--  Title bar  -->
-        <ui:PhTextBlock Classes="group" LangKey="FrmSettings_TitleBar" />
+        <!--  Window  -->
+        <ui:PhTextBlock Classes="group" LangKey="FrmSettings_Window" />
         <StackPanel Margin="{DynamicResource SettingsGroupIndent}">
             <CheckBox x:Name="PART_ShowAppIcon">
                 <ui:PhTextBlock LangKey="FrmSettings_ShowAppIcon" TextWrapping="Wrap" />
+            </CheckBox>
+            <CheckBox x:Name="PART_EnableCenterWindowFit">
+                <ui:PhTextBlock LangKey="FrmSettings_EnableCenterWindowFit" TextWrapping="Wrap" />
             </CheckBox>
 
             <!--  Image information tags  -->
@@ -93,7 +98,7 @@
                 <ui:PhTextBox
                     x:Name="PART_ImageInfoTags"
                     Width="{StaticResource LayoutSectionWidth}"
-                    MinHeight="90"
+                    MinHeight="70"
                     HorizontalAlignment="Left"
                     AcceptsReturn="True"
                     FontFamily="{x:Static types:Const.FONT_CODE}"
@@ -207,4 +212,5 @@
         </StackPanel>
 
     </StackPanel>
+
 </windows:SettingsPageView>

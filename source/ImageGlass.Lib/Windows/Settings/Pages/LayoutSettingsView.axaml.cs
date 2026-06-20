@@ -32,7 +32,7 @@ using System.Linq;
 namespace ImageGlass.Common.Windows;
 
 /// <summary>
-/// The "Layout" settings page: title-bar options (app icon, image-info tags) and the placement of
+/// The "Layout" settings page: window options (app icon, center-on-window-fit, image-info tags) and the placement of
 /// the toolbar and gallery around the viewer. Positions can be set via dropdowns or by dragging the
 /// control chips onto a slot in the visual arranger. Shared binding/registration logic lives in
 /// <see cref="SettingsPageView"/>.
@@ -106,9 +106,11 @@ public partial class LayoutSettingsView : SettingsPageView
 
     protected override void Build()
     {
-        // Title bar
+        // Window
         BindToggle(PART_ShowAppIcon, ConfigId.ShowAppIcon,
-            LangId.FrmSettings_ShowAppIcon, LangId.FrmSettings_TitleBar, true);
+            LangId.FrmSettings_ShowAppIcon, LangId.FrmSettings_Window, true);
+        BindToggle(PART_EnableCenterWindowFit, ConfigId.EnableCenterWindowFit,
+            LangId.FrmSettings_EnableCenterWindowFit, LangId.FrmSettings_Window, true);
         BuildImageInfoTags();
 
         // Controls
@@ -141,7 +143,7 @@ public partial class LayoutSettingsView : SettingsPageView
         PART_AvailableTags.Text = string.Join(TAG_SEPARATOR, _availableTags);
 
         Register(PART_ImageInfoTags, LangId.FrmSettings_ImageInfoTags,
-            ConfigId.ImageInfoTags, LangId.FrmSettings_TitleBar);
+            ConfigId.ImageInfoTags, LangId.FrmSettings_Window);
     }
 
 

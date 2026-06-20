@@ -795,8 +795,8 @@ public class Lang
 
 
         #region FrmSettings > Tab Layout
-        // Layout > Title bar
-        new(LangId.FrmSettings_TitleBar, "Title bar"),
+        // Layout > Window
+        new(LangId.FrmSettings_Window, "Window"),
 
         // Layout > Controls
         new(LangId.FrmSettings_Controls, "Controls"),

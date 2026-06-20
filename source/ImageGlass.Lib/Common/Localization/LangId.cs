@@ -534,8 +534,8 @@ public enum LangId
 
 
     #region FrmSettings > Tab Layout
-    // Layout > Title bar
-    FrmSettings_TitleBar,
+    // Layout > Window
+    FrmSettings_Window,
 
     // Layout > Controls
     FrmSettings_Controls,
