@@ -1,20 +1,9 @@
 <Styles xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <Style Selector="CheckBox">
-
-        <!--
-            half of ControlCornerRadius (7). The template binds both PART_Border and
-            the NormalRectangle box CornerRadius to the control's CornerRadius, so this
-            rounds the box; PART_Border is transparent so it has no visible effect.
-        -->
         <Setter Property="CornerRadius" Value="3.5" />
 
-        <!--
-            unchecked box: match the default Button face (PhButtonBackground /
-            PhButtonBorderBrush). Excludes checked/indeterminate so their accent
-            fill is left untouched. The template sets these at Template priority, so
-            this app-level /template/ style wins.
-        -->
+        <!--  unchecked box:  -->
         <Style Selector="^:not(:checked):not(:indeterminate) /template/ Border#NormalRectangle">
             <Setter Property="Background" Value="{DynamicResource PhButtonBackground}" />
             <Setter Property="BorderBrush" Value="{DynamicResource PhButtonBorderBrush}" />
@@ -38,11 +27,7 @@
             <Setter Property="BorderBrush" Value="{DynamicResource PhButtonBorderBrushPressed}" />
         </Style>
 
-        <!--
-            checked / indeterminate box: accent fill matching the accent Button (shared
-            PhAccentFill*). The template sets the accent fill at Template priority, so these
-            gated /template/ styles run at the higher StyleTrigger priority and win.
-        -->
+        <!--  checked / indeterminate box  -->
         <Style Selector="^:checked /template/ Border#NormalRectangle, ^:indeterminate /template/ Border#NormalRectangle">
             <Setter Property="Background" Value="{DynamicResource PhAccentFill}" />
             <Setter Property="BorderBrush" Value="{DynamicResource PhAccentFill}" />
@@ -66,14 +51,22 @@
             <Setter Property="BorderBrush" Value="{DynamicResource PhAccentFillPressed}" />
         </Style>
 
-        <!--
-            tick / dash glyph: use the accent Button's foreground (auto black/white from
-            accent brightness, set in Core.cs) so it stays readable on the accent fill — the
-            same fill+foreground pairing the accent Button uses. Constant across hover/press;
-            an app-level StyleTrigger setter beats the Fluent ControlTheme's per-state fills.
-        -->
+        <!--  tick / dash glyph  -->
         <Style Selector="^:checked /template/ Path#CheckGlyph, ^:indeterminate /template/ Path#CheckGlyph">
             <Setter Property="Fill" Value="{DynamicResource AccentButtonForeground}" />
+        </Style>
+
+        <!--  disabled: shared neutral palette + subtle outline, gray tick  -->
+        <Style Selector="^:disabled:not(:checked):not(:indeterminate) /template/ Border#NormalRectangle">
+            <Setter Property="Background" Value="{DynamicResource PhControlFillDisabled}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource PhControlBorderDisabled}" />
+        </Style>
+        <Style Selector="^:disabled:checked /template/ Border#NormalRectangle, ^:disabled:indeterminate /template/ Border#NormalRectangle">
+            <Setter Property="Background" Value="{DynamicResource PhControlFillDisabled}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource PhControlBorderDisabled}" />
+        </Style>
+        <Style Selector="^:disabled:checked /template/ Path#CheckGlyph, ^:disabled:indeterminate /template/ Path#CheckGlyph">
+            <Setter Property="Fill" Value="{DynamicResource PhControlGlyphDisabled}" />
         </Style>
 
     </Style>
