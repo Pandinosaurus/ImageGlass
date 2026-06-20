@@ -30,17 +30,6 @@
                         <GradientStop Offset="0.9" Color="#0F000000" />
                         <GradientStop Offset="1.0" Color="#0F000000" />
                     </LinearGradientBrush>
-
-                    <!--  Accent variant: fills (system accent)  -->
-                    <SolidColorBrush x:Key="PhAccentButtonBackground" Color="{DynamicResource SystemAccentColorDark1}" />
-                    <SolidColorBrush
-                        x:Key="PhAccentButtonBackgroundPointerOver"
-                        Opacity="0.9"
-                        Color="{DynamicResource SystemAccentColorDark1}" />
-                    <SolidColorBrush
-                        x:Key="PhAccentButtonBackgroundPressed"
-                        Opacity="0.8"
-                        Color="{DynamicResource SystemAccentColorDark1}" />
                 </ResourceDictionary>
 
                 <ResourceDictionary x:Key="Dark">
@@ -63,17 +52,6 @@
                         <GradientStop Offset="0.9" Color="#14FFFFFF" />
                         <GradientStop Offset="1.0" Color="#14FFFFFF" />
                     </LinearGradientBrush>
-
-                    <!--  Accent variant: fills (system accent)  -->
-                    <SolidColorBrush x:Key="PhAccentButtonBackground" Color="{DynamicResource SystemAccentColorLight2}" />
-                    <SolidColorBrush
-                        x:Key="PhAccentButtonBackgroundPointerOver"
-                        Opacity="0.9"
-                        Color="{DynamicResource SystemAccentColorLight2}" />
-                    <SolidColorBrush
-                        x:Key="PhAccentButtonBackgroundPressed"
-                        Opacity="0.8"
-                        Color="{DynamicResource SystemAccentColorLight2}" />
                 </ResourceDictionary>
 
             </ResourceDictionary.ThemeDictionaries>
@@ -146,15 +124,15 @@
     -->
     <Style Selector="Button.accent">
         <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="{DynamicResource PhAccentButtonBackground}" />
+            <Setter Property="Background" Value="{DynamicResource PhAccentFill}" />
             <Setter Property="BorderBrush" Value="{DynamicResource PhAccentButtonBorderBrush}" />
         </Style>
         <Style Selector="^:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="{DynamicResource PhAccentButtonBackgroundPointerOver}" />
+            <Setter Property="Background" Value="{DynamicResource PhAccentFillPointerOver}" />
             <Setter Property="BorderBrush" Value="{DynamicResource PhAccentButtonBorderBrush}" />
         </Style>
         <Style Selector="^:pressed /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="{DynamicResource PhAccentButtonBackgroundPressed}" />
+            <Setter Property="Background" Value="{DynamicResource PhAccentFillPressed}" />
             <Setter Property="BorderBrush" Value="{DynamicResource PhAccentButtonBorderBrush}" />
         </Style>
     </Style>

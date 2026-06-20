@@ -7,10 +7,11 @@
                     <!--  focused: field lifts to a solid fill  -->
                     <SolidColorBrush x:Key="PhTextBoxBackgroundFocused" Color="#FFFFFFFF" />
 
-                    <!--  focused border: subtle top/sides, accent 2px underline at the bottom (WinUI)  -->
+                    <!--  focused border  -->
                     <LinearGradientBrush x:Key="PhTextBoxBorderBrushFocused" StartPoint="0%,0%" EndPoint="0%,100%">
                         <GradientStop Offset="0.0" Color="#0F000000" />
-                        <GradientStop Offset="0.9" Color="#0F000000" />
+                        <GradientStop Offset="0.85" Color="#0F000000" />
+                        <GradientStop Offset="0.95" Color="{DynamicResource SystemAccentColor}" />
                         <GradientStop Offset="1.0" Color="{DynamicResource SystemAccentColor}" />
                     </LinearGradientBrush>
                 </ResourceDictionary>
@@ -19,11 +20,12 @@
                     <!--  focused: slightly more opaque fill so the field reads as active  -->
                     <SolidColorBrush x:Key="PhTextBoxBackgroundFocused" Color="#26FFFFFF" />
 
-                    <!--  dark: a black hairline is invisible, so top/sides use a faint white  -->
+                    <!--  focused border  -->
                     <LinearGradientBrush x:Key="PhTextBoxBorderBrushFocused" StartPoint="0%,0%" EndPoint="0%,100%">
                         <GradientStop Offset="0.0" Color="#14FFFFFF" />
-                        <GradientStop Offset="0.9" Color="#14FFFFFF" />
-                        <GradientStop Offset="1.0" Color="{DynamicResource SystemAccentColor}" />
+                        <GradientStop Offset="0.85" Color="#14FFFFFF" />
+                        <GradientStop Offset="0.95" Color="{DynamicResource SystemAccentColorLight3}" />
+                        <GradientStop Offset="1.0" Color="{DynamicResource SystemAccentColorLight3}" />
                     </LinearGradientBrush>
                 </ResourceDictionary>
             </ResourceDictionary.ThemeDictionaries>

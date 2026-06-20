@@ -38,6 +38,44 @@
             <Setter Property="BorderBrush" Value="{DynamicResource PhButtonBorderBrushPressed}" />
         </Style>
 
+        <!--
+            checked / indeterminate box: accent fill matching the accent Button (shared
+            PhAccentFill*). The template sets the accent fill at Template priority, so these
+            gated /template/ styles run at the higher StyleTrigger priority and win.
+        -->
+        <Style Selector="^:checked /template/ Border#NormalRectangle, ^:indeterminate /template/ Border#NormalRectangle">
+            <Setter Property="Background" Value="{DynamicResource PhAccentFill}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource PhAccentFill}" />
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.04" />
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.04" />
+                </Transitions>
+            </Setter>
+        </Style>
+
+        <!--  checked / indeterminate hover  -->
+        <Style Selector="^:checked:pointerover /template/ Border#NormalRectangle, ^:indeterminate:pointerover /template/ Border#NormalRectangle">
+            <Setter Property="Background" Value="{DynamicResource PhAccentFillPointerOver}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource PhAccentFillPointerOver}" />
+        </Style>
+
+        <!--  checked / indeterminate pressed  -->
+        <Style Selector="^:checked:pressed /template/ Border#NormalRectangle, ^:indeterminate:pressed /template/ Border#NormalRectangle">
+            <Setter Property="Background" Value="{DynamicResource PhAccentFillPressed}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource PhAccentFillPressed}" />
+        </Style>
+
+        <!--
+            tick / dash glyph: use the accent Button's foreground (auto black/white from
+            accent brightness, set in Core.cs) so it stays readable on the accent fill — the
+            same fill+foreground pairing the accent Button uses. Constant across hover/press;
+            an app-level StyleTrigger setter beats the Fluent ControlTheme's per-state fills.
+        -->
+        <Style Selector="^:checked /template/ Path#CheckGlyph, ^:indeterminate /template/ Path#CheckGlyph">
+            <Setter Property="Fill" Value="{DynamicResource AccentButtonForeground}" />
+        </Style>
+
     </Style>
 
 </Styles>

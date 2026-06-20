@@ -15,40 +15,32 @@
     <ResourceDictionary.ThemeDictionaries>
 
         <ResourceDictionary x:Key="Light">
-            <!--  Rail: accent value (filled) + neutral remainder  -->
-            <SolidColorBrush x:Key="PhSliderTrackValueFill" Color="{DynamicResource SystemAccentColorDark1}" />
-            <SolidColorBrush x:Key="PhSliderTrackValueFillPointerOver" Color="{DynamicResource SystemAccentColor}" />
-            <SolidColorBrush x:Key="PhSliderTrackValueFillPressed" Color="{DynamicResource SystemAccentColorDark1}" />
+            <!--  Accent value rail + inner dot use the shared PhAccentFill*; only the neutral remainder + disabled tints are control-specific  -->
             <SolidColorBrush x:Key="PhSliderTrackValueFillDisabled" Color="#42000000" />
             <SolidColorBrush x:Key="PhSliderTrackFill" Color="#61000000" />
             <SolidColorBrush x:Key="PhSliderTrackFillPointerOver" Color="#8A000000" />
             <SolidColorBrush x:Key="PhSliderTrackFillPressed" Color="#61000000" />
             <SolidColorBrush x:Key="PhSliderTrackFillDisabled" Color="#37000000" />
 
-            <!--  Thumb: white circle, subtle ring, accent inner dot  -->
+            <!--  Thumb: white circle, subtle ring (accent inner dot uses PhAccentFill*)  -->
             <SolidColorBrush x:Key="PhSliderThumbOuterFill" Color="#FFFFFFFF" />
             <SolidColorBrush x:Key="PhSliderThumbOuterFillDisabled" Color="#FFF3F3F3" />
             <SolidColorBrush x:Key="PhSliderThumbBorder" Color="#29000000" />
-            <SolidColorBrush x:Key="PhSliderInnerDotFill" Color="{DynamicResource SystemAccentColorDark1}" />
             <SolidColorBrush x:Key="PhSliderInnerDotFillDisabled" Color="#42000000" />
         </ResourceDictionary>
 
         <ResourceDictionary x:Key="Dark">
-            <!--  Rail: accent value (filled) + neutral remainder  -->
-            <SolidColorBrush x:Key="PhSliderTrackValueFill" Color="{DynamicResource SystemAccentColorLight2}" />
-            <SolidColorBrush x:Key="PhSliderTrackValueFillPointerOver" Color="{DynamicResource SystemAccentColorLight3}" />
-            <SolidColorBrush x:Key="PhSliderTrackValueFillPressed" Color="{DynamicResource SystemAccentColorLight2}" />
+            <!--  Accent value rail + inner dot use the shared PhAccentFill*; only the neutral remainder + disabled tints are control-specific  -->
             <SolidColorBrush x:Key="PhSliderTrackValueFillDisabled" Color="#51FFFFFF" />
             <SolidColorBrush x:Key="PhSliderTrackFill" Color="#8BFFFFFF" />
             <SolidColorBrush x:Key="PhSliderTrackFillPointerOver" Color="#B0FFFFFF" />
             <SolidColorBrush x:Key="PhSliderTrackFillPressed" Color="#8BFFFFFF" />
             <SolidColorBrush x:Key="PhSliderTrackFillDisabled" Color="#28FFFFFF" />
 
-            <!--  Thumb: dark circle, light ring, accent inner dot  -->
+            <!--  Thumb: dark circle, light ring (accent inner dot uses PhAccentFill*)  -->
             <SolidColorBrush x:Key="PhSliderThumbOuterFill" Color="#FF454545" />
             <SolidColorBrush x:Key="PhSliderThumbOuterFillDisabled" Color="#FF2D2D2D" />
             <SolidColorBrush x:Key="PhSliderThumbBorder" Color="#33FFFFFF" />
-            <SolidColorBrush x:Key="PhSliderInnerDotFill" Color="{DynamicResource SystemAccentColorLight2}" />
             <SolidColorBrush x:Key="PhSliderInnerDotFillDisabled" Color="#51FFFFFF" />
         </ResourceDictionary>
 
@@ -130,7 +122,7 @@
                         Height="12"
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
-                        Fill="{DynamicResource PhSliderInnerDotFill}">
+                        Fill="{DynamicResource PhAccentFill}">
                         <!--  grow/shrink + color all follow the button's 0.04s press transition  -->
                         <Ellipse.Transitions>
                             <Transitions>
@@ -144,16 +136,18 @@
             </ControlTemplate>
         </Setter>
 
-        <!--  hover grows the dot  -->
+        <!--  hover grows the dot; accent fades like the button (same hue, lower opacity)  -->
         <Style Selector="^:pointerover /template/ Ellipse#InnerDot">
             <Setter Property="Width" Value="14" />
             <Setter Property="Height" Value="14" />
+            <Setter Property="Fill" Value="{DynamicResource PhAccentFillPointerOver}" />
         </Style>
 
         <!--  dragging (pressed) shrinks it  -->
         <Style Selector="^:pressed /template/ Ellipse#InnerDot">
             <Setter Property="Width" Value="10" />
             <Setter Property="Height" Value="10" />
+            <Setter Property="Fill" Value="{DynamicResource PhAccentFillPressed}" />
         </Style>
 
         <!--  disabled: dim circle + dot  -->
@@ -169,7 +163,7 @@
     <!--  Slider  -->
     <ControlTheme x:Key="{x:Type Slider}" TargetType="Slider">
         <Setter Property="Background" Value="{DynamicResource PhSliderTrackFill}" />
-        <Setter Property="Foreground" Value="{DynamicResource PhSliderTrackValueFill}" />
+        <Setter Property="Foreground" Value="{DynamicResource PhAccentFill}" />
         <Setter Property="BorderThickness" Value="0" />
 
         <Style Selector="^:horizontal">
@@ -368,9 +362,9 @@
             <Setter Property="IsVisible" Value="True" />
         </Style>
 
-        <!--  Rail hover: brighten the remainder, keep the accent value stable  -->
+        <!--  Rail hover: accent value fades like the button; brighten the neutral remainder  -->
         <Style Selector="^:pointerover /template/ RepeatButton#PART_DecreaseButton">
-            <Setter Property="Background" Value="{DynamicResource PhSliderTrackValueFillPointerOver}" />
+            <Setter Property="Background" Value="{DynamicResource PhAccentFillPointerOver}" />
         </Style>
         <Style Selector="^:pointerover /template/ RepeatButton#PART_IncreaseButton">
             <Setter Property="Background" Value="{DynamicResource PhSliderTrackFillPointerOver}" />
@@ -378,7 +372,7 @@
 
         <!--  Rail pressed  -->
         <Style Selector="^:pressed /template/ RepeatButton#PART_DecreaseButton">
-            <Setter Property="Background" Value="{DynamicResource PhSliderTrackValueFillPressed}" />
+            <Setter Property="Background" Value="{DynamicResource PhAccentFillPressed}" />
         </Style>
         <Style Selector="^:pressed /template/ RepeatButton#PART_IncreaseButton">
             <Setter Property="Background" Value="{DynamicResource PhSliderTrackFillPressed}" />
