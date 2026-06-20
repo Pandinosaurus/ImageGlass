@@ -121,7 +121,8 @@ public sealed class SettingsViewModel : PhReactive
             is ConfigId.EnableOnlyLoadRawPreview
             or ConfigId.EnableOnlyLoadNonRawPreview
             or ConfigId.EnableAlwaysApplyColorProfile
-            or ConfigId.ColorProfile);
+            or ConfigId.ColorProfile
+            or ConfigId.EnableVectorRenderer);
 
         // the new color profile must reach Core.DestColorProfile before the photo re-decodes
         if (changedIds.Contains(ConfigId.ColorProfile))

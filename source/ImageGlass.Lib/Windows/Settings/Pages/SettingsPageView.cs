@@ -171,6 +171,30 @@ public abstract class SettingsPageView : PhControl
 
 
     /// <summary>
+    /// Binds a slider to a double config id (staged on change). The slider's <c>Minimum</c>/<c>Maximum</c>
+    /// are expected to be set in XAML. When <paramref name="valueLabel"/> is supplied, its
+    /// <c>{0}</c> placeholder receives the live value, formatted by <paramref name="format"/>
+    /// (a whole number by default), so the label reads e.g. "Zoom speed: 200".
+    /// </summary>
+    protected void BindSlider(Slider slider, ConfigId id, LangId label, LangId? section,
+        double defaultValue = 0, PhTextBlock? valueLabel = null, Func<double, string>? format = null)
+    {
+        format ??= v => v.ToString("0", CultureInfo.InvariantCulture);
+
+        slider.Value = Math.Clamp(VM.GetValue(id, defaultValue), slider.Minimum, slider.Maximum);
+        if (valueLabel is not null) valueLabel.LangParams = format(slider.Value);
+
+        slider.ValueChanged += (_, _) =>
+        {
+            VM.SetValue(id, slider.Value);
+            if (valueLabel is not null) valueLabel.LangParams = format(slider.Value);
+        };
+
+        Register(slider, label, id, section);
+    }
+
+
+    /// <summary>
     /// Populates an enum dropdown with localized labels (from the <c>{EnumType}_{Value}</c>
     /// language key, falling back to the raw name) and binds the selection to a config id.
     /// </summary>

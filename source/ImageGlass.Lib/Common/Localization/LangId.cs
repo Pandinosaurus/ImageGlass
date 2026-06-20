@@ -150,12 +150,10 @@ public enum LangId
     MouseWheelAction_PanHorizontally,
     MouseWheelAction_BrowseImages,
 
-    ImageInterpolation_NearestNeighbor,
-    ImageInterpolation_Linear,
-    ImageInterpolation_Cubic,
-    ImageInterpolation_MultiSampleLinear,
-    ImageInterpolation_Antisotropic,
-    ImageInterpolation_HighQualityBicubic,
+    // values match the CheckerboardType enum members
+    CheckerboardType_None,
+    CheckerboardType_Client,
+    CheckerboardType_Image,
 
     #endregion // Enums
 
@@ -554,10 +552,18 @@ public enum LangId
 
 
     #region FrmSettings > Tab Viewer
-    // Viewer > Viewer
+    // Viewer > Appearance
+    FrmSettings_Appearance,
     FrmSettings_ShowCheckerboardOnlyImageRegion,
     FrmSettings_EnableNavigationButtons,
     FrmSettings_EnableCenterWindowFit,
+    FrmSettings_EnableVectorRenderer,
+    FrmSettings_CheckerboardMode,
+
+    // Viewer > Panning
+    FrmSettings_Panning,
+    FrmSettings_EnableFreePan,
+    FrmSettings_PanMargin,
     FrmSettings_PanSpeed,
 
     // Viewer > Zooming

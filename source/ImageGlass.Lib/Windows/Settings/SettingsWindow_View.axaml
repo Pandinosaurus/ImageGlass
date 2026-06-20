@@ -41,7 +41,7 @@
         <!--  Setting sub-group heading: semibold, body size  -->
         <Style Selector="TextBlock.subgroup">
             <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="Margin" Value="0,14,0,4" />
+            <Setter Property="Margin" Value="0,10,0,4" />
         </Style>
     </ui:PhControl.Styles>
 

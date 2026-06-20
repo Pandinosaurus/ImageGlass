@@ -62,10 +62,13 @@
                 </CheckBox>
 
                 <!--  Minimum embedded-thumbnail size (visible only when a preview-only option is on)  -->
-                <StackPanel x:Name="PART_PreviewSizeSection" Margin="0,6,0,0">
-                    <ui:PhTextBlock LangKey="FrmSettings_MinEmbeddedThumbnailSize" TextWrapping="Wrap" />
+                <StackPanel x:Name="PART_PreviewSizeSection">
+                    <ui:PhTextBlock
+                        Margin="0,8,0,8"
+                        LangKey="FrmSettings_MinEmbeddedThumbnailSize"
+                        TextWrapping="Wrap" />
                     <StackPanel
-                        Margin="10,5,0,0"
+                        Margin="{DynamicResource SettingsGroupIndent}"
                         Orientation="Horizontal"
                         Spacing="14">
                         <StackPanel Spacing="{DynamicResource SettingsLabelInputGap}">

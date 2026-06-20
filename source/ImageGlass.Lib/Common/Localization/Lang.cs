@@ -417,13 +417,10 @@ public class Lang
         new(LangId.MouseWheelAction_PanHorizontally, "Pan left / right"),
         new(LangId.MouseWheelAction_BrowseImages, "View next / previous Image"),
 
-        // ImageInterpolation
-        new(LangId.ImageInterpolation_NearestNeighbor, "Nearest neighbor"),
-        new(LangId.ImageInterpolation_Linear, "Linear"),
-        new(LangId.ImageInterpolation_Cubic, "Cubic"),
-        new(LangId.ImageInterpolation_MultiSampleLinear, "Multi-sample linear"),
-        new(LangId.ImageInterpolation_Antisotropic, "Antisotropic"),
-        new(LangId.ImageInterpolation_HighQualityBicubic, "High quality bicubic"),
+        // CheckerboardType
+        new(LangId.CheckerboardType_None, "None"),
+        new(LangId.CheckerboardType_Client, "Entire viewer"),
+        new(LangId.CheckerboardType_Image, "Image region only"),
 
         #endregion // Enums
 
@@ -815,18 +812,26 @@ public class Lang
 
 
         #region FrmSettings > Tab Viewer
-        // Viewer > Viewer
+        // Viewer > Appearance
+        new(LangId.FrmSettings_Appearance, "Appearance"),
         new(LangId.FrmSettings_ShowCheckerboardOnlyImageRegion, "Show checkerboard only within the image region"),
         new(LangId.FrmSettings_EnableNavigationButtons, "Show navigation arrow buttons"),
         new(LangId.FrmSettings_EnableCenterWindowFit, "Automatically center the window in Window Fit mode"),
-        new(LangId.FrmSettings_PanSpeed, "Panning speed"),
+        new(LangId.FrmSettings_EnableVectorRenderer, "Use the vector renderer for SVG images"),
+        new(LangId.FrmSettings_CheckerboardMode, "Checkerboard background"),
+
+        // Viewer > Panning
+        new(LangId.FrmSettings_Panning, "Panning"),
+        new(LangId.FrmSettings_EnableFreePan, "Enable free panning"),
+        new(LangId.FrmSettings_PanMargin, "Panning margin: {0}"),
+        new(LangId.FrmSettings_PanSpeed, "Panning speed: {0}"),
 
         // Viewer > Zooming
         new(LangId.FrmSettings_Zooming, "Zooming"),
         new(LangId.FrmSettings_ImageInterpolation, "Image interpolation"),
         new(LangId.FrmSettings_ImageInterpolation_ScaleDown, "When zoom < 100%"),
         new(LangId.FrmSettings_ImageInterpolation_ScaleUp, "When zoom > 100%"),
-        new(LangId.FrmSettings_ZoomSpeed, "Zoom speed"),
+        new(LangId.FrmSettings_ZoomSpeed, "Zoom speed: {0}"),
         new(LangId.FrmSettings_ZoomLevels, "Zoom levels"),
         new(LangId.FrmSettings_UseSmoothZooming, "Use smooth zooming"),
         new(LangId.FrmSettings_LoadDefaultZoomLevels, "Load default zoom levels"),
