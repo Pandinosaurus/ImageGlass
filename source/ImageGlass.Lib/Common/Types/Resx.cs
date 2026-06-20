@@ -88,8 +88,6 @@ public enum ResxId
     SystemAccentColorDark2,
     SystemAccentColorDark3,
 
-    // accent color tuned for readable text on the theme background
-    IG_TextAccentColor,
 
     // accent button text (contrasts with the accent background)
     AccentButtonForeground,
@@ -104,6 +102,7 @@ public enum ResxId
 
 
     // text color
+    IG_TextAccentColor, // accent color tuned for readable text on the theme background
     SystemControlForegroundBaseHighBrush,
     TextControlForeground,
     CheckBoxForegroundChecked,

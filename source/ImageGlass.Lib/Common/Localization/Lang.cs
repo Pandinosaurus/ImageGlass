@@ -795,6 +795,14 @@ public class Lang
 
 
         #region FrmSettings > Tab Layout
+        // Layout > Title bar
+        new(LangId.FrmSettings_TitleBar, "Title bar"),
+
+        // Layout > Controls
+        new(LangId.FrmSettings_Controls, "Controls"),
+        new(LangId.FrmSettings_Layout_ArrangeHint, "Drag the toolbar and gallery onto a slot to rearrange them in the app window."),
+        new(LangId.FrmSettings_Layout_Viewer, "Viewer"),
+
         // Layout > Layout
         new(LangId.FrmSettings_Layout_Order, "Order"),
         new(LangId.FrmSettings_Layout_Toolbar, "Toolbar"),

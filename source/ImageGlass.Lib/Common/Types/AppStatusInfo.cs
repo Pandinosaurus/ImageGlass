@@ -39,7 +39,7 @@ public partial class AppStatusInfo : PhDisposable
 
     #region Image Info Tags
 
-    private string? AppName
+    internal string? AppName
     {
         get
         {
@@ -53,7 +53,7 @@ public partial class AppStatusInfo : PhDisposable
     }
 
 
-    private string? Name
+    internal string? Name
     {
         get
         {
@@ -71,7 +71,7 @@ public partial class AppStatusInfo : PhDisposable
     }
 
 
-    private string? Path
+    internal string? Path
     {
         get
         {
@@ -89,7 +89,7 @@ public partial class AppStatusInfo : PhDisposable
     }
 
 
-    private string? FileSize
+    internal string? FileSize
     {
         get
         {
@@ -107,7 +107,7 @@ public partial class AppStatusInfo : PhDisposable
     }
 
 
-    private string? ModifiedDateTime
+    internal string? ModifiedDateTime
     {
         get
         {
@@ -126,7 +126,7 @@ public partial class AppStatusInfo : PhDisposable
     }
 
 
-    private string? Dimension
+    internal string? Dimension
     {
         get
         {
@@ -147,7 +147,7 @@ public partial class AppStatusInfo : PhDisposable
     }
 
 
-    private string? FrameCount
+    internal string? FrameCount
     {
         get
         {
@@ -171,7 +171,7 @@ public partial class AppStatusInfo : PhDisposable
     }
 
 
-    private string? ListCount
+    internal string? ListCount
     {
         get
         {
@@ -194,7 +194,7 @@ public partial class AppStatusInfo : PhDisposable
     }
 
 
-    private string? Zoom
+    internal string? Zoom
     {
         get
         {
@@ -208,7 +208,7 @@ public partial class AppStatusInfo : PhDisposable
     }
 
 
-    private string? ExifRating
+    internal string? ExifRating
     {
         get
         {
@@ -226,7 +226,7 @@ public partial class AppStatusInfo : PhDisposable
     }
 
 
-    private string? ExifDateTime
+    internal string? ExifDateTime
     {
         get
         {
@@ -246,7 +246,7 @@ public partial class AppStatusInfo : PhDisposable
     }
 
 
-    private string? ExifDateTimeOriginal
+    internal string? ExifDateTimeOriginal
     {
         get
         {
@@ -266,7 +266,7 @@ public partial class AppStatusInfo : PhDisposable
     }
 
 
-    private string? DateTimeAuto
+    internal string? DateTimeAuto
     {
         get
         {
@@ -294,7 +294,7 @@ public partial class AppStatusInfo : PhDisposable
     }
 
 
-    private string? HdrInfo
+    internal string? HdrInfo
     {
         get
         {
@@ -336,7 +336,7 @@ public partial class AppStatusInfo : PhDisposable
     }
 
 
-    private string? ColorSpace
+    internal string? ColorSpace
     {
         get
         {
@@ -431,6 +431,7 @@ public partial class AppStatusInfo : PhDisposable
 
         Core.Photos.PropertyChanged += Photos_PropertyChanged;
         Core.ImageTransform.Changed += ImageTransform_Changed;
+        Core.Config.PropertyChanged += Config_PropertyChanged;
         _viewer.ZoomChanged += Viewer_ZoomChanged;
         _viewer.PhotoFrameChanged += Viewer_PhotoFrameChanged;
     }
@@ -442,8 +443,21 @@ public partial class AppStatusInfo : PhDisposable
 
         Core.Photos.PropertyChanged -= Photos_PropertyChanged;
         Core.ImageTransform.Changed -= ImageTransform_Changed;
+        Core.Config.PropertyChanged -= Config_PropertyChanged;
         _viewer.ZoomChanged -= Viewer_ZoomChanged;
         _viewer.PhotoFrameChanged -= Viewer_PhotoFrameChanged;
+    }
+
+
+    private void Config_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        // the status text is built from these tags, so refresh it when they change
+        if (e.PropertyName != nameof(Core.Config.ImageInfoTags)) return;
+
+        Dispatcher.UIThread.Post(() =>
+        {
+            Changed?.Invoke(this, EventArgs.Empty);
+        });
     }
 
 

@@ -27,7 +27,7 @@
                     <ComboBox x:Name="PART_OrderBy" MinWidth="200" />
                 </StackPanel>
                 <StackPanel VerticalAlignment="Bottom">
-                    <ComboBox x:Name="PART_OrderType" MinWidth="140" />
+                    <ComboBox x:Name="PART_OrderType" MinWidth="200" />
                 </StackPanel>
             </StackPanel>
 

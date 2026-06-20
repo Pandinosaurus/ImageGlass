@@ -1,0 +1,232 @@
+<windows:SettingsPageView
+    x:Class="ImageGlass.Common.Windows.LayoutSettingsView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:types="using:ImageGlass.Common.Types"
+    xmlns:ui="using:ImageGlass.UI"
+    xmlns:windows="using:ImageGlass.Common.Windows"
+    mc:Ignorable="d"
+    d:DesignWidth="600"
+    HorizontalAlignment="Stretch">
+
+    <windows:SettingsPageView.Resources>
+        <!--  Shared width: image-info tags box and the layout arranger line up  -->
+        <x:Double x:Key="LayoutSectionWidth">460</x:Double>
+
+        <!--  Accent shades for drop slots (faint fill while valid, stronger under the cursor)  -->
+        <SolidColorBrush
+            x:Key="ZoneValidFill"
+            Opacity="0.15"
+            Color="{DynamicResource SystemAccentColor}" />
+        <SolidColorBrush
+            x:Key="ZoneHoverFill"
+            Opacity="0.35"
+            Color="{DynamicResource SystemAccentColor}" />
+        <SolidColorBrush x:Key="ZoneAccentBorder" Color="{DynamicResource SystemAccentColor}" />
+    </windows:SettingsPageView.Resources>
+
+    <windows:SettingsPageView.Styles>
+        <!--  An empty drop slot in the layout arranger  -->
+        <Style Selector="Border.zone">
+            <Setter Property="Padding" Value="4" />
+            <Setter Property="CornerRadius" Value="{DynamicResource ControlCornerRadius}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderBrush" Value="{DynamicResource IG_BorderControlBrush}" />
+            <Setter Property="Background" Value="{DynamicResource IG_BackgroundNeutralBrush}" />
+            <!--  smooth fade as a slot becomes a valid / hovered drop target  -->
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.15" />
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.15" />
+                </Transitions>
+            </Setter>
+        </Style>
+        <!--  Horizontal bar slots (toolbar / gallery top & bottom): fixed height so nothing reflows  -->
+        <Style Selector="Border.zone.bar">
+            <Setter Property="Height" Value="44" />
+        </Style>
+        <!--  Side slots (gallery left / right): fixed width, fill the row height  -->
+        <Style Selector="Border.zone.side">
+            <Setter Property="Width" Value="88" />
+        </Style>
+        <!--  A slot highlighted as a valid drop target while dragging  -->
+        <Style Selector="Border.zone.valid">
+            <Setter Property="Background" Value="{DynamicResource ZoneValidFill}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource ZoneAccentBorder}" />
+        </Style>
+        <!--  The valid slot currently under the pointer  -->
+        <Style Selector="Border.zone.hover">
+            <Setter Property="Background" Value="{DynamicResource ZoneHoverFill}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource ZoneAccentBorder}" />
+        </Style>
+        <!--  The viewer placeholder at the center  -->
+        <Style Selector="Border.viewer">
+            <Setter Property="CornerRadius" Value="{DynamicResource ControlCornerRadius}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderBrush" Value="{DynamicResource IG_BorderControlBrush}" />
+            <Setter Property="Background" Value="{DynamicResource IG_ButtonBackground}" />
+        </Style>
+        <!--  Faint label shown inside an empty slot  -->
+        <Style Selector="TextBlock.slotLabel">
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="TextAlignment" Value="Center" />
+            <Setter Property="Opacity" Value="0.5" />
+            <Setter Property="FontSize" Value="{x:Static types:Const.FONT_SIZE_SMALL}" />
+        </Style>
+        <!--  A draggable control chip: a normal button with accent text + border  -->
+        <Style Selector="Button.chip">
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Foreground" Value="{DynamicResource IG_TextAccentColor}" />
+        </Style>
+        <!--  the border is drawn by the inner ContentPresenter (see ButtonStyle.axaml), so it
+              must be overridden there, in every state, to keep the accent color  -->
+        <Style Selector="Button.chip /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="BorderBrush" Value="{DynamicResource ZoneAccentBorder}" />
+        </Style>
+        <Style Selector="Button.chip:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="BorderBrush" Value="{DynamicResource ZoneAccentBorder}" />
+        </Style>
+        <Style Selector="Button.chip:pressed /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="BorderBrush" Value="{DynamicResource ZoneAccentBorder}" />
+        </Style>
+        <!--  center the button's inner content (icon + text)  -->
+        <Style Selector="Button.chip StackPanel">
+            <Setter Property="HorizontalAlignment" Value="Center" />
+        </Style>
+    </windows:SettingsPageView.Styles>
+
+    <StackPanel Orientation="Vertical">
+
+        <!--  Title bar  -->
+        <ui:PhTextBlock Classes="group" LangKey="FrmSettings_TitleBar" />
+        <StackPanel Margin="{DynamicResource SettingsGroupIndent}">
+            <CheckBox x:Name="PART_ShowAppIcon">
+                <ui:PhTextBlock LangKey="FrmSettings_ShowAppIcon" TextWrapping="Wrap" />
+            </CheckBox>
+
+            <!--  Image information tags  -->
+            <StackPanel Margin="0,10,0,0" Spacing="{DynamicResource SettingsLabelInputGap}">
+                <ui:PhTextBlock LangKey="FrmSettings_ImageInfoTags" />
+                <ui:PhTextBox
+                    x:Name="PART_ImageInfoTags"
+                    Width="{StaticResource LayoutSectionWidth}"
+                    MinHeight="90"
+                    HorizontalAlignment="Left"
+                    AcceptsReturn="True"
+                    FontFamily="{x:Static types:Const.FONT_CODE}"
+                    TextWrapping="Wrap" />
+                <ui:PhButton
+                    x:Name="PART_ResetImageInfoTags"
+                    HorizontalAlignment="Left"
+                    IsLink="True" />
+
+                <ui:PhTextBlock
+                    Margin="0,8,0,0"
+                    FontWeight="SemiBold"
+                    LangKey="FrmSettings_AvailableImageInfoTags" />
+                <SelectableTextBlock
+                    x:Name="PART_AvailableTags"
+                    MaxWidth="{StaticResource LayoutSectionWidth}"
+                    HorizontalAlignment="Left"
+                    FontFamily="{x:Static types:Const.FONT_CODE}"
+                    FontSize="{x:Static types:Const.FONT_SIZE_SMALL}"
+                    Opacity="0.7"
+                    TextWrapping="Wrap" />
+            </StackPanel>
+        </StackPanel>
+
+
+        <!--  Controls  -->
+        <ui:PhTextBlock Classes="group" LangKey="FrmSettings_Controls" />
+        <StackPanel Margin="{DynamicResource SettingsGroupIndent}">
+
+            <!--  Position dropdowns  -->
+            <StackPanel Orientation="Horizontal" Spacing="14">
+                <StackPanel Spacing="{DynamicResource SettingsLabelInputGap}">
+                    <ui:PhTextBlock LangKey="FrmSettings_Layout_ToolbarPosition" />
+                    <ComboBox x:Name="PART_ToolbarPosition" MinWidth="200" />
+                </StackPanel>
+                <StackPanel Spacing="{DynamicResource SettingsLabelInputGap}">
+                    <ui:PhTextBlock LangKey="FrmSettings_Layout_GalleryPosition" />
+                    <ComboBox x:Name="PART_GalleryPosition" MinWidth="200" />
+                </StackPanel>
+            </StackPanel>
+
+            <!--  Drag-and-drop arranger  -->
+            <ui:PhTextBlock
+                Margin="0,14,0,8"
+                HorizontalAlignment="Stretch"
+                LangKey="FrmSettings_Layout_ArrangeHint"
+                Opacity="0.7"
+                TextWrapping="Wrap" />
+
+            <Border
+                x:Name="PART_Preview"
+                Width="{StaticResource LayoutSectionWidth}"
+                Height="330"
+                Padding="12"
+                HorizontalAlignment="Left"
+                Background="{DynamicResource IG_BackgroundNeutralBrush}"
+                BorderBrush="{DynamicResource IG_BorderNeutralBrush}"
+                BorderThickness="1"
+                CornerRadius="{DynamicResource ControlCornerRadius}">
+                <Grid RowDefinitions="Auto,Auto,*,Auto,Auto" RowSpacing="8">
+
+                    <!--  Toolbar - top  -->
+                    <Border Grid.Row="0" Classes="zone bar">
+                        <Grid x:Name="PART_ZoneToolbarTop" />
+                    </Border>
+
+                    <!--  Gallery - top  -->
+                    <Border Grid.Row="1" Classes="zone bar">
+                        <Grid x:Name="PART_ZoneGalleryTop" />
+                    </Border>
+
+                    <!--  Gallery left | Viewer | Gallery right  -->
+                    <Grid
+                        Grid.Row="2"
+                        ColumnDefinitions="Auto,*,Auto"
+                        ColumnSpacing="8">
+                        <Border Grid.Column="0" Classes="zone side">
+                            <Grid x:Name="PART_ZoneGalleryLeft" />
+                        </Border>
+                        <Border Grid.Column="1" Classes="viewer">
+                            <ui:PhTextBlock
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                LangKey="FrmSettings_Layout_Viewer"
+                                Opacity="0.5" />
+                        </Border>
+                        <Border Grid.Column="2" Classes="zone side">
+                            <Grid x:Name="PART_ZoneGalleryRight" />
+                        </Border>
+                    </Grid>
+
+                    <!--  Gallery - bottom  -->
+                    <Border Grid.Row="3" Classes="zone bar">
+                        <Grid x:Name="PART_ZoneGalleryBottom" />
+                    </Border>
+
+                    <!--  Toolbar - bottom  -->
+                    <Border Grid.Row="4" Classes="zone bar">
+                        <Grid x:Name="PART_ZoneToolbarBottom" />
+                    </Border>
+
+                    <!--  Topmost overlay that hosts the floating chip while dragging  -->
+                    <Canvas
+                        x:Name="PART_DragLayer"
+                        Grid.Row="0"
+                        Grid.RowSpan="5"
+                        IsHitTestVisible="False" />
+                </Grid>
+            </Border>
+
+        </StackPanel>
+
+    </StackPanel>
+</windows:SettingsPageView>
