@@ -47,6 +47,7 @@
                 <ResourceInclude Source="avares://ImageGlass.Lib/UI/Styles/CommonResources.axaml" />
                 <ResourceInclude Source="avares://ImageGlass.Lib/UI/Styles/MenuResources.axaml" />
                 <ResourceInclude Source="avares://ImageGlass.Lib/UI/Styles/ComboBoxResources.axaml" />
+                <ResourceInclude Source="avares://ImageGlass.Lib/UI/Styles/SliderStyle.axaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>
