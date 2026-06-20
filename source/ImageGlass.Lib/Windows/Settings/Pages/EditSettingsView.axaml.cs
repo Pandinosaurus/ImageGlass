@@ -26,7 +26,6 @@ using ImageGlass.UI;
 using ImageGlass.UI.Windowing;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -39,7 +38,6 @@ namespace ImageGlass.Common.Windows;
 /// </summary>
 public partial class EditSettingsView : SettingsPageView
 {
-    private const int IMAGE_EDIT_QUALITY_MAX = 100;
     private static readonly Thickness CELL_PADDING = new(10, 6);
 
     // working copy of the editing apps (keyed by file-extension string); staged into the VM on change
@@ -76,10 +74,8 @@ public partial class EditSettingsView : SettingsPageView
         BindToggle(PART_OpenSaveAsInCurrentFolder, ConfigId.EnableOpenSaveAsInCurrentFolder,
             LangId.FrmSettings_EnableOpenSaveAsInCurrentFolder, LangId.FrmSettings_Edit_Saving, true);
 
-        BindUIntInput(PART_ImageEditQuality, ConfigId.ImageEditQuality,
-            LangId.FrmSettings_ImageEditQuality, LangId.FrmSettings_Edit_Saving, 80u);
-        // clamp to the 0–100 range when the user leaves the field
-        PART_ImageEditQuality.LostFocus += (_, _) => ClampImageEditQuality();
+        BindUIntSlider(PART_ImageEditQuality, ConfigId.ImageEditQuality,
+            LangId.FrmSettings_ImageEditQuality, LangId.FrmSettings_Edit_Saving, 80u, PART_ImageEditQualityLabel);
 
         // Clipboard
         BindToggle(PART_CopyMultipleFiles, ConfigId.EnableCopyMultipleFiles,
@@ -92,16 +88,6 @@ public partial class EditSettingsView : SettingsPageView
             LangId.FrmSettings_AfterEditingAction, LangId.FrmSettings_EditApps);
 
         BuildEditApps();
-    }
-
-
-    /// <summary>
-    /// Clamps the image-quality value to <c>0–100</c> (staging follows from the text change).
-    /// </summary>
-    private void ClampImageEditQuality()
-    {
-        if (!uint.TryParse(PART_ImageEditQuality.Text, out var v) || v <= IMAGE_EDIT_QUALITY_MAX) return;
-        PART_ImageEditQuality.Text = IMAGE_EDIT_QUALITY_MAX.ToString(CultureInfo.InvariantCulture);
     }
 
 

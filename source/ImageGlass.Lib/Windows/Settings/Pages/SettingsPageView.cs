@@ -195,6 +195,29 @@ public abstract class SettingsPageView : PhControl
 
 
     /// <summary>
+    /// Binds a slider to a <c>uint</c> config id (staged on change). Behaves like
+    /// <see cref="BindSlider(Slider, ConfigId, LangId, LangId?, double, PhTextBlock?, Func{double, string})"/>
+    /// but stages a rounded <c>uint</c> so the value round-trips through the integer config getter.
+    /// </summary>
+    protected void BindUIntSlider(Slider slider, ConfigId id, LangId label, LangId? section,
+        uint defaultValue = 0, PhTextBlock? valueLabel = null)
+    {
+        var value = Math.Clamp((uint)VM.GetValue(id, defaultValue), (uint)slider.Minimum, (uint)slider.Maximum);
+        slider.Value = value;
+        if (valueLabel is not null) valueLabel.LangParams = value.ToString(CultureInfo.InvariantCulture);
+
+        slider.ValueChanged += (_, _) =>
+        {
+            var v = (uint)Math.Round(slider.Value);
+            VM.SetValue(id, v);
+            if (valueLabel is not null) valueLabel.LangParams = v.ToString(CultureInfo.InvariantCulture);
+        };
+
+        Register(slider, label, id, section);
+    }
+
+
+    /// <summary>
     /// Populates an enum dropdown with localized labels (from the <c>{EnumType}_{Value}</c>
     /// language key, falling back to the raw name) and binds the selection to a config id.
     /// </summary>

@@ -774,7 +774,7 @@ public class Lang
         new(LangId.FrmSettings_EnableSaveConfirmation, "Show confirmation dialog when overriding file"),
         new(LangId.FrmSettings_EnablePreserveModifiedDate, "Preserve the image's modified date on save"),
         new(LangId.FrmSettings_EnableOpenSaveAsInCurrentFolder, "Open the Save As dialog in the current image directory"), // v9.1
-        new(LangId.FrmSettings_ImageEditQuality, "Image quality"),
+        new(LangId.FrmSettings_ImageEditQuality, "Image quality: {0}"),
 
         // Edit > Clipboard
         new(LangId.FrmSettings_Clipboard, "Clipboard"),
