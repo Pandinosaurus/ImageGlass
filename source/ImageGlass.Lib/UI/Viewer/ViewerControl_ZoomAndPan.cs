@@ -30,7 +30,6 @@ namespace ImageGlass.UI.Viewer;
 public partial class ViewerControl
 {
     private readonly ZoomInfo _zooming = new();
-    private double _panSpeed = 20f;
     private bool _enablePanningVelocity = true;
 
 
@@ -135,12 +134,16 @@ public partial class ViewerControl
     /// </summary>
     public double[] ZoomLevels
     {
-        get => _zooming.Levels;
-        set => _zooming.Levels = value.OrderBy(x => x)
-            .Where(i => i > 0)
-            .Distinct()
-            .ToArray();
+        get => GetValue(ZoomLevelsProperty);
+        set => SetValue(ZoomLevelsProperty, value);
     }
+    public static readonly StyledProperty<double[]> ZoomLevelsProperty =
+        AvaloniaProperty.Register<ViewerControl, double[]>(nameof(ZoomLevels), [],
+            coerce: (_, value) => (value ?? [])
+                .OrderBy(x => x)
+                .Where(i => i > 0)
+                .Distinct()
+                .ToArray());
 
 
     /// <summary>
@@ -148,13 +151,12 @@ public partial class ViewerControl
     /// </summary>
     public double ZoomSpeed
     {
-        get => _zooming.Speed;
-        set
-        {
-            _zooming.Speed = Math.Min(value, ZoomInfo.MAX_ZOOM_SPEED);
-            _zooming.Speed = Math.Max(value, -ZoomInfo.MAX_ZOOM_SPEED);
-        }
+        get => GetValue(ZoomSpeedProperty);
+        set => SetValue(ZoomSpeedProperty, value);
     }
+    public static readonly StyledProperty<double> ZoomSpeedProperty =
+        AvaloniaProperty.Register<ViewerControl, double>(nameof(ZoomSpeed), 0d,
+            coerce: (_, value) => Math.Clamp(value, -ZoomInfo.MAX_ZOOM_SPEED, ZoomInfo.MAX_ZOOM_SPEED));
 
 
     /// <summary>
@@ -168,12 +170,12 @@ public partial class ViewerControl
     /// </summary>
     public double PanSpeed
     {
-        get => _panSpeed;
-        set
-        {
-            _panSpeed = Math.Max(value, 0); // min 0
-        }
+        get => GetValue(PanSpeedProperty);
+        set => SetValue(PanSpeedProperty, value);
     }
+    public static readonly StyledProperty<double> PanSpeedProperty =
+        AvaloniaProperty.Register<ViewerControl, double>(nameof(PanSpeed), 20d,
+            coerce: (_, value) => Math.Max(value, 0)); // min 0
 
 
     /// <summary>
