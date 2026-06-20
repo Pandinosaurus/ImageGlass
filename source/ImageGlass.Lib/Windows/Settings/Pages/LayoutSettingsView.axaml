@@ -66,7 +66,7 @@
             <Setter Property="CornerRadius" Value="{DynamicResource ControlCornerRadius}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="BorderBrush" Value="{DynamicResource IG_BorderControlBrush}" />
-            <Setter Property="Background" Value="{DynamicResource IG_ButtonBackground}" />
+            <Setter Property="Background" Value="{DynamicResource PhButtonBackground}" />
         </Style>
         <!--  Faint label shown inside an empty slot  -->
         <Style Selector="TextBlock.slotLabel">
@@ -75,28 +75,6 @@
             <Setter Property="TextAlignment" Value="Center" />
             <Setter Property="Opacity" Value="0.5" />
             <Setter Property="FontSize" Value="{x:Static types:Const.FONT_SIZE_SMALL}" />
-        </Style>
-        <!--  A draggable control chip: a normal button with accent text + border  -->
-        <Style Selector="Button.chip">
-            <Setter Property="HorizontalAlignment" Value="Stretch" />
-            <Setter Property="HorizontalContentAlignment" Value="Center" />
-            <Setter Property="VerticalContentAlignment" Value="Center" />
-            <Setter Property="Foreground" Value="{DynamicResource IG_TextAccentColor}" />
-        </Style>
-        <!--  the border is drawn by the inner ContentPresenter (see ButtonStyle.axaml), so it
-              must be overridden there, in every state, to keep the accent color  -->
-        <Style Selector="Button.chip /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="BorderBrush" Value="{DynamicResource ZoneAccentBorder}" />
-        </Style>
-        <Style Selector="Button.chip:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="BorderBrush" Value="{DynamicResource ZoneAccentBorder}" />
-        </Style>
-        <Style Selector="Button.chip:pressed /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="BorderBrush" Value="{DynamicResource ZoneAccentBorder}" />
-        </Style>
-        <!--  center the button's inner content (icon + text)  -->
-        <Style Selector="Button.chip StackPanel">
-            <Setter Property="HorizontalAlignment" Value="Center" />
         </Style>
     </windows:SettingsPageView.Styles>
 
@@ -123,7 +101,7 @@
                 <ui:PhButton
                     x:Name="PART_ResetImageInfoTags"
                     HorizontalAlignment="Left"
-                    IsLink="True" />
+                    Variant="Link" />
 
                 <ui:PhTextBlock
                     Margin="0,8,0,0"

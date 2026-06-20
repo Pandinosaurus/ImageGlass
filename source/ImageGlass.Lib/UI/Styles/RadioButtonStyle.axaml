@@ -16,45 +16,45 @@
         <Style Selector="^ /template/ Ellipse#OuterEllipse">
             <Setter Property="Transitions">
                 <Transitions>
-                    <BrushTransition Property="Fill" Duration="0:0:0.1" />
-                    <BrushTransition Property="Stroke" Duration="0:0:0.1" />
+                    <BrushTransition Property="Fill" Duration="0:0:0.04" />
+                    <BrushTransition Property="Stroke" Duration="0:0:0.04" />
                 </Transitions>
             </Setter>
         </Style>
         <Style Selector="^:not(:checked) /template/ Ellipse#OuterEllipse">
-            <Setter Property="Fill" Value="{DynamicResource IG_ButtonBackground}" />
-            <Setter Property="Stroke" Value="{DynamicResource IG_ButtonBorderBrush}" />
+            <Setter Property="Fill" Value="{DynamicResource PhButtonBackground}" />
+            <Setter Property="Stroke" Value="{DynamicResource PhButtonBorderBrush}" />
         </Style>
         <Style Selector="^:not(:checked):pointerover /template/ Ellipse#OuterEllipse">
-            <Setter Property="Fill" Value="{DynamicResource IG_ButtonBackgroundPointerOver}" />
-            <Setter Property="Stroke" Value="{DynamicResource IG_ButtonBorderBrush}" />
+            <Setter Property="Fill" Value="{DynamicResource PhButtonBackgroundPointerOver}" />
+            <Setter Property="Stroke" Value="{DynamicResource PhButtonBorderBrush}" />
         </Style>
         <Style Selector="^:not(:checked):pressed /template/ Ellipse#OuterEllipse">
-            <Setter Property="Fill" Value="{DynamicResource IG_ButtonBackgroundPressed}" />
-            <Setter Property="Stroke" Value="{DynamicResource IG_ButtonBorderBrushPressed}" />
+            <Setter Property="Fill" Value="{DynamicResource PhButtonBackgroundPressed}" />
+            <Setter Property="Stroke" Value="{DynamicResource PhButtonBorderBrushPressed}" />
         </Style>
 
         <!-- ===== checked ring: normal box background + thin 1px accent outline ===== -->
         <Style Selector="^ /template/ Ellipse#CheckOuterEllipse">
             <Setter Property="Transitions">
                 <Transitions>
-                    <BrushTransition Property="Fill" Duration="0:0:0.1" />
-                    <BrushTransition Property="Stroke" Duration="0:0:0.1" />
+                    <BrushTransition Property="Fill" Duration="0:0:0.04" />
+                    <BrushTransition Property="Stroke" Duration="0:0:0.04" />
                 </Transitions>
             </Setter>
         </Style>
         <Style Selector="^:checked /template/ Ellipse#CheckOuterEllipse">
             <!--  thin 1px outline (StyleTrigger so it beats the template thickness)  -->
             <Setter Property="StrokeThickness" Value="1" />
-            <Setter Property="Fill" Value="{DynamicResource IG_ButtonBackground}" />
+            <Setter Property="Fill" Value="{DynamicResource PhButtonBackground}" />
             <Setter Property="Stroke" Value="{DynamicResource CheckBoxCheckBackgroundFillChecked}" />
         </Style>
         <Style Selector="^:checked:pointerover /template/ Ellipse#CheckOuterEllipse">
-            <Setter Property="Fill" Value="{DynamicResource IG_ButtonBackgroundPointerOver}" />
+            <Setter Property="Fill" Value="{DynamicResource PhButtonBackgroundPointerOver}" />
             <Setter Property="Stroke" Value="{DynamicResource CheckBoxCheckBackgroundFillCheckedPointerOver}" />
         </Style>
         <Style Selector="^:checked:pressed /template/ Ellipse#CheckOuterEllipse">
-            <Setter Property="Fill" Value="{DynamicResource IG_ButtonBackgroundPressed}" />
+            <Setter Property="Fill" Value="{DynamicResource PhButtonBackgroundPressed}" />
             <Setter Property="Stroke" Value="{DynamicResource CheckBoxCheckBackgroundFillCheckedPressed}" />
         </Style>
 

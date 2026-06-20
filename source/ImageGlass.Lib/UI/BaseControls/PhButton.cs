@@ -22,11 +22,13 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using ImageGlass.Common;
+using ImageGlass.Common.Extensions;
 using ImageGlass.Common.Types;
 using System;
 using System.ComponentModel;
 
 namespace ImageGlass.UI;
+
 
 public class PhButton : Button
 {
@@ -76,28 +78,15 @@ public class PhButton : Button
 
 
     /// <summary>
-    /// Gets, sets the value indicates that the button is an accent button.
+    /// Gets, sets the visual style variant of the button.
     /// </summary>
-    public bool IsAccent
+    public PhButtonVariant Variant
     {
-        get => GetValue(IsAccentProperty);
-        set => SetValue(IsAccentProperty, value);
+        get => GetValue(VariantProperty);
+        set => SetValue(VariantProperty, value);
     }
-    public static readonly StyledProperty<bool> IsAccentProperty =
-        AvaloniaProperty.Register<PhButton, bool>(nameof(IsAccent));
-
-
-    /// <summary>
-    /// Gets, sets the value indicating that the button is rendered as a borderless,
-    /// link-style button (transparent background, accent-colored text, hand cursor).
-    /// </summary>
-    public bool IsLink
-    {
-        get => GetValue(IsLinkProperty);
-        set => SetValue(IsLinkProperty, value);
-    }
-    public static readonly StyledProperty<bool> IsLinkProperty =
-        AvaloniaProperty.Register<PhButton, bool>(nameof(IsLink));
+    public static readonly StyledProperty<PhButtonVariant> VariantProperty =
+        AvaloniaProperty.Register<PhButton, PhButtonVariant>(nameof(Variant), PhButtonVariant.Default);
 
 
     /// <summary>
@@ -179,6 +168,7 @@ public class PhButton : Button
         base.OnLoaded(e);
 
         OnIgLanguageChanged();
+        UpdateOutlineBorderBrush();
         Core.ThemeChanged += Core_ThemeChanged;
         Core.LanguageChanged += Core_LanguageChanged;
     }
@@ -228,54 +218,101 @@ public class PhButton : Button
         {
             RaisePropertyChanged(IsIconVisibleProperty, default, IsIconVisible);
         }
-        else if (e.Property == IsAccentProperty)
-        {
-            if (IsAccent)
-            {
-                Classes.Add("accent");
-
-                // The Fluent accent style only colors the inner ContentPresenter, not the
-                // button's Foreground. Our custom content (icon + text) binds to Foreground,
-                // so drive it from the accent-aware AccentButtonForeground resource to keep
-                // the text readable on dark/light system accents.
-                this[!ForegroundProperty] = Resx.CreateBinding(ResxId.AccentButtonForeground);
-            }
-            else
-            {
-                Classes.Remove("accent");
-                ClearValue(ForegroundProperty);
-            }
-        }
         else if (e.Property == IsPressedProperty || e.Property == IsPointerOverProperty)
         {
             UpdateContentVisual();
         }
-        else if (e.Property == IsLinkProperty)
+        else if (e.Property == VariantProperty)
         {
-            if (IsLink)
-            {
-                Classes.Add("link");
+            ApplyVariant();
+        }
+    }
 
+
+    /// <summary>
+    /// Applies the look of the current <see cref="Variant"/>: toggles the style class
+    /// (<c>accent</c> / <c>link</c> / <c>outline</c>, defined in <c>ButtonStyle.axaml</c>) and the
+    /// foreground/chrome overrides our custom content needs.
+    /// </summary>
+    private void ApplyVariant()
+    {
+        // reset everything a previous variant may have set
+        Classes.Remove("accent");
+        Classes.Remove("link");
+        Classes.Remove("outline");
+        ClearValue(ForegroundProperty);
+        ClearValue(BackgroundProperty);
+        ClearValue(BorderThicknessProperty);
+        ClearValue(PaddingProperty);
+        ClearValue(CursorProperty);
+
+        switch (Variant)
+        {
+            case PhButtonVariant.Accent:
+                Classes.Add("accent");
+                // the accent style only colors the inner ContentPresenter; our custom content (icon +
+                // text) binds to Foreground, so drive it from the accent-aware resource to stay readable
+                this[!ForegroundProperty] = Resx.CreateBinding(ResxId.AccentButtonForeground);
+                break;
+
+            case PhButtonVariant.Link:
+                Classes.Add("link");
                 // borderless, transparent, accent-colored text with a hand cursor
                 Background = Brushes.Transparent;
                 BorderThickness = new Thickness(0);
-                Padding = new Thickness(4, 2);
+                Padding = new Thickness(0, 2);
                 Cursor = new Cursor(StandardCursorType.Hand);
                 this[!ForegroundProperty] = Resx.CreateBinding(ResxId.IG_TextAccentColor);
-            }
-            else
-            {
-                Classes.Remove("link");
+                break;
 
-                ClearValue(BackgroundProperty);
-                ClearValue(BorderThicknessProperty);
-                ClearValue(PaddingProperty);
-                ClearValue(CursorProperty);
-                ClearValue(ForegroundProperty);
-            }
+            case PhButtonVariant.Outline:
+                Classes.Add("outline");
+                // default background (from ButtonStyle.axaml) with accent text + accent border
+                this[!ForegroundProperty] = Resx.CreateBinding(ResxId.IG_TextAccentColor);
+                break;
 
-            UpdateContentVisual();
+            case PhButtonVariant.Default:
+            default:
+                break;
         }
+
+        UpdateOutlineBorderBrush();
+        UpdateContentVisual();
+    }
+
+
+    /// <summary>
+    /// Builds the Outline border: the accent hue at two alphas (soft top/sides, stronger bottom).
+    /// Done in code because SystemAccentColor is opaque, so a XAML gradient can't vary its alpha.
+    /// </summary>
+    private void UpdateOutlineBorderBrush()
+    {
+        if (Variant != PhButtonVariant.Outline)
+        {
+            Resources.Remove("PhOutlineButtonBorderBrush");
+            return;
+        }
+
+        if (!this.TryFindResource("SystemAccentColor", ActualThemeVariant, out var res)
+            || res is not Color accent)
+        {
+            return;
+        }
+
+        var soft = accent.WithAlpha(0x50);
+        var strong = accent.WithAlpha(0xA0);
+
+        Resources["PhOutlineButtonBorderBrush"] = new LinearGradientBrush
+        {
+            StartPoint = new RelativePoint(0, 0, RelativeUnit.Relative),
+            EndPoint = new RelativePoint(0, 1, RelativeUnit.Relative),
+            GradientStops =
+            {
+                new GradientStop(soft, 0.0),
+                new GradientStop(soft, 0.9),
+                new GradientStop(strong, 1.0),
+            },
+        };
     }
 
 
@@ -305,6 +342,7 @@ public class PhButton : Button
 
     private void Core_ThemeChanged(object? sender, ThemePackChangedEventArgs e)
     {
+        UpdateOutlineBorderBrush();
         OnIgThemeChanged(e);
     }
 
@@ -397,6 +435,9 @@ public class PhButton : Button
 
         var panel = new StackPanel
         {
+            // center the content by default (so it stays centered when the button is stretched)
+            HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
+            VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
             Orientation = Avalonia.Layout.Orientation.Horizontal,
             Spacing = 4,
         };
@@ -419,7 +460,7 @@ public class PhButton : Button
         }
 
         // link: underline on hover/press only
-        if (IsLink && _textEl is not null)
+        if (Variant == PhButtonVariant.Link && _textEl is not null)
         {
             _textEl.TextDecorations = IsPointerOver || IsPressed
                 ? TextDecorations.Underline
@@ -442,4 +483,31 @@ public class PhButton : Button
     #endregion // Control Methods
 
 
+}
+
+
+/// <summary>
+/// The visual style variant of a <see cref="PhButton"/>.
+/// </summary>
+public enum PhButtonVariant
+{
+    /// <summary>
+    /// The standard button look.
+    /// </summary>
+    Default,
+
+    /// <summary>
+    /// A filled accent button (accent background + readable foreground).
+    /// </summary>
+    Accent,
+
+    /// <summary>
+    /// A borderless, link-style button (transparent background, accent text, hand cursor).
+    /// </summary>
+    Link,
+
+    /// <summary>
+    /// A bordered button with the default background but an accent border and accent text.
+    /// </summary>
+    Outline,
 }

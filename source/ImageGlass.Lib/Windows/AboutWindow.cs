@@ -333,8 +333,8 @@ public partial class AboutWindow : DialogWindow
     {
         var btn = new PhButton
         {
-            // link appearance (transparent bg, accent text, hand cursor) comes from IsLink
-            IsLink = true,
+            // link appearance (transparent bg, accent text, hand cursor) comes from the Link variant
+            Variant = PhButtonVariant.Link,
             Padding = new Thickness(6, 2),
             Margin = new Thickness(1),
             FontSize = Const.FONT_SIZE_SMALL,

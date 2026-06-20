@@ -291,10 +291,10 @@ public partial class EditSettingsView : SettingsPageView
 
     private Border ActionsCell(string extKey)
     {
-        var btnEdit = new PhButton { IsLink = true, Text = Core.Lang[LangId._Edit] };
+        var btnEdit = new PhButton { Variant = PhButtonVariant.Link, Text = Core.Lang[LangId._Edit] };
         btnEdit.Click += async (_, _) => await AddOrEditAppAsync(extKey);
 
-        var btnDelete = new PhButton { IsLink = true, Text = Core.Lang[LangId._Delete] };
+        var btnDelete = new PhButton { Variant = PhButtonVariant.Link, Text = Core.Lang[LangId._Delete] };
         btnDelete.Click += (_, _) => DeleteApp(extKey);
 
         var panel = new StackPanel

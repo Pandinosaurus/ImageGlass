@@ -223,7 +223,7 @@ public partial class SettingsWindow : DialogWindow
         var btn = new PhButton
         {
             Text = text,
-            IsLink = true,
+            Variant = PhButtonVariant.Link,
         };
         btn.Click += (_, _) => onClick();
 

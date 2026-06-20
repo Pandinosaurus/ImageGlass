@@ -553,17 +553,17 @@ public partial class DialogWindow : PhWindow
         if (btn == DialogButton.Button1)
         {
             _btn1.IsDefault = PressEnterToSubmit;
-            _btn1.IsAccent = true;
+            _btn1.Variant = PhButtonVariant.Accent;
         }
         else if (btn == DialogButton.Button2)
         {
             _btn2.IsDefault = PressEnterToSubmit;
-            _btn2.IsAccent = true;
+            _btn2.Variant = PhButtonVariant.Accent;
         }
         else if (btn == DialogButton.Button3)
         {
             _btn3.IsDefault = PressEnterToSubmit;
-            _btn3.IsAccent = true;
+            _btn3.Variant = PhButtonVariant.Accent;
         }
     }
 

@@ -14,9 +14,9 @@
 
         <!--  Locations (no heading): button links, tooltip = full path, click = open  -->
         <StackPanel Margin="{DynamicResource SettingsGroupIndent}" HorizontalAlignment="Left">
-            <ui:PhButton x:Name="PART_StartupDir" IsLink="True" />
-            <ui:PhButton x:Name="PART_ConfigDir" IsLink="True" />
-            <ui:PhButton x:Name="PART_UserConfig" IsLink="True" />
+            <ui:PhButton x:Name="PART_StartupDir" Variant="Link" />
+            <ui:PhButton x:Name="PART_ConfigDir" Variant="Link" />
+            <ui:PhButton x:Name="PART_UserConfig" Variant="Link" />
         </StackPanel>
 
 

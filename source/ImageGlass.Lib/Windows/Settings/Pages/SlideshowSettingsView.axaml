@@ -53,7 +53,7 @@
                     <ui:PhButton
                         x:Name="PART_ResetBgColor"
                         VerticalAlignment="Center"
-                        IsLink="True" />
+                        Variant="Link" />
                 </StackPanel>
             </StackPanel>
         </StackPanel>

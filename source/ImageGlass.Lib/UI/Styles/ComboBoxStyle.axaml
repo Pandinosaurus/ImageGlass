@@ -7,8 +7,8 @@
             Driving it through the control's own properties keeps the Fluent :disabled
             state working (its conditional setter still wins over this).
         -->
-        <Setter Property="Background" Value="{DynamicResource IG_ButtonBackground}" />
-        <Setter Property="BorderBrush" Value="{DynamicResource IG_ButtonBorderBrush}" />
+        <Setter Property="Background" Value="{DynamicResource PhButtonBackground}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource PhButtonBorderBrush}" />
 
         <!--
             chevron: smaller than the Fluent 12px default. The template hard-codes the
@@ -22,31 +22,26 @@
             </Setter>
         </Style>
 
-        <!--  base hover transition on the button face  -->
+        <!--  base transition on the button face. One stable Transitions collection, never swapped
+              per state: swapping it on press/release orphans in-flight fades and flashes on rapid clicks  -->
         <Style Selector="^ /template/ Border#Background">
             <Setter Property="Transitions">
                 <Transitions>
-                    <BrushTransition Property="Background" Duration="0:0:0.1" />
-                    <BrushTransition Property="BorderBrush" Duration="0:0:0.1" />
+                    <BrushTransition Property="Background" Duration="0:0:0.04" />
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.04" />
                 </Transitions>
             </Setter>
         </Style>
 
         <Style Selector="^:pointerover /template/ Border#Background">
-            <Setter Property="Background" Value="{DynamicResource IG_ButtonBackgroundPointerOver}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource IG_ButtonBorderBrush}" />
+            <Setter Property="Background" Value="{DynamicResource PhButtonBackgroundPointerOver}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource PhButtonBorderBrush}" />
         </Style>
 
-        <!--  pressed / dropdown-open: snappier transition so the press reads instantly  -->
+        <!--  pressed / dropdown-open  -->
         <Style Selector="^:pressed /template/ Border#Background">
-            <Setter Property="Background" Value="{DynamicResource IG_ButtonBackgroundPressed}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource IG_ButtonBorderBrushPressed}" />
-            <Setter Property="Transitions">
-                <Transitions>
-                    <BrushTransition Property="Background" Duration="0:0:0.02" />
-                    <BrushTransition Property="BorderBrush" Duration="0:0:0.02" />
-                </Transitions>
-            </Setter>
+            <Setter Property="Background" Value="{DynamicResource PhButtonBackgroundPressed}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource PhButtonBorderBrushPressed}" />
         </Style>
 
         <!--

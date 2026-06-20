@@ -4,72 +4,72 @@
     <ResourceDictionary.ThemeDictionaries>
         <ResourceDictionary x:Key="Light">
             <!--  Thumb  -->
-            <SolidColorBrush x:Key="IG_ScrollBarThumbFill" Color="#999999" />
-            <SolidColorBrush x:Key="IG_ScrollBarThumbFillPointerOver" Color="#888888" />
-            <SolidColorBrush x:Key="IG_ScrollBarThumbFillPressed" Color="#666666" />
-            <SolidColorBrush x:Key="IG_ScrollBarThumbFillDisabled" Color="#30808080" />
+            <SolidColorBrush x:Key="PhScrollBarThumbFill" Color="#999999" />
+            <SolidColorBrush x:Key="PhScrollBarThumbFillPointerOver" Color="#888888" />
+            <SolidColorBrush x:Key="PhScrollBarThumbFillPressed" Color="#666666" />
+            <SolidColorBrush x:Key="PhScrollBarThumbFillDisabled" Color="#30808080" />
 
             <!--  Track  -->
-            <SolidColorBrush x:Key="IG_ScrollBarTrackFill" Color="Transparent" />
-            <SolidColorBrush x:Key="IG_ScrollBarTrackFillPointerOver" Color="#08000000" />
-            <SolidColorBrush x:Key="IG_ScrollBarTrackStroke" Color="Transparent" />
-            <SolidColorBrush x:Key="IG_ScrollBarTrackStrokePointerOver" Color="Transparent" />
+            <SolidColorBrush x:Key="PhScrollBarTrackFill" Color="Transparent" />
+            <SolidColorBrush x:Key="PhScrollBarTrackFillPointerOver" Color="#08000000" />
+            <SolidColorBrush x:Key="PhScrollBarTrackStroke" Color="Transparent" />
+            <SolidColorBrush x:Key="PhScrollBarTrackStrokePointerOver" Color="Transparent" />
 
             <!--  Arrow buttons  -->
-            <SolidColorBrush x:Key="IG_ScrollBarButtonArrowForeground" Color="#999999" />
-            <SolidColorBrush x:Key="IG_ScrollBarButtonArrowForegroundPointerOver" Color="#888888" />
-            <SolidColorBrush x:Key="IG_ScrollBarButtonArrowForegroundPressed" Color="#666666" />
-            <SolidColorBrush x:Key="IG_ScrollBarButtonArrowForegroundDisabled" Color="#30808080" />
-            <SolidColorBrush x:Key="IG_ScrollBarButtonBackground" Color="Transparent" />
-            <SolidColorBrush x:Key="IG_ScrollBarButtonBackgroundPointerOver" Color="#08000000" />
-            <SolidColorBrush x:Key="IG_ScrollBarButtonBackgroundPressed" Color="#10000000" />
-            <SolidColorBrush x:Key="IG_ScrollBarButtonBackgroundDisabled" Color="Transparent" />
-            <SolidColorBrush x:Key="IG_ScrollBarButtonBorderBrush" Color="Transparent" />
-            <SolidColorBrush x:Key="IG_ScrollBarButtonBorderBrushPointerOver" Color="Transparent" />
-            <SolidColorBrush x:Key="IG_ScrollBarButtonBorderBrushPressed" Color="Transparent" />
-            <SolidColorBrush x:Key="IG_ScrollBarButtonBorderBrushDisabled" Color="Transparent" />
+            <SolidColorBrush x:Key="PhScrollBarButtonArrowForeground" Color="#999999" />
+            <SolidColorBrush x:Key="PhScrollBarButtonArrowForegroundPointerOver" Color="#888888" />
+            <SolidColorBrush x:Key="PhScrollBarButtonArrowForegroundPressed" Color="#666666" />
+            <SolidColorBrush x:Key="PhScrollBarButtonArrowForegroundDisabled" Color="#30808080" />
+            <SolidColorBrush x:Key="PhScrollBarButtonBackground" Color="Transparent" />
+            <SolidColorBrush x:Key="PhScrollBarButtonBackgroundPointerOver" Color="#08000000" />
+            <SolidColorBrush x:Key="PhScrollBarButtonBackgroundPressed" Color="#10000000" />
+            <SolidColorBrush x:Key="PhScrollBarButtonBackgroundDisabled" Color="Transparent" />
+            <SolidColorBrush x:Key="PhScrollBarButtonBorderBrush" Color="Transparent" />
+            <SolidColorBrush x:Key="PhScrollBarButtonBorderBrushPointerOver" Color="Transparent" />
+            <SolidColorBrush x:Key="PhScrollBarButtonBorderBrushPressed" Color="Transparent" />
+            <SolidColorBrush x:Key="PhScrollBarButtonBorderBrushDisabled" Color="Transparent" />
 
             <!--  Background  -->
-            <SolidColorBrush x:Key="IG_ScrollBarBackground" Color="Transparent" />
-            <SolidColorBrush x:Key="IG_ScrollBarBackgroundPointerOver" Color="#aaffffff" />
-            <SolidColorBrush x:Key="IG_ScrollBarBorderBrush" Color="Transparent" />
-            <SolidColorBrush x:Key="IG_ScrollBarForeground" Color="#6B6B6B" />
-            <SolidColorBrush x:Key="IG_ScrollBarThumbBackgroundColor" Color="#999999" />
+            <SolidColorBrush x:Key="PhScrollBarBackground" Color="Transparent" />
+            <SolidColorBrush x:Key="PhScrollBarBackgroundPointerOver" Color="#aaffffff" />
+            <SolidColorBrush x:Key="PhScrollBarBorderBrush" Color="Transparent" />
+            <SolidColorBrush x:Key="PhScrollBarForeground" Color="#6B6B6B" />
+            <SolidColorBrush x:Key="PhScrollBarThumbBackgroundColor" Color="#999999" />
         </ResourceDictionary>
 
         <ResourceDictionary x:Key="Dark">
             <!--  Thumb  -->
-            <SolidColorBrush x:Key="IG_ScrollBarThumbFill" Color="#BBBBBB" />
-            <SolidColorBrush x:Key="IG_ScrollBarThumbFillPointerOver" Color="#CCCCCC" />
-            <SolidColorBrush x:Key="IG_ScrollBarThumbFillPressed" Color="#DDDDDD" />
-            <SolidColorBrush x:Key="IG_ScrollBarThumbFillDisabled" Color="#30808080" />
+            <SolidColorBrush x:Key="PhScrollBarThumbFill" Color="#BBBBBB" />
+            <SolidColorBrush x:Key="PhScrollBarThumbFillPointerOver" Color="#CCCCCC" />
+            <SolidColorBrush x:Key="PhScrollBarThumbFillPressed" Color="#DDDDDD" />
+            <SolidColorBrush x:Key="PhScrollBarThumbFillDisabled" Color="#30808080" />
 
             <!--  Track  -->
-            <SolidColorBrush x:Key="IG_ScrollBarTrackFill" Color="Transparent" />
-            <SolidColorBrush x:Key="IG_ScrollBarTrackFillPointerOver" Color="#0CFFFFFF" />
-            <SolidColorBrush x:Key="IG_ScrollBarTrackStroke" Color="Transparent" />
-            <SolidColorBrush x:Key="IG_ScrollBarTrackStrokePointerOver" Color="Transparent" />
+            <SolidColorBrush x:Key="PhScrollBarTrackFill" Color="Transparent" />
+            <SolidColorBrush x:Key="PhScrollBarTrackFillPointerOver" Color="#0CFFFFFF" />
+            <SolidColorBrush x:Key="PhScrollBarTrackStroke" Color="Transparent" />
+            <SolidColorBrush x:Key="PhScrollBarTrackStrokePointerOver" Color="Transparent" />
 
             <!--  Arrow buttons  -->
-            <SolidColorBrush x:Key="IG_ScrollBarButtonArrowForeground" Color="#BBBBBB" />
-            <SolidColorBrush x:Key="IG_ScrollBarButtonArrowForegroundPointerOver" Color="#CCCCCC" />
-            <SolidColorBrush x:Key="IG_ScrollBarButtonArrowForegroundPressed" Color="#DDDDDD" />
-            <SolidColorBrush x:Key="IG_ScrollBarButtonArrowForegroundDisabled" Color="#30808080" />
-            <SolidColorBrush x:Key="IG_ScrollBarButtonBackground" Color="Transparent" />
-            <SolidColorBrush x:Key="IG_ScrollBarButtonBackgroundPointerOver" Color="#0CFFFFFF" />
-            <SolidColorBrush x:Key="IG_ScrollBarButtonBackgroundPressed" Color="#15FFFFFF" />
-            <SolidColorBrush x:Key="IG_ScrollBarButtonBackgroundDisabled" Color="Transparent" />
-            <SolidColorBrush x:Key="IG_ScrollBarButtonBorderBrush" Color="Transparent" />
-            <SolidColorBrush x:Key="IG_ScrollBarButtonBorderBrushPointerOver" Color="Transparent" />
-            <SolidColorBrush x:Key="IG_ScrollBarButtonBorderBrushPressed" Color="Transparent" />
-            <SolidColorBrush x:Key="IG_ScrollBarButtonBorderBrushDisabled" Color="Transparent" />
+            <SolidColorBrush x:Key="PhScrollBarButtonArrowForeground" Color="#BBBBBB" />
+            <SolidColorBrush x:Key="PhScrollBarButtonArrowForegroundPointerOver" Color="#CCCCCC" />
+            <SolidColorBrush x:Key="PhScrollBarButtonArrowForegroundPressed" Color="#DDDDDD" />
+            <SolidColorBrush x:Key="PhScrollBarButtonArrowForegroundDisabled" Color="#30808080" />
+            <SolidColorBrush x:Key="PhScrollBarButtonBackground" Color="Transparent" />
+            <SolidColorBrush x:Key="PhScrollBarButtonBackgroundPointerOver" Color="#0CFFFFFF" />
+            <SolidColorBrush x:Key="PhScrollBarButtonBackgroundPressed" Color="#15FFFFFF" />
+            <SolidColorBrush x:Key="PhScrollBarButtonBackgroundDisabled" Color="Transparent" />
+            <SolidColorBrush x:Key="PhScrollBarButtonBorderBrush" Color="Transparent" />
+            <SolidColorBrush x:Key="PhScrollBarButtonBorderBrushPointerOver" Color="Transparent" />
+            <SolidColorBrush x:Key="PhScrollBarButtonBorderBrushPressed" Color="Transparent" />
+            <SolidColorBrush x:Key="PhScrollBarButtonBorderBrushDisabled" Color="Transparent" />
 
             <!--  Background  -->
-            <SolidColorBrush x:Key="IG_ScrollBarBackground" Color="Transparent" />
-            <SolidColorBrush x:Key="IG_ScrollBarBackgroundPointerOver" Color="#33FFFFFF" />
-            <SolidColorBrush x:Key="IG_ScrollBarBorderBrush" Color="Transparent" />
-            <SolidColorBrush x:Key="IG_ScrollBarForeground" Color="#A0A0A0" />
-            <SolidColorBrush x:Key="IG_ScrollBarThumbBackgroundColor" Color="#BBBBBB" />
+            <SolidColorBrush x:Key="PhScrollBarBackground" Color="Transparent" />
+            <SolidColorBrush x:Key="PhScrollBarBackgroundPointerOver" Color="#33FFFFFF" />
+            <SolidColorBrush x:Key="PhScrollBarBorderBrush" Color="Transparent" />
+            <SolidColorBrush x:Key="PhScrollBarForeground" Color="#A0A0A0" />
+            <SolidColorBrush x:Key="PhScrollBarThumbBackgroundColor" Color="#BBBBBB" />
         </ResourceDictionary>
     </ResourceDictionary.ThemeDictionaries>
 
@@ -81,20 +81,20 @@
         - Collapsed: ScaleTransform shrinks thumb to ~2px visual
         - Expanded: RenderTransform=none shows the 6px pill
     -->
-    <x:Double x:Key="IG_ScrollBarSize">14</x:Double>
-    <x:Double x:Key="IG_ScrollBarThumbSize">8</x:Double>
-    <x:Double x:Key="IG_ScrollBarButtonArrowIconLong">10</x:Double>
-    <x:Double x:Key="IG_ScrollBarButtonArrowIconShort">7.5</x:Double>
-    <x:Double x:Key="IG_ScrollBarTrackBorderThemeThickness">0</x:Double>
+    <x:Double x:Key="PhScrollBarSize">14</x:Double>
+    <x:Double x:Key="PhScrollBarThumbSize">8</x:Double>
+    <x:Double x:Key="PhScrollBarButtonArrowIconLong">10</x:Double>
+    <x:Double x:Key="PhScrollBarButtonArrowIconShort">7.5</x:Double>
+    <x:Double x:Key="PhScrollBarTrackBorderThemeThickness">0</x:Double>
 
     <!--  Collapsed: scale the 6px thumb to ~2px (0.33 * 6 = 2)  -->
-    <ScaleTransform x:Key="IG_VerticalSmallScrollThumbScaleTransform" ScaleX="0.33" ScaleY="1" />
-    <ScaleTransform x:Key="IG_HorizontalSmallScrollThumbScaleTransform" ScaleX="1" ScaleY="0.33" />
+    <ScaleTransform x:Key="PhVerticalSmallScrollThumbScaleTransform" ScaleX="0.33" ScaleY="1" />
+    <ScaleTransform x:Key="PhHorizontalSmallScrollThumbScaleTransform" ScaleX="1" ScaleY="0.33" />
 
 
     <!--  Thumb theme: pill-shaped with fully rounded corners  -->
-    <ControlTheme x:Key="IG_ScrollBarThumb" TargetType="Thumb">
-        <Setter Property="Background" Value="{DynamicResource IG_ScrollBarThumbFill}" />
+    <ControlTheme x:Key="PhScrollBarThumb" TargetType="Thumb">
+        <Setter Property="Background" Value="{DynamicResource PhScrollBarThumbFill}" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate>
@@ -110,19 +110,19 @@
         </Setter>
 
         <Style Selector="^:pointerover /template/ Border">
-            <Setter Property="Background" Value="{DynamicResource IG_ScrollBarThumbFillPointerOver}" />
+            <Setter Property="Background" Value="{DynamicResource PhScrollBarThumbFillPointerOver}" />
         </Style>
         <Style Selector="^:pressed /template/ Border">
-            <Setter Property="Background" Value="{DynamicResource IG_ScrollBarThumbFillPressed}" />
+            <Setter Property="Background" Value="{DynamicResource PhScrollBarThumbFillPressed}" />
         </Style>
         <Style Selector="^:disabled /template/ Border">
-            <Setter Property="Background" Value="{DynamicResource IG_ScrollBarThumbFillDisabled}" />
+            <Setter Property="Background" Value="{DynamicResource PhScrollBarThumbFillDisabled}" />
         </Style>
     </ControlTheme>
 
 
     <!--  Page (track area) button: invisible hit-test area  -->
-    <ControlTheme x:Key="IG_ScrollBarPageButton" TargetType="RepeatButton">
+    <ControlTheme x:Key="PhScrollBarPageButton" TargetType="RepeatButton">
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="VerticalAlignment" Value="Stretch" />
         <Setter Property="HorizontalAlignment" Value="Stretch" />
@@ -136,15 +136,15 @@
 
 
     <!--  Line (arrow) button: hidden by default, shown on expanded state  -->
-    <ControlTheme x:Key="IG_ScrollBarLineButton" TargetType="RepeatButton">
+    <ControlTheme x:Key="PhScrollBarLineButton" TargetType="RepeatButton">
         <Setter Property="Opacity" Value="0" />
-        <Setter Property="Foreground" Value="{DynamicResource IG_ScrollBarButtonArrowForeground}" />
+        <Setter Property="Foreground" Value="{DynamicResource PhScrollBarButtonArrowForeground}" />
         <Setter Property="Template">
             <ControlTemplate>
                 <ContentPresenter
                     x:Name="PART_ContentPresenter"
-                    Background="{DynamicResource IG_ScrollBarButtonBackground}"
-                    BorderBrush="{DynamicResource IG_ScrollBarButtonBorderBrush}"
+                    Background="{DynamicResource PhScrollBarButtonBackground}"
+                    BorderBrush="{DynamicResource PhScrollBarButtonBorderBrush}"
                     Content="{TemplateBinding Content}" />
             </ControlTemplate>
         </Setter>
@@ -155,26 +155,26 @@
         </Setter>
 
         <Style Selector="^:pointerover">
-            <Setter Property="Foreground" Value="{DynamicResource IG_ScrollBarButtonArrowForegroundPointerOver}" />
+            <Setter Property="Foreground" Value="{DynamicResource PhScrollBarButtonArrowForegroundPointerOver}" />
             <Style Selector="^ /template/ ContentPresenter">
-                <Setter Property="Background" Value="{DynamicResource IG_ScrollBarButtonBackgroundPointerOver}" />
-                <Setter Property="BorderBrush" Value="{DynamicResource IG_ScrollBarButtonBorderBrushPointerOver}" />
+                <Setter Property="Background" Value="{DynamicResource PhScrollBarButtonBackgroundPointerOver}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource PhScrollBarButtonBorderBrushPointerOver}" />
             </Style>
         </Style>
 
         <Style Selector="^:pressed">
-            <Setter Property="Foreground" Value="{DynamicResource IG_ScrollBarButtonArrowForegroundPressed}" />
+            <Setter Property="Foreground" Value="{DynamicResource PhScrollBarButtonArrowForegroundPressed}" />
             <Style Selector="^ /template/ ContentPresenter">
-                <Setter Property="Background" Value="{DynamicResource IG_ScrollBarButtonBackgroundPressed}" />
-                <Setter Property="BorderBrush" Value="{DynamicResource IG_ScrollBarButtonBorderBrushPressed}" />
+                <Setter Property="Background" Value="{DynamicResource PhScrollBarButtonBackgroundPressed}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource PhScrollBarButtonBorderBrushPressed}" />
             </Style>
         </Style>
 
         <Style Selector="^:disabled">
-            <Setter Property="Foreground" Value="{DynamicResource IG_ScrollBarButtonArrowForegroundDisabled}" />
+            <Setter Property="Foreground" Value="{DynamicResource PhScrollBarButtonArrowForegroundDisabled}" />
             <Style Selector="^ /template/ ContentPresenter">
-                <Setter Property="Background" Value="{DynamicResource IG_ScrollBarButtonBackgroundDisabled}" />
-                <Setter Property="BorderBrush" Value="{DynamicResource IG_ScrollBarButtonBorderBrushDisabled}" />
+                <Setter Property="Background" Value="{DynamicResource PhScrollBarButtonBackgroundDisabled}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource PhScrollBarButtonBorderBrushDisabled}" />
             </Style>
         </Style>
     </ControlTheme>
@@ -182,11 +182,11 @@
 
     <!--  Main ScrollBar ControlTheme (WinUI 3 style)  -->
     <ControlTheme x:Key="{x:Type ScrollBar}" TargetType="ScrollBar">
-        <Setter Property="MinWidth" Value="{DynamicResource IG_ScrollBarSize}" />
-        <Setter Property="MinHeight" Value="{DynamicResource IG_ScrollBarSize}" />
-        <Setter Property="Background" Value="{DynamicResource IG_ScrollBarBackground}" />
-        <Setter Property="Foreground" Value="{DynamicResource IG_ScrollBarForeground}" />
-        <Setter Property="BorderBrush" Value="{DynamicResource IG_ScrollBarBorderBrush}" />
+        <Setter Property="MinWidth" Value="{DynamicResource PhScrollBarSize}" />
+        <Setter Property="MinHeight" Value="{DynamicResource PhScrollBarSize}" />
+        <Setter Property="Background" Value="{DynamicResource PhScrollBarBackground}" />
+        <Setter Property="Foreground" Value="{DynamicResource PhScrollBarForeground}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource PhScrollBarBorderBrush}" />
 
         <!--  ===== VERTICAL =====  -->
         <Style Selector="^:vertical">
@@ -202,12 +202,12 @@
                                 <Rectangle
                                     x:Name="TrackRect"
                                     Grid.RowSpan="3"
-                                    Fill="{DynamicResource IG_ScrollBarTrackFill}"
+                                    Fill="{DynamicResource PhScrollBarTrackFill}"
                                     Opacity="0"
                                     RadiusX="6"
                                     RadiusY="6"
-                                    Stroke="{DynamicResource IG_ScrollBarTrackStroke}"
-                                    StrokeThickness="{DynamicResource IG_ScrollBarTrackBorderThemeThickness}">
+                                    Stroke="{DynamicResource PhScrollBarTrackStroke}"
+                                    StrokeThickness="{DynamicResource PhScrollBarTrackBorderThemeThickness}">
                                     <Rectangle.Transitions>
                                         <Transitions>
                                             <DoubleTransition Property="Opacity" Duration="0:0:0.1" />
@@ -218,15 +218,15 @@
                                 <RepeatButton
                                     Name="PART_LineUpButton"
                                     Grid.Row="0"
-                                    Height="{DynamicResource IG_ScrollBarSize}"
-                                    MinWidth="{DynamicResource IG_ScrollBarSize}"
+                                    Height="{DynamicResource PhScrollBarSize}"
+                                    MinWidth="{DynamicResource PhScrollBarSize}"
                                     HorizontalAlignment="Center"
                                     AutomationProperties.Name="Line up"
                                     Focusable="False"
-                                    Theme="{StaticResource IG_ScrollBarLineButton}">
+                                    Theme="{StaticResource PhScrollBarLineButton}">
                                     <PathIcon
-                                        Width="{DynamicResource IG_ScrollBarButtonArrowIconLong}"
-                                        Height="{DynamicResource IG_ScrollBarButtonArrowIconShort}"
+                                        Width="{DynamicResource PhScrollBarButtonArrowIconLong}"
+                                        Height="{DynamicResource PhScrollBarButtonArrowIconShort}"
                                         Data="M 3,9.5 L 7,2.8 Q 8,1 9,2.8 L 13,9.5 Q 14,11.5 12,11.5 L 4,11.5 Q 2,11.5 3,9.5 Z"
                                         Foreground="{Binding $parent[RepeatButton].Foreground}" />
                                 </RepeatButton>
@@ -247,7 +247,7 @@
                                             AutomationProperties.Name="Page up"
                                             Classes="largeIncrease"
                                             Focusable="False"
-                                            Theme="{StaticResource IG_ScrollBarPageButton}" />
+                                            Theme="{StaticResource PhScrollBarPageButton}" />
                                     </Track.DecreaseButton>
                                     <Track.IncreaseButton>
                                         <RepeatButton
@@ -255,31 +255,31 @@
                                             AutomationProperties.Name="Page down"
                                             Classes="largeIncrease"
                                             Focusable="False"
-                                            Theme="{StaticResource IG_ScrollBarPageButton}" />
+                                            Theme="{StaticResource PhScrollBarPageButton}" />
                                     </Track.IncreaseButton>
                                     <!--  Thumb: 6px layout width, visually scaled to ~2px when collapsed  -->
                                     <Thumb
-                                        Width="{DynamicResource IG_ScrollBarThumbSize}"
-                                        MinHeight="{DynamicResource IG_ScrollBarSize}"
+                                        Width="{DynamicResource PhScrollBarThumbSize}"
+                                        MinHeight="{DynamicResource PhScrollBarSize}"
                                         AutomationProperties.Name="Position"
                                         CornerRadius="4"
-                                        RenderTransform="{DynamicResource IG_VerticalSmallScrollThumbScaleTransform}"
+                                        RenderTransform="{DynamicResource PhVerticalSmallScrollThumbScaleTransform}"
                                         RenderTransformOrigin="100%,50%"
-                                        Theme="{StaticResource IG_ScrollBarThumb}" />
+                                        Theme="{StaticResource PhScrollBarThumb}" />
                                 </Track>
 
                                 <RepeatButton
                                     Name="PART_LineDownButton"
                                     Grid.Row="2"
-                                    Height="{DynamicResource IG_ScrollBarSize}"
-                                    MinWidth="{DynamicResource IG_ScrollBarSize}"
+                                    Height="{DynamicResource PhScrollBarSize}"
+                                    MinWidth="{DynamicResource PhScrollBarSize}"
                                     HorizontalAlignment="Center"
                                     AutomationProperties.Name="Line down"
                                     Focusable="False"
-                                    Theme="{StaticResource IG_ScrollBarLineButton}">
+                                    Theme="{StaticResource PhScrollBarLineButton}">
                                     <PathIcon
-                                        Width="{DynamicResource IG_ScrollBarButtonArrowIconLong}"
-                                        Height="{DynamicResource IG_ScrollBarButtonArrowIconShort}"
+                                        Width="{DynamicResource PhScrollBarButtonArrowIconLong}"
+                                        Height="{DynamicResource PhScrollBarButtonArrowIconShort}"
                                         Data="M 13,2.5 L 9,9.2 Q 8,11 7,9.2 L 3,2.5 Q 2,0.5 4,0.5 L 12,0.5 Q 14,0.5 13,2.5 Z"
                                         Foreground="{Binding $parent[RepeatButton].Foreground}" />
                                 </RepeatButton>
@@ -304,12 +304,12 @@
                                 <Rectangle
                                     x:Name="TrackRect"
                                     Grid.ColumnSpan="3"
-                                    Fill="{DynamicResource IG_ScrollBarTrackFill}"
+                                    Fill="{DynamicResource PhScrollBarTrackFill}"
                                     Opacity="0"
                                     RadiusX="6"
                                     RadiusY="6"
-                                    Stroke="{DynamicResource IG_ScrollBarTrackStroke}"
-                                    StrokeThickness="{DynamicResource IG_ScrollBarTrackBorderThemeThickness}">
+                                    Stroke="{DynamicResource PhScrollBarTrackStroke}"
+                                    StrokeThickness="{DynamicResource PhScrollBarTrackBorderThemeThickness}">
                                     <Rectangle.Transitions>
                                         <Transitions>
                                             <DoubleTransition Property="Opacity" Duration="0:0:0.1" />
@@ -320,15 +320,15 @@
                                 <RepeatButton
                                     Name="PART_LineUpButton"
                                     Grid.Column="0"
-                                    Width="{DynamicResource IG_ScrollBarSize}"
-                                    MinHeight="{DynamicResource IG_ScrollBarSize}"
+                                    Width="{DynamicResource PhScrollBarSize}"
+                                    MinHeight="{DynamicResource PhScrollBarSize}"
                                     VerticalAlignment="Center"
                                     AutomationProperties.Name="Column left"
                                     Focusable="False"
-                                    Theme="{StaticResource IG_ScrollBarLineButton}">
+                                    Theme="{StaticResource PhScrollBarLineButton}">
                                     <PathIcon
-                                        Width="{DynamicResource IG_ScrollBarButtonArrowIconShort}"
-                                        Height="{DynamicResource IG_ScrollBarButtonArrowIconLong}"
+                                        Width="{DynamicResource PhScrollBarButtonArrowIconShort}"
+                                        Height="{DynamicResource PhScrollBarButtonArrowIconLong}"
                                         Data="M 9.5,3 L 2.8,7 Q 1,8 2.8,9 L 9.5,13 Q 11.5,14 11.5,12 L 11.5,4 Q 11.5,2 9.5,3 Z"
                                         Foreground="{Binding $parent[RepeatButton].Foreground}" />
                                 </RepeatButton>
@@ -348,7 +348,7 @@
                                             AutomationProperties.Name="Page left"
                                             Classes="largeIncrease"
                                             Focusable="False"
-                                            Theme="{StaticResource IG_ScrollBarPageButton}" />
+                                            Theme="{StaticResource PhScrollBarPageButton}" />
                                     </Track.DecreaseButton>
                                     <Track.IncreaseButton>
                                         <RepeatButton
@@ -356,31 +356,31 @@
                                             AutomationProperties.Name="Page right"
                                             Classes="largeIncrease"
                                             Focusable="False"
-                                            Theme="{StaticResource IG_ScrollBarPageButton}" />
+                                            Theme="{StaticResource PhScrollBarPageButton}" />
                                     </Track.IncreaseButton>
                                     <!--  Thumb: 6px layout height, visually scaled to ~2px when collapsed  -->
                                     <Thumb
-                                        Height="{DynamicResource IG_ScrollBarThumbSize}"
-                                        MinWidth="{DynamicResource IG_ScrollBarSize}"
+                                        Height="{DynamicResource PhScrollBarThumbSize}"
+                                        MinWidth="{DynamicResource PhScrollBarSize}"
                                         AutomationProperties.Name="Position"
                                         CornerRadius="4"
-                                        RenderTransform="{DynamicResource IG_HorizontalSmallScrollThumbScaleTransform}"
+                                        RenderTransform="{DynamicResource PhHorizontalSmallScrollThumbScaleTransform}"
                                         RenderTransformOrigin="50%,100%"
-                                        Theme="{StaticResource IG_ScrollBarThumb}" />
+                                        Theme="{StaticResource PhScrollBarThumb}" />
                                 </Track>
 
                                 <RepeatButton
                                     Name="PART_LineDownButton"
                                     Grid.Column="2"
-                                    Width="{DynamicResource IG_ScrollBarSize}"
-                                    MinHeight="{DynamicResource IG_ScrollBarSize}"
+                                    Width="{DynamicResource PhScrollBarSize}"
+                                    MinHeight="{DynamicResource PhScrollBarSize}"
                                     VerticalAlignment="Center"
                                     AutomationProperties.Name="Column right"
                                     Focusable="False"
-                                    Theme="{StaticResource IG_ScrollBarLineButton}">
+                                    Theme="{StaticResource PhScrollBarLineButton}">
                                     <PathIcon
-                                        Width="{DynamicResource IG_ScrollBarButtonArrowIconShort}"
-                                        Height="{DynamicResource IG_ScrollBarButtonArrowIconLong}"
+                                        Width="{DynamicResource PhScrollBarButtonArrowIconShort}"
+                                        Height="{DynamicResource PhScrollBarButtonArrowIconLong}"
                                         Data="M 2.5,3 L 9.2,7 Q 11,8 9.2,9 L 2.5,13 Q 0.5,14 0.5,12 L 0.5,4 Q 0.5,2 2.5,3 Z"
                                         Foreground="{Binding $parent[RepeatButton].Foreground}" />
                                 </RepeatButton>
@@ -394,19 +394,19 @@
         <!--  ===== EXPANDED STATE (pointer over scrollbar area) =====  -->
         <Style Selector="^[IsExpanded=true]">
             <Style Selector="^ /template/ Border#VerticalRoot">
-                <Setter Property="Background" Value="{DynamicResource IG_ScrollBarBackgroundPointerOver}" />
+                <Setter Property="Background" Value="{DynamicResource PhScrollBarBackgroundPointerOver}" />
             </Style>
             <Style Selector="^ /template/ Border#HorizontalRoot">
-                <Setter Property="Background" Value="{DynamicResource IG_ScrollBarBackgroundPointerOver}" />
+                <Setter Property="Background" Value="{DynamicResource PhScrollBarBackgroundPointerOver}" />
             </Style>
             <Style Selector="^ /template/ Rectangle#TrackRect">
-                <Setter Property="Fill" Value="{DynamicResource IG_ScrollBarTrackFillPointerOver}" />
-                <Setter Property="Stroke" Value="{DynamicResource IG_ScrollBarTrackStrokePointerOver}" />
+                <Setter Property="Fill" Value="{DynamicResource PhScrollBarTrackFillPointerOver}" />
+                <Setter Property="Stroke" Value="{DynamicResource PhScrollBarTrackStrokePointerOver}" />
                 <Setter Property="Opacity" Value="1" />
             </Style>
             <!--  Expanded: remove scale transform to show full 6px pill thumb  -->
             <Style Selector="^ /template/ Thumb">
-                <Setter Property="Background" Value="{DynamicResource IG_ScrollBarThumbBackgroundColor}" />
+                <Setter Property="Background" Value="{DynamicResource PhScrollBarThumbBackgroundColor}" />
                 <Setter Property="RenderTransform" Value="none" />
             </Style>
             <Style Selector="^ /template/ RepeatButton">

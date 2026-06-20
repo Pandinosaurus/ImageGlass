@@ -1,143 +1,192 @@
 <Styles xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
+    <!--
+        PhButton variants (see PhButton.PhButtonVariant):
+        • Default  - neutral fill + subtle elevation border
+        • Accent   - accent fill
+        • Outline  - default fill + accent border
+        • Link     - borderless text button
+        Every variant draws its chrome on the template's ContentPresenter (PART_ContentPresenter).
+    -->
+
     <Styles.Resources>
         <ResourceDictionary>
             <ResourceDictionary.ThemeDictionaries>
-                <ResourceDictionary x:Key="Light">
-                    <!--  fills  -->
-                    <SolidColorBrush x:Key="IG_ButtonBackground" Color="#B3FFFFFF" />
-                    <SolidColorBrush x:Key="IG_ButtonBackgroundPointerOver" Color="#80F9F9F9" />
-                    <SolidColorBrush x:Key="IG_ButtonBackgroundPressed" Color="#4DF9F9F9" />
 
-                    <!--  elevation border: subtle top/sides, darker hairline at the bottom  -->
-                    <LinearGradientBrush x:Key="IG_ButtonBorderBrush" StartPoint="0%,0%" EndPoint="0%,100%">
+                <ResourceDictionary x:Key="Light">
+                    <!--  Default variant: fills  -->
+                    <SolidColorBrush x:Key="PhButtonBackground" Color="#B3FFFFFF" />
+                    <SolidColorBrush x:Key="PhButtonBackgroundPointerOver" Color="#80F9F9F9" />
+                    <SolidColorBrush x:Key="PhButtonBackgroundPressed" Color="#4DF9F9F9" />
+
+                    <!--  Default variant: elevation border (subtle top/sides, darker hairline at the bottom)  -->
+                    <LinearGradientBrush x:Key="PhButtonBorderBrush" StartPoint="0%,0%" EndPoint="0%,100%">
                         <GradientStop Offset="0.0" Color="#0F000000" />
                         <GradientStop Offset="0.9" Color="#0F000000" />
                         <GradientStop Offset="1.0" Color="#29000000" />
                     </LinearGradientBrush>
-                    <LinearGradientBrush x:Key="IG_ButtonBorderBrushPressed" StartPoint="0%,0%" EndPoint="0%,100%">
+                    <LinearGradientBrush x:Key="PhButtonBorderBrushPressed" StartPoint="0%,0%" EndPoint="0%,100%">
                         <GradientStop Offset="0.0" Color="#0F000000" />
                         <GradientStop Offset="0.9" Color="#0F000000" />
                         <GradientStop Offset="1.0" Color="#0F000000" />
                     </LinearGradientBrush>
 
-                    <!--  accent fills use the system accent  -->
-                    <SolidColorBrush x:Key="IG_AccentButtonBackground" Color="{DynamicResource SystemAccentColorDark1}" />
+                    <!--  Accent variant: fills (system accent)  -->
+                    <SolidColorBrush x:Key="PhAccentButtonBackground" Color="{DynamicResource SystemAccentColorDark1}" />
                     <SolidColorBrush
-                        x:Key="IG_AccentButtonBackgroundPointerOver"
+                        x:Key="PhAccentButtonBackgroundPointerOver"
                         Opacity="0.9"
                         Color="{DynamicResource SystemAccentColorDark1}" />
                     <SolidColorBrush
-                        x:Key="IG_AccentButtonBackgroundPressed"
+                        x:Key="PhAccentButtonBackgroundPressed"
                         Opacity="0.8"
                         Color="{DynamicResource SystemAccentColorDark1}" />
                 </ResourceDictionary>
 
                 <ResourceDictionary x:Key="Dark">
-                    <!--  fills  -->
-                    <SolidColorBrush x:Key="IG_ButtonBackground" Color="#0FFFFFFF" />
-                    <SolidColorBrush x:Key="IG_ButtonBackgroundPointerOver" Color="#15FFFFFF" />
-                    <SolidColorBrush x:Key="IG_ButtonBackgroundPressed" Color="#08FFFFFF" />
+                    <!--  Default variant: fills  -->
+                    <SolidColorBrush x:Key="PhButtonBackground" Color="#0FFFFFFF" />
+                    <SolidColorBrush x:Key="PhButtonBackgroundPointerOver" Color="#15FFFFFF" />
+                    <SolidColorBrush x:Key="PhButtonBackgroundPressed" Color="#08FFFFFF" />
 
                     <!--
-                        dark: a black hairline is invisible on a dark fill, so the
-                        bottom edge uses a brighter white to stay readable
+                        Default variant: elevation border. A black hairline is invisible on a dark
+                        fill, so the bottom edge uses a brighter white to stay readable.
                     -->
-                    <LinearGradientBrush x:Key="IG_ButtonBorderBrush" StartPoint="0%,0%" EndPoint="0%,100%">
+                    <LinearGradientBrush x:Key="PhButtonBorderBrush" StartPoint="0%,0%" EndPoint="0%,100%">
                         <GradientStop Offset="0.0" Color="#14FFFFFF" />
                         <GradientStop Offset="0.9" Color="#14FFFFFF" />
                         <GradientStop Offset="1.0" Color="#33FFFFFF" />
                     </LinearGradientBrush>
-                    <LinearGradientBrush x:Key="IG_ButtonBorderBrushPressed" StartPoint="0%,0%" EndPoint="0%,100%">
+                    <LinearGradientBrush x:Key="PhButtonBorderBrushPressed" StartPoint="0%,0%" EndPoint="0%,100%">
                         <GradientStop Offset="0.0" Color="#14FFFFFF" />
                         <GradientStop Offset="0.9" Color="#14FFFFFF" />
                         <GradientStop Offset="1.0" Color="#14FFFFFF" />
                     </LinearGradientBrush>
 
-                    <!--  accent fills use the system accent  -->
-                    <SolidColorBrush x:Key="IG_AccentButtonBackground" Color="{DynamicResource SystemAccentColorLight2}" />
+                    <!--  Accent variant: fills (system accent)  -->
+                    <SolidColorBrush x:Key="PhAccentButtonBackground" Color="{DynamicResource SystemAccentColorLight2}" />
                     <SolidColorBrush
-                        x:Key="IG_AccentButtonBackgroundPointerOver"
+                        x:Key="PhAccentButtonBackgroundPointerOver"
                         Opacity="0.9"
                         Color="{DynamicResource SystemAccentColorLight2}" />
                     <SolidColorBrush
-                        x:Key="IG_AccentButtonBackgroundPressed"
+                        x:Key="PhAccentButtonBackgroundPressed"
                         Opacity="0.8"
                         Color="{DynamicResource SystemAccentColorLight2}" />
                 </ResourceDictionary>
+
             </ResourceDictionary.ThemeDictionaries>
 
-            <!--  accent elevation border (same highlight/shadow in both themes)  -->
-            <LinearGradientBrush x:Key="IG_AccentButtonBorderBrush" StartPoint="0%,0%" EndPoint="0%,100%">
+            <!--  Accent variant: elevation border (same highlight/shadow in both themes)  -->
+            <LinearGradientBrush x:Key="PhAccentButtonBorderBrush" StartPoint="0%,0%" EndPoint="0%,100%">
                 <GradientStop Offset="0.0" Color="#14FFFFFF" />
                 <GradientStop Offset="0.9" Color="#14FFFFFF" />
                 <GradientStop Offset="1.0" Color="#66000000" />
             </LinearGradientBrush>
+
+            <!--  Outline variant: pre-load fallback; PhButton.UpdateOutlineBorderBrush() overrides this per-control  -->
+            <SolidColorBrush x:Key="PhOutlineButtonBorderBrush" Opacity="0.5" Color="{DynamicResource SystemAccentColor}" />
+            <SolidColorBrush
+                x:Key="PhOutlineButtonBorderBrushPressed"
+                Opacity="0.3"
+                Color="{DynamicResource SystemAccentColor}" />
         </ResourceDictionary>
     </Styles.Resources>
 
 
-    <!--  applies to every Avalonia Button (and PhButton); link variant opts out  -->
+    <!--
+        ============================================================
+        Default variant (the shared chrome for every non-link button)
+        ============================================================
+    -->
     <Style Selector="Button:not(.link)">
 
-        <!--  base look + the hover transition  -->
+        <!--  rest. One stable Transitions collection, never swapped per state: swapping it on
+              every press/release orphans in-flight fades and makes rapid clicks flash for a long time  -->
         <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="{DynamicResource IG_ButtonBackground}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource IG_ButtonBorderBrush}" />
+            <Setter Property="Background" Value="{DynamicResource PhButtonBackground}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource PhButtonBorderBrush}" />
             <Setter Property="Transitions">
                 <Transitions>
-                    <BrushTransition Property="Background" Duration="0:0:0.1" />
-                    <BrushTransition Property="BorderBrush" Duration="0:0:0.1" />
+                    <BrushTransition Property="Background" Duration="0:0:0.04" />
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.04" />
                 </Transitions>
             </Setter>
         </Style>
 
+        <!--  hover  -->
         <Style Selector="^:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="{DynamicResource IG_ButtonBackgroundPointerOver}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource IG_ButtonBorderBrush}" />
+            <Setter Property="Background" Value="{DynamicResource PhButtonBackgroundPointerOver}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource PhButtonBorderBrush}" />
         </Style>
 
-        <!--  pressed: snappier transition so the press reads instantly (covers accent too)  -->
+        <!--  pressed  -->
         <Style Selector="^:pressed /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="{DynamicResource IG_ButtonBackgroundPressed}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource IG_ButtonBorderBrushPressed}" />
-            <Setter Property="Transitions">
-                <Transitions>
-                    <BrushTransition Property="Background" Duration="0:0:0.02" />
-                    <BrushTransition Property="BorderBrush" Duration="0:0:0.02" />
-                </Transitions>
-            </Setter>
+            <Setter Property="Background" Value="{DynamicResource PhButtonBackgroundPressed}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource PhButtonBorderBrushPressed}" />
         </Style>
 
-        <!--  suppress Fluent's press-scale for UpdatePressedVisual method  -->
+        <!--  suppress Fluent's press-scale (the content nudge is done in PhButton code)  -->
         <Style Selector="^:pressed">
             <Setter Property="RenderTransform" Value="none" />
         </Style>
-
-
-        <!--  accent variant  -->
-        <Style Selector="^.accent /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="{DynamicResource IG_AccentButtonBackground}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource IG_AccentButtonBorderBrush}" />
-        </Style>
-        <Style Selector="^.accent:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="{DynamicResource IG_AccentButtonBackgroundPointerOver}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource IG_AccentButtonBorderBrush}" />
-        </Style>
-        <Style Selector="^.accent:pressed /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="{DynamicResource IG_AccentButtonBackgroundPressed}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource IG_AccentButtonBorderBrush}" />
-        </Style>
     </Style>
 
-
-    <!--  normal button text uses the theme foreground (accent/link have their own)  -->
-    <Style Selector="Button:not(.link):not(.accent)">
+    <!--  Default variant: text uses the theme foreground (accent/outline/link set their own)  -->
+    <Style Selector="Button:not(.link):not(.accent):not(.outline)">
         <Setter Property="Foreground" Value="{DynamicResource IG_ThemeForegroundBrush}" />
     </Style>
 
 
-    <!--  link variant: borderless text button. Underline + content nudge/dim are in PhButton code  -->
+    <!--
+        ============================================================
+        Accent variant: accent fill + accent elevation border
+        ============================================================
+    -->
+    <Style Selector="Button.accent">
+        <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource PhAccentButtonBackground}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource PhAccentButtonBorderBrush}" />
+        </Style>
+        <Style Selector="^:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource PhAccentButtonBackgroundPointerOver}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource PhAccentButtonBorderBrush}" />
+        </Style>
+        <Style Selector="^:pressed /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource PhAccentButtonBackgroundPressed}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource PhAccentButtonBorderBrush}" />
+        </Style>
+    </Style>
+
+
+    <!--
+        ============================================================
+        Outline variant: default fill (inherited) + accent border.
+        Uniform thickness; the "thin top/sides, darker bottom" look
+        comes from the gradient, just like the Default border.
+        ============================================================
+    -->
+    <Style Selector="Button.outline">
+        <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="BorderBrush" Value="{DynamicResource PhOutlineButtonBorderBrush}" />
+        </Style>
+        <Style Selector="^:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="BorderBrush" Value="{DynamicResource PhOutlineButtonBorderBrush}" />
+        </Style>
+        <!--  pressed: dim the border to match the Default press feel  -->
+        <Style Selector="^:pressed /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="BorderBrush" Value="{DynamicResource PhOutlineButtonBorderBrushPressed}" />
+        </Style>
+    </Style>
+
+
+    <!--
+        ============================================================
+        Link variant: borderless text button.
+        Underline + content nudge/dim are handled in PhButton code.
+        ============================================================
+    -->
     <Style Selector="Button.link">
         <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
             <Setter Property="Background" Value="Transparent" />

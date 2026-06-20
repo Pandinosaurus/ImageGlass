@@ -10,32 +10,32 @@
         <Setter Property="CornerRadius" Value="3.5" />
 
         <!--
-            unchecked box: match the default Button face (IG_ButtonBackground /
-            IG_ButtonBorderBrush). Excludes checked/indeterminate so their accent
+            unchecked box: match the default Button face (PhButtonBackground /
+            PhButtonBorderBrush). Excludes checked/indeterminate so their accent
             fill is left untouched. The template sets these at Template priority, so
             this app-level /template/ style wins.
         -->
         <Style Selector="^:not(:checked):not(:indeterminate) /template/ Border#NormalRectangle">
-            <Setter Property="Background" Value="{DynamicResource IG_ButtonBackground}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource IG_ButtonBorderBrush}" />
+            <Setter Property="Background" Value="{DynamicResource PhButtonBackground}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource PhButtonBorderBrush}" />
             <Setter Property="Transitions">
                 <Transitions>
-                    <BrushTransition Property="Background" Duration="0:0:0.1" />
-                    <BrushTransition Property="BorderBrush" Duration="0:0:0.1" />
+                    <BrushTransition Property="Background" Duration="0:0:0.04" />
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.04" />
                 </Transitions>
             </Setter>
         </Style>
 
         <!--  unchecked hover  -->
         <Style Selector="^:not(:checked):not(:indeterminate):pointerover /template/ Border#NormalRectangle">
-            <Setter Property="Background" Value="{DynamicResource IG_ButtonBackgroundPointerOver}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource IG_ButtonBorderBrush}" />
+            <Setter Property="Background" Value="{DynamicResource PhButtonBackgroundPointerOver}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource PhButtonBorderBrush}" />
         </Style>
 
         <!--  unchecked pressed  -->
         <Style Selector="^:not(:checked):not(:indeterminate):pressed /template/ Border#NormalRectangle">
-            <Setter Property="Background" Value="{DynamicResource IG_ButtonBackgroundPressed}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource IG_ButtonBorderBrushPressed}" />
+            <Setter Property="Background" Value="{DynamicResource PhButtonBackgroundPressed}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource PhButtonBorderBrushPressed}" />
         </Style>
 
     </Style>

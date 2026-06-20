@@ -5,10 +5,10 @@
             <ResourceDictionary.ThemeDictionaries>
                 <ResourceDictionary x:Key="Light">
                     <!--  focused: field lifts to a solid fill  -->
-                    <SolidColorBrush x:Key="IG_TextBoxBackgroundFocused" Color="#FFFFFFFF" />
+                    <SolidColorBrush x:Key="PhTextBoxBackgroundFocused" Color="#FFFFFFFF" />
 
                     <!--  focused border: subtle top/sides, accent 2px underline at the bottom (WinUI)  -->
-                    <LinearGradientBrush x:Key="IG_TextBoxBorderBrushFocused" StartPoint="0%,0%" EndPoint="0%,100%">
+                    <LinearGradientBrush x:Key="PhTextBoxBorderBrushFocused" StartPoint="0%,0%" EndPoint="0%,100%">
                         <GradientStop Offset="0.0" Color="#0F000000" />
                         <GradientStop Offset="0.9" Color="#0F000000" />
                         <GradientStop Offset="1.0" Color="{DynamicResource SystemAccentColor}" />
@@ -17,10 +17,10 @@
 
                 <ResourceDictionary x:Key="Dark">
                     <!--  focused: slightly more opaque fill so the field reads as active  -->
-                    <SolidColorBrush x:Key="IG_TextBoxBackgroundFocused" Color="#26FFFFFF" />
+                    <SolidColorBrush x:Key="PhTextBoxBackgroundFocused" Color="#26FFFFFF" />
 
                     <!--  dark: a black hairline is invisible, so top/sides use a faint white  -->
-                    <LinearGradientBrush x:Key="IG_TextBoxBorderBrushFocused" StartPoint="0%,0%" EndPoint="0%,100%">
+                    <LinearGradientBrush x:Key="PhTextBoxBorderBrushFocused" StartPoint="0%,0%" EndPoint="0%,100%">
                         <GradientStop Offset="0.0" Color="#14FFFFFF" />
                         <GradientStop Offset="0.9" Color="#14FFFFFF" />
                         <GradientStop Offset="1.0" Color="{DynamicResource SystemAccentColor}" />
@@ -34,8 +34,8 @@
     <Style Selector="TextBox">
 
         <!--  resting  -->
-        <Setter Property="Background" Value="{DynamicResource IG_ButtonBackground}" />
-        <Setter Property="BorderBrush" Value="{DynamicResource IG_ButtonBorderBrush}" />
+        <Setter Property="Background" Value="{DynamicResource PhButtonBackground}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource PhButtonBorderBrush}" />
 
         <!--  hover/focus transition on the border part  -->
         <Style Selector="^ /template/ Border#PART_BorderElement">
@@ -49,14 +49,14 @@
 
         <!--  hover  -->
         <Style Selector="^:pointerover /template/ Border#PART_BorderElement">
-            <Setter Property="Background" Value="{DynamicResource IG_ButtonBackgroundPointerOver}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource IG_ButtonBorderBrush}" />
+            <Setter Property="Background" Value="{DynamicResource PhButtonBackgroundPointerOver}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource PhButtonBorderBrush}" />
         </Style>
 
         <!--  focused (active): solid fill + accent underline  -->
         <Style Selector="^:focus-within /template/ Border#PART_BorderElement">
-            <Setter Property="Background" Value="{DynamicResource IG_TextBoxBackgroundFocused}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource IG_TextBoxBorderBrushFocused}" />
+            <Setter Property="Background" Value="{DynamicResource PhTextBoxBackgroundFocused}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource PhTextBoxBorderBrushFocused}" />
             <Setter Property="BorderThickness" Value="1,1,1,2" />
         </Style>
 

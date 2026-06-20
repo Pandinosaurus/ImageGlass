@@ -120,7 +120,7 @@
                     x:Name="PART_CustomColorProfile"
                     Margin="0,2,0,0"
                     HorizontalAlignment="Left"
-                    IsLink="True" />
+                    Variant="Link" />
 
                 <!--  Note for the current monitor profile option  -->
                 <ui:PhTextBlock

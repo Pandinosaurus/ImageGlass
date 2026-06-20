@@ -247,7 +247,8 @@ public partial class LayoutSettingsView : SettingsPageView
         // the floating ghost (hidden until a drag starts)
         _ghost = new PhButton
         {
-            Classes = { "chip" },
+            Variant = PhButtonVariant.Outline,
+            HorizontalAlignment = HorizontalAlignment.Stretch,
             IsHitTestVisible = false,
             IsVisible = false,
         };
@@ -292,8 +293,9 @@ public partial class LayoutSettingsView : SettingsPageView
     {
         var chip = new PhButton
         {
-            Classes = { "chip" },
+            Variant = PhButtonVariant.Outline,
             Cursor = new Cursor(StandardCursorType.Hand),
+            HorizontalAlignment = HorizontalAlignment.Stretch,
         };
         AddLangRefresher(() => chip.Text = Core.Lang[labelKey]);
 
@@ -398,8 +400,8 @@ public partial class LayoutSettingsView : SettingsPageView
         _dragStart = e.GetPosition(PART_DragLayer);
         _isDragging = false;
 
+        // don't mark the event handled: let the button enter its pressed state (content nudge + dim)
         e.Pointer.Capture(chip);
-        e.Handled = true;
     }
 
 
@@ -438,7 +440,6 @@ public partial class LayoutSettingsView : SettingsPageView
 
         _dragChip = null;
         _isDragging = false;
-        e.Handled = true;
 
         // apply only when dropped on a different, valid slot; otherwise just restore the dimmed chip
         if (target is not null && target.Owner == control && target.Position != GetPosition(control))
