@@ -863,7 +863,7 @@ public class Lang
         new(LangId.FrmSettings_Toolbar_ShowButtonText, "Show text beside the icon"),
         new(LangId.FrmSettings_Toolbar_AlignRight, "Place on the right side of the toolbar"),
         new(LangId.FrmSettings_Toolbar_CustomIcon, "Custom…"),
-        new(LangId.FrmSettings_Toolbar_ConfigBinding, "Toggle binding"),
+        new(LangId.FrmSettings_Toolbar_ConfigBinding, "Enable toggle binding"),
         new(LangId.FrmSettings_Toolbar_ConfigBindingName, "Config name"),
         new(LangId.FrmSettings_Toolbar_ConfigBindingValue, "Config value"),
         new(LangId.FrmSettings_Toolbar_ClickAction, "Click action"),

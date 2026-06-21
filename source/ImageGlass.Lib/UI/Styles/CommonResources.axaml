@@ -12,10 +12,10 @@
             <SolidColorBrush x:Key="PhControlBorderDisabled" Color="#08000000" />
 
             <!--  disabled content dim (matches PhTextBoxForegroundDisabled alpha): applied to solid content so icon + text dim equally  -->
-            <x:Double x:Key="PhControlContentOpacityDisabled">0.45</x:Double>
+            <x:Double x:Key="PhControlContentOpacityDisabled">0.6</x:Double>
 
             <!--  same dim baked into SVG glyphs (Svg.Skia ignores composited Opacity, so it must go through CurrentCss)  -->
-            <x:String x:Key="PhSvgCssDisabled">svg { opacity: 0.45 }</x:String>
+            <x:String x:Key="PhSvgCssDisabled">svg { opacity: 0.6 }</x:String>
         </ResourceDictionary>
         <ResourceDictionary x:Key="Dark">
             <SolidColorBrush x:Key="PhAccentFill" Color="{DynamicResource SystemAccentColorLight2}" />
