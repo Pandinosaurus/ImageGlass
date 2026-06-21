@@ -240,7 +240,7 @@ public partial class ImageSettingsView : SettingsPageView
             ],
         });
 
-        var path = files.FirstOrDefault()?.TryGetLocalPath();
+        var path = (files.Count > 0 ? files[0] : null)?.TryGetLocalPath();
         if (string.IsNullOrEmpty(path)) return;
 
         _customProfilePath = path;

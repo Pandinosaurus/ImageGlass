@@ -143,7 +143,7 @@ public class PhHotkeyPicker : PhControl
     }
 
 
-    private Control BuildChip(Hotkey hk)
+    private Border BuildChip(Hotkey hk)
     {
         var label = new TextBlock
         {

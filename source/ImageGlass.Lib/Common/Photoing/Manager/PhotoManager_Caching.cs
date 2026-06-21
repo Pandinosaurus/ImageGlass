@@ -105,7 +105,7 @@ public partial class PhotoManager
 
         // run on a dedicated thread to avoid thread pool starvation
         _ = Task.Factory.StartNew(
-            () => RunCacheAroundAsync(centerIndex, token, isSlideshow),
+            () => RunCacheAroundAsync(centerIndex, isSlideshow, token),
             token,
             TaskCreationOptions.LongRunning,
             TaskScheduler.Default);
@@ -175,7 +175,7 @@ public partial class PhotoManager
     /// Core caching loop. Loads photos in center-right-left expanding pattern
     /// until the memory budget is exhausted or all reachable photos are cached.
     /// </summary>
-    private async Task RunCacheAroundAsync(int centerIndex, CancellationToken token, bool isSlideshow)
+    private async Task RunCacheAroundAsync(int centerIndex, bool isSlideshow, CancellationToken token)
     {
         try
         {

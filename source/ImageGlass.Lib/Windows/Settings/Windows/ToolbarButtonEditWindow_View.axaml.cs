@@ -250,7 +250,7 @@ public partial class ToolbarButtonEditWindowView : PhControl
     /// Uses the <c>Svg</c> control (not <c>Image</c>+<c>SvgImage</c>) so the disabled-state
     /// <c>Svg.CurrentCss</c> opacity reaches the glyph (SvgImage ignores composited Opacity).
     /// </summary>
-    private static Control BuildIconOptionVisual(IconOption opt)
+    private static StackPanel BuildIconOptionVisual(IconOption opt)
     {
         var panel = new StackPanel
         {
@@ -295,7 +295,7 @@ public partial class ToolbarButtonEditWindowView : PhControl
             FileTypeFilter = [new FilePickerFileType("SVG") { Patterns = ["*.svg"] }],
         });
 
-        var path = files.FirstOrDefault()?.TryGetLocalPath();
+        var path = (files.Count > 0 ? files[0] : null)?.TryGetLocalPath();
         if (string.IsNullOrEmpty(path)) return;
 
         PART_CustomImagePath.Text = path;
@@ -319,7 +319,7 @@ public partial class ToolbarButtonEditWindowView : PhControl
             AllowMultiple = false,
         });
 
-        var path = files.FirstOrDefault()?.TryGetLocalPath();
+        var path = (files.Count > 0 ? files[0] : null)?.TryGetLocalPath();
         if (string.IsNullOrEmpty(path)) return;
 
         PART_Executable.Text = path;

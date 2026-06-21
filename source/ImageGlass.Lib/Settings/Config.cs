@@ -681,7 +681,8 @@ public partial class Config : PhReactive
     /// <summary>
     /// Gets, sets the last view of settings window.
     /// </summary>
-    public string LastOpenedSetting {
+    public string LastOpenedSetting
+    {
         get => Get(ConfigId.LastOpenedSetting, string.Empty);
         set => Set(ConfigId.LastOpenedSetting, value);
     }

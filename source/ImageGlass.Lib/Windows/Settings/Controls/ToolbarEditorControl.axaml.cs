@@ -328,7 +328,7 @@ public partial class ToolbarEditorControl : PhControl
     /// <summary>
     /// Builds a draggable chip (icon only, with a tooltip) for a toolbar item.
     /// </summary>
-    private Control BuildChip(ToolbarItemModel model)
+    private PhToolButton BuildChip(ToolbarItemModel model)
     {
         var name = model.IsSeparator ? Core.Lang[LangId._Separator] : model.DisplayText;
 

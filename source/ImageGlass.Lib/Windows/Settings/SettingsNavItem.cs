@@ -120,7 +120,7 @@ public sealed class SettingsNavItem
     /// <summary>
     /// Placeholder content for nav items whose real per-tab view isn't implemented yet.
     /// </summary>
-    private static Control CreatePlaceholderView(SettingsViewModel vm, string navId, LangId? label)
+    private static TextBlock CreatePlaceholderView(SettingsViewModel vm, string navId, LangId? label)
         => new TextBlock { Text = "TODO", Opacity = 0.6, TextWrapping = TextWrapping.Wrap };
 
 
