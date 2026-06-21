@@ -14,35 +14,18 @@
     <windows:SettingsPageView.Resources>
         <!--  Shared width: image-info tags box and the layout arranger line up  -->
         <x:Double x:Key="LayoutSectionWidth">460</x:Double>
-
-        <!--  Accent shades for drop slots (faint fill while valid, stronger under the cursor)  -->
-        <SolidColorBrush
-            x:Key="ZoneValidFill"
-            Opacity="0.15"
-            Color="{DynamicResource SystemAccentColor}" />
-        <SolidColorBrush
-            x:Key="ZoneHoverFill"
-            Opacity="0.35"
-            Color="{DynamicResource SystemAccentColor}" />
-        <SolidColorBrush x:Key="ZoneAccentBorder" Color="{DynamicResource SystemAccentColor}" />
     </windows:SettingsPageView.Resources>
 
 
     <windows:SettingsPageView.Styles>
-        <!--  An empty drop slot in the layout arranger  -->
+        <!--
+            An empty drop slot in the layout arranger: neutral fill, no border at rest (only the
+            dashed outline below appears, and only while dragging).
+        -->
         <Style Selector="Border.zone">
             <Setter Property="Padding" Value="4" />
             <Setter Property="CornerRadius" Value="{DynamicResource ControlCornerRadius}" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="BorderBrush" Value="{DynamicResource IG_BorderControlBrush}" />
             <Setter Property="Background" Value="{DynamicResource IG_BackgroundNeutralBrush}" />
-            <!--  smooth fade as a slot becomes a valid / hovered drop target  -->
-            <Setter Property="Transitions">
-                <Transitions>
-                    <BrushTransition Property="Background" Duration="0:0:0.15" />
-                    <BrushTransition Property="BorderBrush" Duration="0:0:0.15" />
-                </Transitions>
-            </Setter>
         </Style>
         <!--  Horizontal bar slots (toolbar / gallery top & bottom): fixed height so nothing reflows  -->
         <Style Selector="Border.zone.bar">
@@ -52,22 +35,43 @@
         <Style Selector="Border.zone.side">
             <Setter Property="Width" Value="88" />
         </Style>
-        <!--  A slot highlighted as a valid drop target while dragging  -->
-        <Style Selector="Border.zone.valid">
-            <Setter Property="Background" Value="{DynamicResource ZoneValidFill}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource ZoneAccentBorder}" />
+
+        <!--
+            Dashed outline overlay, shown only while dragging: gray for a valid slot, accent under the
+            cursor. A small Margin keeps the 1.5px stroke from being clipped at the slot edges.
+        -->
+        <Style Selector="Rectangle.zoneDash">
+            <Setter Property="IsVisible" Value="False" />
+            <Setter Property="IsHitTestVisible" Value="False" />
+            <Setter Property="Stretch" Value="Fill" />
+            <Setter Property="Margin" Value="1" />
+            <Setter Property="RadiusX" Value="6" />
+            <Setter Property="RadiusY" Value="6" />
+            <Setter Property="StrokeThickness" Value="1.5" />
+            <Setter Property="StrokeDashArray" Value="4,3" />
+            <Setter Property="StrokeLineCap" Value="Round" />
+            <Setter Property="Stroke" Value="{DynamicResource ZoneGrayStroke}" />
+            <Setter Property="Opacity" Value="0" />
+            <Setter Property="Transitions">
+                <Transitions>
+                    <DoubleTransition Property="Opacity" Duration="0:0:0.12" />
+                    <BrushTransition Property="Stroke" Duration="0:0:0.12" />
+                </Transitions>
+            </Setter>
         </Style>
-        <!--  The valid slot currently under the pointer  -->
-        <Style Selector="Border.zone.hover">
-            <Setter Property="Background" Value="{DynamicResource ZoneHoverFill}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource ZoneAccentBorder}" />
+        <Style Selector="Rectangle.zoneDash.valid">
+            <Setter Property="IsVisible" Value="True" />
+            <Setter Property="Opacity" Value="0.55" />
+        </Style>
+        <Style Selector="Rectangle.zoneDash.hover">
+            <Setter Property="IsVisible" Value="True" />
+            <Setter Property="Opacity" Value="0.95" />
+            <Setter Property="Stroke" Value="{DynamicResource ZoneAccentBorder}" />
         </Style>
         <!--  The viewer placeholder at the center  -->
         <Style Selector="Border.viewer">
             <Setter Property="CornerRadius" Value="{DynamicResource ControlCornerRadius}" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="BorderBrush" Value="{DynamicResource IG_BorderControlBrush}" />
-            <Setter Property="Background" Value="{DynamicResource PhButtonBackground}" />
+            <Setter Property="Background" Value="{DynamicResource IG_BackgroundNeutralBrush}" />
         </Style>
         <!--  Faint label shown inside an empty slot  -->
         <Style Selector="TextBlock.slotLabel">
@@ -140,7 +144,8 @@
             <!--  Drag-and-drop arranger  -->
             <ui:PhTextBlock
                 Margin="0,14,0,8"
-                HorizontalAlignment="Stretch"
+                MaxWidth="{StaticResource TextContentMaxWidth}"
+                HorizontalAlignment="Left"
                 LangKey="FrmSettings_Layout_ArrangeHint"
                 Opacity="0.7"
                 TextWrapping="Wrap" />
@@ -151,30 +156,39 @@
                 Height="330"
                 Padding="12"
                 HorizontalAlignment="Left"
-                Background="{DynamicResource IG_BackgroundNeutralBrush}"
+                Background="{DynamicResource IG_ThemeBackgroundBrush}"
                 BorderBrush="{DynamicResource IG_BorderNeutralBrush}"
                 BorderThickness="1"
                 CornerRadius="{DynamicResource ControlCornerRadius}">
                 <Grid RowDefinitions="Auto,Auto,*,Auto,Auto" RowSpacing="8">
 
                     <!--  Toolbar - top  -->
-                    <Border Grid.Row="0" Classes="zone bar">
-                        <Grid x:Name="PART_ZoneToolbarTop" />
-                    </Border>
+                    <Grid Grid.Row="0">
+                        <Border Classes="zone bar">
+                            <Grid x:Name="PART_ZoneToolbarTop" />
+                        </Border>
+                        <Rectangle Classes="zoneDash" />
+                    </Grid>
 
                     <!--  Gallery - top  -->
-                    <Border Grid.Row="1" Classes="zone bar">
-                        <Grid x:Name="PART_ZoneGalleryTop" />
-                    </Border>
+                    <Grid Grid.Row="1">
+                        <Border Classes="zone bar">
+                            <Grid x:Name="PART_ZoneGalleryTop" />
+                        </Border>
+                        <Rectangle Classes="zoneDash" />
+                    </Grid>
 
                     <!--  Gallery left | Viewer | Gallery right  -->
                     <Grid
                         Grid.Row="2"
                         ColumnDefinitions="Auto,*,Auto"
                         ColumnSpacing="8">
-                        <Border Grid.Column="0" Classes="zone side">
-                            <Grid x:Name="PART_ZoneGalleryLeft" />
-                        </Border>
+                        <Grid Grid.Column="0">
+                            <Border Classes="zone side">
+                                <Grid x:Name="PART_ZoneGalleryLeft" />
+                            </Border>
+                            <Rectangle Classes="zoneDash" />
+                        </Grid>
                         <Border Grid.Column="1" Classes="viewer">
                             <ui:PhTextBlock
                                 HorizontalAlignment="Center"
@@ -182,20 +196,29 @@
                                 LangKey="FrmSettings_Layout_Viewer"
                                 Opacity="0.5" />
                         </Border>
-                        <Border Grid.Column="2" Classes="zone side">
-                            <Grid x:Name="PART_ZoneGalleryRight" />
-                        </Border>
+                        <Grid Grid.Column="2">
+                            <Border Classes="zone side">
+                                <Grid x:Name="PART_ZoneGalleryRight" />
+                            </Border>
+                            <Rectangle Classes="zoneDash" />
+                        </Grid>
                     </Grid>
 
                     <!--  Gallery - bottom  -->
-                    <Border Grid.Row="3" Classes="zone bar">
-                        <Grid x:Name="PART_ZoneGalleryBottom" />
-                    </Border>
+                    <Grid Grid.Row="3">
+                        <Border Classes="zone bar">
+                            <Grid x:Name="PART_ZoneGalleryBottom" />
+                        </Border>
+                        <Rectangle Classes="zoneDash" />
+                    </Grid>
 
                     <!--  Toolbar - bottom  -->
-                    <Border Grid.Row="4" Classes="zone bar">
-                        <Grid x:Name="PART_ZoneToolbarBottom" />
-                    </Border>
+                    <Grid Grid.Row="4">
+                        <Border Classes="zone bar">
+                            <Grid x:Name="PART_ZoneToolbarBottom" />
+                        </Border>
+                        <Rectangle Classes="zoneDash" />
+                    </Grid>
 
                     <!--  Topmost overlay that hosts the floating chip while dragging  -->
                     <Canvas

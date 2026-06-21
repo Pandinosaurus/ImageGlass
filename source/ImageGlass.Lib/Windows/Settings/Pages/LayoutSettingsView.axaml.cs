@@ -18,6 +18,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
+using Avalonia.Controls.Shapes;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
@@ -76,8 +78,9 @@ public partial class LayoutSettingsView : SettingsPageView
     // guards the combo <-> arranger two-way sync from re-entering
     private bool _suppressComboEvents;
 
-    // the floating chip shown on PART_DragLayer while dragging
+    // the floating chip shown while dragging; hosted on the window overlay so it isn't clipped
     private PhButton _ghost = null!;
+    private Panel? _ghostHost; // the overlay layer hosting the ghost (falls back to PART_DragLayer)
 
     // drag state
     private PhButton? _dragChip;
@@ -246,7 +249,7 @@ public partial class LayoutSettingsView : SettingsPageView
         _toolbarChip = CreateChip(LangId.FrmSettings_Layout_Toolbar);
         _galleryChip = CreateChip(LangId.FrmSettings_Layout_Gallery);
 
-        // the floating ghost (hidden until a drag starts)
+        // the floating ghost (hidden until a drag starts; parented to its host only while dragging)
         _ghost = new PhButton
         {
             Variant = PhButtonVariant.Outline,
@@ -254,7 +257,6 @@ public partial class LayoutSettingsView : SettingsPageView
             IsHitTestVisible = false,
             IsVisible = false,
         };
-        PART_DragLayer.Children.Add(_ghost);
 
         // slot definitions (host grid + the control/position it stands for)
         _zones =
@@ -423,9 +425,11 @@ public partial class LayoutSettingsView : SettingsPageView
             StartGhost();
         }
 
-        // float the ghost centered under the cursor
-        Canvas.SetLeft(_ghost, pos.X - _ghost.Width / 2);
-        Canvas.SetTop(_ghost, pos.Y - _ghost.Height / 2);
+        // float the ghost centered under the cursor (in its host's coordinate space)
+        var host = _ghostHost ?? (Panel)PART_DragLayer;
+        var gpos = e.GetPosition(host);
+        Canvas.SetLeft(_ghost, gpos.X - _ghost.Width / 2);
+        Canvas.SetTop(_ghost, gpos.Y - _ghost.Height / 2);
         UpdateHoveredZone(e);
     }
 
@@ -463,6 +467,12 @@ public partial class LayoutSettingsView : SettingsPageView
         _isDragging = true;
         _dragChip!.Opacity = 0.35;
 
+        // host the ghost on the window overlay so it isn't clipped by the preview box / scroll
+        // viewer; fall back to the local drag layer if the overlay is unavailable
+        _ghostHost = OverlayLayer.GetOverlayLayer(this) ?? (Panel)PART_DragLayer;
+        (_ghost.Parent as Panel)?.Children.Remove(_ghost);
+        _ghostHost.Children.Add(_ghost);
+
         _ghost.Text = _dragChip.Text;
         _ghost.Width = _dragChip.Bounds.Width;
         _ghost.Height = _dragChip.Bounds.Height;
@@ -478,6 +488,12 @@ public partial class LayoutSettingsView : SettingsPageView
     private void EndGhost()
     {
         _ghost.IsVisible = false;
+
+        // unparent the ghost from whichever host it was added to
+        var host = _ghostHost ?? (Panel)PART_DragLayer;
+        host.Children.Remove(_ghost);
+        _ghostHost = null;
+
         if (_dragChip is not null) _dragChip.Opacity = 1d;
         HighlightValidZones(false);
     }
@@ -497,17 +513,10 @@ public partial class LayoutSettingsView : SettingsPageView
     {
         foreach (var zone in ValidDropZones())
         {
-            if (zone.Grid.Parent is not Border border) continue;
+            if (DashOf(zone) is not { } dash) continue;
 
-            if (on)
-            {
-                border.Classes.Add("valid");
-            }
-            else
-            {
-                border.Classes.Remove("valid");
-                border.Classes.Remove("hover");
-            }
+            SetClass(dash, "valid", on);
+            if (!on) SetClass(dash, "hover", false);
         }
     }
 
@@ -517,11 +526,26 @@ public partial class LayoutSettingsView : SettingsPageView
         var hovered = FindZoneAt(e);
         foreach (var zone in ValidDropZones())
         {
-            if (zone.Grid.Parent is not Border border) continue;
-
-            if (ReferenceEquals(hovered, zone)) border.Classes.Add("hover");
-            else border.Classes.Remove("hover");
+            if (DashOf(zone) is { } dash) SetClass(dash, "hover", ReferenceEquals(hovered, zone));
         }
+    }
+
+
+    /// <summary>
+    /// Gets the dashed-outline overlay that sits beside the slot's border (structure:
+    /// <c>wrapper Grid &gt; [Border.zone &gt; zone.Grid], [Rectangle.zoneDash]</c>).
+    /// </summary>
+    private static Rectangle? DashOf(LayoutZone zone)
+        => (zone.Grid.Parent as Border)?.Parent is Grid wrapper
+            ? wrapper.Children.OfType<Rectangle>().FirstOrDefault()
+            : null;
+
+
+    private static void SetClass(StyledElement el, string className, bool on)
+    {
+        var has = el.Classes.Contains(className);
+        if (on && !has) el.Classes.Add(className);
+        else if (!on && has) el.Classes.Remove(className);
     }
 
 
