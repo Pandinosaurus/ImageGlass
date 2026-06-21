@@ -130,6 +130,14 @@ public sealed class SettingsViewModel : PhReactive
             Core.UpdateDestColorProfile();
         }
 
+        // toolbar buttons edited: the toolbar itself rebuilds via its ItemsSource binding,
+        // but button hotkey text (tooltips) and the global hotkey map are only wired in
+        // RegisterHotkeys, so re-run it to pick up the new/changed/removed buttons
+        if (changedIds.Contains(ConfigId.ToolbarButtons))
+        {
+            Core.API.RegisterHotkeys();
+        }
+
 
         if (reloadList) Core.API.IG_ReloadList();
         if (reloadPhoto) Core.API.IG_Reload();

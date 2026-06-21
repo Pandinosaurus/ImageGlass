@@ -258,8 +258,8 @@ public partial class ToolbarItemModel : PhReactive, IJsonOnDeserialized
             var svgPath = string.Empty;
             if (string.IsNullOrWhiteSpace(Image)) return svgPath;
 
-            // absolute path
-            if (File.Exists(Image)) return svgPath;
+            // absolute path: the file itself is the icon
+            if (File.Exists(Image)) return Image;
 
             // get toolbar icon enum from theme
             if (!Enum.TryParse<IgThemeIcon>(Image, out var themeIconNameEnum)) return svgPath;

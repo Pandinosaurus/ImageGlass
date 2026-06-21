@@ -859,6 +859,17 @@ public class Lang
         new(LangId.FrmSettings_Toolbar_Errors_ButtonIdDuplicated, "A button with the ID '{0}' has already been defined. Please choose a different and unique ID for your button to avoid conflicts."),
         new(LangId.FrmSettings_Toolbar_Errors_ButtonExecutableRequired, "Button executable required."),
 
+        new(LangId.FrmSettings_Toolbar_ButtonText, "Button text"),
+        new(LangId.FrmSettings_Toolbar_ShowButtonText, "Show text beside the icon"),
+        new(LangId.FrmSettings_Toolbar_AlignRight, "Place on the right side of the toolbar"),
+        new(LangId.FrmSettings_Toolbar_CustomIcon, "Custom…"),
+        new(LangId.FrmSettings_Toolbar_ConfigBinding, "Toggle binding"),
+        new(LangId.FrmSettings_Toolbar_ConfigBindingName, "Config name"),
+        new(LangId.FrmSettings_Toolbar_ConfigBindingValue, "Config value"),
+        new(LangId.FrmSettings_Toolbar_ClickAction, "Click action"),
+        new(LangId.FrmSettings_Toolbar_RecordHotkeyHint, "Click here, then press a shortcut to add it"),
+        new(LangId.FrmSettings_Toolbar_BuiltInReadonly, "This is a built-in button, so its properties can't be changed."),
+
         new(LangId.FrmSettings_Toolbar_ArrangeHint, "Drag to reorder items, or move them between lists to add and remove. Arrow keys can also be used for positioning."),
 
         #endregion // FrmSettings > Tab Toolbar

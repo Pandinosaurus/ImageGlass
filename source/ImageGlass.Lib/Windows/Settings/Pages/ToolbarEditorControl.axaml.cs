@@ -31,10 +31,12 @@ using Avalonia.Threading;
 using ImageGlass.Common;
 using ImageGlass.Common.Localization;
 using ImageGlass.UI;
+using ImageGlass.UI.Windowing;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace ImageGlass.Common.Windows;
 
@@ -76,6 +78,7 @@ public partial class ToolbarEditorControl : PhControl
     private EditorGroup _dragSource;
     private Point _dragStart;
     private bool _isDragging;
+    private bool _suppressClick; // set when a drag occurs so the chip's Click (open dialog) is skipped
 
     // drag visuals
     private Border? _ghost;
@@ -87,9 +90,6 @@ public partial class ToolbarEditorControl : PhControl
 
     // the model whose chip should receive focus after the next re-render (keyboard edits)
     private ToolbarItemModel? _focusAfterRender;
-
-    // the current button "picked up" for click/keyboard rearranging (single selection), or null
-    private ToolbarItemModel? _pickedModel;
 
 
     /// <summary>
@@ -105,16 +105,14 @@ public partial class ToolbarEditorControl : PhControl
         PART_AddCustomBtn.Click += (_, _) => OnAddCustomClicked();
         PART_ResetBtn.Click += (_, _) => ResetToDefault();
 
-        // keyboard-only arranging: Tab moves between groups, arrow keys move within a group.
-        // The control itself is focusable so settings-search navigation can land here (forwarded
-        // into the Current buttons by OnGotFocus).
+        // Tab moves between groups; the control itself is focusable so settings-search navigation
+        // can land here (forwarded into the Current buttons by OnGotFocus).
         Focusable = true;
         KeyboardNavigation.SetTabNavigation(PART_PrimaryGroup, KeyboardNavigationMode.Once);
         KeyboardNavigation.SetTabNavigation(PART_SecondaryGroup, KeyboardNavigationMode.Once);
         KeyboardNavigation.SetTabNavigation(PART_AvailableGroup, KeyboardNavigationMode.Once);
 
-        // tunnel + handledEventsToo so we see arrows / Delete / Enter before the focused chip
-        // (a button) consumes them
+        // tunnel + handledEventsToo so we see Enter / Delete before the focused chip (a button) consumes them
         AddHandler(KeyDownEvent, OnEditorKeyDown, RoutingStrategies.Tunnel, handledEventsToo: true);
     }
 
@@ -126,7 +124,6 @@ public partial class ToolbarEditorControl : PhControl
     /// </summary>
     public void LoadButtons(IEnumerable<ToolbarItemModel> current)
     {
-        _pickedModel = null;
         _primary.Clear();
         _secondary.Clear();
 
@@ -341,8 +338,7 @@ public partial class ToolbarEditorControl : PhControl
             Padding = new Thickness(CHIP_PADDING),
             Margin = new Thickness(3),
             Cursor = new Cursor(StandardCursorType.Hand),
-            Focusable = true, // keyboard arranging: chips are arrow-navigable within their group
-            IsChecked = ReferenceEquals(model, _pickedModel), // checked highlight = selected to move
+            Focusable = true, // focusable so Tab reaches chips and Enter/Delete act on them
             Content = BuildIconVisual(model),
             Transitions = [new DoubleTransition { Property = OpacityProperty, Duration = TimeSpan.FromMilliseconds(180) }],
         };
@@ -356,6 +352,9 @@ public partial class ToolbarEditorControl : PhControl
         chip.AddHandler(PointerMovedEvent, Chip_PointerMoved, RoutingStrategies.Tunnel, handledEventsToo: true);
         chip.AddHandler(PointerReleasedEvent, Chip_PointerReleased, RoutingStrategies.Tunnel, handledEventsToo: true);
         chip.AddHandler(PointerCaptureLostEvent, Chip_PointerCaptureLost, handledEventsToo: true);
+
+        // the button's action (click, tap, or Space/Enter on the focused chip) opens the dialog
+        chip.Click += Chip_Click;
 
         // brief fade-in on the chip that was just moved/added so the landing spot is easy to spot
         if (ReferenceEquals(model, _justMoved))
@@ -419,10 +418,102 @@ public partial class ToolbarEditorControl : PhControl
     }
 
 
-    private void OnAddCustomClicked()
+    private void OnAddCustomClicked() => _ = OpenAddDialogAsync();
+
+
+    /// <summary>
+    /// Opens the editor dialog to create a new custom button, then appends it to the matching
+    /// current group (Primary, or Secondary when right-aligned).
+    /// </summary>
+    private async Task OpenAddDialogAsync()
     {
-        // TODO: open the custom-button editor dialog (placeholder).
+        var win = new ToolbarButtonEditWindow(null, CollectTakenIds(except: null), isBuiltIn: false);
+        if (await win.ShowAsync(TopLevel.GetTopLevel(this) as PhWindow) != DialogExitCode.OK) return;
+        if (win.ResultModel is not { } model) return;
+
+        if (model.Alignment == ToolbarItemAlignment.Right) _secondary.Add(model);
+        else _primary.Add(model);
+
+        _justMoved = model;
+        _focusAfterRender = model;
+        Commit();
     }
+
+
+    /// <summary>
+    /// Opens the editor dialog for an existing button: read-only for built-in buttons, editable for
+    /// custom ones. Separators have nothing to edit. Applies the edit in place on success.
+    /// </summary>
+    private async Task OpenEditDialogAsync(ToolbarItemModel model)
+    {
+        if (model.IsSeparator) return;
+
+        var win = new ToolbarButtonEditWindow(model, CollectTakenIds(except: model), IsBuiltIn(model));
+        if (await win.ShowAsync(TopLevel.GetTopLevel(this) as PhWindow) != DialogExitCode.OK) return;
+        if (win.ResultModel is not { } edited) return; // cancelled or read-only built-in
+
+        ApplyEdit(model, edited);
+        _justMoved = model;
+        _focusAfterRender = model;
+        Commit();
+    }
+
+
+    /// <summary>
+    /// Copies the edited values onto the existing model (keeping its identity), hopping it between the
+    /// Primary and Secondary groups when its alignment changed.
+    /// </summary>
+    private void ApplyEdit(ToolbarItemModel model, ToolbarItemModel edited)
+    {
+        model.Id = edited.Id;
+        model.Image = edited.Image;
+        model.Text = edited.Text;
+        model.ShowText = edited.ShowText;
+        model.ConfigBinding = edited.ConfigBinding;
+        model.ConfigBindingValue = edited.ConfigBindingValue;
+        model.OnClick = edited.OnClick;
+
+        var group = GroupOf(model);
+        if (group == EditorGroup.Primary && edited.Alignment == ToolbarItemAlignment.Right)
+        {
+            _primary.Remove(model);
+            model.Alignment = ToolbarItemAlignment.Right;
+            _secondary.Add(model);
+        }
+        else if (group == EditorGroup.Secondary && edited.Alignment == ToolbarItemAlignment.Left)
+        {
+            _secondary.Remove(model);
+            model.Alignment = ToolbarItemAlignment.Left;
+            _primary.Add(model);
+        }
+        else
+        {
+            model.Alignment = edited.Alignment;
+        }
+    }
+
+
+    /// <summary>
+    /// Gets the button IDs already in use across the built-in catalog and the current groups,
+    /// excluding the given model's own ID (so editing a button doesn't clash with itself).
+    /// </summary>
+    private HashSet<string> CollectTakenIds(ToolbarItemModel? except)
+    {
+        var set = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var c in Catalog) if (!c.IsSeparator) set.Add(c.Id);
+        foreach (var m in _primary) if (!m.IsSeparator) set.Add(m.Id);
+        foreach (var m in _secondary) if (!m.IsSeparator) set.Add(m.Id);
+        if (except is not null && !except.IsSeparator) set.Remove(except.Id);
+        return set;
+    }
+
+
+    /// <summary>
+    /// Whether the model is a built-in button (its ID exists in the built-in catalog), and so is
+    /// shown read-only in the editor dialog.
+    /// </summary>
+    private bool IsBuiltIn(ToolbarItemModel model) => !model.IsSeparator
+        && Catalog.Any(c => !c.IsSeparator && c.Id.Equals(model.Id, StringComparison.OrdinalIgnoreCase));
 
 
     /// <summary>
@@ -447,6 +538,7 @@ public partial class ToolbarEditorControl : PhControl
         // left button starts a drag; right button falls through to the context menu
         if (!e.GetCurrentPoint(chip).Properties.IsLeftButtonPressed) return;
 
+        _suppressClick = false; // fresh gesture; a drag will set this to skip the button's Click
         _dragChip = chip;
         _dragModel = model;
         _dragSource = GroupOfChip(chip);
@@ -489,14 +581,10 @@ public partial class ToolbarEditorControl : PhControl
 
         if (!_isDragging)
         {
-            // a plain click (not a drag): select / deselect the button — the mouse equivalent
-            // of pressing Space/Enter on it
-            e.Pointer.Capture(null);
-            var clickedModel = _dragModel;
+            // not a drag: leave the pointer capture intact so the button raises its Click, which
+            // opens the dialog via Chip_Click (matching Space/Enter). Just drop our drag tracking.
             _dragChip = null;
             _dragModel = null;
-
-            if (clickedModel is not null) TogglePick(clickedModel);
             return;
         }
 
@@ -537,6 +625,20 @@ public partial class ToolbarEditorControl : PhControl
         _isDragging = false;
 
         if (wasDragging) RenderAll();
+    }
+
+
+    /// <summary>
+    /// The chip's button action (mouse click, touch tap, or Space/Enter on the focused chip): opens
+    /// the edit dialog. Skipped right after a drag, which already did the rearranging.
+    /// </summary>
+    private void Chip_Click(object? sender, RoutedEventArgs e)
+    {
+        if (_suppressClick) { _suppressClick = false; return; }
+        if (sender is not Control chip || chip.Tag is not ToolbarItemModel model) return;
+
+        // post so the click/key event unwinds before the modal opens
+        Dispatcher.UIThread.Post(() => _ = OpenEditDialogAsync(model));
     }
 
 
@@ -592,9 +694,7 @@ public partial class ToolbarEditorControl : PhControl
     {
         _isDragging = true;
         _dragChip!.Opacity = 0.35;
-
-        // a drag supersedes any keyboard selection
-        if (_pickedModel is not null) { _pickedModel = null; RefreshCheckedStates(); }
+        _suppressClick = true; // this gesture became a drag; skip the button's Click on release
 
         // host the cursor-following visuals on the window overlay so they aren't clipped by the
         // settings section / scroll viewer; fall back to the local drag layer if unavailable
@@ -832,12 +932,9 @@ public partial class ToolbarEditorControl : PhControl
     #region Keyboard navigation
 
     /// <summary>
-    /// Drives keyboard-only arranging from the focused chip. Space/Enter (or a click) selects / deselects
-    /// a button. While a button is selected the arrows move it: Left/Right shift a current button (hopping
-    /// between the Primary and Secondary groups at the inner edge), Up promotes an available button into
-    /// Current, Down sends a current button to Available — and it stays selected so moves can continue.
-    /// Otherwise the arrows move focus between chips. Delete removes a current button; Escape deselects.
-    /// Runs on the tunnel route so it beats the button's own key handling.
+    /// Keyboard navigation on the focused chip: arrow keys move focus between chips, Delete removes a
+    /// current button. Space/Enter are left for the chip's default button activation, which opens the
+    /// dialog via Chip_Click. Runs on the tunnel route so the arrows beat default focus handling.
     /// </summary>
     private void OnEditorKeyDown(object? sender, KeyEventArgs e)
     {
@@ -845,42 +942,24 @@ public partial class ToolbarEditorControl : PhControl
             || focused.Tag is not ToolbarItemModel model)
             return;
 
+        // a key press clears any stale drag suppression so Space/Enter activation isn't swallowed
+        _suppressClick = false;
+
         var group = GroupOfChip(focused);
-        var picked = _pickedModel is not null && ReferenceEquals(_pickedModel, model);
 
         switch (e.Key)
         {
-            // when selected, the arrows move the button; otherwise they move focus
             case Key.Left:
-                if (picked) { ShiftPicked(-1); e.Handled = true; }
-                else e.Handled = MoveFocusHorizontal(focused, group, -1);
+                e.Handled = MoveFocusHorizontal(focused, group, -1);
                 break;
-
             case Key.Right:
-                if (picked) { ShiftPicked(+1); e.Handled = true; }
-                else e.Handled = MoveFocusHorizontal(focused, group, +1);
+                e.Handled = MoveFocusHorizontal(focused, group, +1);
                 break;
-
             case Key.Up:
-                // a selected available button is promoted up into the Current section
-                if (picked) { PromotePickedToCurrent(); e.Handled = true; }
-                else e.Handled = MoveFocusVertical(focused, group, up: true);
+                e.Handled = MoveFocusVertical(focused, group, up: true);
                 break;
-
             case Key.Down:
-                // a selected current button is sent down into the Available section
-                if (picked) { DemotePickedToAvailable(); e.Handled = true; }
-                else e.Handled = MoveFocusVertical(focused, group, up: false);
-                break;
-
-            case Key.Enter:
-            case Key.Space:
-                TogglePick(model); // select / deselect (does not add — Up promotes an available button)
-                e.Handled = true;
-                break;
-
-            case Key.Escape:
-                if (_pickedModel is not null) { ClearPick(); e.Handled = true; }
+                e.Handled = MoveFocusVertical(focused, group, up: false);
                 break;
 
             case Key.Delete:
@@ -968,137 +1047,6 @@ public partial class ToolbarEditorControl : PhControl
 
 
     /// <summary>
-    /// Selects / deselects a button for click or keyboard rearranging (single selection: picking one
-    /// drops any other). A selected button shows the checked highlight; arrow keys then move it — a
-    /// current button shifts left/right, an available button is promoted to Current with Up.
-    /// </summary>
-    private void TogglePick(ToolbarItemModel model)
-    {
-        _pickedModel = ReferenceEquals(_pickedModel, model) ? null : model;
-        RefreshCheckedStates();
-    }
-
-
-    /// <summary>
-    /// Drops the picked-up button (clears the selection highlight).
-    /// </summary>
-    private void ClearPick()
-    {
-        if (_pickedModel is null) return;
-        _pickedModel = null;
-        RefreshCheckedStates();
-    }
-
-
-    /// <summary>
-    /// Syncs every chip's checked highlight to the picked-up button (no re-render).
-    /// </summary>
-    private void RefreshCheckedStates()
-    {
-        foreach (var panel in new Panel[] { PART_PrimaryGroup, PART_SecondaryGroup, PART_AvailableGroup })
-        {
-            foreach (var c in panel.Children)
-            {
-                if (c is PhToolButton tb) tb.IsChecked = ReferenceEquals(c.Tag, _pickedModel);
-            }
-        }
-    }
-
-
-    /// <summary>
-    /// Shifts the picked-up button one slot left/right within its group, hopping between the Primary
-    /// and Secondary groups at the inner edge. Keeps it picked + focused. Returns whether it moved.
-    /// </summary>
-    private bool ShiftPicked(int delta)
-    {
-        if (_pickedModel is null) return false;
-        if (GroupOf(_pickedModel) is not EditorGroup g || g == EditorGroup.Available) return false;
-
-        var list = ListFor(g);
-        var i = list.IndexOf(_pickedModel);
-        if (i < 0) return false;
-
-        var target = i + delta;
-        if (target >= 0 && target < list.Count)
-        {
-            // reorder within the group
-            list.RemoveAt(i);
-            list.Insert(target, _pickedModel);
-        }
-        else if (g == EditorGroup.Primary && delta > 0)
-        {
-            _primary.RemoveAt(i);
-            _pickedModel.Alignment = ToolbarItemAlignment.Right;
-            _secondary.Insert(0, _pickedModel);
-        }
-        else if (g == EditorGroup.Secondary && delta < 0)
-        {
-            _secondary.RemoveAt(i);
-            _pickedModel.Alignment = ToolbarItemAlignment.Left;
-            _primary.Add(_pickedModel);
-        }
-        else
-        {
-            return false; // outer edge: nowhere to go
-        }
-
-        _justMoved = _pickedModel;
-        _focusAfterRender = _pickedModel; // stays picked (checked) + focused after the re-render
-        Commit();
-        return true;
-    }
-
-
-    /// <summary>
-    /// Promotes the selected available button up into the Current section (appended to Primary),
-    /// keeping it selected so the user can keep moving it. Returns whether a button was promoted.
-    /// </summary>
-    private bool PromotePickedToCurrent()
-    {
-        if (_pickedModel is null || GroupOf(_pickedModel) != EditorGroup.Available) return false;
-
-        var clone = _pickedModel.IsSeparator ? ToolbarItemModel.Separator : Clone(_pickedModel);
-        clone.Alignment = ToolbarItemAlignment.Left;
-        _primary.Add(clone);
-
-        _pickedModel = clone; // selection follows the button into Current
-        _justMoved = clone;
-        _focusAfterRender = clone;
-        Commit();
-        return true;
-    }
-
-
-    /// <summary>
-    /// Sends the selected current button down into the Available list (removing it from the toolbar),
-    /// keeping it selected on its Available entry so the user can keep moving it. Returns whether a
-    /// button was demoted.
-    /// </summary>
-    private bool DemotePickedToAvailable()
-    {
-        if (_pickedModel is null) return false;
-
-        var g = GroupOf(_pickedModel);
-        if (g is not (EditorGroup.Primary or EditorGroup.Secondary)) return false;
-
-        var model = _pickedModel;
-        ListFor(g.Value).Remove(model);
-        RecomputeAvailable(); // the button reappears in Available (by id, or the separator template)
-
-        // keep the selection on the same button, now represented in the Available list
-        _pickedModel = model.IsSeparator
-            ? _available.FirstOrDefault(m => m.IsSeparator)
-            : _available.FirstOrDefault(m => m.Id.Equals(model.Id, StringComparison.OrdinalIgnoreCase));
-        _justMoved = _pickedModel;
-        _focusAfterRender = _pickedModel;
-
-        RenderAll();
-        ButtonsChanged?.Invoke(this, EventArgs.Empty);
-        return true;
-    }
-
-
-    /// <summary>
     /// Returns which working list currently holds the given model, or <c>null</c>.
     /// </summary>
     private EditorGroup? GroupOf(ToolbarItemModel model)
@@ -1120,7 +1068,6 @@ public partial class ToolbarEditorControl : PhControl
         var i = list.IndexOf(model);
         if (i < 0) return false;
 
-        if (ReferenceEquals(_pickedModel, model)) _pickedModel = null;
         list.Remove(model);
         _focusAfterRender = list.Count > 0 ? list[Math.Clamp(i, 0, list.Count - 1)] : null;
         var emptied = _focusAfterRender is null;

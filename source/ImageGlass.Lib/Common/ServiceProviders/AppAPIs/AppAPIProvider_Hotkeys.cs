@@ -198,6 +198,10 @@ public partial class AppAPIProvider
     /// </summary>
     public void RegisterHotkeys()
     {
+        // clear first so this can be re-run after a settings change (e.g. toolbar buttons
+        // edited): rebuild the map from scratch instead of leaving stale TryAdd entries
+        AppHotkeysMap.Clear();
+
         // 0. load main menu button hotkey text
         var mainMenuHotkeys = Core.Config.MenuHotkeys.GetValueOrDefault(LangId.FrmMain_MnuMain)
             ?? _menuMap.GetValueOrDefault(LangId.FrmMain_MnuMain)?.Hotkeys

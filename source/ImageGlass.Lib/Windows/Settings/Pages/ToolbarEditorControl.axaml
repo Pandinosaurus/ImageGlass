@@ -72,7 +72,7 @@
 
     <!--
         content + topmost drag overlay. A single left-anchored, max-width column fills from the left
-        up to the max and shrinks with a small window — so it's never centered on a wide monitor
+        up to the max and shrinks with a small window, so it's never centered on a wide monitor
         (which a Stretch element with MaxWidth would be) and never clipped on a narrow one.
     -->
     <Grid HorizontalAlignment="Stretch">

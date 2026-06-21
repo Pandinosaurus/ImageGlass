@@ -598,6 +598,17 @@ public enum LangId
     FrmSettings_Toolbar_Errors_ButtonIdDuplicated,
     FrmSettings_Toolbar_Errors_ButtonExecutableRequired,
 
+    FrmSettings_Toolbar_ButtonText,
+    FrmSettings_Toolbar_ShowButtonText,
+    FrmSettings_Toolbar_AlignRight,
+    FrmSettings_Toolbar_CustomIcon,
+    FrmSettings_Toolbar_ConfigBinding,
+    FrmSettings_Toolbar_ConfigBindingName,
+    FrmSettings_Toolbar_ConfigBindingValue,
+    FrmSettings_Toolbar_ClickAction,
+    FrmSettings_Toolbar_RecordHotkeyHint,
+    FrmSettings_Toolbar_BuiltInReadonly,
+
     FrmSettings_Toolbar_ArrangeHint,
     #endregion // FrmSettings > Tab Toolbar
 
