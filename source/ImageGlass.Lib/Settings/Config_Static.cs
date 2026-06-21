@@ -19,8 +19,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 using ImageGlass.Common.Actions;
 using ImageGlass.Common.AppThemes;
 using ImageGlass.Common.Localization;
+using ImageGlass.Common.Photoing;
 using ImageGlass.Common.ServiceProviders;
 using ImageGlass.Common.Types;
+using ImageGlass.Tools;
 using ImageGlass.UI;
 using ImageGlass.UI.Viewer;
 using System;
@@ -264,6 +266,241 @@ public partial class Config
             Text = Lang.KeysMap[LangId.FrmMain_MnuMoveToRecycleBin],
             OnClick = new(LangId.FrmMain_MnuMoveToRecycleBin, API.IG_Delete),
         }
+    ];
+
+
+    /// <summary>
+    /// Gets the catalog of all built-in toolbar buttons the user can add to the toolbar.
+    /// Used by the Toolbar settings page to populate the "Available buttons" list.
+    /// </summary>
+    [JsonIgnore]
+    public static ReadOnlyCollection<ToolbarItemModel> BuiltInToolbarItems =>
+    [
+        // File
+        new() {
+            Id = $"Btn_{nameof(IgThemeIcon.OpenFile)}",
+            Image = nameof(IgThemeIcon.OpenFile),
+            Text = Lang.KeysMap[LangId.FrmMain_MnuOpenFile],
+            OnClick = new(LangId.FrmMain_MnuOpenFile, API.IG_OpenFile),
+        },
+        new() {
+            Id = $"Btn_{nameof(IgThemeIcon.Save)}",
+            Image = nameof(IgThemeIcon.Save),
+            Text = Lang.KeysMap[LangId.FrmMain_MnuSave],
+            OnClick = new(LangId.FrmMain_MnuSave, API.IG_Save),
+        },
+        new() {
+            Id = $"Btn_{nameof(IgThemeIcon.Print)}",
+            Image = nameof(IgThemeIcon.Print),
+            Text = Lang.KeysMap[LangId.FrmMain_MnuPrint],
+            OnClick = new(LangId.FrmMain_MnuPrint, API.IG_Print),
+        },
+        new() {
+            Id = $"Btn_{nameof(IgThemeIcon.Export)}",
+            Image = nameof(IgThemeIcon.Export),
+            Text = Lang.KeysMap[LangId.FrmMain_MnuExportFrames],
+            OnClick = new(LangId.FrmMain_MnuExportFrames, API.IG_ExportImageFrames),
+        },
+        new() {
+            Id = $"Btn_{nameof(IgThemeIcon.Edit)}",
+            Image = nameof(IgThemeIcon.Edit),
+            Text = Lang.KeysMap[LangId.FrmMain_MnuEdit],
+            OnClick = new(LangId.FrmMain_MnuEdit, API.IG_OpenEditingApp),
+        },
+        new() {
+            Id = $"Btn_{nameof(IgThemeIcon.Delete)}",
+            Image = nameof(IgThemeIcon.Delete),
+            Text = Lang.KeysMap[LangId.FrmMain_MnuMoveToRecycleBin],
+            OnClick = new(LangId.FrmMain_MnuMoveToRecycleBin, API.IG_Delete, "true"),
+        },
+
+        // Navigation
+        new() {
+            Id = $"Btn_{nameof(IgThemeIcon.ViewPreviousImage)}",
+            Image = nameof(IgThemeIcon.ViewPreviousImage),
+            Text = Lang.KeysMap[LangId.FrmMain_MnuViewPrevious],
+            OnClick = new(LangId.FrmMain_MnuViewPrevious, API.IG_ViewPrevious),
+        },
+        new() {
+            Id = $"Btn_{nameof(IgThemeIcon.ViewNextImage)}",
+            Image = nameof(IgThemeIcon.ViewNextImage),
+            Text = Lang.KeysMap[LangId.FrmMain_MnuViewNext],
+            OnClick = new(LangId.FrmMain_MnuViewNext, API.IG_ViewNext),
+        },
+        new() {
+            Id = $"Btn_{nameof(IgThemeIcon.ViewFirstImage)}",
+            Image = nameof(IgThemeIcon.ViewFirstImage),
+            Text = Lang.KeysMap[LangId.FrmMain_MnuGoToFirst],
+            OnClick = new(LangId.FrmMain_MnuGoToFirst, API.IG_GotoFirst),
+        },
+        new() {
+            Id = $"Btn_{nameof(IgThemeIcon.ViewLastImage)}",
+            Image = nameof(IgThemeIcon.ViewLastImage),
+            Text = Lang.KeysMap[LangId.FrmMain_MnuGoToLast],
+            OnClick = new(LangId.FrmMain_MnuGoToLast, API.IG_GotoLast),
+        },
+
+        // Zoom
+        new() {
+            Id = $"Btn_{nameof(IgThemeIcon.AutoZoom)}",
+            Image = nameof(IgThemeIcon.AutoZoom),
+            Text = Lang.KeysMap[LangId.FrmMain_MnuAutoZoom],
+            ConfigBinding = nameof(Config.ZoomMode),
+            ConfigBindingValue = ZoomMode.AutoZoom.ToString(),
+            OnClick = new(LangId.FrmMain_MnuAutoZoom, API.IG_SetZoomMode, nameof(ZoomMode.AutoZoom)),
+        },
+        new() {
+            Id = $"Btn_{nameof(IgThemeIcon.LockZoom)}",
+            Image = nameof(IgThemeIcon.LockZoom),
+            Text = Lang.KeysMap[LangId.FrmMain_MnuLockZoom],
+            ConfigBinding = nameof(Config.ZoomMode),
+            ConfigBindingValue = ZoomMode.LockZoom.ToString(),
+            OnClick = new(LangId.FrmMain_MnuLockZoom, API.IG_SetZoomMode, nameof(ZoomMode.LockZoom)),
+        },
+        new() {
+            Id = $"Btn_{nameof(IgThemeIcon.ScaleToWidth)}",
+            Image = nameof(IgThemeIcon.ScaleToWidth),
+            Text = Lang.KeysMap[LangId.FrmMain_MnuScaleToWidth],
+            ConfigBinding = nameof(Config.ZoomMode),
+            ConfigBindingValue = ZoomMode.ScaleToWidth.ToString(),
+            OnClick = new(LangId.FrmMain_MnuScaleToWidth, API.IG_SetZoomMode, nameof(ZoomMode.ScaleToWidth)),
+        },
+        new() {
+            Id = $"Btn_{nameof(IgThemeIcon.ScaleToHeight)}",
+            Image = nameof(IgThemeIcon.ScaleToHeight),
+            Text = Lang.KeysMap[LangId.FrmMain_MnuScaleToHeight],
+            ConfigBinding = nameof(Config.ZoomMode),
+            ConfigBindingValue = ZoomMode.ScaleToHeight.ToString(),
+            OnClick = new(LangId.FrmMain_MnuScaleToHeight, API.IG_SetZoomMode, nameof(ZoomMode.ScaleToHeight)),
+        },
+        new() {
+            Id = $"Btn_{nameof(IgThemeIcon.ScaleToFit)}",
+            Image = nameof(IgThemeIcon.ScaleToFit),
+            Text = Lang.KeysMap[LangId.FrmMain_MnuScaleToFit],
+            ConfigBinding = nameof(Config.ZoomMode),
+            ConfigBindingValue = ZoomMode.ScaleToFit.ToString(),
+            OnClick = new(LangId.FrmMain_MnuScaleToFit, API.IG_SetZoomMode, nameof(ZoomMode.ScaleToFit)),
+        },
+        new() {
+            Id = $"Btn_{nameof(IgThemeIcon.ScaleToFill)}",
+            Image = nameof(IgThemeIcon.ScaleToFill),
+            Text = Lang.KeysMap[LangId.FrmMain_MnuScaleToFill],
+            ConfigBinding = nameof(Config.ZoomMode),
+            ConfigBindingValue = ZoomMode.ScaleToFill.ToString(),
+            OnClick = new(LangId.FrmMain_MnuScaleToFill, API.IG_SetZoomMode, nameof(ZoomMode.ScaleToFill)),
+        },
+        new() {
+            Id = $"Btn_{nameof(IgThemeIcon.ActualSize)}",
+            Image = nameof(IgThemeIcon.ActualSize),
+            Text = Lang.KeysMap[LangId.FrmMain_MnuActualSize],
+            OnClick = new(LangId.FrmMain_MnuActualSize, API.IG_SetZoom, "1"),
+        },
+        new() {
+            Id = $"Btn_{nameof(IgThemeIcon.ZoomIn)}",
+            Image = nameof(IgThemeIcon.ZoomIn),
+            Text = Lang.KeysMap[LangId.FrmMain_MnuZoomIn],
+            OnClick = new(LangId.FrmMain_MnuZoomIn, API.IG_ZoomIn),
+        },
+        new() {
+            Id = $"Btn_{nameof(IgThemeIcon.ZoomOut)}",
+            Image = nameof(IgThemeIcon.ZoomOut),
+            Text = Lang.KeysMap[LangId.FrmMain_MnuZoomOut],
+            OnClick = new(LangId.FrmMain_MnuZoomOut, API.IG_ZoomOut),
+        },
+
+        // Image transforms
+        new() {
+            Id = $"Btn_{nameof(IgThemeIcon.RotateLeft)}",
+            Image = nameof(IgThemeIcon.RotateLeft),
+            Text = Lang.KeysMap[LangId.FrmMain_MnuRotateLeft],
+            OnClick = new(LangId.FrmMain_MnuRotateLeft, API.IG_Rotate, nameof(RotateOption.Left)),
+        },
+        new() {
+            Id = $"Btn_{nameof(IgThemeIcon.RotateRight)}",
+            Image = nameof(IgThemeIcon.RotateRight),
+            Text = Lang.KeysMap[LangId.FrmMain_MnuRotateRight],
+            OnClick = new(LangId.FrmMain_MnuRotateRight, API.IG_Rotate, nameof(RotateOption.Right)),
+        },
+        new() {
+            Id = $"Btn_{nameof(IgThemeIcon.FlipHorz)}",
+            Image = nameof(IgThemeIcon.FlipHorz),
+            Text = Lang.KeysMap[LangId.FrmMain_MnuFlipHorizontal],
+            OnClick = new(LangId.FrmMain_MnuFlipHorizontal, API.IG_FlipImage, nameof(FlipOptions.Horizontal)),
+        },
+        new() {
+            Id = $"Btn_{nameof(IgThemeIcon.FlipVert)}",
+            Image = nameof(IgThemeIcon.FlipVert),
+            Text = Lang.KeysMap[LangId.FrmMain_MnuFlipVertical],
+            OnClick = new(LangId.FrmMain_MnuFlipVertical, API.IG_FlipImage, nameof(FlipOptions.Vertical)),
+        },
+
+        // Tools
+        new() {
+            Id = $"Btn_{nameof(IgThemeIcon.ColorPicker)}",
+            Image = nameof(IgThemeIcon.ColorPicker),
+            Text = Lang.KeysMap[LangId.FrmMain_MnuColorPicker],
+            OnClick = new(LangId.FrmMain_MnuColorPicker, API.IG_ToggleTool, ColorPickerToolControl.TOOL_ID),
+        },
+        new() {
+            Id = $"Btn_{nameof(IgThemeIcon.Crop)}",
+            Image = nameof(IgThemeIcon.Crop),
+            Text = Lang.KeysMap[LangId.FrmMain_MnuCropTool],
+            OnClick = new(LangId.FrmMain_MnuCropTool, API.IG_ToggleTool, CropImageToolControl.TOOL_ID),
+        },
+
+        // View modes
+        new() {
+            Id = $"Btn_{nameof(IgThemeIcon.Refresh)}",
+            Image = nameof(IgThemeIcon.Refresh),
+            Text = Lang.KeysMap[LangId.FrmMain_MnuRefresh],
+            OnClick = new(LangId.FrmMain_MnuRefresh, API.IG_Refresh),
+        },
+        new() {
+            Id = $"Btn_{nameof(IgThemeIcon.Gallery)}",
+            Image = nameof(IgThemeIcon.Gallery),
+            Text = Lang.KeysMap[LangId.FrmMain_MnuToggleGallery],
+            ConfigBinding = nameof(Config.ShowGallery),
+            ConfigBindingValue = "True",
+            OnClick = new(LangId.FrmMain_MnuToggleGallery, API.IG_ToggleGallery),
+        },
+        new() {
+            Id = $"Btn_{nameof(IgThemeIcon.Checkerboard)}",
+            Image = nameof(IgThemeIcon.Checkerboard),
+            Text = Lang.KeysMap[LangId.FrmMain_MnuToggleCheckerboard],
+            ConfigBinding = nameof(Config.CheckerboardMode),
+            ConfigBindingValue = $"!{nameof(CheckerboardType.None)}",
+            OnClick = new(LangId.FrmMain_MnuToggleCheckerboard, API.IG_ToggleCheckerboard),
+        },
+        new() {
+            Id = $"Btn_{nameof(IgThemeIcon.WindowFit)}",
+            Image = nameof(IgThemeIcon.WindowFit),
+            Text = Lang.KeysMap[LangId.FrmMain_MnuWindowFit],
+            ConfigBinding = nameof(Config.EnableWindowFit),
+            ConfigBindingValue = "True",
+            OnClick = new(LangId.FrmMain_MnuWindowFit, API.IG_ToggleWindowFit),
+        },
+        new() {
+            Id = $"Btn_{nameof(IgThemeIcon.FullScreen)}",
+            Image = nameof(IgThemeIcon.FullScreen),
+            Text = Lang.KeysMap[LangId.FrmMain_MnuFullScreen],
+            ConfigBinding = nameof(Config.EnableFullScreen),
+            ConfigBindingValue = "True",
+            OnClick = new(LangId.FrmMain_MnuFullScreen, API.IG_ToggleFullScreen),
+        },
+        new() {
+            Id = $"Btn_{nameof(IgThemeIcon.Slideshow)}",
+            Image = nameof(IgThemeIcon.Slideshow),
+            Text = Lang.KeysMap[LangId.FrmMain_MnuSlideshow],
+            ConfigBinding = nameof(Config.EnableSlideshow),
+            ConfigBindingValue = "True",
+            OnClick = new(LangId.FrmMain_MnuSlideshow, API.IG_ToggleSlideshow),
+        },
+        new() {
+            Id = $"Btn_{nameof(IgThemeIcon.Exit)}",
+            Image = nameof(IgThemeIcon.Exit),
+            Text = Lang.KeysMap[LangId.FrmMain_MnuExit],
+            OnClick = new(LangId.FrmMain_MnuExit, API.IG_Exit),
+        },
     ];
 
     #endregion // Public static properties

@@ -318,6 +318,8 @@ public class Lang
         new(LangId._Empty, "(empty)"),
         new(LangId._MoveUp, "Move up"),
         new(LangId._MoveDown, "Move down"),
+        new(LangId._MoveLeft, "Move left"),
+        new(LangId._MoveRight, "Move right"),
         new(LangId._Separator, "Separator"),
         new(LangId._Icon, "Icon"),
         new(LangId._Description, "Description"),
@@ -841,7 +843,7 @@ public class Lang
         #region FrmSettings > Tab Toolbar
         // Toolbar > Toolbar
         new(LangId.FrmSettings_Toolbar_ShowToolbarInFullscreen, "Show toolbar in Full Screen mode"),
-        new(LangId.FrmSettings_Toolbar_ToolbarIconHeight, "Toolbar icon size"),
+        new(LangId.FrmSettings_Toolbar_ToolbarIconHeight, "Toolbar icon size: {0}"),
 
         new(LangId.FrmSettings_Toolbar_AddNewButton, "Add a custom toolbar button"),
         new(LangId.FrmSettings_Toolbar_EditButton, "Edit toolbar button"),
@@ -855,6 +857,8 @@ public class Lang
         new(LangId.FrmSettings_Toolbar_Errors_ButtonIdRequired, "Button ID required."),
         new(LangId.FrmSettings_Toolbar_Errors_ButtonIdDuplicated, "A button with the ID '{0}' has already been defined. Please choose a different and unique ID for your button to avoid conflicts."),
         new(LangId.FrmSettings_Toolbar_Errors_ButtonExecutableRequired, "Button executable required."),
+
+        new(LangId.FrmSettings_Toolbar_ArrangeHint, "Drag to reorder items, or move them between lists to add and remove. Arrow keys can also be used for positioning."),
 
         #endregion // FrmSettings > Tab Toolbar
 

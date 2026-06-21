@@ -1,12 +1,5 @@
 <ResourceDictionary xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-    <!--
-        Shared accent fill — the single standard for every accent-filled control
-        (accent Button, Slider value rail + thumb, checked CheckBox/RadioButton).
-        States map directly onto the accent shade ladder produced in Core.cs
-        (SystemAccentColor*), not opacity: hover steps one shade lighter, press one
-        shade darker (WinUI-style), so the fill stays fully opaque in every state.
-    -->
     <ResourceDictionary.ThemeDictionaries>
         <ResourceDictionary x:Key="Light">
             <SolidColorBrush x:Key="PhAccentFill" Color="{DynamicResource SystemAccentColorDark1}" />
@@ -39,9 +32,17 @@
     <x:Double x:Key="ToolTipContentMaxWidth">500</x:Double>
 
     <!--  Text selection color  -->
+    <x:Double x:Key="TextContentMaxWidth">600</x:Double>
     <SolidColorBrush
         x:Key="TextControlSelectionHighlightColor"
         Opacity="0.4"
         Color="{DynamicResource SystemAccentColor}" />
+
+    <!-- Drag-drop zone outline -->
+    <SolidColorBrush
+        x:Key="ZoneGrayStroke"
+        Opacity="0.5"
+        Color="#808080" />
+    <SolidColorBrush x:Key="ZoneAccentBorder" Color="{DynamicResource SystemAccentColor}" />
 
 </ResourceDictionary>

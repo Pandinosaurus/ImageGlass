@@ -60,6 +60,8 @@ public enum LangId
     _Empty,
     _MoveUp,
     _MoveDown,
+    _MoveLeft,
+    _MoveRight,
     _Separator,
     _Icon,
     _Description,
@@ -594,6 +596,8 @@ public enum LangId
     FrmSettings_Toolbar_Errors_ButtonIdRequired,
     FrmSettings_Toolbar_Errors_ButtonIdDuplicated,
     FrmSettings_Toolbar_Errors_ButtonExecutableRequired,
+
+    FrmSettings_Toolbar_ArrangeHint,
     #endregion // FrmSettings > Tab Toolbar
 
 
