@@ -237,6 +237,19 @@ public partial class PhTextBox : TextBox
                     }
                     break;
 
+                // Valid file path only
+                case TextBoxAcceptValue.FilePathValueOnly:
+                    foreach (var c in Path.GetInvalidPathChars().AsSpan())
+                    {
+                        if (textValue.Contains(c))
+                        {
+                            isValid = false;
+                            error = new ValidationException(Core.Lang[LangId._Validation_FilePathValueOnly]);
+                            break;
+                        }
+                    }
+                    break;
+
                 // Any value
                 default:
                     break;
@@ -327,4 +340,5 @@ public enum TextBoxAcceptValue
     FloatValueOnly,
     UnsignedFloatValueOnly,
     FileNameValueOnly,
+    FilePathValueOnly,
 }

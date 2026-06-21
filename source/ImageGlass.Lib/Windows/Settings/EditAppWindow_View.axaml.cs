@@ -34,9 +34,6 @@ namespace ImageGlass.Common.Windows;
 /// </summary>
 public partial class EditAppWindowView : PhControl
 {
-    // sample path used to render the command preview
-    private const string PREVIEW_FAKE_PATH = @"C:\sample\photo.jpg";
-
     // ".*" (all extensions), or one/more dot + alphanumeric extensions separated by ";"
     // (e.g. ".jpg;.png"); surrounding/inner whitespace is tolerated and normalized away on submit
     private const string EXT_PATTERN = @"^\s*\.(\*|[A-Za-z0-9]+)(\s*;\s*\.(\*|[A-Za-z0-9]+))*\s*$";
@@ -133,19 +130,13 @@ public partial class EditAppWindowView : PhControl
 
 
     /// <summary>
-    /// Re-renders the command preview from the current executable + argument, expanding the
-    /// <c>&lt;file&gt;</c> macro against a sample path (matches the runtime via <see cref="BHelper.BuildExeArgs"/>).
+    /// Feeds the current executable + argument into the command preview, which renders the
+    /// expanded command itself.
     /// </summary>
     private void UpdateCommandPreview()
     {
-        var (exe, args) = BHelper.BuildExeArgs(
-            PART_Executable.Text ?? string.Empty,
-            PART_Argument.Text ?? string.Empty,
-            PREVIEW_FAKE_PATH);
-
-        // app-protocol executables (ending with ':') join without a space
-        var join = exe.EndsWith(':') ? string.Empty : " ";
-        PART_CommandPreview.Text = string.Join(join, new[] { exe, args }.Where(s => !string.IsNullOrEmpty(s)));
+        PART_CommandPreview.Executable = PART_Executable.Text;
+        PART_CommandPreview.Argument = PART_Argument.Text;
     }
 
 

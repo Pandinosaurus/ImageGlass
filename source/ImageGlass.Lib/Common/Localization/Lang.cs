@@ -371,6 +371,7 @@ public class Lang
         new(LangId._Validation_FloatValueOnly, "Must be a number"),
         new(LangId._Validation_UnsignedFloatValueOnly, "Must be a non-negative number"),
         new(LangId._Validation_FileNameValueOnly, "Invalid filename"),
+        new(LangId._Validation_FilePathValueOnly, "Invalid file path"),
 
         #endregion // General
     

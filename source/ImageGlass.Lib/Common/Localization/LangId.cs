@@ -112,6 +112,7 @@ public enum LangId
     _Validation_FloatValueOnly,
     _Validation_UnsignedFloatValueOnly,
     _Validation_FileNameValueOnly,
+    _Validation_FilePathValueOnly,
 
     #endregion // General
 

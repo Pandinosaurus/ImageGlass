@@ -55,20 +55,7 @@
         </StackPanel>
 
         <!--  Command preview  -->
-        <StackPanel Spacing="5">
-            <ui:PhTextBlock LangKey="_CommandPreview" />
-            <Border
-                Padding="10,7"
-                Background="{DynamicResource IG_BackgroundNeutralBrush}"
-                BorderBrush="{DynamicResource IG_BorderControlBrush}"
-                BorderThickness="1"
-                CornerRadius="{DynamicResource ControlCornerRadius}">
-                <SelectableTextBlock
-                    x:Name="PART_CommandPreview"
-                    FontFamily="{x:Static types:Const.FONT_CODE}"
-                    TextWrapping="Wrap" />
-            </Border>
-        </StackPanel>
+        <ui:PhCommandPreview x:Name="PART_CommandPreview" />
 
     </StackPanel>
 </ui:PhControl>
