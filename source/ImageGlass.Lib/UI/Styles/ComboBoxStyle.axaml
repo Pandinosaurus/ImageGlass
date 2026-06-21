@@ -72,6 +72,25 @@
             </Setter>
         </Style>
 
+        <!--  disabled: lighter neutral fill + subtle solid border (matches TextBox)  -->
+        <Style Selector="^:disabled /template/ Border#Background">
+            <Setter Property="Background" Value="{DynamicResource PhControlFillDisabled}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource PhControlBorderDisabled}" />
+        </Style>
+
+        <!--
+            disabled content: force the text to the solid base color, then dim it with the
+            shared opacity. The SVG glyph ignores composited Opacity, so it's faded to the
+            same alpha via the inheriting Svg.CurrentCss below instead.
+        -->
+        <Style Selector="^:disabled /template/ ContentControl#ContentPresenter">
+            <Setter Property="Foreground" Value="{DynamicResource SystemControlForegroundBaseHighBrush}" />
+            <Setter Property="Opacity" Value="{DynamicResource PhControlContentOpacityDisabled}" />
+        </Style>
+        <Style Selector="^:disabled">
+            <Setter Property="Svg.CurrentCss" Value="{DynamicResource PhSvgCssDisabled}" />
+        </Style>
+
     </Style>
 
 

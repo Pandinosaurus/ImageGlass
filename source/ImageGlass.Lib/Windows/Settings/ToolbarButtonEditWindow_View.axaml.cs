@@ -20,7 +20,6 @@ using Avalonia.Controls;
 using Avalonia.Controls.Templates;
 using Avalonia.Layout;
 using Avalonia.Platform.Storage;
-using Avalonia.Svg.Skia;
 using ImageGlass.Common.Actions;
 using ImageGlass.Common.AppThemes;
 using ImageGlass.Common.Localization;
@@ -47,9 +46,6 @@ public partial class ToolbarButtonEditWindowView : PhControl
     /// </summary>
     private sealed record IconOption(IgThemeIcon? Icon, string Display);
 
-
-    // parsed-SVG cache so the icon picker doesn't re-read files while scrolling/redrawing
-    private readonly Dictionary<IgThemeIcon, SvgSource?> _svgCache = [];
 
     // icon picker options (index 0 is the "Custom…" entry)
     private List<IconOption> _imageOptions = [];
@@ -251,8 +247,10 @@ public partial class ToolbarButtonEditWindowView : PhControl
 
     /// <summary>
     /// Builds the icon-picker row visual: the SVG preview (when available) plus the display name.
+    /// Uses the <c>Svg</c> control (not <c>Image</c>+<c>SvgImage</c>) so the disabled-state
+    /// <c>Svg.CurrentCss</c> opacity reaches the glyph (SvgImage ignores composited Opacity).
     /// </summary>
-    private Control BuildIconOptionVisual(IconOption opt)
+    private static Control BuildIconOptionVisual(IconOption opt)
     {
         var panel = new StackPanel
         {
@@ -261,13 +259,15 @@ public partial class ToolbarButtonEditWindowView : PhControl
             VerticalAlignment = VerticalAlignment.Center,
         };
 
-        if (opt.Icon is { } icon && GetSvg(icon) is { } src)
+        if (opt.Icon is { } icon
+            && new ToolbarItemModel { Image = icon.ToString() }.ImagePath is { Length: > 0 } path)
         {
-            panel.Children.Add(new Image
+            // baseUri is unused for the rooted ImagePath, but the Svg ctor requires one
+            panel.Children.Add(new Avalonia.Svg.Skia.Svg(new Uri("file:///"))
             {
                 Width = 18,
                 Height = 18,
-                Source = new SvgImage { Source = src },
+                Path = path,
             });
         }
 
@@ -278,26 +278,6 @@ public partial class ToolbarButtonEditWindowView : PhControl
         });
 
         return panel;
-    }
-
-
-    /// <summary>
-    /// Gets a parsed SVG for a theme icon, caching it (resolves the path via <see cref="ToolbarItemModel.ImagePath"/>).
-    /// </summary>
-    private SvgSource? GetSvg(IgThemeIcon icon)
-    {
-        if (_svgCache.TryGetValue(icon, out var cached)) return cached;
-
-        SvgSource? src = null;
-        var path = new ToolbarItemModel { Image = icon.ToString() }.ImagePath;
-        if (!string.IsNullOrEmpty(path))
-        {
-            try { src = SvgSource.Load(path); }
-            catch { }
-        }
-
-        _svgCache[icon] = src;
-        return src;
     }
 
 
