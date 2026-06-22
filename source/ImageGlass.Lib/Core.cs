@@ -452,10 +452,13 @@ public static class Core
 
         // update text color
         var textBrush = AppThemeColors.TextColorBrush.Color.ToBrush();
-        var textDisabled = AppThemeColors.TextColorBrush.Color.Blend(Core.Theme.BaseColor, 0.5f, AppThemeColors.TextColorBrush.A);
+        var textPlaceholder = AppThemeColors.TextColorBrush.Color.Blend(Core.Theme.BaseColor, 0.7f, AppThemeColors.TextColorBrush.A);
 
         Resx.Set(ResxId.SystemControlForegroundBaseHighBrush, textBrush);
         Resx.Set(ResxId.TextControlForeground, textBrush);
+        Resx.Set(ResxId.TextControlForegroundPointerOver, textBrush);
+        Resx.Set(ResxId.TextControlForegroundFocused, textBrush);
+        Resx.Set(ResxId.TextControlPlaceholderForeground, textPlaceholder.ToBrush());
         Resx.Set(ResxId.CheckBoxForegroundChecked, textBrush);
         Resx.Set(ResxId.CheckBoxForegroundCheckedPointerOver, textBrush);
         Resx.Set(ResxId.CheckBoxForegroundUnchecked, textBrush);

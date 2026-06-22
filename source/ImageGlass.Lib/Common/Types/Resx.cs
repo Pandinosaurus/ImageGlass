@@ -105,6 +105,9 @@ public enum ResxId
     IG_TextAccentColor, // accent color tuned for readable text on the theme background
     SystemControlForegroundBaseHighBrush,
     TextControlForeground,
+    TextControlForegroundPointerOver,
+    TextControlForegroundFocused,
+    TextControlPlaceholderForeground,
     CheckBoxForegroundChecked,
     CheckBoxForegroundCheckedPointerOver,
     CheckBoxForegroundUnchecked,

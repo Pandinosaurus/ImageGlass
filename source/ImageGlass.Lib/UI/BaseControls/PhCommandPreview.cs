@@ -27,10 +27,7 @@ using System.Linq;
 namespace ImageGlass.UI;
 
 /// <summary>
-/// A read-only preview of the command an action runs: it renders "Executable Argument" with the
-/// <c>&lt;file&gt;</c> macro expanded against a sample path (matching the runtime via
-/// <see cref="BHelper.BuildExeArgs"/>). Set <see cref="Executable"/> and <see cref="Argument"/>
-/// (or bind them); the preview refreshes automatically.
+/// A read-only preview of the command an action.
 /// </summary>
 public class PhCommandPreview : PhControl
 {

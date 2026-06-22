@@ -23,4 +23,17 @@
         <Setter Property="Opacity" Value="0.5" />
     </Style>
 
+    <!--  Disabled TextBlock label: solid base color dimmed by the shared opacity (matches ComboBox/TextBox). Class-scoped so button/combobox text isn't double-dimmed.  -->
+    <Style Selector="TextBlock:disabled">
+        <Setter Property="Foreground" Value="{DynamicResource SystemControlForegroundBaseHighBrush}" />
+        <Setter Property="Opacity" Value="{DynamicResource PhControlContentOpacityDisabled}" />
+    </Style>
+
+    <!--  the rule above also matches a disabled TextBox's watermark; restore its placeholder color/opacity.
+          Must stay after that rule: same (pseudoclass) priority, so later wins the tie.  -->
+    <Style Selector="TextBox:disabled /template/ TextBlock#PART_Placeholder">
+        <Setter Property="Foreground" Value="{DynamicResource TextControlPlaceholderForeground}" />
+        <Setter Property="Opacity" Value="{DynamicResource TextControlPlaceholderOpacity}" />
+    </Style>
+
 </Styles>

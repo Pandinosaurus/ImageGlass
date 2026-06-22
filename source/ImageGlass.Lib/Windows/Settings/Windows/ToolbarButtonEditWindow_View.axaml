@@ -11,7 +11,7 @@
 
     <!--  cap the height so the many fields stay on-screen on short displays; the window sizes to content otherwise  -->
     <ScrollViewer
-        MaxHeight="600"
+        MaxHeight="500"
         HorizontalScrollBarVisibility="Disabled"
         VerticalScrollBarVisibility="Auto">
 
@@ -49,6 +49,7 @@
                     </StackPanel>
                 </StackPanel>
 
+
                 <!--  Icon  -->
                 <StackPanel Spacing="5">
                     <ui:PhTextBlock LangKey="_Icon" />
@@ -72,6 +73,7 @@
                             VerticalAlignment="Top" />
                     </Grid>
                 </StackPanel>
+
 
                 <!--  Toggles (kept tight, not on the 14px field rhythm)  -->
                 <StackPanel>
