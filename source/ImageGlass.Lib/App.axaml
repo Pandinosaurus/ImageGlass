@@ -29,6 +29,7 @@
         <StyleInclude Source="avares://ImageGlass.Lib/UI/Styles/ButtonStyle.axaml" />
         <StyleInclude Source="avares://ImageGlass.Lib/UI/Styles/ComboBoxStyle.axaml" />
         <StyleInclude Source="avares://ImageGlass.Lib/UI/Styles/TextBoxStyle.axaml" />
+        <StyleInclude Source="avares://ImageGlass.Lib/UI/Styles/NumericUpDownStyle.axaml" />
         <StyleInclude Source="avares://ImageGlass.Lib/UI/Styles/CheckBoxStyle.axaml" />
         <StyleInclude Source="avares://ImageGlass.Lib/UI/Styles/RadioButtonStyle.axaml" />
         <StyleInclude Source="avares://ImageGlass.Lib/UI/Styles/MenuStyle.axaml" />
