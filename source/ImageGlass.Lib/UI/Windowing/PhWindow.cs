@@ -404,7 +404,7 @@ public partial class PhWindow : Window
             if (useDefaultIcon)
             {
                 // get default logo icon if theme's app logo does not exist
-                Icon = StockIcon.GetDefaultWindowIcon();
+                Icon = Resx.GetDefaultWindowIcon();
 
                 return;
             }

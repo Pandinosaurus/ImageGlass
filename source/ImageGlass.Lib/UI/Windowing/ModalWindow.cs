@@ -590,7 +590,7 @@ public partial class ModalWindow : DialogWindow
         if (_thumbnailIconImage.Source is not null) return;
 
         // get system icon
-        var bmp = StockIcon.Get(ThumbnailIcon);
+        var bmp = Resx.GetStockIcon(ThumbnailIcon);
 
         // set the icon
         _thumbnailIconImage.Width = Thumbnail is null ? 50 : 40;

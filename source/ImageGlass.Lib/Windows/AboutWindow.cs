@@ -364,7 +364,7 @@ public partial class AboutWindow : DialogWindow
         // 1.2 load the default logo
         if (_imgLogo.Source is null)
         {
-            using var stream = StockIcon.GetDefaultWindowIconAsStream();
+            using var stream = Resx.GetDefaultWindowIconAsStream();
             if (stream is not null)
             {
                 _imgLogo.Source = Bitmap.DecodeToHeight(stream, 256);

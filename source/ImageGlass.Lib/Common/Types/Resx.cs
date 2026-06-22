@@ -17,10 +17,15 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Markup.Xaml.MarkupExtensions;
+using Avalonia.Media;
+using Avalonia.Media.Imaging;
+using Avalonia.Platform;
 using System;
 using System.Collections.Frozen;
 using System.Collections.Generic;
+using System.IO;
 
 namespace ImageGlass.Common.Types;
 
@@ -72,6 +77,72 @@ public static class Resx
     {
         var resName = GetResxName(resxId);
         return new DynamicResourceExtension(resName);
+    }
+
+
+    /// <summary>
+    /// Resolves a shared icon geometry (from IconResources) by id.
+    /// </summary>
+    public static StreamGeometry? GetIcon(ResxIconId? id)
+    {
+        if (id is null) return null;
+
+        var resName = Enum.GetName(id.Value) ?? string.Empty;
+        return Application.Current is { } app && app.TryFindResource(resName, out var res)
+            ? res as StreamGeometry
+            : null;
+    }
+
+
+    /// <summary>
+    /// Gets stock icon.
+    /// </summary>
+    public static Bitmap? GetStockIcon(StockIconId? id)
+    {
+        if (id is null) return null;
+
+        try
+        {
+            using var stream = AssetLoader.Open(new Uri($"avares://ImageGlass.Lib/Assets/{id}.png"));
+            return Bitmap.DecodeToHeight(stream, 256);
+        }
+        catch { }
+
+        return null;
+    }
+
+
+    /// <summary>
+    /// Gets default app icon.
+    /// </summary>
+    public static WindowIcon? GetDefaultWindowIcon()
+    {
+        try
+        {
+            using var stream = GetDefaultWindowIconAsStream();
+            if (stream is null) return null;
+
+            return new WindowIcon(stream);
+        }
+        catch { }
+
+        return null;
+    }
+
+
+    /// <summary>
+    /// Gets default app icon.
+    /// </summary>
+    public static Stream? GetDefaultWindowIconAsStream()
+    {
+        try
+        {
+            var stream = AssetLoader.Open(new Uri($"avares://ImageGlass.Lib/Assets/icon256.ico"));
+            return stream;
+        }
+        catch { }
+
+        return null;
     }
 
 }
@@ -207,4 +278,44 @@ public enum ResxId
     IG_ToolButtonBackgroundHover,
     IG_ToolButtonBackgroundPressed,
     IG_ToolButtonBackgroundChecked,
+}
+
+
+/// <summary>
+/// Shared icon geometries defined in <c>IconResources.axaml</c>; the name maps to the resource key.
+/// </summary>
+public enum ResxIconId
+{
+    IconEllipsis,
+    IconClose,
+    IconSearch,
+    IconSettings,
+    IconSave,
+    IconSaveAs,
+    IconCrop,
+    IconCopy,
+    IconReset,
+    IconArrowPrevious,
+    IconArrowNext,
+    IconArrowLeft,
+    IconArrowRight,
+    IconPlay,
+    IconPause,
+    IconImageForward,
+    IconLivePhoto,
+    IconFolderOpen,
+}
+
+
+public enum StockIconId
+{
+    Delete,
+    Error,
+    Find,
+    Info,
+    Lock,
+    RecycleBin,
+    Rename,
+    Shield,
+    Warning,
 }

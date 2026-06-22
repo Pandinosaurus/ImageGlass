@@ -157,7 +157,7 @@ public class PhHotkeyPicker : PhControl
         {
             Width = 9,
             Height = 9,
-            Data = FindIcon("IconClose"),
+            Data = Resx.GetIcon(ResxIconId.IconClose),
             Stretch = Stretch.Uniform,
             StrokeThickness = 1.2,
             StrokeLineCap = PenLineCap.Round,
@@ -202,15 +202,6 @@ public class PhHotkeyPicker : PhControl
         chip[!Border.CornerRadiusProperty] = Resx.CreateBinding(ResxId.ControlCornerRadius);
         return chip;
     }
-
-
-    /// <summary>
-    /// Resolves a shared icon geometry (from IconResources) by key.
-    /// </summary>
-    private static Geometry? FindIcon(string key)
-        => Application.Current is { } app && app.TryFindResource(key, out var res)
-            ? res as Geometry
-            : null;
 
     #endregion // Chips
 
