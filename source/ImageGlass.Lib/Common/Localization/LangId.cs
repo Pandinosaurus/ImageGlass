@@ -617,6 +617,7 @@ public enum LangId
     // Gallery > Gallery
     FrmSettings_ShowGalleryInFullscreen,
     FrmSettings_ShowGalleryFileName,
+    FrmSettings_EnableGalleryShellThumbnail,
     FrmSettings_ThumbnailSize,
     FrmSettings_GalleryCacheSizeInMb,
     FrmSettings_GalleryColumns,

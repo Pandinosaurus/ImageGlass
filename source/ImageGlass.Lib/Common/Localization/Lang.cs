@@ -879,9 +879,10 @@ public class Lang
         // Gallery > Gallery
         new(LangId.FrmSettings_ShowGalleryInFullscreen, "Show gallery in Full Screen mode"),
         new(LangId.FrmSettings_ShowGalleryFileName, "Show thumbnail filename"),
-        new(LangId.FrmSettings_ThumbnailSize, "Thumbnail size (in pixels)"),
+        new(LangId.FrmSettings_EnableGalleryShellThumbnail, "Use system shell for thumbnails"),
+        new(LangId.FrmSettings_ThumbnailSize, "Thumbnail size (in pixels): {0}"),
         new(LangId.FrmSettings_GalleryCacheSizeInMb, "Maximum gallery cache size (in megabytes)"),
-        new(LangId.FrmSettings_GalleryColumns, "Number of thumbnail columns in vertical gallery layout"),
+        new(LangId.FrmSettings_GalleryColumns, "Number of thumbnail columns in vertical gallery layout: {0}"),
         #endregion // FrmSettings > Tab Gallery
 
 

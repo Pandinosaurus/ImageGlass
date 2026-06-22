@@ -18,28 +18,24 @@
 
 
     <windows:SettingsPageView.Styles>
-        <!--
-            An empty drop slot in the layout arranger: neutral fill, no border at rest (only the
-            dashed outline below appears, and only while dragging).
-        -->
+        <!--  An empty drop slot in the layout arranger  -->
         <Style Selector="Border.zone">
             <Setter Property="Padding" Value="4" />
             <Setter Property="CornerRadius" Value="{DynamicResource ControlCornerRadius}" />
             <Setter Property="Background" Value="{DynamicResource IG_BackgroundNeutralBrush}" />
         </Style>
+
         <!--  Horizontal bar slots (toolbar / gallery top & bottom): fixed height so nothing reflows  -->
         <Style Selector="Border.zone.bar">
             <Setter Property="Height" Value="44" />
         </Style>
+
         <!--  Side slots (gallery left / right): fixed width, fill the row height  -->
         <Style Selector="Border.zone.side">
             <Setter Property="Width" Value="88" />
         </Style>
 
-        <!--
-            Dashed outline overlay, shown only while dragging: gray for a valid slot, accent under the
-            cursor. A small Margin keeps the 1.5px stroke from being clipped at the slot edges.
-        -->
+        <!--  Dashed outline overlay, shown only while dragging  -->
         <Style Selector="Rectangle.zoneDash">
             <Setter Property="IsVisible" Value="False" />
             <Setter Property="IsHitTestVisible" Value="False" />
@@ -143,8 +139,8 @@
 
             <!--  Drag-and-drop arranger  -->
             <ui:PhTextBlock
-                Margin="0,14,0,8"
                 MaxWidth="{StaticResource TextContentMaxWidth}"
+                Margin="0,14,0,8"
                 HorizontalAlignment="Left"
                 LangKey="FrmSettings_Layout_ArrangeHint"
                 Opacity="0.7"
