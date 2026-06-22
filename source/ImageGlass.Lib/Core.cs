@@ -429,6 +429,14 @@ public static class Core
             Resx.Set(ResxId.IG_BackgroundSuccessBrush, AppThemeColors.BackgroundSuccessDark.ToBrush());
             Resx.Set(ResxId.IG_BackgroundWarningBrush, AppThemeColors.BackgroundWarningDark.ToBrush());
             Resx.Set(ResxId.IG_BackgroundDangerBrush, AppThemeColors.BackgroundDangerDark.ToBrush());
+
+            Resx.Set(ResxId.IG_TextSuccessBrush, AppThemeColors.TextSuccessDark.ToBrush());
+            Resx.Set(ResxId.IG_TextWarningBrush, AppThemeColors.TextWarningDark.ToBrush());
+            Resx.Set(ResxId.IG_TextDangerBrush, AppThemeColors.TextDangerDark.ToBrush());
+
+            Resx.Set(ResxId.IG_TextSuccessColor, AppThemeColors.TextSuccessDark);
+            Resx.Set(ResxId.IG_TextWarningColor, AppThemeColors.TextWarningDark);
+            Resx.Set(ResxId.IG_TextDangerColor, AppThemeColors.TextDangerDark);
         }
         else
         {
@@ -436,6 +444,14 @@ public static class Core
             Resx.Set(ResxId.IG_BackgroundSuccessBrush, AppThemeColors.BackgroundSuccessLight.ToBrush());
             Resx.Set(ResxId.IG_BackgroundWarningBrush, AppThemeColors.BackgroundWarningLight.ToBrush());
             Resx.Set(ResxId.IG_BackgroundDangerBrush, AppThemeColors.BackgroundDangerLight.ToBrush());
+
+            Resx.Set(ResxId.IG_TextSuccessBrush, AppThemeColors.TextSuccessLight.ToBrush());
+            Resx.Set(ResxId.IG_TextWarningBrush, AppThemeColors.TextWarningLight.ToBrush());
+            Resx.Set(ResxId.IG_TextDangerBrush, AppThemeColors.TextDangerLight.ToBrush());
+
+            Resx.Set(ResxId.IG_TextSuccessColor, AppThemeColors.TextSuccessLight);
+            Resx.Set(ResxId.IG_TextWarningColor, AppThemeColors.TextWarningLight);
+            Resx.Set(ResxId.IG_TextDangerColor, AppThemeColors.TextDangerLight);
         }
 
         var bgNeutralAlpha = 100;

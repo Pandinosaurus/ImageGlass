@@ -21,16 +21,12 @@
                         <GradientStop Offset="1.0" Color="{DynamicResource SystemAccentColor}" />
                     </LinearGradientBrush>
 
-                    <!--  WinUI Fluent 2 critical (error) color  -->
-                    <Color x:Key="SystemFillColorCritical">#C42B1C</Color>
-                    <SolidColorBrush x:Key="SystemFillColorCriticalBrush" Color="{StaticResource SystemFillColorCritical}" />
-
                     <!--  error border: critical color at the bottom edge  -->
                     <LinearGradientBrush x:Key="PhTextBoxBorderBrushError" StartPoint="0%,0%" EndPoint="0%,100%">
                         <GradientStop Offset="0.0" Color="{DynamicResource PhTextBoxBorderEdgeColor}" />
                         <GradientStop Offset="0.85" Color="{DynamicResource PhTextBoxBorderEdgeColor}" />
-                        <GradientStop Offset="0.95" Color="{DynamicResource SystemFillColorCritical}" />
-                        <GradientStop Offset="1.0" Color="{DynamicResource SystemFillColorCritical}" />
+                        <GradientStop Offset="0.95" Color="{DynamicResource IG_TextDangerColor}" />
+                        <GradientStop Offset="1.0" Color="{DynamicResource IG_TextDangerColor}" />
                     </LinearGradientBrush>
                 </ResourceDictionary>
 
@@ -49,16 +45,12 @@
                         <GradientStop Offset="1.0" Color="{DynamicResource SystemAccentColorLight3}" />
                     </LinearGradientBrush>
 
-                    <!--  WinUI Fluent 2 critical (error) color  -->
-                    <Color x:Key="SystemFillColorCritical">#FF99A4</Color>
-                    <SolidColorBrush x:Key="SystemFillColorCriticalBrush" Color="{StaticResource SystemFillColorCritical}" />
-
                     <!--  error border: critical color at the bottom edge  -->
                     <LinearGradientBrush x:Key="PhTextBoxBorderBrushError" StartPoint="0%,0%" EndPoint="0%,100%">
                         <GradientStop Offset="0.0" Color="{DynamicResource PhTextBoxBorderEdgeColor}" />
                         <GradientStop Offset="0.85" Color="{DynamicResource PhTextBoxBorderEdgeColor}" />
-                        <GradientStop Offset="0.95" Color="{DynamicResource SystemFillColorCritical}" />
-                        <GradientStop Offset="1.0" Color="{DynamicResource SystemFillColorCritical}" />
+                        <GradientStop Offset="0.95" Color="{DynamicResource IG_TextDangerColor}" />
+                        <GradientStop Offset="1.0" Color="{DynamicResource IG_TextDangerColor}" />
                     </LinearGradientBrush>
                 </ResourceDictionary>
             </ResourceDictionary.ThemeDictionaries>
@@ -76,7 +68,7 @@
         <Style Selector="^ /template/ DataValidationErrors">
             <Setter Property="ErrorTemplate">
                 <DataTemplate>
-                    <ItemsControl Foreground="{DynamicResource SystemFillColorCriticalBrush}" ItemsSource="{Binding}">
+                    <ItemsControl Foreground="{DynamicResource IG_TextDangerBrush}" ItemsSource="{Binding}">
                         <ItemsControl.Styles>
                             <Style Selector="TextBlock">
                                 <Setter Property="TextWrapping" Value="Wrap" />

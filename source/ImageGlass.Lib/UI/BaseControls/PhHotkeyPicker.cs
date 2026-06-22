@@ -196,7 +196,7 @@ public class PhHotkeyPicker : PhControl
             BorderThickness = new Thickness(1),
             Child = panel,
         };
-        // match the Default PhButton fill (PhButtonBackground has no ResxId, so resolve it directly)
+        // match the Default PhButton fill
         chip[!Border.BackgroundProperty] = new DynamicResourceExtension("PhButtonBackground");
         chip[!Border.BorderBrushProperty] = Resx.CreateBinding(ResxId.IG_BorderControlBrush);
         chip[!Border.CornerRadiusProperty] = Resx.CreateBinding(ResxId.ControlCornerRadius);

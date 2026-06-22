@@ -193,6 +193,15 @@ public enum ResxId
     IG_BorderControlBrush,
     IG_MessageBackgroundBrush,
 
+    IG_TextSuccessBrush,
+    IG_TextWarningBrush,
+    IG_TextDangerBrush,
+
+    IG_TextSuccessColor,
+    IG_TextWarningColor,
+    IG_TextDangerColor,
+
+
     // tool button styles
     IG_ToolButtonBackground,
     IG_ToolButtonBackgroundHover,

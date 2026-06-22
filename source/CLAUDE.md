@@ -97,6 +97,19 @@ ImageGlass.Lib/
 ├── Common/
 │   ├── Actions/                   # Action definitions
 │   ├── Commands/                  # Command definitions
+│   ├── AppThemes/                 # Theme system: IgTheme, IgThemeColors, AppThemeColors, IgThemeMetadata
+│   ├── BHelper/                   # Static helper methods (see "Reusing Shared Code"): Color, Format, General, JsonEx, Path, ProcessHelper, Task
+│   ├── Extensions/                # Extension methods (see "Reusing Shared Code"): Color_Exts, DrawingContext_Exts, ISolidColorBrush_Exts, Point_Exts, Rect_Exts, Size_Exts, SKObject_Exts
+│   ├── Localization/              # Lang.cs, LangId enum
+│   ├── Photoing/                  # Photo management, codecs, animators
+│   │   ├── Animators/             # SkiaAnimator, AnimatorImpl
+│   │   ├── Codecs/                # Codec pipeline
+│   │   │   ├── MagickCodecs/      # Magick.NET fallback codec
+│   │   │   ├── Registry/          # CodecRegistry
+│   │   │   ├── SkiaCodecs/        # SkiaSharp fast-path codec
+│   │   │   └── SvgCodecs/         # SVG (vector) codec
+│   │   ├── Manager/               # PhotoManager & PhotoManager_*.cs (search, watcher, caching)
+│   │   └── Photos/                # Photo, PhotoMetadata, PhotoColorProfile, etc.
 │   ├── ServiceProviders/          # Interface contracts + shared providers
 │   │   ├── AppAPIs/               # App API provider interfaces
 │   │   ├── FileSearchService/     # File search service abstractions
@@ -105,36 +118,33 @@ ImageGlass.Lib/
 │   │   ├── PhotoPreviewProvider.cs
 │   │   ├── SlideshowProvider.cs
 │   │   └── UpdateProvider.cs
-│   ├── Photoing/                  # Photo management, codecs, animators
-│   │   ├── Manager/               # PhotoManager & related (search, watcher, caching)
-│   │   ├── Codecs/                # SkiaCodec, MagickCodec
-│   │   ├── Animators/             # SkiaAnimator, AnimatorImpl
-│   │   └── Photos/                # Photo, PhotoMetadata, PhotoColorProfile, etc.
-│   ├── AppThemes/                 # Theme system (IgTheme, IgThemeColors, IgThemeMetadata)
-│   ├── Types/                     # Base classes (PhReactive, PhDisposable, InterlockedBool, etc.)
-│   ├── Extensions/                # SK* and Avalonia extensions (SKObject_Exts, DrawingContext_Exts, etc.)
-│   ├── BHelper/                   # Utilities (Path, ProcessHelper, JsonEx, Format, Color, etc.)
-│   ├── Localization/              # Lang.cs, LangId enum
-│   └── OsApi/                     # OS-level info (SystemInfo, etc.)
+│   └── Types/                     # Base classes + shared types: PhReactive, PhDisposable, InterlockedBool, Resx, Const, Hotkey, SKImageRef, Enums, Dir
+│       └── JsonTypeConverters/    # AOT-safe JSON converters (see "Reusing Shared Code")
+├── Plugins/                       # Native plugin host: PluginRegistry, codec proxies
+├── Settings/                      # Config.cs, Config_Static.cs, ConfigMetadata.cs
+├── Tools/                         # Built-in & external tool framework
+│   ├── Builtins/                  # ColorPicker, CropImage, FrameNav, ImageResizer, LosslessCompression
+│   └── External/                  # External tool process management
 ├── UI/
+│   ├── BaseControls/              # Ph* controls (see "Designing UI"): PhControl, PhButton, PhTextBox, PhTextBlock, PhToolButton, PhMenuItem, PhHotkeyPicker, PhGridSplitter, PhVirtualizingUniformPanel, PhCommandPreview
+│   ├── Gallery/                   # Gallery browsing UI (GalleryControl)
+│   ├── Styles/                    # App-wide XAML styles + resource dictionaries (see "Designing UI"); merged in App.axaml
+│   ├── Toolbar/                   # Toolbar UI and model (ToolbarControl)
 │   ├── Viewer/                    # ViewerControl (partial classes by feature)
+│   │   ├── Checkerboard/          # Transparency checkerboard background
 │   │   ├── NavButtons/            # NavButtonsOverlay, NavButtonsInfo, NavButtonClickedEventArgs
 │   │   ├── Renderer/              # MipmapTileCache, PhotoRenderer
-│   │   ├── ZoomAndPan/            # Gesture recognizers, zoom/pan math
 │   │   ├── Selection/             # Selection tools
-│   │   └── (other ViewerControl_*.cs files)
-│   ├── BaseControls/              # PhControl, PhWindow, PhTextBox, PhToolButton, etc.
-│   ├── Converters/                # Avalonia value converters
-│   ├── Toolbar/                   # Toolbar UI and model
-│   ├── Gallery/                   # Gallery browsing UI
-│   ├── Tools/                     # Tool UI (ColorPicker, etc.)
-│   └── Windowing/                 # MainWindow, DialogWindow, ModalWindow
-├── Settings/                      # Config.cs, ConfigMetadata, Config_Static.cs
-├── ViewModels/                    # MainWindowViewModel, MainWindowModel, ToolbarControlModel
-└── Windows/                       # MainWindow.axaml.cs, AboutWindow.cs, etc.
+│   │   └── ZoomAndPan/            # Gesture recognizers, zoom/pan math
+│   └── Windowing/                 # PhWindow, ModalWindow, DialogWindow, PhColorPickerDialog
+├── ViewModels/                    # MainWindowViewModel, MainWindowModel, SettingsViewModel
+└── Windows/                       # Top-level windows: MainWindow, AboutWindow, SettingsWindow, UpdateWindow, ExportFramesWindow
+    ├── Main/                      # MainWindow_View partial
+    └── Settings/                  # Settings UI: Controls/, Pages/, Windows/
 
 ImageGlass.Win32/
 ├── Program.cs                     # Entry point, service registration, AOT bootstrap
+├── Properties/                    # PublishProfiles
 ├── Windows/                       # MainWindow32.cs (Win32-specific window)
 └── Common/
     ├── ServiceProviders/          # Win32 implementations (Win32FileSearchProvider, etc.)
@@ -148,6 +158,7 @@ ImageGlass.Linux/
 ImageGlass.Mac/
 ├── Program.cs                     # Entry point, service registration
 └── Common/
+    ├── Sandbox/                   # macOS sandbox helpers
     └── ServiceProviders/          # macOS implementations (MacPrintProvider, etc.)
 ```
 
@@ -157,6 +168,56 @@ ImageGlass.Mac/
 - **Async methods**: Always suffix with `Async`
 - **Codecs/Providers**: Prefix with platform/source (e.g., `SkiaCodec`, `Win32FileSearchProvider`, `MagickCodec`)
 - **Partial class files**: Name by concern (e.g., `ViewerControl_Render.cs`, `PhotoManager_Caching.cs`, `AppAPIProvider_Hotkeys.cs`)
+
+---
+
+## Reusing Shared Code (Always Check Before Writing New)
+
+Before adding a helper, converter, or extension, check these folders; the utility you need likely already exists.
+
+### Type Extensions: `Common/Extensions/`
+Extension methods on framework types. Prefer these over re-implementing:
+- `Color_Exts`: `ToBrush()`, `WithAlpha()`, `NoAlpha()`, `Blend()`, `WithBrightness()`, `IsLight()`, `BlackOrWhite()` / `InvertBlackOrWhite()`, `ToHex()`, `ToRgbaString()`, `ToCmyk()` / `ToCmykString()`, `ToHslString()`, `ToHsvString()`, `ToCIELAB()` / `ToCIELABString()`
+- `ISolidColorBrush_Exts`, `DrawingContext_Exts`, `Point_Exts`, `Rect_Exts`, `Size_Exts`: Avalonia geometry & drawing helpers
+- `SKObject_Exts`: `IsDisposed()` and other SkiaSharp guards
+
+### Helper Methods: `Common/BHelper/` (static `BHelper` partial class)
+- `Color.cs`: `ColorFromHex()`
+- `Format.cs`: `FormatSize()`, `FormatDateTime()`, `SimplifyFractions()`, star-rating formatting
+- `General.cs`: `OS`, `GenerateWrappedIndexes()` (spiral cache order), `ComputeIndexInRange()`, `ResizeRatio()`, `GetInAppError()`
+- `Path.cs`: `ConfigDir()` / `BaseDir()`, `ResolvePath()`, `CheckPath()`, `OpenUrlAsync()`, `OpenFilePath()` / `OpenFolderPath()`, `DeleteFile()`
+- `ProcessHelper.cs`: `RunExeAsync()` / `RunExeCmd()`, `RunSync()`, `ExitApp()`
+- `JsonEx.cs`: `CreateJsonOptions()`, `ReadJsonFromFile()` / `WriteJsonToFileAsync()` (AOT-safe via `JsonTypeInfo<T>`)
+- `Task.cs`: `Debounce()`, `GcCollect()`
+
+### JSON Converters: `Common/Types/JsonTypeConverters/`
+AOT-safe converters for `Config` serialization. Reuse an existing one, or add a new converter here; never use reflection-based serialization.
+- `JsonStringEnumSafeConverter<T>` (always use for enums; never the built-in `JsonStringEnumConverter`)
+- `JsonStringToHotkeyConverter`, `JsonArrayToZoomFactorConverter`, `JsonArrayToRectConverter` / `JsonArrayToPixelRectConverter`, `JsonArrayToDoubleConverter` / `JsonArrayToIntConverter`, `JsonDateTimeConverter`, `JsonHashSetToStringConverter`, `JsonObservableCollectionToStringConverter`
+
+---
+
+## Designing UI
+
+When building or restyling UI, reuse the app's existing controls, design tokens, styles, icons, and fonts instead of raw Avalonia controls or hardcoded values.
+
+### 1. Controls: prefer `UI/` over raw Avalonia
+- **Base controls** (`UI/BaseControls/`, all inherit `PhControl`): `PhButton`, `PhTextBox`, `PhTextBlock`, `PhToolButton`, `PhMenuItem`, `PhHotkeyPicker`, `PhGridSplitter`, `PhVirtualizingUniformPanel`, `PhCommandPreview`.
+- **Windows & dialogs** (`UI/Windowing/`): inherit `PhWindow`; for modal/dialog flows use `ModalWindow` / `DialogWindow`; use `PhColorPickerDialog` for color picking.
+- **Feature controls**: `ViewerControl` (`UI/Viewer/`), `GalleryControl` (`UI/Gallery/`), `ToolbarControl` (`UI/Toolbar/`).
+
+### 2. Colors, brushes & styles: never hardcode
+- **Themed resources via `Resx` / `ResxId`** (`Common/Types/Resx.cs`): resolve in XAML with `{DynamicResource <ResxId-name>}`, or in code with `Resx.Get<T>(ResxId.X)` / `Resx.CreateBinding(ResxId.X)`. The resource name equals the `ResxId` enum name. These keys are populated at runtime by the `Update*` methods in `Core.cs` (`UpdateBaseResources`, `UpdateAppThemedColorResources`, `UpdateViewerBackgroundBrushResource`, `UpdateAccentColorResources`; see `Core.cs:387-635`). To add a new themed value: add a `ResxId` entry and set it inside the matching `Update*` method.
+- **Brush vs Color**: `ResxId` keys ending in `Brush` resolve to an `IBrush`; keys ending in `Color` resolve to a `Color`. Use the `*Color` variant where a `Color` is required (e.g. `GradientStop.Color`).
+- **Theme & situational colors** (`Common/AppThemes/AppThemeColors.cs`): the static source of truth for text success/warning/danger, situational backgrounds, and window backgrounds. The `Update*` methods derive `Resx` resources from these, so reuse them rather than duplicating hex literals. `IgThemeColors.cs` is the per-theme-pack color model.
+- **Shared styles & tokens** (`UI/Styles/`, merged in `App.axaml`): control styles (`ButtonStyle`, `TextBoxStyle`, `ComboBoxStyle`, `CheckBoxStyle`, `RadioButtonStyle`, `MenuStyle`, `SliderStyle`, `ListBoxItemStyle`, `ControlStyle`) and resource dictionaries (`CommonResources`, `MenuResources`, `ComboBoxResources`, `ScrollBarResources`, `IconResources`). Reuse tokens from `CommonResources.axaml`: `ControlCornerRadius` (7), `OverlayCornerRadius` (10), `PhAccentFill` / `PhAccentFillPointerOver` / `PhAccentFillPressed`, and the shared disabled palette (`PhControlFillDisabled`, `PhControlGlyphDisabled`, `PhControlBorderDisabled`, `PhControlContentOpacityDisabled`, `PhSvgCssDisabled`).
+
+### 3. Icons: `UI/Styles/IconResources.axaml`
+Reuse the `StreamGeometry` icon resources via `{StaticResource IconName}`: `IconSearch`, `IconSettings`, `IconSave`, `IconSaveAs`, `IconCrop`, `IconCopy`, `IconReset`, `IconClose`, `IconEllipsis`, `IconArrowPrevious` / `IconArrowNext` / `IconArrowLeft` / `IconArrowRight`, `IconPlay`, `IconPause`, `IconImageForward`, `IconLivePhoto`. Add new icons here as `StreamGeometry`.
+
+### 4. Fonts: `Common/Types/Const.cs:81-104`
+- **Font family**: `Const.FONT_CODE` (OS-specific monospace stack for code / credits / metadata text).
+- **Font sizes**: `Const.FONT_SIZE_BODY`, `FONT_SIZE_TITLE`, `FONT_SIZE_SUBTITLE`, `FONT_SIZE_SMALL`. Reference in XAML via `{x:Static types:Const.FONT_SIZE_SMALL}` (with `xmlns:types="using:ImageGlass.Common.Types"`); do not hardcode sizes.
 
 ---
 
@@ -320,7 +381,7 @@ Occurs in `Program.cs` before Avalonia app setup (Linux/Mac have equivalent regi
 - **Cancellation**: Always check `token.IsCancellationRequested` in loops; throw on cancellation
 
 ### Avalonia-Specific
-- **Reuse UI components**: when building UI, always check and reuse the existing controls in `ImageGlass.Lib/UI/` (e.g. `PhButton`, `PhTextBox`, `PhTextBlock` in `UI/BaseControls/`) instead of raw Avalonia controls; use the app's style resources via `Resx`/`ResxId` (`Common/Types/Resx.cs`) rather than hardcoding colors/brushes.
+- **Reuse UI components**: when building UI, always check and reuse the existing controls in `ImageGlass.Lib/UI/` (e.g. `PhButton`, `PhTextBox`, `PhTextBlock` in `UI/BaseControls/`) instead of raw Avalonia controls; use the app's style resources via `Resx`/`ResxId` (`Common/Types/Resx.cs`) rather than hardcoding colors/brushes. See the **Designing UI** section for the full controls/resources/icons/fonts inventory.
 - **Platform-conditional visibility**: hide/show controls per platform with the XAML `OnPlatform` markup extension directly on `IsVisible`, not with `OperatingSystem.IsWindows()` in code-behind. Example: `IsVisible="{OnPlatform False, Windows=True, x:TypeArguments=x:Boolean}"` (see `UI/Toolbar/ToolbarControl.axaml`).
 - **Compiled bindings**: `AvaloniaUseCompiledBindingsByDefault = true` (type-safe, zero-runtime cost)
 - **Attached behaviors**: Prefer to UI trigger patterns for event handling
@@ -358,8 +419,13 @@ Occurs in `Program.cs` before Avalonia app setup (Linux/Mac have equivalent regi
 | `ImageGlass.Win32/Common/ServiceProviders/` | Win32 implementations of service providers |
 | `ImageGlass.Linux/Common/ServiceProviders/` | Linux implementations of service providers |
 | `ImageGlass.Mac/Common/ServiceProviders/` | macOS implementations of service providers |
-| `Common/AppThemes/` | Theme loading, color management |
+| `Common/AppThemes/` | Theme loading, color management (`AppThemeColors`, `IgThemeColors`) |
 | `Common/Localization/Lang.cs` | Translation key registry |
+| `Common/Types/Resx.cs` | Themed resource registry (`ResxId`); resolve via `{DynamicResource}` / `Resx.Get` |
+| `Common/Types/Const.cs` | App constants: icon sizes, `FONT_CODE`, `FONT_SIZE_*` |
+| `Common/Extensions/`, `Common/BHelper/`, `Common/Types/JsonTypeConverters/` | Shared extensions, helpers, AOT-safe JSON converters (check before writing new) |
+| `UI/BaseControls/` | Reusable `Ph*` controls (`PhButton`, `PhTextBox`, etc.) |
+| `UI/Styles/` | App-wide XAML styles + resource dictionaries (incl. `IconResources.axaml`) |
 | `Directory.Packages.props` | Central package version management (Avalonia 12.0.0-rc1, SkiaSharp 3.119.x, Magick.NET 14.x, etc.) |
 
 ---

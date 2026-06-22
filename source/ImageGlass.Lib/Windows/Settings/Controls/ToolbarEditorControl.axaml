@@ -54,6 +54,12 @@
             <Setter Property="Opacity" Value="0.95" />
             <Setter Property="Stroke" Value="{DynamicResource ZoneAccentBorder}" />
         </Style>
+        <!--  Danger: the Available zone under the cursor when a custom button is dragged in (drop = delete). Declared after .hover so it wins.  -->
+        <Style Selector="Rectangle.zoneDash.danger">
+            <Setter Property="IsVisible" Value="True" />
+            <Setter Property="Opacity" Value="0.95" />
+            <Setter Property="Stroke" Value="{DynamicResource IG_TextDangerBrush}" />
+        </Style>
 
         <!--  The insertion marker shown between chips while dragging (stays inside the editor)  -->
         <Style Selector="Border.dropMarker">
@@ -64,8 +70,9 @@
         </Style>
 
         <!--
-            Note: the floating ghost + "Delete/Add/Move" tag are styled inline in code because they
-            are hosted on the window OverlayLayer (outside this control's style scope).
+            Note: the floating ghost + the "Delete" chip (shown when a custom button is dragged over
+            the Available zone) are styled inline in code because they are hosted on the window
+            OverlayLayer (outside this control's style scope).
         -->
     </ui:PhControl.Styles>
 

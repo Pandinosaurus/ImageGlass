@@ -28,8 +28,9 @@ using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Svg.Skia;
 using Avalonia.Threading;
-using ImageGlass.Common;
+using ImageGlass.Common.Extensions;
 using ImageGlass.Common.Localization;
+using ImageGlass.Common.Types;
 using ImageGlass.UI;
 using ImageGlass.UI.Windowing;
 using System;
@@ -41,12 +42,7 @@ using System.Threading.Tasks;
 namespace ImageGlass.Common.Windows;
 
 /// <summary>
-/// The drag-and-drop toolbar arranger used by the Toolbar settings page. It shows the toolbar's
-/// "Current buttons" (split into the centered <c>Primary</c> group and the right-aligned
-/// <c>Secondary</c> group) and an "Available buttons" list. Buttons can be reordered, moved between
-/// groups, added or removed by dragging chips or via each chip's right-click menu. All edits are
-/// staged in working copies and surfaced through <see cref="ButtonsChanged"/> /
-/// <see cref="CurrentButtons"/>; the host page commits them to <see cref="Config"/> on Apply/OK.
+/// The drag-and-drop toolbar arranger used by the Toolbar settings page.
 /// </summary>
 public partial class ToolbarEditorControl : PhControl
 {
@@ -82,8 +78,12 @@ public partial class ToolbarEditorControl : PhControl
 
     // drag visuals
     private Border? _ghost;
+    private Border? _ghostTag; // "Delete" chip shown on the ghost when a custom button is dragged over Available
     private Border? _marker; // insertion line; stays on PART_DragLayer (inside the editor)
     private Panel? _ghostHost; // hosts the ghost: the window OverlayLayer so it isn't clipped
+
+    // true while dragging a custom (non-built-in) current button: dropping it on Available deletes it for good
+    private bool _dragCanDelete;
 
     // the chip to briefly highlight after a move (set just before a re-render)
     private ToolbarItemModel? _justMoved;
@@ -306,6 +306,7 @@ public partial class ToolbarEditorControl : PhControl
         // fresh chips are in the tree (only set by keyboard/menu edits, never by mouse drag)
         var focusModel = _focusAfterRender;
         _focusAfterRender = null;
+
         if (focusModel is not null)
         {
             Dispatcher.UIThread.Post(() => FocusChipFor(focusModel), DispatcherPriority.Input);
@@ -374,9 +375,8 @@ public partial class ToolbarEditorControl : PhControl
     {
         if (model.IsSeparator)
         {
-            // inline (not a style class) so it also renders when the ghost is hosted on the overlay
-            var lineBrush = (this.TryFindResource("TextControlForeground", out var fg) ? fg as IBrush : null)
-                ?? Brushes.Gray;
+            var lineBrush = Resx.Get<IBrush>(ResxId.TextControlForeground);
+
             return new Border
             {
                 Width = ICON_SIZE,
@@ -571,6 +571,15 @@ public partial class ToolbarEditorControl : PhControl
         Canvas.SetLeft(_ghost!, gpos.X - _ghost!.Width / 2);
         Canvas.SetTop(_ghost, gpos.Y - _ghost.Height / 2);
 
+        // float the "Delete" chip just above the ghost (its visibility is driven by UpdateDropTarget).
+        // Fall back to an estimated height on the first frame before it has been laid out.
+        if (_ghostTag is not null)
+        {
+            var tagH = _ghostTag.Bounds.Height > 0 ? _ghostTag.Bounds.Height : 24;
+            Canvas.SetLeft(_ghostTag, gpos.X - _ghost.Width / 2);
+            Canvas.SetTop(_ghostTag, gpos.Y - _ghost.Height / 2 - tagH - 4);
+        }
+
         UpdateDropTarget(e);
     }
 
@@ -695,17 +704,10 @@ public partial class ToolbarEditorControl : PhControl
         _isDragging = true;
         _dragChip!.Opacity = 0.35;
         _suppressClick = true; // this gesture became a drag; skip the button's Click on release
-
-        // host the cursor-following visuals on the window overlay so they aren't clipped by the
-        // settings section / scroll viewer; fall back to the local drag layer if unavailable
         _ghostHost = OverlayLayer.GetOverlayLayer(this) ?? (Panel)PART_DragLayer;
 
-        // the ghost lives outside this control's <Styles> scope (it's on the overlay), so style it
-        // inline. Use the themed neutral background (not accent) so it reads right in light/dark.
-        var accent = (this.TryFindResource("ZoneAccentBorder", out var a) ? a as IBrush : null)
-            ?? new SolidColorBrush(Color.FromRgb(0x33, 0x77, 0xCC));
-        var ghostBg = (this.TryFindResource("IG_BackgroundNeutralBrush", out var b) ? b as IBrush : null)
-            ?? new SolidColorBrush(Color.FromRgb(0x80, 0x80, 0x80));
+        var accent = Resx.Get<Color>(ResxId.SystemAccentColor).ToBrush();
+        var ghostBg = Resx.Get<IBrush>(ResxId.IG_BackgroundNeutralBrush);
 
         // floating ghost
         _ghost = new Border
@@ -723,8 +725,35 @@ public partial class ToolbarEditorControl : PhControl
         };
         _ghostHost.Children.Add(_ghost);
 
-        // outline valid drop zones (not the group the button came from), setting the hover state
-        // for the zone already under the cursor in one shot to avoid a flash on the first move
+        // dragging chip for custom button
+        _dragCanDelete = _dragSource != EditorGroup.Available
+            && !_dragModel!.IsSeparator
+            && !IsBuiltIn(_dragModel);
+        if (_dragCanDelete)
+        {
+            var dangerBg = Resx.Get<IBrush>(ResxId.IG_TextDangerBrush);
+            var dangerFg = Core.Theme.BaseColor.ToBrush();
+
+            _ghostTag = new Border
+            {
+                IsVisible = false,
+                IsHitTestVisible = false,
+                Background = dangerBg,
+                CornerRadius = new CornerRadius(4),
+                Padding = new Thickness(8, 3),
+                BoxShadow = BoxShadows.Parse("0 2 6 0 #40000000"),
+                Child = new TextBlock
+                {
+                    Text = Core.Lang[LangId._Delete],
+                    Foreground = dangerFg,
+                    FontWeight = FontWeight.SemiBold,
+                    FontSize = 12,
+                },
+            };
+            _ghostHost.Children.Add(_ghostTag);
+        }
+
+        // outline valid drop zones (not the group the button came from)
         var hovered = HitZone(e);
         foreach (var g in ValidTargets())
         {
@@ -743,7 +772,13 @@ public partial class ToolbarEditorControl : PhControl
             host.Children.Remove(_ghost);
             _ghost = null;
         }
+        if (_ghostTag is not null)
+        {
+            host.Children.Remove(_ghostTag);
+            _ghostTag = null;
+        }
         _ghostHost = null;
+        _dragCanDelete = false;
 
         HideMarker();
         ResetZoneStates();
@@ -777,8 +812,15 @@ public partial class ToolbarEditorControl : PhControl
         {
             // don't outline the group the button came from
             var show = g != _dragSource;
-            SetZoneState(g, valid: show, hover: show && g == hovered);
+            var isHover = show && g == hovered;
+
+            // a custom button over Available means "delete": flag the zone red instead of accent
+            var isDanger = isHover && g == EditorGroup.Available && _dragCanDelete;
+            SetZoneState(g, valid: show, hover: isHover && !isDanger, danger: isDanger);
         }
+
+        // surface the "Delete" chip only while the custom button is over the Available zone
+        if (_ghostTag is not null) _ghostTag.IsVisible = hovered == EditorGroup.Available;
 
         if (hovered is EditorGroup hg && hg != EditorGroup.Available)
         {
@@ -815,12 +857,13 @@ public partial class ToolbarEditorControl : PhControl
     }
 
 
-    private void SetZoneState(EditorGroup g, bool valid, bool hover)
+    private void SetZoneState(EditorGroup g, bool valid, bool hover, bool danger = false)
     {
         SetClass(ZoneFor(g), "valid", valid);
         SetClass(ZoneFor(g), "hover", hover);
         SetClass(DashFor(g), "valid", valid);
         SetClass(DashFor(g), "hover", hover);
+        SetClass(DashFor(g), "danger", danger);
     }
 
 
