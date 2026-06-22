@@ -62,14 +62,6 @@ public partial class ToolbarButtonEditWindowView : PhControl
         PART_Image.SelectionChanged += (_, _) => UpdateCustomImageRow();
         PART_EnableConfigBinding.IsCheckedChanged += (_, _) => UpdateConfigBindingVisibility();
         PART_BrowseImage.Click += async (_, _) => await BrowseImageAsync();
-        PART_BrowseExecutable.Click += async (_, _) => await BrowseExecutableAsync();
-
-        // executable is required for a working button (matches the toolbar item contract)
-        PART_Executable.IsRequired = true;
-
-        // keep the command preview in sync with the executable + argument
-        PART_Executable.TextChanged += (_, _) => UpdateCommandPreview();
-        PART_Argument.TextChanged += (_, _) => UpdateCommandPreview();
     }
 
 
@@ -77,9 +69,7 @@ public partial class ToolbarButtonEditWindowView : PhControl
     {
         base.OnIgLanguageChanged();
 
-        PART_BrowseImage.Text = Core.Lang[LangId._Browse];
-        PART_BrowseExecutable.Text = Core.Lang[LangId._Browse];
-        PART_Hotkeys.PlaceholderText = Core.Lang[LangId.FrmSettings_Toolbar_RecordHotkeyHint];
+        ToolTip.SetTip(PART_BrowseImage, Core.Lang[LangId._Browse]);
     }
 
 
@@ -102,13 +92,10 @@ public partial class ToolbarButtonEditWindowView : PhControl
         PART_ConfigBinding.Text = model?.ConfigBinding ?? string.Empty;
         PART_ConfigBindingValue.Text = model?.ConfigBindingValue ?? string.Empty;
         PART_EnableConfigBinding.IsChecked = !string.IsNullOrWhiteSpace(model?.ConfigBinding);
-        PART_Executable.Text = model?.OnClick?.Executable ?? string.Empty;
-        PART_Argument.Text = model?.OnClick?.Argument ?? string.Empty;
-        PART_Hotkeys.Hotkeys = model?.OnClick?.Hotkeys ?? [];
+        PART_Action.LoadAction(model?.OnClick);
 
         SelectImage(model?.Image);
         UpdateConfigBindingVisibility();
-        UpdateCommandPreview();
 
         // built-in buttons are read-only
         PART_Fields.IsEnabled = !isReadOnly;
@@ -117,7 +104,6 @@ public partial class ToolbarButtonEditWindowView : PhControl
         // setting Text above eagerly raised the required-field errors; clear them so the dialog
         // opens clean (validation re-runs as the user edits and on submit)
         DataValidationErrors.ClearErrors(PART_Id);
-        DataValidationErrors.ClearErrors(PART_Executable);
         DataValidationErrors.ClearErrors(PART_CustomImagePath);
     }
 
@@ -140,7 +126,7 @@ public partial class ToolbarButtonEditWindowView : PhControl
             }
         }
 
-        var exeOk = PART_Executable.ValidateAndShowError();
+        var exeOk = PART_Action.ValidateExecutable();
 
         // the icon path is only relevant for the "Custom…" option
         var imgOk = (PART_Image.SelectedItem as IconOption)?.Icon is not null
@@ -167,9 +153,9 @@ public partial class ToolbarButtonEditWindowView : PhControl
 
         var action = new HotkeySingleAction
         {
-            Executable = PART_Executable.Text?.Trim() ?? string.Empty,
-            Argument = PART_Argument.Text?.Trim() ?? string.Empty,
-            Hotkeys = [.. PART_Hotkeys.Hotkeys],
+            Executable = PART_Action.Executable?.Trim() ?? string.Empty,
+            Argument = PART_Action.Argument?.Trim() ?? string.Empty,
+            Hotkeys = [.. PART_Action.Hotkeys],
             LangKey = text,
         };
 
@@ -302,36 +288,5 @@ public partial class ToolbarButtonEditWindowView : PhControl
     }
 
     #endregion // Icon picker
-
-
-    #region Click action
-
-    /// <summary>
-    /// Opens a file picker to choose the action executable.
-    /// </summary>
-    private async Task BrowseExecutableAsync()
-    {
-        var topLevel = TopLevel.GetTopLevel(this);
-        if (topLevel is null) return;
-
-        var files = await topLevel.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
-        {
-            AllowMultiple = false,
-        });
-
-        var path = (files.Count > 0 ? files[0] : null)?.TryGetLocalPath();
-        if (string.IsNullOrEmpty(path)) return;
-
-        PART_Executable.Text = path;
-    }
-
-
-    private void UpdateCommandPreview()
-    {
-        PART_CommandPreview.Executable = PART_Executable.Text;
-        PART_CommandPreview.Argument = PART_Argument.Text;
-    }
-
-    #endregion // Click action
 
 }

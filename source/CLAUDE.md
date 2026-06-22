@@ -367,7 +367,7 @@ Occurs in `Program.cs` before Avalonia app setup (Linux/Mac have equivalent regi
 ## Code Style & Best Practices
 
 ### General
-- **Comments**: Explain *why*, not what; only add if needed. Keep comments short and straight to the point — never write long-winded/verbose comments.
+- **Comments**: Explain *why*, not what; only add if needed. Keep comments short and straight to the point — one line (two at most); never write long-winded/verbose comments. This applies to code comments and XAML comments alike.
 - **XML documentation comments**: For C# classes, methods, and public properties in infrastructure / coordination code (plugins, tools, host bridges, process managers, IPC handlers, similar files), keep XML docs present and current.
 - **XML summary format**: Never use single-line XML summaries like `/// <summary>Text</summary>`. Always use the multi-line form:
   ```csharp

@@ -4,7 +4,6 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:types="using:ImageGlass.Common.Types"
     xmlns:ui="using:ImageGlass.UI"
     mc:Ignorable="d"
     d:DesignWidth="500">
@@ -53,25 +52,29 @@
                 <!--  Icon  -->
                 <StackPanel Spacing="5">
                     <ui:PhTextBlock LangKey="_Icon" />
-                    <ComboBox
-                        x:Name="PART_Image"
-                        Width="200"
-                        HorizontalAlignment="Left" />
-                    <Grid
-                        x:Name="PART_CustomImageRow"
-                        ColumnDefinitions="*,Auto"
-                        ColumnSpacing="8"
-                        IsVisible="False">
-                        <ui:PhTextBox
-                            x:Name="PART_CustomImagePath"
-                            Grid.Column="0"
-                            AcceptValue="FilePathValueOnly"
-                            PlaceholderText="C:\path\to\icon.svg" />
-                        <ui:PhButton
-                            x:Name="PART_BrowseImage"
-                            Grid.Column="1"
-                            VerticalAlignment="Top" />
-                    </Grid>
+                    <StackPanel Spacing="8">
+                        <ComboBox
+                            x:Name="PART_Image"
+                            Width="200"
+                            HorizontalAlignment="Left" />
+                        <Grid
+                            x:Name="PART_CustomImageRow"
+                            ColumnDefinitions="*,Auto"
+                            ColumnSpacing="8"
+                            IsVisible="False">
+                            <ui:PhTextBox
+                                x:Name="PART_CustomImagePath"
+                                Grid.Column="0"
+                                AcceptValue="FilePathValueOnly"
+                                PlaceholderText="C:\path\to\icon.svg" />
+                            <ui:PhButton
+                                x:Name="PART_BrowseImage"
+                                Grid.Column="1"
+                                Height="32"
+                                VerticalAlignment="Top"
+                                IconData="{StaticResource IconFolderOpen}" />
+                        </Grid>
+                    </StackPanel>
                 </StackPanel>
 
 
@@ -109,43 +112,12 @@
 
 
                 <!--  Click action  -->
-                <Border
+                <ui:PhActionEditorControl
+                    x:Name="PART_Action"
                     Margin="0,2,0,0"
                     Padding="0,10,0,0"
                     BorderBrush="{DynamicResource IG_BorderNeutralBrush}"
-                    BorderThickness="0,1,0,0">
-                    <StackPanel Spacing="14">
-                        <ui:PhTextBlock FontWeight="SemiBold" LangKey="FrmSettings_Toolbar_ClickAction" />
-
-                        <StackPanel Spacing="5">
-                            <ui:PhTextBlock LangKey="_Executable" />
-                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
-                                <ui:PhTextBox x:Name="PART_Executable" Grid.Column="0" />
-                                <ui:PhButton
-                                    x:Name="PART_BrowseExecutable"
-                                    Grid.Column="1"
-                                    VerticalAlignment="Top" />
-                            </Grid>
-                        </StackPanel>
-
-                        <StackPanel Spacing="5">
-                            <ui:PhTextBlock LangKey="_Argument" />
-                            <ui:PhTextBox
-                                x:Name="PART_Argument"
-                                FontFamily="{x:Static types:Const.FONT_CODE}"
-                                TextWrapping="Wrap" />
-                        </StackPanel>
-
-                        <!--  Hotkeys  -->
-                        <StackPanel Spacing="5">
-                            <ui:PhTextBlock LangKey="_Hotkeys" />
-                            <ui:PhHotkeyPicker x:Name="PART_Hotkeys" />
-                        </StackPanel>
-
-                        <!--  Command preview  -->
-                        <ui:PhCommandPreview x:Name="PART_CommandPreview" />
-                    </StackPanel>
-                </Border>
+                    BorderThickness="0,1,0,0" />
 
             </StackPanel>
         </StackPanel>
