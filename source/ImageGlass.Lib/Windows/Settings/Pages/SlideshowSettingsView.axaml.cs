@@ -16,7 +16,6 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-using Avalonia.Media;
 using ImageGlass.Common.Localization;
 using System;
 using System.Globalization;
@@ -55,9 +54,8 @@ public partial class SlideshowSettingsView : SettingsPageView
             LangId.FrmSettings_EnableFullscreenSlideshow, LangId.FrmSettings_Slideshow_Appearance, true);
         BindToggle(PART_SlideshowCountdown, ConfigId.EnableSlideshowCountdown,
             LangId.FrmSettings_EnableSlideshowCountdown, LangId.FrmSettings_Slideshow_Appearance, true);
-        BindColorPicker(PART_BgColorButton, PART_BgColorSwatch, PART_BgColorHex, PART_ResetBgColor,
-            ConfigId.SlideshowBackgroundColor, "#000000", LangId.FrmSettings_SlideshowBackgroundColor,
-            LangId.FrmSettings_Slideshow_Appearance, Colors.Black);
+        BindColorPicker(PART_BgColor, ConfigId.SlideshowBackgroundColor, "#000000",
+            LangId.FrmSettings_SlideshowBackgroundColor, LangId.FrmSettings_Slideshow_Appearance);
 
         // Playback
         BindToggle(PART_LoopSlideshow, ConfigId.EnableLoopSlideshow,

@@ -4,7 +4,6 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:types="using:ImageGlass.Common.Types"
     xmlns:ui="using:ImageGlass.UI"
     xmlns:windows="using:ImageGlass.Common.Windows"
     mc:Ignorable="d"
@@ -26,35 +25,7 @@
             <!--  Slideshow Background  -->
             <StackPanel Margin="0,10,0,0" Spacing="{DynamicResource SettingsLabelInputGap}">
                 <ui:PhTextBlock LangKey="FrmSettings_SlideshowBackgroundColor" />
-                <StackPanel
-                    VerticalAlignment="Center"
-                    Orientation="Horizontal"
-                    Spacing="10">
-                    <ui:PhButton
-                        x:Name="PART_BgColorButton"
-                        Padding="6"
-                        CornerRadius="{DynamicResource ControlCornerRadius}"
-                        Cursor="Hand">
-                        <!--  checkerboard (for alpha) underneath the selected color  -->
-                        <Border
-                            Width="80"
-                            Height="20"
-                            CornerRadius="4">
-                            <Grid>
-                                <Border Background="{DynamicResource ColorControlCheckeredBackgroundBrush}" CornerRadius="3" />
-                                <Border x:Name="PART_BgColorSwatch" CornerRadius="3" />
-                            </Grid>
-                        </Border>
-                    </ui:PhButton>
-                    <SelectableTextBlock
-                        x:Name="PART_BgColorHex"
-                        VerticalAlignment="Center"
-                        FontFamily="{x:Static types:Const.FONT_CODE}" />
-                    <ui:PhButton
-                        x:Name="PART_ResetBgColor"
-                        VerticalAlignment="Center"
-                        Variant="Link" />
-                </StackPanel>
+                <ui:PhColorPickerControl x:Name="PART_BgColor" HorizontalAlignment="Left" />
             </StackPanel>
         </StackPanel>
 
