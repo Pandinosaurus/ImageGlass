@@ -153,6 +153,13 @@ public enum LangId
     MouseWheelAction_PanHorizontally,
     MouseWheelAction_BrowseImages,
 
+    MouseClickEvent_LeftClick,
+    MouseClickEvent_LeftDoubleClick,
+    MouseClickEvent_RightClick,
+    MouseClickEvent_WheelClick,
+    MouseClickEvent_XButton1Click,
+    MouseClickEvent_XButton2Click,
+
     // values match the CheckerboardType enum members
     CheckerboardType_None,
     CheckerboardType_Client,
@@ -627,6 +634,9 @@ public enum LangId
     #region FrmSettings > Tab Mouse
     // Mouse > Mouse wheel action
     FrmSettings_MouseWheelAction,
+    // Mouse > Mouse click action
+    FrmSettings_MouseClickAction,
+    FrmSettings_MouseClickAction_Hint,
     #endregion // FrmSettings > Tab Mouse
 
 

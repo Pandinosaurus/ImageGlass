@@ -420,6 +420,14 @@ public class Lang
         new(LangId.MouseWheelAction_PanHorizontally, "Pan left / right"),
         new(LangId.MouseWheelAction_BrowseImages, "View next / previous Image"),
 
+        // MouseClickEvent
+        new(LangId.MouseClickEvent_LeftClick, "Left click"),
+        new(LangId.MouseClickEvent_LeftDoubleClick, "Left double-click"),
+        new(LangId.MouseClickEvent_RightClick, "Right click"),
+        new(LangId.MouseClickEvent_WheelClick, "Wheel click"),
+        new(LangId.MouseClickEvent_XButton1Click, "Back button (XButton1) click"),
+        new(LangId.MouseClickEvent_XButton2Click, "Forward button (XButton2) click"),
+
         // CheckerboardType
         new(LangId.CheckerboardType_None, "None"),
         new(LangId.CheckerboardType_Client, "Entire viewer"),
@@ -889,6 +897,9 @@ public class Lang
         #region FrmSettings > Tab Mouse
         // Mouse > Mouse wheel action
         new(LangId.FrmSettings_MouseWheelAction, "Mouse wheel action"),
+        // Mouse > Mouse click action
+        new(LangId.FrmSettings_MouseClickAction, "Mouse click action"),
+        new(LangId.FrmSettings_MouseClickAction_Hint, "Leave the executable empty to do nothing."),
         #endregion // FrmSettings > Tab Mouse
 
 
