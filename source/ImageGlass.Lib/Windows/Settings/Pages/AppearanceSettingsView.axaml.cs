@@ -88,6 +88,15 @@ public partial class AppearanceSettingsView : SettingsPageView
     }
 
 
+    protected override void OnIgThemeChanged(ThemePackChangedEventArgs e)
+    {
+        base.OnIgThemeChanged(e);
+
+        // resync the background color
+        ResyncColorPicker(PART_BgColor, ConfigId.BackgroundColor, Core.Theme.Colors.BgColor);
+    }
+
+
     protected override void Build()
     {
         BuildBackdropSection();
@@ -98,6 +107,7 @@ public partial class AppearanceSettingsView : SettingsPageView
 
         BuildThemeSection();
     }
+
 
 
     #region Appearance group

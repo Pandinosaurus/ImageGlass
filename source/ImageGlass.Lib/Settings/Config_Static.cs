@@ -18,6 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 using ImageGlass.Common.Actions;
 using ImageGlass.Common.AppThemes;
+using ImageGlass.Common.Extensions;
 using ImageGlass.Common.Localization;
 using ImageGlass.Common.Photoing;
 using ImageGlass.Common.ServiceProviders;
@@ -808,8 +809,12 @@ public partial class Config
         else LightTheme = th.FolderName;
 
 
-        // 5. load background color
-        if (BackgroundColor == Core.Theme.Colors.BgColor || forceUpdateBackground)
+        // 5. follow the theme's background unless the user set a custom one.
+        //    "not custom" = empty/transparent sentinel, or still matching the previous theme's bg
+        //    (compare parsed colors so hex casing/format differences don't read as custom).
+        var currentBg = BHelper.ColorFromHex(BackgroundColor);
+        var prevThemeBg = BHelper.ColorFromHex(Core.Theme.Colors.BgColor);
+        if (currentBg.IsEmpty || currentBg == prevThemeBg || forceUpdateBackground)
         {
             BackgroundColor = th.Colors.BgColor;
         }

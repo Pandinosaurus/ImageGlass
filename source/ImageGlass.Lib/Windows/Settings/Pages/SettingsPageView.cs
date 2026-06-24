@@ -51,6 +51,11 @@ public abstract class SettingsPageView : PhControl
     /// </summary>
     private readonly List<Action> _langRefreshers = [];
 
+    /// <summary>
+    /// Guards a programmatic color-picker resync from staging a phantom edit.
+    /// </summary>
+    private bool _suppressColorStaging;
+
 
     /// <summary>
     /// Wires the page to its working copy and builds the rows. Call from the derived
@@ -285,11 +290,28 @@ public abstract class SettingsPageView : PhControl
         picker.DefaultColor = BHelper.ColorFromHex(defaultHex);
         picker.SelectedColor = BHelper.ColorFromHex(VM.GetValue(id, defaultHex));
 
-        // subscribe AFTER seeding the value, so opening the page doesn't stage a phantom change
-        picker.ColorChanged += (_, _) => VM.SetValue(id, picker.SelectedColor.ToHex());
+        // subscribe AFTER seeding the value, so opening the page (or a resync) doesn't stage a phantom change
+        picker.ColorChanged += (_, _) =>
+        {
+            if (!_suppressColorStaging) VM.SetValue(id, picker.SelectedColor.ToHex());
+        };
         AddLangRefresher(() => picker.Title = Core.Lang[label]);
 
         RegisterSearchKey(picker, label, id, section);
+    }
+
+
+    /// <summary>
+    /// Re-seeds a color picker's selected color and reset target (from the current config and the
+    /// given default) without staging a phantom edit. Use when the value changed outside the page,
+    /// e.g. the background color now follows a newly applied theme.
+    /// </summary>
+    protected void ResyncColorPicker(PhColorPickerControl picker, ConfigId id, string defaultHex)
+    {
+        _suppressColorStaging = true;
+        picker.DefaultColor = BHelper.ColorFromHex(defaultHex);
+        picker.SelectedColor = BHelper.ColorFromHex(VM.GetValue(id, defaultHex));
+        _suppressColorStaging = false;
     }
 
 
