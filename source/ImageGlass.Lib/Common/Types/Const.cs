@@ -68,9 +68,14 @@ public static class Const
     public const double QUICK_SETUP_VERSION = 10f;
 
     /// <summary>
-    /// The default theme pack
+    /// The default theme pack (dark mode).
     /// </summary>
     public const string DEFAULT_THEME = "Kobe";
+
+    /// <summary>
+    /// The default theme pack for light mode.
+    /// </summary>
+    public const string DEFAULT_LIGHT_THEME = "Kobe-Light";
 
     /// <summary>
     /// Gets built-in image formats

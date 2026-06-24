@@ -138,6 +138,13 @@ public sealed class SettingsViewModel : PhReactive
             Core.API.RegisterHotkeys();
         }
 
+        // dark/light theme pack changed → re-apply the active pack live
+        if (changedIds.Any(static id => id is ConfigId.DarkTheme or ConfigId.LightTheme)
+            && Avalonia.Application.Current is App app)
+        {
+            _ = app.ApplyThemePackAsync(Core.IsSystemDarkMode, Core.AccentColor);
+        }
+
 
         if (reloadList) Core.API.IG_ReloadList();
         if (reloadPhoto) Core.API.IG_Reload();

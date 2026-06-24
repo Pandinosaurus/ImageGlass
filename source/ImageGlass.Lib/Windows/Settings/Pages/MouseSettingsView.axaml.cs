@@ -32,8 +32,7 @@ using System.Threading.Tasks;
 namespace ImageGlass.Common.Windows;
 
 /// <summary>
-/// The "Mouse" settings page: the action of each mouse-wheel event (a per-event dropdown) and of
-/// each mouse-click event (edited via <see cref="MouseClickActionEditWindow"/>).
+/// The "Mouse" settings page.
 /// </summary>
 public partial class MouseSettingsView : SettingsPageView
 {

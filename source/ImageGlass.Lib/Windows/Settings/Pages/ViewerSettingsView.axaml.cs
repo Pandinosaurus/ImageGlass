@@ -26,10 +26,7 @@ using System.Linq;
 namespace ImageGlass.Common.Windows;
 
 /// <summary>
-/// The "Viewer" settings page: viewer appearance (navigation buttons, vector renderer, checkerboard),
-/// panning (free pan, margin, speed), and zooming (interpolation, zoom speed, zoom levels). Shared
-/// binding/registration logic lives in <see cref="SettingsPageView"/>; only the zoom-levels box (a
-/// percentage list with smooth-zoom toggle) needs bespoke handling here.
+/// The "Viewer" settings page.
 /// </summary>
 public partial class ViewerSettingsView : SettingsPageView
 {

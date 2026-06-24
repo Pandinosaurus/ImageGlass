@@ -17,11 +17,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 using Avalonia.Controls;
-using Avalonia.Media;
 using ImageGlass.Common.Extensions;
 using ImageGlass.Common.Localization;
 using ImageGlass.UI;
-using ImageGlass.UI.Windowing;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -271,45 +269,20 @@ public abstract class SettingsPageView : PhControl
 
 
     /// <summary>
-    /// Binds a color-picker widget (swatch button + hex label + reset link) to a hex-string config id.
-    /// The swatch opens <see cref="PhColorPickerDialog"/>; reset restores <paramref name="defaultHex"/>.
+    /// Binds a <see cref="PhColorPickerControl"/> to a hex-string config id (staged on change).
+    /// The reset link restores <paramref name="defaultHex"/>.
     /// </summary>
-    protected void BindColorPicker(Button button, Border swatch, TextBlock hexLabel, PhButton resetButton,
-        ConfigId id, string defaultHex, LangId label, LangId? section, Color pickerResetColor)
+    protected void BindColorPicker(PhColorPickerControl picker, ConfigId id, string defaultHex,
+        LangId label, LangId? section)
     {
-        var hex = VM.GetValue(id, defaultHex);
+        picker.DefaultColor = BHelper.ColorFromHex(defaultHex);
+        picker.SelectedColor = BHelper.ColorFromHex(VM.GetValue(id, defaultHex));
 
-        void Show(string h)
-        {
-            var color = BHelper.ColorFromHex(h);
-            swatch.Background = new SolidColorBrush(color);
-            hexLabel.Text = color.ToHex();
-        }
-        void Stage(string h)
-        {
-            hex = h;
-            VM.SetValue(id, h);
-            Show(h);
-        }
+        // subscribe AFTER seeding the value, so opening the page doesn't stage a phantom change
+        picker.ColorChanged += (_, _) => VM.SetValue(id, picker.SelectedColor.ToHex());
+        AddLangRefresher(() => picker.Title = Core.Lang[label]);
 
-        Show(hex);
-
-        button.Click += async (_, _) =>
-        {
-            var dialog = new PhColorPickerDialog(BHelper.ColorFromHex(hex), pickerResetColor)
-            {
-                Title = Core.Lang[label],
-            };
-            if (await dialog.ShowAsync(TopLevel.GetTopLevel(this) as PhWindow) == DialogExitCode.OK)
-            {
-                Stage(dialog.SelectedColor.ToHex());
-            }
-        };
-
-        SetLocalizedText(resetButton, LangId._Reset);
-        resetButton.Click += (_, _) => Stage(defaultHex);
-
-        Register(button, label, id, section);
+        Register(picker, label, id, section);
     }
 
 

@@ -35,9 +35,7 @@ namespace ImageGlass.Common.Windows;
 
 /// <summary>
 /// The "Layout" settings page: window options (app icon, center-on-window-fit, image-info tags) and the placement of
-/// the toolbar and gallery around the viewer. Positions can be set via dropdowns or by dragging the
-/// control chips onto a slot in the visual arranger. Shared binding/registration logic lives in
-/// <see cref="SettingsPageView"/>.
+/// the toolbar and gallery ar.
 /// </summary>
 public partial class LayoutSettingsView : SettingsPageView
 {

@@ -32,9 +32,7 @@ using System.Threading.Tasks;
 namespace ImageGlass.Common.Windows;
 
 /// <summary>
-/// The "Edit" settings page: saving options, clipboard options, and the editing-apps table.
-/// Shared binding/registration logic lives in <see cref="SettingsPageView"/>; only the editing-apps
-/// table (add/edit/delete via <see cref="EditAppWindow"/>) needs bespoke handling here.
+/// The "Edit" settings page.
 /// </summary>
 public partial class EditSettingsView : SettingsPageView
 {

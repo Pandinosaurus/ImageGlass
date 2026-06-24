@@ -963,7 +963,6 @@ public class Lang
         new(LangId.FrmSettings_Theme_OpenThemeFolder, "Open theme folder"),
         new(LangId.FrmSettings_Theme_GetMoreThemes, "Get more theme packs…"),
         new(LangId.FrmSettings_Theme_InstallTheme, "Install theme packs"),
-        new(LangId.FrmSettings_Theme_UninstallTheme, "Uninstall a theme pack"),
 
         new(LangId.FrmSettings_UseThemeForDarkMode, "Use this theme for dark mode"),
         new(LangId.FrmSettings_UseThemeForLightMode, "Use this theme for light mode"),

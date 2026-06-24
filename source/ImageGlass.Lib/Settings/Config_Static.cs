@@ -30,6 +30,8 @@ using System.Buffers;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.IO.Compression;
+using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
@@ -636,6 +638,98 @@ public partial class Config
         }
 
         return config;
+    }
+
+
+    /// <summary>
+    /// Gets the user theme-packs folder (in the Config dir), where installed theme packs live.
+    /// </summary>
+    [JsonIgnore]
+    public static string ThemePacksDir => BHelper.ConfigDir(Dir.Themes);
+
+
+    /// <summary>
+    /// Loads every installed theme pack: built-in packs from the app base dir and user packs from
+    /// the Config dir. Packs are de-duplicated by folder name (a user pack shadows a built-in one of
+    /// the same name); invalid packs are skipped. The result is sorted by display name.
+    /// </summary>
+    public static async Task<List<IgTheme>> LoadAllThemePacksAsync()
+    {
+        var found = new Dictionary<string, IgTheme>(StringComparer.OrdinalIgnoreCase);
+
+        // base dir (built-in) first, then Config dir (user) so user packs win on a name clash
+        foreach (var rootDir in new[] { BHelper.BaseDir(Dir.Themes), BHelper.ConfigDir(Dir.Themes) })
+        {
+            if (!Directory.Exists(rootDir)) continue;
+
+            foreach (var themeDir in Directory.EnumerateDirectories(rootDir))
+            {
+                var th = await new IgTheme().LoadAsync(themeDir).ConfigureAwait(false);
+                if (th.IsValid) found[th.FolderName] = th;
+            }
+        }
+
+        return found.Values
+            .OrderBy(t => t.Info.Name, StringComparer.CurrentCultureIgnoreCase)
+            .ToList();
+    }
+
+
+    /// <summary>
+    /// Whether a theme pack is a built-in (shipped under the app base dir) and therefore not removable.
+    /// </summary>
+    public static bool IsBuiltInThemePack(IgTheme theme)
+    {
+        var baseThemesDir = BHelper.BaseDir(Dir.Themes);
+        return theme.FolderPath.StartsWith(baseThemesDir, StringComparison.OrdinalIgnoreCase);
+    }
+
+
+    /// <summary>
+    /// Installs theme packs from the given <c>.igtheme</c> (zip) files into the user theme folder.
+    /// Returns the number of packs extracted successfully.
+    /// </summary>
+    public static async Task<int> InstallThemePacksAsync(IEnumerable<string> igThemeFilePaths)
+    {
+        var destDir = ThemePacksDir;
+        Directory.CreateDirectory(destDir);
+
+        return await Task.Run(() =>
+        {
+            var count = 0;
+            foreach (var file in igThemeFilePaths)
+            {
+                if (!File.Exists(file)) continue;
+                try
+                {
+                    ZipFile.ExtractToDirectory(file, destDir, overwriteFiles: true);
+                    count++;
+                }
+                catch { }
+            }
+
+            return count;
+        }).ConfigureAwait(false);
+    }
+
+
+    /// <summary>
+    /// Removes a user-installed theme pack folder. Built-in packs cannot be removed.
+    /// Returns <c>true</c> when the pack folder was deleted.
+    /// </summary>
+    public static bool UninstallThemePack(IgTheme theme)
+    {
+        if (IsBuiltInThemePack(theme)) return false;
+        if (string.IsNullOrEmpty(theme.FolderPath) || !Directory.Exists(theme.FolderPath)) return false;
+
+        try
+        {
+            Directory.Delete(theme.FolderPath, true);
+            return true;
+        }
+        catch { }
+
+        return false;
     }
 
 

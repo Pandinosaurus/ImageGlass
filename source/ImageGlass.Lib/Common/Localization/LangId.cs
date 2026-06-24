@@ -700,7 +700,6 @@ public enum LangId
     FrmSettings_Theme_OpenThemeFolder,
     FrmSettings_Theme_GetMoreThemes,
     FrmSettings_Theme_InstallTheme,
-    FrmSettings_Theme_UninstallTheme,
 
     FrmSettings_UseThemeForDarkMode,
     FrmSettings_UseThemeForLightMode,

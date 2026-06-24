@@ -417,6 +417,9 @@ public partial class App : Application
             var info = PlatformSettings!.GetColorValues();
             var isSystemDarkMode = info.ThemeVariant == PlatformThemeVariant.Dark;
 
+            // sync the global: ColorValuesChanged only fires on later OS theme changes
+            Core.IsSystemDarkMode = isSystemDarkMode;
+
             try
             {
                 await ApplyThemePackAsync(isSystemDarkMode, info.AccentColor1);
@@ -440,7 +443,7 @@ public partial class App : Application
     /// <summary>
     /// Applies the current theme pack and accent color to the app, updating UI resources as needed.
     /// </summary>
-    private async Task ApplyThemePackAsync(bool isSystemDarkMode, Color systemAccentColor)
+    public async Task ApplyThemePackAsync(bool isSystemDarkMode, Color systemAccentColor)
     {
         // load theme pack
         var hasThemeChanged = await Core.Config.LoadCurrentThemeAsync(isSystemDarkMode,

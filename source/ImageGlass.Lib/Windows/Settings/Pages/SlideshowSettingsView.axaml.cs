@@ -23,9 +23,7 @@ using System.Globalization;
 namespace ImageGlass.Common.Windows;
 
 /// <summary>
-/// The "Slideshow" settings page: appearance (fullscreen, countdown, background color) and
-/// playback (loop, interval, notification sound). Shared binding/registration logic lives in
-/// <see cref="SettingsPageView"/>; only the live interval heading needs bespoke handling here.
+/// The "Slideshow" settings page.
 /// </summary>
 public partial class SlideshowSettingsView : SettingsPageView
 {

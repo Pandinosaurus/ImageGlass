@@ -22,16 +22,12 @@ using ImageGlass.Common.Localization;
 using ImageGlass.Common.Photoing;
 using ImageGlass.Common.Types;
 using System;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace ImageGlass.Common.Windows;
 
 /// <summary>
-/// The "Image" settings page: image browsing/order, preview &amp; embedded thumbnails,
-/// Image Booster cache, and color management. Shared binding/registration logic lives in
-/// <see cref="SettingsPageView"/>; only the color-profile widget (custom file path + Browse)
-/// needs bespoke handling here.
+/// The "Image" settings page.
 /// </summary>
 public partial class ImageSettingsView : SettingsPageView
 {

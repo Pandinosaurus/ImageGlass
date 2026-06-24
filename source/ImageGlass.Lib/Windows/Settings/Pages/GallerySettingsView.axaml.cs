@@ -21,9 +21,7 @@ using ImageGlass.Common.Localization;
 namespace ImageGlass.Common.Windows;
 
 /// <summary>
-/// The "Gallery" settings page: gallery appearance (fullscreen visibility, filename, shell
-/// thumbnails, columns, thumbnail size, cache size). All rows use the shared <c>Bind*</c> helpers
-/// in <see cref="SettingsPageView"/>.
+/// The "Gallery" settings page.
 /// </summary>
 public partial class GallerySettingsView : SettingsPageView
 {

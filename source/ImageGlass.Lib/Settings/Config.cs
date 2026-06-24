@@ -719,7 +719,7 @@ public partial class Config : PhReactive
     /// </summary>
     public string LightTheme
     {
-        get => Get(ConfigId.LightTheme, "Kobe-Light");
+        get => Get(ConfigId.LightTheme, Const.DEFAULT_LIGHT_THEME);
         set => Set(ConfigId.LightTheme, value);
     }
 

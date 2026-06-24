@@ -100,7 +100,8 @@ public sealed class SettingsNavItem
             CreateNavItem("file_assocs", LangId.FrmSettings_Nav_FileTypeAssociations, ICON_FILE_ASSOC, 0),
             CreateNavItem("tools", LangId.FrmSettings_Nav_Tools, ICON_TOOLS, 0),
             CreateNavItem("language", LangId.FrmSettings_Nav_Language, ICON_LANGUAGE, 0),
-            CreateNavItem("appearance", LangId.FrmSettings_Nav_Appearance, ICON_APPEARANCE, 0),
+            CreateNavItem("appearance", LangId.FrmSettings_Nav_Appearance, ICON_APPEARANCE, 0,
+                (vm, navId, label) => new AppearanceSettingsView(vm, navId, label)),
         ];
     }
 

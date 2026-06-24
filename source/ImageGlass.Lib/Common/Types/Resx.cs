@@ -45,9 +45,9 @@ public static class Resx
     public static T Get<T>(ResxId resxId)
     {
         var resName = GetResxName(resxId);
-        var value = Application.Current?.Resources[resName]!;
+        _ = App.Current!.TryGetResource(resName, out var value);
 
-        return (T)value;
+        return (T)value!;
     }
 
 
@@ -57,7 +57,7 @@ public static class Resx
     public static void Set(ResxId resxId, object resValue)
     {
         var resName = GetResxName(resxId);
-        Application.Current?.Resources[resName] = resValue;
+        App.Current?.Resources[resName] = resValue;
     }
 
 
@@ -304,6 +304,8 @@ public enum ResxIconId
     IconImageForward,
     IconLivePhoto,
     IconFolderOpen,
+    IconWeatherMoon,
+    IconWeatherSunny,
 }
 
 

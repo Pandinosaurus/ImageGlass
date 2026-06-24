@@ -24,10 +24,7 @@ using System.Collections.ObjectModel;
 namespace ImageGlass.Common.Windows;
 
 /// <summary>
-/// The "Toolbar" settings page: toolbar appearance (full-screen visibility, icon size) and the
-/// toolbar button arranger. Shared binding/registration logic lives in <see cref="SettingsPageView"/>;
-/// the button arranger is the bespoke <see cref="ToolbarEditorControl"/> which stages its edits back
-/// through the working-copy view model.
+/// The "Toolbar" settings page.
 /// </summary>
 public partial class ToolbarSettingsView : SettingsPageView
 {

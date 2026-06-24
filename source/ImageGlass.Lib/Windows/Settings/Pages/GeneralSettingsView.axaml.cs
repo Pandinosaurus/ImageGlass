@@ -24,8 +24,7 @@ using System.IO;
 namespace ImageGlass.Common.Windows;
 
 /// <summary>
-/// The "General" settings page: app locations, startup options, app update, and misc settings.
-/// Shared binding/registration logic lives in <see cref="SettingsPageView"/>.
+/// The "General" settings page.
 /// </summary>
 public partial class GeneralSettingsView : SettingsPageView
 {
