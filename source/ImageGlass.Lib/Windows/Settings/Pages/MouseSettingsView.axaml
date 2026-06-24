@@ -26,23 +26,8 @@
 
         <!--  Mouse click action  -->
         <ui:PhTextBlock Classes="group" LangKey="FrmSettings_MouseClickAction" />
-        <StackPanel Margin="{DynamicResource SettingsGroupIndent}" Spacing="12">
-            <ui:PhTextBlock
-                LangKey="FrmSettings_MouseClickAction_Hint"
-                Opacity="0.8"
-                TextWrapping="Wrap" />
-
-            <Border
-                x:Name="PART_ClickTable"
-                MaxWidth="1500"
-                HorizontalAlignment="Left"
-                Background="{DynamicResource IG_BackgroundNeutralBrush}"
-                BorderBrush="{DynamicResource IG_BorderControlBrush}"
-                BorderThickness="1"
-                ClipToBounds="True"
-                CornerRadius="{DynamicResource ControlCornerRadius}">
-                <Grid x:Name="PART_ClickTableBody" ColumnDefinitions="Auto,*,Auto" />
-            </Border>
+        <StackPanel Margin="{DynamicResource SettingsGroupIndent}" Spacing="14">
+            <StackPanel x:Name="PART_ClickTable" Spacing="14" />
 
             <ui:PhButton
                 x:Name="PART_ResetClick"

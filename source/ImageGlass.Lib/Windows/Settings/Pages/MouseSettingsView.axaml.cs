@@ -16,7 +16,6 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
@@ -36,7 +35,8 @@ namespace ImageGlass.Common.Windows;
 /// </summary>
 public partial class MouseSettingsView : SettingsPageView
 {
-    private static readonly Thickness CELL_PADDING = new(10, 6);
+    // shared width for the wheel dropdowns and click buttons
+    private const double ACTION_CONTROL_WIDTH = 250;
 
     private readonly Dictionary<MouseWheelEvent, MouseWheelAction> _wheelActions = [];
     private readonly Dictionary<MouseClickEvent, SingleAction> _clickActions = [];
@@ -123,7 +123,7 @@ public partial class MouseSettingsView : SettingsPageView
         foreach (var evt in Enum.GetValues<MouseWheelEvent>())
         {
             var row = new StackPanel { Spacing = 5 };
-            row.Children.Add(new PhTextBlock { Text = EnumLabel("MouseWheelEvent", evt) });
+            row.Children.Add(new PhTextBlock { Text = EnumLabel(nameof(MouseWheelEvent), evt) });
             row.Children.Add(BuildWheelCombo(evt));
 
             PART_WheelTable.Children.Add(row);
@@ -138,7 +138,7 @@ public partial class MouseSettingsView : SettingsPageView
     {
         var combo = new ComboBox
         {
-            MinWidth = 220,
+            Width = ACTION_CONTROL_WIDTH,
             HorizontalAlignment = HorizontalAlignment.Left,
         };
 
@@ -152,7 +152,7 @@ public partial class MouseSettingsView : SettingsPageView
             combo.Items.Add(new ComboBoxItem
             {
                 Tag = action,
-                Content = EnumLabel("MouseWheelAction", action),
+                Content = EnumLabel(nameof(MouseWheelAction), action),
             });
             if (action == current) selectedIndex = i;
         }
@@ -222,71 +222,55 @@ public partial class MouseSettingsView : SettingsPageView
 
 
     /// <summary>
-    /// Rebuilds the click table: one row per event with a label, the current action, and an Edit link.
+    /// Rebuilds the click rows: each event shows its label above a button that opens the editor.
     /// </summary>
     private void RebuildClickTable()
     {
-        PART_ClickTableBody.Children.Clear();
-        PART_ClickTableBody.RowDefinitions.Clear();
+        PART_ClickTable.Children.Clear();
 
-        var events = Enum.GetValues<MouseClickEvent>();
-        for (var i = 0; i < events.Length; i++)
+        foreach (var evt in Enum.GetValues<MouseClickEvent>())
         {
-            var evt = events[i];
-            PART_ClickTableBody.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
+            var row = new StackPanel { Spacing = 5 };
+            row.Children.Add(new PhTextBlock { Text = EnumLabel(nameof(MouseClickEvent), evt) });
+            row.Children.Add(BuildClickButton(evt));
 
-            if (i > 0) AddCell(HLine(ResxId.IG_BorderNeutralBrush), i, 0, 3);
-
-            AddCell(new PhTextBlock
-            {
-                Text = EnumLabel("MouseClickEvent", evt),
-                Padding = CELL_PADDING,
-                VerticalAlignment = VerticalAlignment.Center,
-            }, i, 0);
-            AddCell(ActionCell(evt), i, 1);
-            AddCell(EditCell(evt), i, 2);
+            PART_ClickTable.Children.Add(row);
         }
     }
 
 
     /// <summary>
-    /// The action-summary cell: the executable to run, or "Do nothing" when the event is unbound.
+    /// Builds the action button for a click event: shows the bound executable (or "Do nothing")
+    /// and opens the editor when clicked.
     /// </summary>
-    private TextBlock ActionCell(MouseClickEvent evt)
+    private PhButton BuildClickButton(MouseClickEvent evt)
     {
         var exe = _clickActions.GetValueOrDefault(evt)?.Executable?.Trim();
-        var isEmpty = string.IsNullOrEmpty(exe);
+        var hasExe = !string.IsNullOrEmpty(exe);
 
-        var tb = new TextBlock
+        var btn = new PhButton
         {
-            Text = isEmpty ? Core.Lang[LangId.MouseWheelAction_DoNothing] : exe,
-            Padding = CELL_PADDING,
-            VerticalAlignment = VerticalAlignment.Center,
+            Width = ACTION_CONTROL_WIDTH,
+            HorizontalAlignment = HorizontalAlignment.Left,
+            // stretch the content so the label fills the width and can ellipsis-trim
+            HorizontalContentAlignment = HorizontalAlignment.Stretch,
+        };
+
+        // PhButton.Text centers and never trims, so use our own trimming label as the content
+        var label = new TextBlock
+        {
+            Text = hasExe ? System.IO.Path.GetFileName(exe!) : Core.Lang[LangId.MouseWheelAction_DoNothing],
             TextTrimming = TextTrimming.CharacterEllipsis,
-            MaxWidth = 280,
-            FontStyle = isEmpty ? FontStyle.Italic : FontStyle.Normal,
-            Opacity = isEmpty ? 0.6 : 1,
-        };
-        if (!isEmpty) ToolTip.SetTip(tb, exe);
-
-        return tb;
-    }
-
-
-    /// <summary>
-    /// The Edit link cell that opens the action editor for a click event.
-    /// </summary>
-    private Border EditCell(MouseClickEvent evt)
-    {
-        var btnEdit = new PhButton { Variant = PhButtonVariant.Link, Text = Core.Lang[LangId._Edit] };
-        btnEdit.Click += async (_, _) => await EditClickActionAsync(evt);
-
-        return new Border
-        {
-            Padding = new Thickness(8, 2),
             VerticalAlignment = VerticalAlignment.Center,
-            Child = btnEdit,
         };
+        label[!TextBlock.ForegroundProperty] = btn[!Button.ForegroundProperty];
+        btn.Content = label;
+
+        if (hasExe) ToolTip.SetTip(btn, exe);
+
+        btn.Click += async (_, _) => await EditClickActionAsync(evt);
+
+        return btn;
     }
 
 
@@ -297,7 +281,7 @@ public partial class MouseSettingsView : SettingsPageView
     private async Task EditClickActionAsync(MouseClickEvent evt)
     {
         var existing = _clickActions.GetValueOrDefault(evt);
-        var window = new MouseClickActionEditWindow(EnumLabel("MouseClickEvent", evt), existing);
+        var window = new MouseClickActionEditWindow(EnumLabel(nameof(MouseClickEvent), evt), existing);
 
         if (await window.ShowAsync(TopLevel.GetTopLevel(this) as PhWindow) != DialogExitCode.OK) return;
         if (window.ResultAction is not { } result) return;
@@ -320,30 +304,6 @@ public partial class MouseSettingsView : SettingsPageView
     /// </summary>
     private static string EnumLabel<TEnum>(string enumName, TEnum value) where TEnum : struct, Enum
         => Lang.GetKey($"{enumName}_{value}") is { } key ? Core.Lang[key] : value.ToString();
-
-
-    /// <summary>
-    /// Places a control into the click-table grid.
-    /// </summary>
-    private void AddCell(Control content, int row, int col, int colSpan = 1)
-    {
-        Grid.SetRow(content, row);
-        Grid.SetColumn(content, col);
-        if (colSpan > 1) Grid.SetColumnSpan(content, colSpan);
-        PART_ClickTableBody.Children.Add(content);
-    }
-
-
-    /// <summary>
-    /// Creates a 1px top-aligned horizontal rule whose color follows the theme.
-    /// </summary>
-    private static Border HLine(ResxId brushId)
-    {
-        var line = new Border { Height = 1, VerticalAlignment = VerticalAlignment.Top };
-        line[!Border.BackgroundProperty] = Resx.CreateBinding(brushId);
-
-        return line;
-    }
 
     #endregion // Helpers
 
