@@ -177,7 +177,7 @@ public static class Core
 
 
     /// <summary>
-    /// Gets the system accent color.
+    /// Gets the app accent color derived from the theme/system accent (used to build accent resources).
     /// </summary>
     public static Color AccentColor { get; private set; } = new();
 
@@ -569,12 +569,13 @@ public static class Core
 
         // update app accent color
         var accent = Core.AccentColor;
-        var accentLight1 = accent.WithBrightness(0.2f);
-        var accentLight2 = accent.WithBrightness(0.3f);
-        var accentLight3 = accent.WithBrightness(0.4f);
-        var accentDark1 = accent.WithBrightness(-0.2f);
-        var accentDark2 = accent.WithBrightness(-0.3f);
-        var accentDark3 = accent.WithBrightness(-0.4f);
+        var accentLight1 = accent.WithBrightness(0.12f);
+        var accentLight2 = accent.WithBrightness(0.28f);
+        var accentLight3 = accent.WithBrightness(0.5f);
+
+        var accentDark1 = accent.WithBrightness(-0.07f);
+        var accentDark2 = accent.WithBrightness(-0.20f);
+        var accentDark3 = accent.WithBrightness(-0.35f);
 
 
         // update all accent-related resources

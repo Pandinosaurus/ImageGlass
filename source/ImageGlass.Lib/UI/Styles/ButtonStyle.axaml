@@ -19,7 +19,7 @@
                     <SolidColorBrush x:Key="PhButtonBackgroundPointerOver" Color="#80F9F9F9" />
                     <SolidColorBrush x:Key="PhButtonBackgroundPressed" Color="#4DF9F9F9" />
 
-                    <!--  Default variant: elevation border (subtle top/sides, darker hairline at the bottom)  -->
+                    <!--  Default variant  -->
                     <LinearGradientBrush x:Key="PhButtonBorderBrush" StartPoint="0%,0%" EndPoint="0%,100%">
                         <GradientStop Offset="0.0" Color="#0F000000" />
                         <GradientStop Offset="0.9" Color="#0F000000" />
@@ -30,7 +30,16 @@
                         <GradientStop Offset="0.9" Color="#0F000000" />
                         <GradientStop Offset="1.0" Color="#0F000000" />
                     </LinearGradientBrush>
+
+
+                    <!--  Accent variant  -->
+                    <LinearGradientBrush x:Key="PhAccentButtonBorderBrush" StartPoint="0%,0%" EndPoint="0%,100%">
+                        <GradientStop Offset="0.0" Color="#14FFFFFF" />
+                        <GradientStop Offset="0.9" Color="#14FFFFFF" />
+                        <GradientStop Offset="1.0" Color="#33000000" />
+                    </LinearGradientBrush>
                 </ResourceDictionary>
+
 
                 <ResourceDictionary x:Key="Dark">
                     <!--  Default variant: fills  -->
@@ -38,10 +47,7 @@
                     <SolidColorBrush x:Key="PhButtonBackgroundPointerOver" Color="#15FFFFFF" />
                     <SolidColorBrush x:Key="PhButtonBackgroundPressed" Color="#08FFFFFF" />
 
-                    <!--
-                        Default variant: elevation border. A black hairline is invisible on a dark
-                        fill, so the bottom edge uses a brighter white to stay readable.
-                    -->
+                    <!--  Default variant: elevation border  -->
                     <LinearGradientBrush x:Key="PhButtonBorderBrush" StartPoint="0%,0%" EndPoint="0%,100%">
                         <GradientStop Offset="0.0" Color="#14FFFFFF" />
                         <GradientStop Offset="0.9" Color="#14FFFFFF" />
@@ -52,19 +58,24 @@
                         <GradientStop Offset="0.9" Color="#14FFFFFF" />
                         <GradientStop Offset="1.0" Color="#14FFFFFF" />
                     </LinearGradientBrush>
+
+
+                    <!--  Accent variant  -->
+                    <LinearGradientBrush x:Key="PhAccentButtonBorderBrush" StartPoint="0%,0%" EndPoint="0%,100%">
+                        <GradientStop Offset="0.0" Color="#14000000" />
+                        <GradientStop Offset="0.9" Color="#14000000" />
+                        <GradientStop Offset="1.0" Color="#55FFFFFF" />
+                    </LinearGradientBrush>
                 </ResourceDictionary>
 
             </ResourceDictionary.ThemeDictionaries>
 
-            <!--  Accent variant: elevation border (same highlight/shadow in both themes)  -->
-            <LinearGradientBrush x:Key="PhAccentButtonBorderBrush" StartPoint="0%,0%" EndPoint="0%,100%">
-                <GradientStop Offset="0.0" Color="#14FFFFFF" />
-                <GradientStop Offset="0.9" Color="#14FFFFFF" />
-                <GradientStop Offset="1.0" Color="#66000000" />
-            </LinearGradientBrush>
 
             <!--  Outline variant: pre-load fallback; PhButton.UpdateOutlineBorderBrush() overrides this per-control  -->
-            <SolidColorBrush x:Key="PhOutlineButtonBorderBrush" Opacity="0.5" Color="{DynamicResource SystemAccentColor}" />
+            <SolidColorBrush
+                x:Key="PhOutlineButtonBorderBrush"
+                Opacity="0.5"
+                Color="{DynamicResource SystemAccentColor}" />
             <SolidColorBrush
                 x:Key="PhOutlineButtonBorderBrushPressed"
                 Opacity="0.3"
@@ -79,9 +90,7 @@
         ============================================================
     -->
     <Style Selector="Button:not(.link)">
-
-        <!--  rest. One stable Transitions collection, never swapped per state: swapping it on
-              every press/release orphans in-flight fades and makes rapid clicks flash for a long time  -->
+        <!--  rest  -->
         <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
             <Setter Property="Background" Value="{DynamicResource PhButtonBackground}" />
             <Setter Property="BorderBrush" Value="{DynamicResource PhButtonBorderBrush}" />
