@@ -46,10 +46,6 @@ namespace ImageGlass.Common.ServiceProviders;
 
 public partial class AppAPIProvider
 {
-    private MainWindow _mainWindow;
-    private SettingsWindow? _settingsWindow;
-
-
     // wallpaper formats
     private static FrozenSet<string> _desktopNativeFormats => [".bmp", ".jpg", ".jpeg", ".png", ".gif"];
 
@@ -73,25 +69,23 @@ public partial class AppAPIProvider
     private bool _slideshowIsAdvancing;
 
 
-    private ViewerControl Viewer => _mainWindow.PART_MainView.PART_Viewer;
-    private ToolbarControl Toolbar => _mainWindow.PART_MainView.PART_Toolbar;
-    private GalleryControl Gallery => _mainWindow.PART_MainView.PART_Gallery;
-    private PhGridSplitter GalleryResizer => _mainWindow.PART_MainView.PART_GalleryResizer;
-    private MessageControl Message => _mainWindow.PART_MainView.PART_Message;
-    private ToolHostControl ToolHost => _mainWindow.PART_MainView.PART_ToolHost;
-    private SlideshowCountdownOverlay SlideshowCountdown => _mainWindow.PART_MainView.PART_SlideshowCountdown;
+    private static ViewerControl Viewer => App.MainWindow.PART_MainView.PART_Viewer;
+    private static ToolbarControl Toolbar => App.MainWindow.PART_MainView.PART_Toolbar;
+    private static GalleryControl Gallery => App.MainWindow.PART_MainView.PART_Gallery;
+    private static PhGridSplitter GalleryResizer => App.MainWindow.PART_MainView.PART_GalleryResizer;
+    private static MessageControl Message => App.MainWindow.PART_MainView.PART_Message;
+    private static ToolHostControl ToolHost => App.MainWindow.PART_MainView.PART_ToolHost;
+    private static SlideshowCountdownOverlay SlideshowCountdown => App.MainWindow.PART_MainView.PART_SlideshowCountdown;
 
 
     /// <summary>
     /// Gets the <see cref="ViewerControl"/> for external plugin access.
     /// </summary>
-    internal ViewerControl? GetViewer() => Viewer;
+    internal static ViewerControl? GetViewer() => Viewer;
 
 
-    public AppAPIProvider(MainWindow mainWindow)
+    public AppAPIProvider()
     {
-        _mainWindow = mainWindow;
-
         // Register built-in hosted plugins (via ToolControlAdapter)
         Core.ToolRegistry.Register(ColorPickerToolControl.TOOL_ID,
             new ToolControlAdapter(ColorPickerToolControl.TOOL_ID, v => new ColorPickerToolControl { Viewer = v }));
@@ -113,9 +107,9 @@ public partial class AppAPIProvider
     /// <summary>
     /// Shows main menu.
     /// </summary>
-    public void IG_OpenMainMenu()
+    public static void IG_OpenMainMenu()
     {
-        _mainWindow.PART_MainView.PART_Toolbar.PART_BtnMainMenu.OpenDropdownMenu();
+        App.MainWindow.PART_MainView.PART_Toolbar.PART_BtnMainMenu.OpenDropdownMenu();
     }
 
 
@@ -126,25 +120,25 @@ public partial class AppAPIProvider
     /// Optional <see cref="ConfigId"/> name to navigate to directly,
     /// e.g. <c>"EnableLoopSlideshow"</c>.
     /// </param>
-    public async Task IG_OpenSettingsAsync(string? configId = null)
+    public static async Task IG_OpenSettingsAsync(string? configId = null)
     {
         // reuse the existing window if it is already open
-        if (_settingsWindow is not null)
+        if (App.SettingsWindow is not null)
         {
-            _settingsWindow.Activate();
-            if (!string.IsNullOrWhiteSpace(configId)) _settingsWindow.NavigateToConfig(configId);
+            App.SettingsWindow.Activate();
+            if (!string.IsNullOrWhiteSpace(configId)) App.SettingsWindow.NavigateToConfig(configId);
             return;
         }
 
-        _settingsWindow = new SettingsWindow(configId);
+        App.SettingsWindow = new SettingsWindow(configId);
 
         try
         {
-            await _settingsWindow.ShowAsync(null);
+            await App.SettingsWindow.ShowAsync(null);
         }
         finally
         {
-            _settingsWindow = null;
+            App.SettingsWindow = null;
         }
     }
 
@@ -171,7 +165,7 @@ public partial class AppAPIProvider
         var supportFileExtPatterns = Core.Config.FileFormats.Select(ext => $"*{ext}")
             .ToImmutableList();
 
-        var files = await _mainWindow.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        var files = await App.MainWindow.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
         {
             Title = Core.Lang[LangId.FrmMain_MnuOpenFile],
             FileTypeFilter = [
@@ -193,7 +187,7 @@ public partial class AppAPIProvider
     /// </summary>
     public async Task IG_OpenFolderAsync()
     {
-        var dirs = await _mainWindow.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions());
+        var dirs = await App.MainWindow.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions());
 
         var dir = dirs?.ElementAtOrDefault(0);
         var dirPath = dir?.TryGetLocalPath();
@@ -225,7 +219,7 @@ public partial class AppAPIProvider
             // so that file enumeration uses the new folder instead of the stale shell
             var disposeForegroundShell = imageIndex == -1;
 
-            _mainWindow.PART_MainView.PrepareLoadPhotoList([fullPath],
+            App.MainWindow.PART_MainView.PrepareLoadPhotoList([fullPath],
                 currentFilePath: null, disposeForegroundShell, reloadInitPhoto: true);
         }
         // 2.2 The file is in current folder AND it is the viewing image
@@ -244,11 +238,11 @@ public partial class AppAPIProvider
     /// <summary>
     /// Open the current image in a new window.
     /// </summary>
-    public void IG_NewWindow()
+    public static void IG_NewWindow()
     {
         if (!Core.Config.EnableMultiInstances)
         {
-            _ = ModalWindow.ShowInfoAsync(_mainWindow, new ModalWindowOptions
+            _ = ModalWindow.ShowInfoAsync(App.MainWindow, new ModalWindowOptions
             {
                 Title = Core.Lang[LangId.FrmMain_MnuNewWindow],
                 Heading = Core.Lang[LangId.FrmMain_MnuNewWindow],
@@ -260,7 +254,7 @@ public partial class AppAPIProvider
         var filePath = Core.Photos.CurrentFilePath;
 
         // get position for new window
-        var posDiff = _mainWindow.DpiScale(10f);
+        var posDiff = App.MainWindow.DpiScale(10f);
         var newBounds = Core.Config.MainWindowBounds.WithX(Core.Config.MainWindowBounds.X + posDiff);
         newBounds = newBounds.WithY(Core.Config.MainWindowBounds.Y + posDiff);
         var boundStr = newBounds.ToStringDelimiter();
@@ -273,7 +267,7 @@ public partial class AppAPIProvider
     /// <summary>
     /// Saves and overrides the current photo.
     /// </summary>
-    public async Task IG_SaveAsync()
+    public static async Task IG_SaveAsync()
     {
         var srcFilePath = Core.Photos.CurrentFilePath;
         var isOpeningImageList = Core.Photos.CurrentIndex > -1;
@@ -289,7 +283,7 @@ public partial class AppAPIProvider
         // show override warning
         if (Core.Config.EnableSaveConfirmation)
         {
-            var modal = await ModalWindow.ShowWarningAsync(_mainWindow, new ModalWindowOptions
+            var modal = await ModalWindow.ShowWarningAsync(App.MainWindow, new ModalWindowOptions
             {
                 Title = Core.Lang[LangId.FrmMain_MnuSave],
                 Heading = Core.Lang[LangId.FrmMain_MnuSave_Confirm],
@@ -312,7 +306,7 @@ public partial class AppAPIProvider
     /// <summary>
     /// Shows save file dialog to save photo to file.
     /// </summary>
-    public async Task IG_SaveAsAsync()
+    public static async Task IG_SaveAsAsync()
     {
         var srcFilePath = string.Empty;
         var srcExt = ".png";
@@ -332,7 +326,7 @@ public partial class AppAPIProvider
 
                 if (!string.IsNullOrWhiteSpace(initSaveDirPath))
                 {
-                    initSaveDir = await _mainWindow.StorageProvider.TryGetFolderFromPathAsync(initSaveDirPath);
+                    initSaveDir = await App.MainWindow.StorageProvider.TryGetFolderFromPathAsync(initSaveDirPath);
                 }
             }
         }
@@ -343,7 +337,7 @@ public partial class AppAPIProvider
 
 
         // 2. create file save picker
-        var result = await _mainWindow.StorageProvider.SaveFilePickerWithResultAsync(new FilePickerSaveOptions
+        var result = await App.MainWindow.StorageProvider.SaveFilePickerWithResultAsync(new FilePickerSaveOptions
         {
             Title = Core.Lang[LangId.FrmMain_MnuSaveAs],
             FileTypeChoices = SavingExts.FilePickerFileTypeChoices,
@@ -365,7 +359,7 @@ public partial class AppAPIProvider
             var fi = new FileInfo(destFilePath);
 
             // show confirm dialog
-            var modal = await ModalWindow.ShowWarningAsync(_mainWindow, new ModalWindowOptions
+            var modal = await ModalWindow.ShowWarningAsync(App.MainWindow, new ModalWindowOptions
             {
                 Title = Core.Lang[LangId.FrmMain_MnuSaveAs],
                 Heading = Core.Lang[LangId.FrmMain_MnuSave_Confirm],
@@ -400,7 +394,7 @@ public partial class AppAPIProvider
     ///     </list>
     ///   </para>
     /// </summary>
-    public async Task<bool> SaveImageAsync(string destFilePath)
+    public static async Task<bool> SaveImageAsync(string destFilePath)
     {
         var saveSource = ImageSaveSource.Undefined;
         var hasSrcPath = !string.IsNullOrEmpty(Core.Photos.CurrentFilePath);
@@ -463,7 +457,7 @@ public partial class AppAPIProvider
         {
             await Message.ClearAsync();
 
-            _ = await ModalWindow.ShowErrorAsync(_mainWindow, new ModalWindowOptions
+            _ = await ModalWindow.ShowErrorAsync(App.MainWindow, new ModalWindowOptions
             {
                 Title = Core.Lang[LangId.FrmMain_MnuSave],
                 Heading = Core.Lang[LangId.FrmMain_MnuSave_Error],
@@ -520,14 +514,14 @@ public partial class AppAPIProvider
     /// <summary>
     /// Exports image frames from the current photo source.
     /// </summary>
-    public async Task IG_ExportImageFrames()
+    public static async Task IG_ExportImageFrames()
     {
         if (Viewer.SourceKind == PhotoSource.None) return;
         var frameCount = Core.Photos.CurrentMetadata?.FrameCount ?? 0;
         if (frameCount < 2) return;
 
         // 1. open folder picker
-        var results = await _mainWindow.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
+        var results = await App.MainWindow.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
         {
             Title = Core.Lang[LangId.FrmExportFrames_FolderPickerTitle],
         });
@@ -552,7 +546,7 @@ public partial class AppAPIProvider
         Core.IsBusy = true;
 
         var exportWindow = new ExportFramesWindow(srcFilePath, destDirPath);
-        await exportWindow.ShowAsync(_mainWindow);
+        await exportWindow.ShowAsync(App.MainWindow);
 
         Core.IsBusy = false;
     }
@@ -561,7 +555,7 @@ public partial class AppAPIProvider
     /// <summary>
     /// Shows Open With window.
     /// </summary>
-    public async Task IG_OpenWithAsync()
+    public static async Task IG_OpenWithAsync()
     {
         if (BHelper.OS != OSType.Windows)
         {
@@ -589,7 +583,7 @@ public partial class AppAPIProvider
         await Message.ClearAsync();
         if (!File.Exists(filePath))
         {
-            _ = await ModalWindow.ShowErrorAsync(_mainWindow, new ModalWindowOptions
+            _ = await ModalWindow.ShowErrorAsync(App.MainWindow, new ModalWindowOptions
             {
                 Title = Core.Lang[LangId.FrmMain_MnuOpenWith],
                 Description = Core.Lang[LangId._CreatingFileError],
@@ -605,7 +599,7 @@ public partial class AppAPIProvider
     /// <summary>
     /// Opens Print dialog to print the current photo.
     /// </summary>
-    public async Task IG_PrintAsync()
+    public static async Task IG_PrintAsync()
     {
         if (BHelper.OS != OSType.Windows)
         {
@@ -618,7 +612,7 @@ public partial class AppAPIProvider
 
         if (string.IsNullOrEmpty(fileToPrint))
         {
-            _ = await ModalWindow.ShowErrorAsync(_mainWindow, new ModalWindowOptions
+            _ = await ModalWindow.ShowErrorAsync(App.MainWindow, new ModalWindowOptions
             {
                 Title = Core.Lang[LangId.FrmMain_MnuOpenWith],
                 Description = Core.Lang[LangId._CreatingFileError],
@@ -633,7 +627,7 @@ public partial class AppAPIProvider
             }
             catch (Exception ex)
             {
-                _ = await ModalWindow.ShowErrorAsync(_mainWindow, new ModalWindowOptions
+                _ = await ModalWindow.ShowErrorAsync(App.MainWindow, new ModalWindowOptions
                 {
                     Title = Core.Lang[LangId.FrmMain_MnuPrint],
                     Heading = Core.Lang[LangId.FrmMain_MnuPrint_Error],
@@ -649,7 +643,7 @@ public partial class AppAPIProvider
     /// <summary>
     /// Shows Share dialog.
     /// </summary>
-    public async Task IG_ShareAsync()
+    public static async Task IG_ShareAsync()
     {
         var filePath = Core.Photos.CurrentFilePath;
 
@@ -666,7 +660,7 @@ public partial class AppAPIProvider
 
         if (!File.Exists(filePath))
         {
-            _ = ModalWindow.ShowErrorAsync(_mainWindow, new ModalWindowOptions
+            _ = ModalWindow.ShowErrorAsync(App.MainWindow, new ModalWindowOptions
             {
                 Title = Core.Lang[LangId.FrmMain_MnuShare],
                 Description = Core.Lang[LangId._CreatingFileError],
@@ -676,11 +670,11 @@ public partial class AppAPIProvider
         {
             try
             {
-                Core.ShareProvider.ShowShare(_mainWindow.Handle, [filePath]);
+                Core.ShareProvider.ShowShare(App.MainWindow.Handle, [filePath]);
             }
             catch (Exception ex)
             {
-                _ = ModalWindow.ShowErrorAsync(_mainWindow, new ModalWindowOptions
+                _ = ModalWindow.ShowErrorAsync(App.MainWindow, new ModalWindowOptions
                 {
                     Title = Core.Lang[LangId.FrmMain_MnuShare],
                     Description = $"{Core.Lang[LangId.FrmMain_MnuShare_Error]}\r\n\r\n{ex.Message}",
@@ -702,7 +696,7 @@ public partial class AppAPIProvider
     /// <summary>
     /// Opens a popup to rename the current photo.
     /// </summary>
-    public async Task IG_RenameAsync()
+    public static async Task IG_RenameAsync()
     {
         var oldFilePath = Core.Photos.CurrentFilePath;
         if (!File.Exists(oldFilePath)) return;
@@ -713,7 +707,7 @@ public partial class AppAPIProvider
         var title = Core.Lang[LangId.FrmMain_MnuRename];
 
         // 2. show popup
-        var result = await ModalWindow.ShowInputAsync(_mainWindow, new ModalWindowOptions
+        var result = await ModalWindow.ShowInputAsync(App.MainWindow, new ModalWindowOptions
         {
             Title = title,
             Description = $"""
@@ -758,7 +752,7 @@ public partial class AppAPIProvider
         }
         catch (Exception ex)
         {
-            _ = await ModalWindow.ShowErrorAsync(_mainWindow, new ModalWindowOptions
+            _ = await ModalWindow.ShowErrorAsync(App.MainWindow, new ModalWindowOptions
             {
                 Title = title,
                 Description = ex.Message,
@@ -771,7 +765,7 @@ public partial class AppAPIProvider
     /// Sends or permenantly deletes the current image.
     /// </summary>
     /// <param name="boolStr">Values: <c>"true"</c>, <c>"false"</c> or empty.</param>
-    public async Task IG_DeleteAsync(string? moveToRecycleBinStr = "true")
+    public static async Task IG_DeleteAsync(string? moveToRecycleBinStr = "true")
     {
         var moveToRecycleBin = BHelper.ConvertStringToBool(moveToRecycleBinStr) ?? true;
         await IG_DeleteAsync(moveToRecycleBin);
@@ -781,7 +775,7 @@ public partial class AppAPIProvider
     /// <summary>
     /// Sends or permenantly deletes the current image.
     /// </summary>
-    public async Task IG_DeleteAsync(bool moveToRecycleBin = true)
+    public static async Task IG_DeleteAsync(bool moveToRecycleBin = true)
     {
         var filePath = Core.Photos.CurrentFilePath;
         if (!File.Exists(filePath)) return;
@@ -802,7 +796,7 @@ public partial class AppAPIProvider
                 ? StockIconId.RecycleBin
                 : StockIconId.Delete;
 
-            var modal = await ModalWindow.ShowWarningAsync(_mainWindow, new ModalWindowOptions
+            var modal = await ModalWindow.ShowWarningAsync(App.MainWindow, new ModalWindowOptions
             {
                 Title = title,
                 Heading = heading,
@@ -835,11 +829,11 @@ public partial class AppAPIProvider
             Core.Photos.Remove(Core.Photos.CurrentFilePath);
             var nextIndex = (int)Math.Min(Core.Photos.Count - 1, Core.Photos.CurrentIndex);
             var nextPhoto = Core.Photos.Select(nextIndex);
-            _ = _mainWindow.PART_MainView.ViewPhotoAsync(nextPhoto);
+            _ = App.MainWindow.PART_MainView.ViewPhotoAsync(nextPhoto);
         }
         catch (Exception ex)
         {
-            await ModalWindow.ShowErrorAsync(_mainWindow, new ModalWindowOptions
+            await ModalWindow.ShowErrorAsync(App.MainWindow, new ModalWindowOptions
             {
                 Title = title,
                 Description = ex.Message,
@@ -853,9 +847,9 @@ public partial class AppAPIProvider
     /// <summary>
     /// Opens photo's Properties dialog.
     /// </summary>
-    public void IG_OpenProperties()
+    public static void IG_OpenProperties()
     {
-        Core.ShellProvider?.ShowFileProperties(Core.Photos.CurrentFilePath, _mainWindow.Handle);
+        Core.ShellProvider?.ShowFileProperties(Core.Photos.CurrentFilePath, App.MainWindow.Handle);
     }
 
     #endregion // File APIs
@@ -928,7 +922,7 @@ public partial class AppAPIProvider
         }
 
 
-        _ = _mainWindow.PART_MainView.ViewPhotoAsync(photo);
+        _ = App.MainWindow.PART_MainView.ViewPhotoAsync(photo);
 
         // reset slideshow interval on manual navigation
         if (Core.Config.EnableSlideshow && !_slideshowIsAdvancing)
@@ -973,7 +967,7 @@ public partial class AppAPIProvider
         if (Core.Photos.Count == 0) return;
 
         var oldIndex = Core.Photos.CurrentIndex + 1;
-        var result = await ModalWindow.ShowInputAsync(_mainWindow, new ModalWindowOptions
+        var result = await ModalWindow.ShowInputAsync(App.MainWindow, new ModalWindowOptions
         {
             Title = Core.Lang[LangId.FrmMain_MnuGoTo],
             Description = Core.Lang[LangId.FrmMain_MnuGoTo_Description],
@@ -1039,7 +1033,7 @@ public partial class AppAPIProvider
     /// View a frame of the current photo.
     /// If the frame index is out of range, it will be looped.
     /// </summary>
-    public void IG_ViewFrame(int frameIndex)
+    public static void IG_ViewFrame(int frameIndex)
     {
         var frameCount = Core.Photos.CurrentMetadata?.FrameCount ?? 0;
         if (frameCount < 2) return;
@@ -1056,7 +1050,7 @@ public partial class AppAPIProvider
     /// <summary>
     /// View the next frame of the current photo.
     /// </summary>
-    public void IG_ViewNextFrame()
+    public static void IG_ViewNextFrame()
     {
         var newFrameIndex = (Core.Photos.Current?.FrameIndex ?? 0) + 1;
         IG_ViewFrame(newFrameIndex);
@@ -1066,7 +1060,7 @@ public partial class AppAPIProvider
     /// <summary>
     /// View the previous frame of the current photo.
     /// </summary>
-    public void IG_ViewPreviousFrame()
+    public static void IG_ViewPreviousFrame()
     {
         var newFrameIndex = (Core.Photos.Current?.FrameIndex ?? 1) - 1;
         IG_ViewFrame(newFrameIndex);
@@ -1076,7 +1070,7 @@ public partial class AppAPIProvider
     /// <summary>
     /// View the first frame of the current photo.
     /// </summary>
-    public void IG_ViewFirstFrame()
+    public static void IG_ViewFirstFrame()
     {
         IG_ViewFrame(0);
     }
@@ -1085,7 +1079,7 @@ public partial class AppAPIProvider
     /// <summary>
     /// View the last frame of the current photo.
     /// </summary>
-    public void IG_ViewLastFrame()
+    public static void IG_ViewLastFrame()
     {
         var lastFrameIndex = (int)(Core.Photos.CurrentMetadata?.FrameCount ?? 1) - 1;
         IG_ViewFrame(lastFrameIndex);
@@ -1100,11 +1094,11 @@ public partial class AppAPIProvider
     /// <summary>
     /// Shows input dialog for custom zoom.
     /// </summary>
-    public async Task IG_CustomZoomAsync()
+    public static async Task IG_CustomZoomAsync()
     {
         var oldZoom = Math.Round(Viewer.ZoomFactor * 100f, 3);
 
-        var result = await ModalWindow.ShowInputAsync(_mainWindow, new ModalWindowOptions
+        var result = await ModalWindow.ShowInputAsync(App.MainWindow, new ModalWindowOptions
         {
             Title = Core.Lang[LangId.FrmMain_MnuCustomZoom],
             Description = Core.Lang[LangId.FrmMain_MnuCustomZoom_Description],
@@ -1144,7 +1138,7 @@ public partial class AppAPIProvider
     /// <summary>
     /// Zoom to the current cursor location by the given factor.
     /// </summary>
-    public void IG_SetZoom(float factor)
+    public static void IG_SetZoom(float factor)
     {
         _ = Viewer.ZoomToPoint(factor);
     }
@@ -1154,7 +1148,7 @@ public partial class AppAPIProvider
     /// Sets zoom = 100% if zoom value is less than 100%.
     /// Otherwise, refresh the image with the current zoom mode.
     /// </summary>
-    public void IG_SetZoomForMouseClick()
+    public static void IG_SetZoomForMouseClick()
     {
         if (Viewer.ZoomFactor < 1)
         {
@@ -1189,7 +1183,7 @@ public partial class AppAPIProvider
     /// <summary>
     /// Sets the zoom mode value.
     /// </summary>
-    public void IG_SetZoomMode(ZoomMode mode)
+    public static void IG_SetZoomMode(ZoomMode mode)
     {
         if (mode == Core.Config.ZoomMode)
         {
@@ -1205,7 +1199,7 @@ public partial class AppAPIProvider
     /// <summary>
     /// Zooms into the image.
     /// </summary>
-    public void IG_ZoomIn()
+    public static void IG_ZoomIn()
     {
         if (Viewer.ZoomLevels.Length > 0)
         {
@@ -1221,7 +1215,7 @@ public partial class AppAPIProvider
     /// <summary>
     /// Zooms out of the image.
     /// </summary>
-    public void IG_ZoomOut()
+    public static void IG_ZoomOut()
     {
         if (Viewer.ZoomLevels.Length > 0)
         {
@@ -1242,7 +1236,7 @@ public partial class AppAPIProvider
     /// <summary>
     /// Pans the viewing image to left.
     /// </summary>
-    public void IG_PanLeft()
+    public static void IG_PanLeft()
     {
         // smooth zooming
         Viewer.StartDrawingAnimation(AnimationSources.PanLeft, 100);
@@ -1252,7 +1246,7 @@ public partial class AppAPIProvider
     /// <summary>
     /// Pans the viewing image to right.
     /// </summary>
-    public void IG_PanRight()
+    public static void IG_PanRight()
     {
         // smooth zooming
         Viewer.StartDrawingAnimation(AnimationSources.PanRight, 100);
@@ -1262,7 +1256,7 @@ public partial class AppAPIProvider
     /// <summary>
     /// Pans the viewing image to top.
     /// </summary>
-    public void IG_PanUp()
+    public static void IG_PanUp()
     {
         // smooth zooming
         Viewer.StartDrawingAnimation(AnimationSources.PanUp, 100);
@@ -1272,7 +1266,7 @@ public partial class AppAPIProvider
     /// <summary>
     /// Pans the viewing image to bottom.
     /// </summary>
-    public void IG_PanDown()
+    public static void IG_PanDown()
     {
         // smooth zooming
         Viewer.StartDrawingAnimation(AnimationSources.PanDown, 100);
@@ -1282,7 +1276,7 @@ public partial class AppAPIProvider
     /// <summary>
     /// Pans the viewing image to left side.
     /// </summary>
-    public void IG_PanToLeft()
+    public static void IG_PanToLeft()
     {
         var distanceX = Viewer.SrcRect.X * Viewer.ZoomFactor;
         var duration = 1000;
@@ -1298,7 +1292,7 @@ public partial class AppAPIProvider
     /// <summary>
     /// Pans the viewing image to right side.
     /// </summary>
-    public void IG_PanToRight()
+    public static void IG_PanToRight()
     {
         var x = Viewer.BitmapSize.Width - Viewer.SrcRect.Width;
         var distanceX = (x + Viewer.SrcRect.X) * Viewer.ZoomFactor;
@@ -1315,7 +1309,7 @@ public partial class AppAPIProvider
     /// <summary>
     /// Pans the viewing image to top.
     /// </summary>
-    public void IG_PanToTop()
+    public static void IG_PanToTop()
     {
         var distanceY = Viewer.SrcRect.Y * Viewer.ZoomFactor;
         var duration = 1000;
@@ -1331,7 +1325,7 @@ public partial class AppAPIProvider
     /// <summary>
     /// Pans the viewing image to bottom.
     /// </summary>
-    public void IG_PanToBottom()
+    public static void IG_PanToBottom()
     {
         var y = Viewer.BitmapSize.Height - Viewer.SrcRect.Height;
         var distanceY = (y + Viewer.SrcRect.Y) * Viewer.ZoomFactor;
@@ -1353,7 +1347,7 @@ public partial class AppAPIProvider
     /// <summary>
     /// Refreshes image viewport.
     /// </summary>
-    public void IG_Refresh()
+    public static void IG_Refresh()
     {
         Viewer.Refresh(true, false, Core.Config.EnableWindowFit);
     }
@@ -1362,9 +1356,9 @@ public partial class AppAPIProvider
     /// <summary>
     /// Reloads image file.
     /// </summary>
-    public void IG_Reload()
+    public static void IG_Reload()
     {
-        _ = _mainWindow.PART_MainView.ViewPhotoAsync(Core.Photos.Current, useCache: false);
+        _ = App.MainWindow.PART_MainView.ViewPhotoAsync(Core.Photos.Current, useCache: false);
 
         // reload thumbnail
         Gallery.LoadThumbnail(Core.Photos.CurrentIndex, false);
@@ -1374,9 +1368,9 @@ public partial class AppAPIProvider
     /// <summary>
     /// Reloads images list.
     /// </summary>
-    public void IG_ReloadList()
+    public static void IG_ReloadList()
     {
-        _mainWindow.PART_MainView.PrepareLoadPhotoList(Core.Photos.DistinctDirs,
+        App.MainWindow.PART_MainView.PrepareLoadPhotoList(Core.Photos.DistinctDirs,
             Core.Photos.CurrentFilePath, disposeForegroundShell: false, reloadInitPhoto: false);
     }
 
@@ -1384,7 +1378,7 @@ public partial class AppAPIProvider
     /// <summary>
     /// Unloads the current photo.
     /// </summary>
-    public async Task IG_UnloadAsync()
+    public static async Task IG_UnloadAsync()
     {
         var args = new PhotoUnloadedEventArgs()
         {
@@ -1400,7 +1394,7 @@ public partial class AppAPIProvider
             await LoadClipboardPhotoAsync(null);
 
             // show the current photo in the list
-            await _mainWindow.PART_MainView.ViewPhotoAsync(Core.Photos.Current);
+            await App.MainWindow.PART_MainView.ViewPhotoAsync(Core.Photos.Current);
         }
 
         // 2. unload photo from the list
@@ -1409,7 +1403,7 @@ public partial class AppAPIProvider
             // cancel loading the current image
             Core.Photos.Current?.CancelLoading();
 
-            await _mainWindow.PART_MainView.ViewPhotoAsync(null, false);
+            await App.MainWindow.PART_MainView.ViewPhotoAsync(null, false);
             Core.Photos.Current?.Unload();
         }
 
@@ -1421,7 +1415,7 @@ public partial class AppAPIProvider
     /// <summary>
     /// Sets whether to use the Explorer sort order.
     /// </summary>
-    public void IG_ToggleExplorerSortOrder(string? boolStr = null)
+    public static void IG_ToggleExplorerSortOrder(string? boolStr = null)
     {
         var enabled = BHelper.ConvertStringToBool(boolStr);
         IG_ToggleExplorerSortOrder(enabled);
@@ -1431,7 +1425,7 @@ public partial class AppAPIProvider
     /// <summary>
     /// Sets whether to use the Explorer sort order.
     /// </summary>
-    public void IG_ToggleExplorerSortOrder(bool? enabled)
+    public static void IG_ToggleExplorerSortOrder(bool? enabled)
     {
         enabled ??= !Core.Config.EnableExplorerSortOrder;
         Core.Config.EnableExplorerSortOrder = enabled.Value;
@@ -1463,7 +1457,7 @@ public partial class AppAPIProvider
     /// <summary>
     /// Sets the image loading order value.
     /// </summary>
-    public void IG_SetLoadingOrderBy(ImageOrderBy orderBy)
+    public static void IG_SetLoadingOrderBy(ImageOrderBy orderBy)
     {
         if (orderBy == Core.Config.ImageLoadingOrder) return;
 
@@ -1495,7 +1489,7 @@ public partial class AppAPIProvider
     /// <summary>
     /// Sets the image loading order value.
     /// </summary>
-    public void IG_SetLoadingOrderType(ImageOrderType orderType)
+    public static void IG_SetLoadingOrderType(ImageOrderType orderType)
     {
         if (orderType == Core.Config.ImageLoadingOrderType) return;
 
@@ -1527,7 +1521,7 @@ public partial class AppAPIProvider
     /// <summary>
     /// Sets the image color channels.
     /// </summary>
-    public void IG_SetColorChannels(ColorChannels channels)
+    public static void IG_SetColorChannels(ColorChannels channels)
     {
         if (Viewer.SourceKind == PhotoSource.None || Core.IsBusy) return;
 
@@ -1575,7 +1569,7 @@ public partial class AppAPIProvider
 
         if (!File.Exists(filePath))
         {
-            _ = await ModalWindow.ShowErrorAsync(_mainWindow, new ModalWindowOptions
+            _ = await ModalWindow.ShowErrorAsync(App.MainWindow, new ModalWindowOptions
             {
                 Title = Core.Lang[LangId.FrmMain_MnuOpenWith],
                 Description = Core.Lang[LangId._CreatingFileError],
@@ -1617,7 +1611,7 @@ public partial class AppAPIProvider
     {
         if (Core.Config.AfterEditingAction == AfterEditAppAction.Minimize)
         {
-            _mainWindow.WindowState = WindowState.Minimized;
+            App.MainWindow.WindowState = WindowState.Minimized;
         }
         else if (Core.Config.AfterEditingAction == AfterEditAppAction.Close)
         {
@@ -1629,7 +1623,7 @@ public partial class AppAPIProvider
     /// <summary>
     /// Invert image colors.
     /// </summary>
-    public void IG_InvertColors()
+    public static void IG_InvertColors()
     {
         if (Viewer.SourceKind == PhotoSource.None || Core.IsBusy) return;
 
@@ -1651,7 +1645,7 @@ public partial class AppAPIProvider
     /// Sets whether to play or pause the image animation.
     /// If the photo is a live/motion photo, opens the embedded video instead.
     /// </summary>
-    public async Task IG_ToggleImageAnimationAsync(string? boolStr = null)
+    public static async Task IG_ToggleImageAnimationAsync(string? boolStr = null)
     {
         var enabled = BHelper.ConvertStringToBool(boolStr);
         await IG_ToggleImageAnimationAsync(enabled);
@@ -1662,7 +1656,7 @@ public partial class AppAPIProvider
     /// Sets whether to play or pause the image animation.
     /// If the photo is a live/motion photo, opens the embedded video instead.
     /// </summary>
-    public async Task IG_ToggleImageAnimationAsync(bool? enabled)
+    public static async Task IG_ToggleImageAnimationAsync(bool? enabled)
     {
         // if this is a motion/live photo, extract and play the embedded video
         var meta = Viewer.Photo?.Metadata;
@@ -1708,7 +1702,7 @@ public partial class AppAPIProvider
     /// <summary>
     /// Rotate the current image according to the rotation options.
     /// </summary>
-    public void IG_Rotate(RotateOption options)
+    public static void IG_Rotate(RotateOption options)
     {
         if (Viewer.SourceKind == PhotoSource.None || Core.IsBusy) return;
 
@@ -1757,7 +1751,7 @@ public partial class AppAPIProvider
     /// <summary>
     /// Flips the current image according to the flip options.
     /// </summary>
-    public void IG_FlipImage(FlipOptions options)
+    public static void IG_FlipImage(FlipOptions options)
     {
         if (Viewer.SourceKind == PhotoSource.None || Core.IsBusy) return;
 
@@ -1800,7 +1794,7 @@ public partial class AppAPIProvider
     /// <summary>
     /// Sets the viewing photo as desktop wallpaper.
     /// </summary>
-    public async Task IG_SetDesktopBackgroundAsync()
+    public static async Task IG_SetDesktopBackgroundAsync()
     {
         await SetSystemBackgroundAsync(false);
     }
@@ -1809,7 +1803,7 @@ public partial class AppAPIProvider
     /// <summary>
     /// Sets the viewing photo as lock screen image.
     /// </summary>
-    public async Task IG_SetLockScreenImageAsync()
+    public static async Task IG_SetLockScreenImageAsync()
     {
         if (BHelper.OS != OSType.Windows)
         {
@@ -1826,7 +1820,7 @@ public partial class AppAPIProvider
     /// <param name="forLockScreen">
     /// <c>true</c>: For lock screen image, <c>false</c>: for desktop wallpaper
     /// </param>
-    private async Task SetSystemBackgroundAsync(bool forLockScreen)
+    private static async Task SetSystemBackgroundAsync(bool forLockScreen)
     {
         if (Viewer.SourceKind == PhotoSource.None || Core.ShellProvider is null) return;
 
@@ -1851,7 +1845,7 @@ public partial class AppAPIProvider
         // 2. check if file path is valid
         if (!File.Exists(filePath))
         {
-            _ = await ModalWindow.ShowErrorAsync(_mainWindow, new ModalWindowOptions
+            _ = await ModalWindow.ShowErrorAsync(App.MainWindow, new ModalWindowOptions
             {
                 Title = title,
                 Description = Core.Lang[LangId._CreatingFileError],
@@ -1885,7 +1879,7 @@ public partial class AppAPIProvider
                 ? Core.Lang[LangId.FrmMain_MnuSetLockScreen_Error]
                 : Core.Lang[LangId.FrmMain_MnuSetDesktopBackground_Error];
 
-            _ = await ModalWindow.ShowErrorAsync(_mainWindow, new ModalWindowOptions
+            _ = await ModalWindow.ShowErrorAsync(App.MainWindow, new ModalWindowOptions
             {
                 Title = title,
                 Heading = heading,
@@ -1906,9 +1900,9 @@ public partial class AppAPIProvider
     /// </summary>
     private async Task IG_PasteImageAsync()
     {
-        if (_mainWindow.Clipboard is null) return;
+        if (App.MainWindow.Clipboard is null) return;
 
-        using var data = await _mainWindow.Clipboard.TryGetDataAsync();
+        using var data = await App.MainWindow.Clipboard.TryGetDataAsync();
         if (data is null) return;
 
 
@@ -1973,12 +1967,12 @@ public partial class AppAPIProvider
     }
 
 
-    public async Task LoadClipboardPhotoAsync(Photo? photo)
+    public static async Task LoadClipboardPhotoAsync(Photo? photo)
     {
         // cancel the current loading image
         Core.Photos.Current?.CancelLoading();
 
-        await _mainWindow.PART_MainView.ViewPhotoAsync(photo, true, false);
+        await App.MainWindow.PART_MainView.ViewPhotoAsync(photo, true, false);
 
         Core.ClipboardImage = photo;
     }
@@ -1987,9 +1981,9 @@ public partial class AppAPIProvider
     /// <summary>
     /// Copies image pixels.
     /// </summary>
-    public async Task IG_CopyImagePixelsAsync()
+    public static async Task IG_CopyImagePixelsAsync()
     {
-        if (Viewer.SourceKind == PhotoSource.None || _mainWindow.Clipboard is null) return;
+        if (Viewer.SourceKind == PhotoSource.None || App.MainWindow.Clipboard is null) return;
 
         // 1. get rendered bitmap
         var bmp = Viewer.GetRenderedBitmap(!Viewer.SourceSelection.IsEmpty);
@@ -2005,13 +1999,13 @@ public partial class AppAPIProvider
         try
         {
             var abmp = SkiaCodec.ToWritableBitmap(bmp);
-            await _mainWindow.Clipboard.SetBitmapAsync(abmp);
+            await App.MainWindow.Clipboard.SetBitmapAsync(abmp);
 
             _ = Message.ShowAsync(Core.Lang[LangId.FrmMain_MnuCopyImagePixels_Success]);
         }
         catch (Exception ex)
         {
-            await ModalWindow.ShowErrorAsync(_mainWindow, new ModalWindowOptions
+            await ModalWindow.ShowErrorAsync(App.MainWindow, new ModalWindowOptions
             {
                 Title = Core.Lang[LangId.FrmMain_MnuCopyImagePixels],
                 Description = ex.Message,
@@ -2023,13 +2017,13 @@ public partial class AppAPIProvider
     /// <summary>
     /// Copy the current image path.
     /// </summary>
-    public async Task IG_CopyImagePathAsync()
+    public static async Task IG_CopyImagePathAsync()
     {
-        if (string.IsNullOrWhiteSpace(Core.Photos.CurrentFilePath) || _mainWindow.Clipboard is null) return;
+        if (string.IsNullOrWhiteSpace(Core.Photos.CurrentFilePath) || App.MainWindow.Clipboard is null) return;
 
         try
         {
-            await _mainWindow.Clipboard.SetTextAsync(Core.Photos.CurrentFilePath);
+            await App.MainWindow.Clipboard.SetTextAsync(Core.Photos.CurrentFilePath);
 
             // show message
             _ = Message.ShowAsync(Core.Lang[LangId.FrmMain_MnuCopyPath_Success]);
@@ -2041,7 +2035,7 @@ public partial class AppAPIProvider
     /// <summary>
     /// Copies the current photo file.
     /// </summary>
-    public async Task IG_CopyFilesAsync()
+    public static async Task IG_CopyFilesAsync()
     {
         await SetFileToClipboardAsync(Core.Photos.CurrentFilePath, false);
     }
@@ -2050,7 +2044,7 @@ public partial class AppAPIProvider
     /// <summary>
     /// Cuts the current photo file.
     /// </summary>
-    public async Task IG_CutFilesAsync()
+    public static async Task IG_CutFilesAsync()
     {
         await SetFileToClipboardAsync(Core.Photos.CurrentFilePath, true);
     }
@@ -2059,9 +2053,9 @@ public partial class AppAPIProvider
     /// <summary>
     /// Sets file to clipboard
     /// </summary>
-    private async Task SetFileToClipboardAsync(string? filePath, bool forCutting)
+    public static async Task SetFileToClipboardAsync(string? filePath, bool forCutting)
     {
-        if (_mainWindow.Clipboard is null || !File.Exists(filePath)) return;
+        if (App.MainWindow.Clipboard is null || !File.Exists(filePath)) return;
 
         // 1. cut/copy single file
         if (forCutting)
@@ -2090,7 +2084,7 @@ public partial class AppAPIProvider
             var dt = new DataTransfer();
             foreach (var path in Core.StringClipboard)
             {
-                var fi = await _mainWindow.StorageProvider.TryGetFileFromPathAsync(path);
+                var fi = await App.MainWindow.StorageProvider.TryGetFileFromPathAsync(path);
                 if (fi is null) continue;
 
                 var dti = new DataTransferItem();
@@ -2100,7 +2094,7 @@ public partial class AppAPIProvider
 
 
             // 4. perform copy/cut
-            await _mainWindow.Clipboard.SetDataAsync(dt);
+            await App.MainWindow.Clipboard.SetDataAsync(dt);
 
             _ = Message.ShowAsync(Core.Lang[forCutting
                     ? LangId.FrmMain_MnuCutFile_Success
@@ -2109,7 +2103,7 @@ public partial class AppAPIProvider
         }
         catch (Exception ex)
         {
-            await ModalWindow.ShowErrorAsync(_mainWindow, new ModalWindowOptions
+            await ModalWindow.ShowErrorAsync(App.MainWindow, new ModalWindowOptions
             {
                 Title = Core.Lang[forCutting ? LangId.FrmMain_MnuCutFile : LangId.FrmMain_MnuCopyFile],
                 Description = ex.Message,
@@ -2121,14 +2115,14 @@ public partial class AppAPIProvider
     /// <summary>
     /// Clears clipboard.
     /// </summary>
-    public async Task IG_ClearClipboardAsync()
+    public static async Task IG_ClearClipboardAsync()
     {
         // clear clipboard
         Core.StringClipboard.Clear();
 
-        if (_mainWindow.Clipboard is not null)
+        if (App.MainWindow.Clipboard is not null)
         {
-            await _mainWindow.Clipboard.ClearAsync();
+            await App.MainWindow.Clipboard.ClearAsync();
         }
 
 
@@ -2179,16 +2173,16 @@ public partial class AppAPIProvider
     /// <summary>
     /// Adjusts the main window size and position to fit the displayed image within the available screen area.
     /// </summary>
-    public void ApplyWindowFitMode(bool resetZoomMode = true)
+    public static void ApplyWindowFitMode(bool resetZoomMode = true)
     {
         if (!Core.Config.EnableWindowFit || Viewer.SourceKind == PhotoSource.None) return;
 
         // 1. reset window state
-        _mainWindow.WindowState = WindowState.Normal;
+        App.MainWindow.WindowState = WindowState.Normal;
 
 
         // 2. get the size
-        var dpi = _mainWindow.Dpi;
+        var dpi = App.MainWindow.Dpi;
         var toolbarPos = Config.GetControlLayout(LayoutControl.Toolbar);
         var galleryPos = Config.GetControlLayout(LayoutControl.Gallery);
 
@@ -2207,7 +2201,7 @@ public partial class AppAPIProvider
 
 
         // get current screen workarea
-        var screen = _mainWindow.Screens.ScreenFromWindow(_mainWindow)!;
+        var screen = App.MainWindow.Screens.ScreenFromWindow(App.MainWindow)!;
         var workArea = screen.WorkingArea.ToRect(dpi);
 
         // get source image size
@@ -2265,19 +2259,19 @@ public partial class AppAPIProvider
         // check center window to screen option
         if (!Core.Config.EnableCenterWindowFit)
         {
-            winBounds = winBounds.WithX(_mainWindow.Position.X / dpi);
-            winBounds = winBounds.WithY(_mainWindow.Position.Y / dpi);
+            winBounds = winBounds.WithX(App.MainWindow.Position.X / dpi);
+            winBounds = winBounds.WithY(App.MainWindow.Position.Y / dpi);
         }
 
 
         // 6. set min size for window
-        _mainWindow.MinWidth = gapW + 50;
-        _mainWindow.MinHeight = gapH + 50;
+        App.MainWindow.MinWidth = gapW + 50;
+        App.MainWindow.MinHeight = gapH + 50;
 
         // update window position and size
-        _mainWindow.Position = new((int)(winBounds.X * dpi), (int)(winBounds.Y * dpi));
-        _mainWindow.Width = winBounds.Width;
-        _mainWindow.Height = winBounds.Height;
+        App.MainWindow.Position = new((int)(winBounds.X * dpi), (int)(winBounds.Y * dpi));
+        App.MainWindow.Width = winBounds.Width;
+        App.MainWindow.Height = winBounds.Height;
 
         if (resetZoomMode)
         {
@@ -2325,13 +2319,13 @@ public partial class AppAPIProvider
             // exit full screen
             if (Core.Config.EnableFullScreen) IG_ToggleFullScreen(false);
 
-            _mainWindow.IsFrameless = true;
+            App.MainWindow.IsFrameless = true;
         }
 
         // restore frame
         else
         {
-            _mainWindow.IsFrameless = false;
+            App.MainWindow.IsFrameless = false;
         }
 
 
@@ -2397,14 +2391,14 @@ public partial class AppAPIProvider
             }
 
             // back up layout & window state
-            _windowBound = _mainWindow.Bounds;
-            _windowMaximized = _mainWindow.WindowState == WindowState.Maximized;
+            _windowBound = App.MainWindow.Bounds;
+            _windowMaximized = App.MainWindow.WindowState == WindowState.Maximized;
             _showToolbar = Core.Config.ShowToolbar;
             _showGallery = Core.Config.ShowGallery;
 
 
             // enable fullscreen
-            _mainWindow.WindowState = WindowState.FullScreen;
+            App.MainWindow.WindowState = WindowState.FullScreen;
 
 
             // hide toolbar & gallery
@@ -2422,7 +2416,7 @@ public partial class AppAPIProvider
 
             // restore window state, size, position
             Core.Config.EnableMainWindowMaximized = _windowMaximized;
-            _mainWindow.WindowState = _windowMaximized
+            App.MainWindow.WindowState = _windowMaximized
                 ? WindowState.Maximized
                 : WindowState.Normal;
 
@@ -2472,8 +2466,8 @@ public partial class AppAPIProvider
         _isWindowFitBeforeSlideshow = Core.Config.EnableWindowFit;
         _showToolbarBeforeSlideshow = Core.Config.ShowToolbar;
         _showGalleryBeforeSlideshow = Core.Config.ShowGallery;
-        _windowBoundBeforeSlideshow = _mainWindow.Bounds;
-        _windowMaximizedBeforeSlideshow = _mainWindow.WindowState == WindowState.Maximized;
+        _windowBoundBeforeSlideshow = App.MainWindow.Bounds;
+        _windowMaximizedBeforeSlideshow = App.MainWindow.WindowState == WindowState.Maximized;
 
 
         // 2. enter full screen if configured
@@ -2483,7 +2477,7 @@ public partial class AppAPIProvider
             if (Core.Config.EnableWindowFit) IG_ToggleWindowFit(false);
             if (Core.Config.EnableFrameless) SetFramelessMode__(false, false);
 
-            _mainWindow.WindowState = WindowState.FullScreen;
+            App.MainWindow.WindowState = WindowState.FullScreen;
             Core.Config.EnableFullScreen = true;
         }
 
@@ -2537,7 +2531,7 @@ public partial class AppAPIProvider
             Core.Config.EnableFullScreen = false;
 
             Core.Config.EnableMainWindowMaximized = _windowMaximizedBeforeSlideshow;
-            _mainWindow.WindowState = _windowMaximizedBeforeSlideshow
+            App.MainWindow.WindowState = _windowMaximizedBeforeSlideshow
                 ? WindowState.Maximized
                 : WindowState.Normal;
         }
@@ -2606,7 +2600,7 @@ public partial class AppAPIProvider
     /// Plays or pauses the current slideshow.
     /// </summary>
     /// <param name="boolStr">Values: <c>"true"</c>, <c>"false"</c> or empty.</param>
-    public void IG_ToggleSlideshowPlayback(string? boolStr = null)
+    public static void IG_ToggleSlideshowPlayback(string? boolStr = null)
     {
         var enabled = BHelper.ConvertStringToBool(boolStr);
         IG_ToggleSlideshowPlayback(enabled);
@@ -2616,7 +2610,7 @@ public partial class AppAPIProvider
     /// <summary>
     /// Plays or pauses the current slideshow.
     /// </summary>
-    public void IG_ToggleSlideshowPlayback(bool? enabled = null)
+    public static void IG_ToggleSlideshowPlayback(bool? enabled = null)
     {
         if (Core.Slideshow?.IsRunning != true) return;
         var isPaused = Core.Slideshow?.IsPaused ?? false;
@@ -2639,7 +2633,7 @@ public partial class AppAPIProvider
     /// Toggles visibility of toolbar.
     /// </summary>
     /// <param name="boolStr">Values: <c>"true"</c>, <c>"false"</c> or empty.</param>
-    public void IG_ToggleToolbar(string? boolStr = null)
+    public static void IG_ToggleToolbar(string? boolStr = null)
     {
         var enabled = BHelper.ConvertStringToBool(boolStr);
         IG_ToggleToolbar(enabled);
@@ -2649,7 +2643,7 @@ public partial class AppAPIProvider
     /// <summary>
     /// Toggles visibility of toolbar.
     /// </summary>
-    public void IG_ToggleToolbar(bool? enabled = null)
+    public static void IG_ToggleToolbar(bool? enabled = null)
     {
         enabled ??= !Core.Config.ShowToolbar;
         Core.Config.ShowToolbar = enabled.Value;
@@ -2668,7 +2662,7 @@ public partial class AppAPIProvider
     /// <summary>
     /// Toggles visibility of gallery.
     /// </summary>
-    public async Task IG_ToggleGalleryAsync(string? boolStr = null)
+    public static async Task IG_ToggleGalleryAsync(string? boolStr = null)
     {
         var enabled = BHelper.ConvertStringToBool(boolStr);
         await IG_ToggleGalleryAsync(enabled);
@@ -2678,7 +2672,7 @@ public partial class AppAPIProvider
     /// <summary>
     /// Toggles visibility of gallery
     /// </summary>
-    public async Task IG_ToggleGalleryAsync(bool? enabled = null)
+    public static async Task IG_ToggleGalleryAsync(bool? enabled = null)
     {
         enabled ??= !Core.Config.ShowGallery;
         Core.Config.ShowGallery = enabled.Value;
@@ -2688,7 +2682,7 @@ public partial class AppAPIProvider
             Gallery.ScrollToItem(Core.Photos.CurrentIndex);
         }
 
-        _mainWindow.PART_MainView.ApplyAppLayout();
+        App.MainWindow.PART_MainView.ApplyAppLayout();
 
         // update window fit
         if (Core.Config.EnableWindowFit)
@@ -2751,7 +2745,7 @@ public partial class AppAPIProvider
     /// Toggles window top most.
     /// </summary>
     /// <param name="boolStr">Values: <c>"true"</c>, <c>"false"</c> or empty.</param>
-    public void IG_ToggleWindowTopMost(string? boolStr = null)
+    public static void IG_ToggleWindowTopMost(string? boolStr = null)
     {
         var enabled = BHelper.ConvertStringToBool(boolStr);
         IG_ToggleWindowTopMost(enabled);
@@ -2761,7 +2755,7 @@ public partial class AppAPIProvider
     /// <summary>
     /// Toggles window top most.
     /// </summary>
-    public void IG_ToggleWindowTopMost(bool? enabled = null)
+    public static void IG_ToggleWindowTopMost(bool? enabled = null)
     {
         enabled ??= !Core.Config.EnableWindowTopMost;
         Core.Config.EnableWindowTopMost = enabled.Value;
@@ -2776,7 +2770,7 @@ public partial class AppAPIProvider
     /// Sets background color,
     /// opens Color Picker dialog if the <paramref name="hexColor"/> is <c>null</c>.
     /// </summary>
-    public async Task IG_SetBackgroundColorAsync(string? hexColor = null)
+    public static async Task IG_SetBackgroundColorAsync(string? hexColor = null)
     {
         Color? newColor = null;
 
@@ -2792,7 +2786,7 @@ public partial class AppAPIProvider
             {
                 Title = Core.Lang[LangId.FrmMain_MnuChangeBackgroundColor],
             };
-            var result = await cp.ShowAsync(_mainWindow);
+            var result = await cp.ShowAsync(App.MainWindow);
 
             if (result != DialogExitCode.OK) return;
             newColor = cp.SelectedColor;
@@ -2827,7 +2821,7 @@ public partial class AppAPIProvider
     /// <summary>
     /// Toggles a tool by ID. Non-hosted tools only support open (toggle = open).
     /// </summary>
-    public void IG_ToggleTool(string? toolId)
+    public static void IG_ToggleTool(string? toolId)
     {
         if (string.IsNullOrEmpty(toolId)) return;
         if (Core.ToolRegistry.Get(toolId) is not { } tool) return;
@@ -2871,7 +2865,7 @@ public partial class AppAPIProvider
     /// Opens a tool by ID. Handles both hosted and non-hosted plugins.
     /// Settings are loaded before the tool is opened/executed.
     /// </summary>
-    public void IG_OpenTool(string? toolId)
+    public static void IG_OpenTool(string? toolId)
     {
         if (string.IsNullOrEmpty(toolId)) return;
         if (Core.ToolRegistry.Get(toolId) is not { } tool) return;
@@ -2900,7 +2894,7 @@ public partial class AppAPIProvider
                 if (Core.ToolRegistry.ExternalTools.IsRunning(toolId)) return;
 
                 // External non-hosted tool: start process and execute
-                _ = tool.ExecuteAsync(new ToolExecutionContext { Window = _mainWindow });
+                _ = tool.ExecuteAsync(new ToolExecutionContext { Window = App.MainWindow });
             }
             else
             {
@@ -2908,7 +2902,7 @@ public partial class AppAPIProvider
                 tool.Viewer = Viewer;
                 ToolRegistry.LoadToolSettings(tool);
 
-                var context = new ToolExecutionContext { Window = _mainWindow };
+                var context = new ToolExecutionContext { Window = App.MainWindow };
                 _ = ToolRegistry.ExecuteNonHostedToolAsync(tool, context);
             }
         }
@@ -2919,7 +2913,7 @@ public partial class AppAPIProvider
     /// Closes a tool by ID. Only applicable to hosted tools.
     /// Saves settings before closing.
     /// </summary>
-    public void IG_CloseTool(string? toolId)
+    public static void IG_CloseTool(string? toolId)
     {
         if (string.IsNullOrEmpty(toolId)) return;
 
@@ -2937,7 +2931,7 @@ public partial class AppAPIProvider
     /// <summary>
     /// Closes the currently active tool in the tool host, if one is open.
     /// </summary>
-    public void IG_CloseCurrentTool()
+    public static void IG_CloseCurrentTool()
     {
         if (ToolHost.Tool is ITool currentTool)
         {
@@ -2950,9 +2944,9 @@ public partial class AppAPIProvider
     /// <summary>
     /// Opens website to download more tools.
     /// </summary>
-    public void IG_GetMoreTools()
+    public static void IG_GetMoreTools()
     {
-        _ = BHelper.OpenUrlAsync(_mainWindow, "https://imageglass.org/tools", "from_get_more_tools");
+        _ = BHelper.OpenUrlAsync(App.MainWindow, "https://imageglass.org/tools", "from_get_more_tools");
     }
 
     #endregion // Tools APIs
@@ -2964,10 +2958,10 @@ public partial class AppAPIProvider
     /// <summary>
     /// Open About window.
     /// </summary>
-    public async Task IG_OpenAboutWindowAsync()
+    public static async Task IG_OpenAboutWindowAsync()
     {
         var dialog = new AboutWindow();
-        _ = await dialog.ShowAsync(_mainWindow);
+        _ = await dialog.ShowAsync(App.MainWindow);
     }
 
 
@@ -2975,7 +2969,7 @@ public partial class AppAPIProvider
     /// Checks for new update asynchronously with option to shows UI feedback.
     /// </summary>
     /// <param name="boolStr">Values: <c>"true"</c>, <c>"false"</c> or empty.</param>
-    public async Task IG_CheckForUpdateAsync(string? boolStr = null)
+    public static async Task IG_CheckForUpdateAsync(string? boolStr = null)
     {
         var showUI = BHelper.ConvertStringToBool(boolStr);
         await IG_CheckForUpdateAsync(showUI ?? true);
@@ -2985,7 +2979,7 @@ public partial class AppAPIProvider
     /// <summary>
     /// Checks for new update asynchronously with option to shows UI feedback.
     /// </summary>
-    public async Task IG_CheckForUpdateAsync(bool showUI = true)
+    public static async Task IG_CheckForUpdateAsync(bool showUI = true)
     {
         // silent mode: skip if disabled or checked recently
         if (!showUI)
@@ -3007,7 +3001,7 @@ public partial class AppAPIProvider
             updateWindow.SetCheckingState();
 
             // show the window non-blocking, then perform the check
-            _ = updateWindow.ShowAsync(_mainWindow);
+            _ = updateWindow.ShowAsync(App.MainWindow);
         }
 
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
@@ -3025,7 +3019,7 @@ public partial class AppAPIProvider
             {
                 updateWindow = new UpdateWindow();
                 updateWindow.SetResultState(result);
-                _ = await updateWindow.ShowAsync(_mainWindow);
+                _ = await updateWindow.ShowAsync(App.MainWindow);
             }
         }
     }
@@ -3034,9 +3028,9 @@ public partial class AppAPIProvider
     /// <summary>
     /// Opens website to report issue.
     /// </summary>
-    public void IG_ReportIssue()
+    public static void IG_ReportIssue()
     {
-        _ = BHelper.OpenUrlAsync(_mainWindow,
+        _ = BHelper.OpenUrlAsync(App.MainWindow,
             "https://github.com/d2phap/ImageGlass/issues?q=is%3Aissue+",
             "from_report_issue");
     }
@@ -3045,7 +3039,7 @@ public partial class AppAPIProvider
     /// <summary>
     /// Registers the app as the default photo viewer.
     /// </summary>
-    public async Task IG_SetDefaultPhotoViewerAsync()
+    public static async Task IG_SetDefaultPhotoViewerAsync()
     {
         await SetDefaultPhotoViewerAsync(true);
     }
@@ -3054,7 +3048,7 @@ public partial class AppAPIProvider
     /// <summary>
     /// Unregisters the app from the default photo viewer.
     /// </summary>
-    public async Task IG_RemoveDefaultPhotoViewerAsync()
+    public static async Task IG_RemoveDefaultPhotoViewerAsync()
     {
         await SetDefaultPhotoViewerAsync(false);
     }
@@ -3063,7 +3057,7 @@ public partial class AppAPIProvider
     /// <summary>
     /// Sets or removes the app as the default photo viewer for supported file formats.
     /// </summary>
-    private async Task SetDefaultPhotoViewerAsync(bool enable)
+    public static async Task SetDefaultPhotoViewerAsync(bool enable)
     {
         if (Core.ShellProvider is null) return;
 
@@ -3073,7 +3067,7 @@ public partial class AppAPIProvider
         {
             await Core.ShellProvider.SetDefaultPhotoViewerAsync(extensions, enable);
 
-            await ModalWindow.ShowInfoAsync(_mainWindow, new ModalWindowOptions
+            await ModalWindow.ShowInfoAsync(App.MainWindow, new ModalWindowOptions
             {
                 Title = Core.Lang[enable
                     ? LangId.FrmMain_MnuSetDefaultPhotoViewer
@@ -3087,7 +3081,7 @@ public partial class AppAPIProvider
         }
         catch (Exception ex)
         {
-            await ModalWindow.ShowErrorAsync(_mainWindow, new ModalWindowOptions
+            await ModalWindow.ShowErrorAsync(App.MainWindow, new ModalWindowOptions
             {
                 Title = Core.Lang[enable
                     ? LangId.FrmMain_MnuSetDefaultPhotoViewer
@@ -3159,7 +3153,7 @@ public partial class AppAPIProvider
     /// <summary>
     /// Opens the context menu associated with the viewer.
     /// </summary>
-    public void IG_OpenContextMenu()
+    public static void IG_OpenContextMenu()
     {
         Viewer.ContextMenu?.Open();
     }

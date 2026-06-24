@@ -44,7 +44,7 @@ namespace ImageGlass.Common;
 
 public partial class App : Application
 {
-    private MainWindow? _mainWindow = null;
+    private static MainWindow? _mainWindow = null;
     private TaskCompletionSource _taskUi = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
 
@@ -53,7 +53,13 @@ public partial class App : Application
     /// <summary>
     /// Gets the main window.
     /// </summary>
-    public MainWindow MainWindow => _mainWindow!;
+    public static MainWindow MainWindow => _mainWindow!;
+
+
+    /// <summary>
+    /// Gets the settings window.
+    /// </summary>
+    public static SettingsWindow? SettingsWindow { get; set; }
 
 
     /// <summary>
@@ -379,7 +385,7 @@ public partial class App : Application
 
 
         // initialize service providers
-        Core.API = new AppAPIProvider(_mainWindow);
+        Core.API = new AppAPIProvider();
 
 
         // initialize update provider and auto-check

@@ -389,7 +389,7 @@ public partial class MainWindowView : PhControl
             && e.ChangeSource != ZoomChangeSource.SizeChanged
             && (e.IsManualZoom || e.IsZoomModeChange))
         {
-            Core.API.ApplyWindowFitMode(e.ChangeSource == ZoomChangeSource.ZoomMode);
+            AppAPIProvider.ApplyWindowFitMode(e.ChangeSource == ZoomChangeSource.ZoomMode);
         }
     }
 

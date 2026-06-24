@@ -323,7 +323,7 @@ public partial class AppAPIProvider
             // get the language string for error title
             var errorTitle = Core.Lang[ac.LangKey];
 
-            _ = await ModalWindow.ShowErrorAsync(_mainWindow, new ModalWindowOptions
+            _ = await ModalWindow.ShowErrorAsync(App.MainWindow, new ModalWindowOptions
             {
                 Title = errorTitle,
                 Description = error.Message,

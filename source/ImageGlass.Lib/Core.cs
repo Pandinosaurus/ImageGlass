@@ -753,7 +753,7 @@ public static class Core
     public static async Task LoadClipboardPhotoAsync(Photo? photo)
     {
         if (API is null) return;
-        await API.LoadClipboardPhotoAsync(photo);
+        await AppAPIProvider.LoadClipboardPhotoAsync(photo);
     }
 
 

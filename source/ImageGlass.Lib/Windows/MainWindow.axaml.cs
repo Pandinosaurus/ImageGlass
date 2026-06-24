@@ -310,8 +310,10 @@ public partial class MainWindow : PhWindow
         }
 
 
-        // hide the window
+        // hide the open windows
         Hide();
+        App.SettingsWindow?.Hide();
+
 
         // save config to file
         var taskConfig = Core.Config.SaveAsync();

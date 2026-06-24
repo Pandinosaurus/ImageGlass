@@ -250,7 +250,7 @@ public partial class CropImageToolControl : PhControl, IToolControl
         var bitmap = Viewer.GetRenderedBitmap(true);
         var photo = new Photo(bitmap);
 
-        await Core.API!.LoadClipboardPhotoAsync(photo);
+        await AppAPIProvider.LoadClipboardPhotoAsync(photo);
     }
 
 
