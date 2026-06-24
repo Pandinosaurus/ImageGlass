@@ -26,7 +26,6 @@ using Avalonia.Platform;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using ImageGlass.Common.AppThemes;
-using ImageGlass.Common.Extensions;
 using ImageGlass.Common.Localization;
 using ImageGlass.Common.Photoing;
 using ImageGlass.Common.ServiceProviders;
@@ -417,7 +416,8 @@ public partial class App : Application
             var info = PlatformSettings!.GetColorValues();
             var isSystemDarkMode = info.ThemeVariant == PlatformThemeVariant.Dark;
 
-            // sync the global: ColorValuesChanged only fires on later OS theme changes
+            // sync the global: ColorValuesChanged only fires on later OS theme changes, so without
+            // this Core.IsSystemDarkMode would stay at its default and mis-resolve live theme re-applies
             Core.IsSystemDarkMode = isSystemDarkMode;
 
             try
@@ -443,7 +443,11 @@ public partial class App : Application
     /// <summary>
     /// Applies the current theme pack and accent color to the app, updating UI resources as needed.
     /// </summary>
-    public async Task ApplyThemePackAsync(bool isSystemDarkMode, Color systemAccentColor)
+    /// <param name="systemAccentColor">
+    /// The raw OS accent color. Pass <c>null</c> (e.g. on a live re-apply) to read it fresh from the
+    /// platform, so a pack that follows the system accent always resolves the true OS accent.
+    /// </param>
+    public async Task ApplyThemePackAsync(bool isSystemDarkMode, Color? systemAccentColor = null)
     {
         // load theme pack
         var hasThemeChanged = await Core.Config.LoadCurrentThemeAsync(isSystemDarkMode,
@@ -452,10 +456,13 @@ public partial class App : Application
                 forceUpdateBackground: false);
 
         // load & compute accent colors
+        var systemAccent = systemAccentColor
+            ?? PlatformSettings?.GetColorValues().AccentColor1
+            ?? Core.AccentColor;
         var accent = Core.Theme.UseSystemAccent
-            ? systemAccentColor
+            ? systemAccent
             : Core.Theme.AccentColor;
-        var hasAccentChanged = Core.SetAccentColor(accent.WithBrightness(-0.125f));
+        var hasAccentChanged = Core.SetAccentColor(accent);
 
 
         // set UI according to theme pack

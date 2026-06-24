@@ -136,11 +136,13 @@ public sealed class SettingsViewModel : PhReactive
             Core.API.RegisterHotkeys();
         }
 
-        // theme pack changed
+        // theme pack changed → re-apply live. omit the accent so ApplyThemePackAsync reads the live
+        // OS accent itself; passing the derived Core.AccentColor would make a system-accent pack
+        // inherit the previous pack's accent (and darken it again each time)
         if (changedIds.Any(static id => id is ConfigId.DarkTheme or ConfigId.LightTheme)
             && Avalonia.Application.Current is App app)
         {
-            _ = app.ApplyThemePackAsync(Core.IsSystemDarkMode, Core.AccentColor);
+            _ = app.ApplyThemePackAsync(Core.IsSystemDarkMode);
         }
 
 
