@@ -40,7 +40,7 @@ public sealed class SettingsViewModel : PhReactive
     /// <summary>
     /// Gets the shared index of all setting rows (for search + navigate-by-config).
     /// </summary>
-    public SettingsIndex Index { get; } = new();
+    public SettingsIndex Indexing { get; } = new();
 
 
     /// <summary>
@@ -130,15 +130,13 @@ public sealed class SettingsViewModel : PhReactive
             Core.UpdateDestColorProfile();
         }
 
-        // toolbar buttons edited: the toolbar itself rebuilds via its ItemsSource binding,
-        // but button hotkey text (tooltips) and the global hotkey map are only wired in
-        // RegisterHotkeys, so re-run it to pick up the new/changed/removed buttons
+        // updated hotkeys after toolbar buttons edited
         if (changedIds.Contains(ConfigId.ToolbarButtons))
         {
             Core.API.RegisterHotkeys();
         }
 
-        // dark/light theme pack changed → re-apply the active pack live
+        // theme pack changed
         if (changedIds.Any(static id => id is ConfigId.DarkTheme or ConfigId.LightTheme)
             && Avalonia.Application.Current is App app)
         {

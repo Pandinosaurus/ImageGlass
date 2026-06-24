@@ -73,7 +73,7 @@ public partial class ToolbarSettingsView : SettingsPageView
         PART_Editor.ButtonsChanged += (_, _) =>
             VM.SetValue(ConfigId.ToolbarButtons, PART_Editor.CurrentButtons);
 
-        Register(PART_Editor, LangId.FrmSettings_Toolbar_ToolbarButtons,
+        RegisterSearchKey(PART_Editor, LangId.FrmSettings_Toolbar_ToolbarButtons,
             ConfigId.ToolbarButtons, LangId.FrmSettings_Toolbar_ToolbarButtons);
     }
 

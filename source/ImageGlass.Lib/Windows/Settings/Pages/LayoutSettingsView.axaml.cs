@@ -143,7 +143,7 @@ public partial class LayoutSettingsView : SettingsPageView
         // available tags: selectable so they can be copied, separated by the same delimiter
         PART_AvailableTags.Text = string.Join(TAG_SEPARATOR, _availableTags);
 
-        Register(PART_ImageInfoTags, LangId.FrmSettings_ImageInfoTags,
+        RegisterSearchKey(PART_ImageInfoTags, LangId.FrmSettings_ImageInfoTags,
             ConfigId.ImageInfoTags, LangId.FrmSettings_Window);
     }
 
@@ -202,9 +202,9 @@ public partial class LayoutSettingsView : SettingsPageView
                 ApplyPosition(LayoutControl.Gallery, pos);
         };
 
-        Register(PART_ToolbarPosition, LangId.FrmSettings_Layout_ToolbarPosition,
+        RegisterSearchKey(PART_ToolbarPosition, LangId.FrmSettings_Layout_ToolbarPosition,
             ConfigId.Layout, LangId.FrmSettings_Controls);
-        Register(PART_GalleryPosition, LangId.FrmSettings_Layout_GalleryPosition,
+        RegisterSearchKey(PART_GalleryPosition, LangId.FrmSettings_Layout_GalleryPosition,
             ConfigId.Layout, LangId.FrmSettings_Controls);
     }
 

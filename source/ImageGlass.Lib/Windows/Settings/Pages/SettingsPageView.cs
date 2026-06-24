@@ -27,19 +27,7 @@ using System.Globalization;
 namespace ImageGlass.Common.Windows;
 
 /// <summary>
-/// Base class for every settings page view (the XAML content of one settings tab).
-/// <para>
-/// It centralizes everything the pages share so it is written once: the working-copy
-/// <see cref="SettingsViewModel"/>, the search-index registration, the localized
-/// control-binding helpers (toggles, numeric/text inputs, enum dropdowns, link buttons),
-/// and the language-change refresh plumbing.
-/// </para>
-/// <para>
-/// To add a new page: derive from this class, set the XAML root element to
-/// <c>windows:SettingsPageView</c>, call <see cref="Initialize"/> from the
-/// <c>(vm, navId, pageLabel)</c> constructor, and create the rows in <see cref="Build"/>
-/// using the <c>Bind*</c> helpers. Do NOT re-implement those helpers on the page.
-/// </para>
+/// Base class for every settings page view.
 /// </summary>
 public abstract class SettingsPageView : PhControl
 {
@@ -58,7 +46,9 @@ public abstract class SettingsPageView : PhControl
     /// </summary>
     protected LangId? PageLabel { get; private set; }
 
-    // re-applies localized text to controls that don't self-refresh (buttons, combo items)
+    /// <summary>
+    /// Re-applies localized text to controls that don't self-refresh (buttons, combo items)
+    /// </summary>
     private readonly List<Action> _langRefreshers = [];
 
 
@@ -111,6 +101,23 @@ public abstract class SettingsPageView : PhControl
 
 
     /// <summary>
+    /// Registers a setting row into the shared search index.
+    /// </summary>
+    protected void RegisterSearchKey(Control target, LangId label, ConfigId? id, LangId? section)
+    {
+        VM.Indexing.Register(new SettingItem
+        {
+            Id = id,
+            Label = label,
+            PageNavId = NavId,
+            Page = PageLabel,
+            Section = section,
+            Target = target,
+        });
+    }
+
+
+    /// <summary>
     /// Binds a checkbox to a boolean config id (staged on change).
     /// </summary>
     protected void BindToggle(CheckBox chk, ConfigId id, LangId label, LangId? section, bool defaultValue = false)
@@ -118,7 +125,7 @@ public abstract class SettingsPageView : PhControl
         chk.IsChecked = VM.GetValue(id, defaultValue);
         chk.IsCheckedChanged += (_, _) => VM.SetValue(id, chk.IsChecked ?? false);
 
-        Register(chk, label, id, section);
+        RegisterSearchKey(chk, label, id, section);
     }
 
 
@@ -133,7 +140,7 @@ public abstract class SettingsPageView : PhControl
             if (int.TryParse(box.Text, out var v)) VM.SetValue(id, v);
         };
 
-        Register(box, label, id, section);
+        RegisterSearchKey(box, label, id, section);
     }
 
 
@@ -148,7 +155,7 @@ public abstract class SettingsPageView : PhControl
             if (uint.TryParse(box.Text, out var v)) VM.SetValue(id, v);
         };
 
-        Register(box, label, id, section);
+        RegisterSearchKey(box, label, id, section);
     }
 
 
@@ -164,7 +171,7 @@ public abstract class SettingsPageView : PhControl
                 VM.SetValue(id, v);
         };
 
-        Register(box, label, id, section);
+        RegisterSearchKey(box, label, id, section);
     }
 
 
@@ -188,7 +195,7 @@ public abstract class SettingsPageView : PhControl
             if (valueLabel is not null) valueLabel.LangParams = format(slider.Value);
         };
 
-        Register(slider, label, id, section);
+        RegisterSearchKey(slider, label, id, section);
     }
 
 
@@ -211,7 +218,7 @@ public abstract class SettingsPageView : PhControl
             if (valueLabel is not null) valueLabel.LangParams = v.ToString(CultureInfo.InvariantCulture);
         };
 
-        Register(slider, label, id, section);
+        RegisterSearchKey(slider, label, id, section);
     }
 
 
@@ -243,7 +250,7 @@ public abstract class SettingsPageView : PhControl
             if (combo.SelectedItem is ComboBoxItem { Tag: TEnum value }) VM.SetValue(id, value);
         };
 
-        Register(combo, label, id, section);
+        RegisterSearchKey(combo, label, id, section);
     }
 
 
@@ -264,7 +271,7 @@ public abstract class SettingsPageView : PhControl
         ToolTip.SetTip(btn, tooltip);
         btn.Click += (_, _) => onClick();
 
-        Register(btn, label, null, null);
+        RegisterSearchKey(btn, label, null, null);
     }
 
 
@@ -282,25 +289,9 @@ public abstract class SettingsPageView : PhControl
         picker.ColorChanged += (_, _) => VM.SetValue(id, picker.SelectedColor.ToHex());
         AddLangRefresher(() => picker.Title = Core.Lang[label]);
 
-        Register(picker, label, id, section);
+        RegisterSearchKey(picker, label, id, section);
     }
 
-
-    /// <summary>
-    /// Registers a setting row into the shared search index.
-    /// </summary>
-    protected void Register(Control target, LangId label, ConfigId? id, LangId? section)
-    {
-        VM.Index.Register(new SettingItem
-        {
-            Id = id,
-            Label = label,
-            PageNavId = NavId,
-            Page = PageLabel,
-            Section = section,
-            Target = target,
-        });
-    }
 
     #endregion // Binding helpers
 

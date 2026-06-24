@@ -230,7 +230,7 @@ public partial class SettingsWindowView : PhControl
     /// </summary>
     private void UpdateSearchResults()
     {
-        var results = _vm.Index.Search(PART_Search.Text).Take(25).ToList();
+        var results = _vm.Indexing.Search(PART_Search.Text).Take(25).ToList();
         PART_SearchResults.ItemsSource = results;
         PART_SearchPopup.IsOpen = results.Count > 0;
 
@@ -386,7 +386,7 @@ public partial class SettingsWindowView : PhControl
     /// </summary>
     public void NavigateToConfig(string? configId)
     {
-        var item = _vm.Index.FindByConfigId(configId);
+        var item = _vm.Indexing.FindByConfigId(configId);
         if (item is null) return;
 
         JumpToSetting(item);

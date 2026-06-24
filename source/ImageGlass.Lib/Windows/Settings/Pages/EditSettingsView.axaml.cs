@@ -107,7 +107,7 @@ public partial class EditSettingsView : SettingsPageView
         // rebuild on language change (also performs the initial render)
         AddLangRefresher(RebuildAppsTable);
 
-        Register(PART_AddApp, LangId.FrmSettings_EditApps, ConfigId.EditApps, LangId.FrmSettings_EditApps);
+        RegisterSearchKey(PART_AddApp, LangId.FrmSettings_EditApps, ConfigId.EditApps, LangId.FrmSettings_EditApps);
     }
 
 

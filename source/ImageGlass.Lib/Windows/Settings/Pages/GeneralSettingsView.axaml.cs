@@ -88,7 +88,7 @@ public partial class GeneralSettingsView : SettingsPageView
         chk.IsCheckedChanged += (_, _) =>
             VM.SetValue(id, (chk.IsChecked ?? false) ? DateTime.UtcNow.ToString() : "0");
 
-        Register(chk, label, id, section);
+        RegisterSearchKey(chk, label, id, section);
     }
 
 

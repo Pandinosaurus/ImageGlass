@@ -861,8 +861,8 @@ public class Lang
 
         new(LangId.FrmSettings_Toolbar_ToolbarButtons, "Toolbar buttons"),
         new(LangId.FrmSettings_Toolbar_AddCustomButton, "Add a custom button…"),
-        new(LangId.FrmSettings_Toolbar_AvailableButtons, "Available buttons:"),
-        new(LangId.FrmSettings_Toolbar_CurrentButtons, "Current buttons:"),
+        new(LangId.FrmSettings_Toolbar_AvailableButtons, "Available buttons"),
+        new(LangId.FrmSettings_Toolbar_CurrentButtons, "Current buttons"),
         new(LangId.FrmSettings_Toolbar_Errors_ButtonIdRequired, "Button ID required."),
         new(LangId.FrmSettings_Toolbar_Errors_ButtonIdDuplicated, "A button with the ID '{0}' has already been defined. Please choose a different and unique ID for your button to avoid conflicts."),
         new(LangId.FrmSettings_Toolbar_Errors_ButtonExecutableRequired, "Button executable required."),

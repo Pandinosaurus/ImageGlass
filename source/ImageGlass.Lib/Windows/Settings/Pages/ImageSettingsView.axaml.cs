@@ -171,7 +171,7 @@ public partial class ImageSettingsView : SettingsPageView
 
         UpdateColorProfileVisibility();
 
-        Register(PART_ColorProfile, LangId.FrmSettings_ColorProfile,
+        RegisterSearchKey(PART_ColorProfile, LangId.FrmSettings_ColorProfile,
             ConfigId.ColorProfile, LangId.FrmSettings_ColorManagement);
     }
 

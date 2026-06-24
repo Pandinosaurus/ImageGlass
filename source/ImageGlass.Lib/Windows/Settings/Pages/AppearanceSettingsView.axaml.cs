@@ -129,15 +129,15 @@ public partial class AppearanceSettingsView : SettingsPageView
     {
         SetLocalizedText(PART_InstallTheme, LangId.FrmSettings_Theme_InstallTheme);
         PART_InstallTheme.Click += async (_, _) => await InstallThemesAsync();
-        Register(PART_InstallTheme, LangId.FrmSettings_Theme_InstallTheme, null, LangId.FrmSettings_Theme);
+        RegisterSearchKey(PART_InstallTheme, LangId.FrmSettings_Theme_InstallTheme, null, LangId.FrmSettings_Theme);
 
         SetLocalizedText(PART_RefreshThemes, LangId.FrmSettings_Refresh);
         PART_RefreshThemes.Click += async (_, _) => await ReloadThemesAsync();
-        Register(PART_RefreshThemes, LangId.FrmSettings_Refresh, null, LangId.FrmSettings_Theme);
+        RegisterSearchKey(PART_RefreshThemes, LangId.FrmSettings_Refresh, null, LangId.FrmSettings_Theme);
 
         SetLocalizedText(PART_OpenThemeFolder, LangId.FrmSettings_Theme_OpenThemeFolder);
         PART_OpenThemeFolder.Click += (_, _) => BHelper.OpenFolderPath(Config.ThemePacksDir);
-        Register(PART_OpenThemeFolder, LangId.FrmSettings_Theme_OpenThemeFolder, null, LangId.FrmSettings_Theme);
+        RegisterSearchKey(PART_OpenThemeFolder, LangId.FrmSettings_Theme_OpenThemeFolder, null, LangId.FrmSettings_Theme);
 
         BindLink(PART_GetMoreThemes, LangId.FrmSettings_Theme_GetMoreThemes, THEMES_URL,
             () => _ = BHelper.OpenUrlAsync(this, THEMES_URL, "from_setting_appearance"));

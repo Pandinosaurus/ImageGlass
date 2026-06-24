@@ -119,7 +119,7 @@ public partial class ViewerSettingsView : SettingsPageView
 
         UpdateZoomLevelsEnabled();
 
-        Register(PART_ZoomLevels, LangId.FrmSettings_ZoomLevels,
+        RegisterSearchKey(PART_ZoomLevels, LangId.FrmSettings_ZoomLevels,
             ConfigId.ZoomLevels, LangId.FrmSettings_Zooming);
     }
 
