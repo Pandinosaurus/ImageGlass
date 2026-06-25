@@ -131,8 +131,8 @@ public sealed class SettingsViewModel : PhReactive
             Core.UpdateDestColorProfile();
         }
 
-        // updated hotkeys after toolbar buttons edited
-        if (changedIds.Contains(ConfigId.ToolbarButtons))
+        // updated hotkeys after toolbar buttons or menu hotkeys edited
+        if (changedIds.Contains(ConfigId.ToolbarButtons) || changedIds.Contains(ConfigId.MenuHotkeys))
         {
             Core.API.RegisterHotkeys();
         }
