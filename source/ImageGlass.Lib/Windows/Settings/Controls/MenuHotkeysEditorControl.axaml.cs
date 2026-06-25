@@ -61,7 +61,6 @@ public partial class MenuHotkeysEditorControl : PhControl
         InitializeComponent();
 
         PART_Search.TextChanged += (_, _) => ApplyFilter();
-        PART_ClearSearch.Click += (_, _) => { PART_Search.Text = string.Empty; PART_Search.Focus(); };
         PART_Reset.Click += (_, _) => ResetAll();
 
         PART_List.DoubleTapped += PART_List_DoubleTapped;

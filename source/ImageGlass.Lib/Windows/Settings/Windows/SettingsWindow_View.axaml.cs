@@ -25,6 +25,7 @@ using Avalonia.VisualTree;
 using ImageGlass.Common.Localization;
 using ImageGlass.Common.Types;
 using ImageGlass.UI;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -167,12 +168,12 @@ public partial class SettingsWindowView : PhControl
         if (e.Key != _searchHotkey.Key || e.KeyModifiers != _searchHotkey.Modifiers) return;
 
         FocusSearch();
-        PART_Search.SelectAll();
+        PART_Search.TextBox.SelectAll();
         e.Handled = true;
     }
 
 
-    private void TxtSearch_TextChanged(object? sender, TextChangedEventArgs e)
+    private void TxtSearch_TextChanged(object? sender, EventArgs e)
     {
         UpdateSearchResults();
     }
@@ -216,7 +217,7 @@ public partial class SettingsWindowView : PhControl
     {
         // the clear button closes the popup via its Click; pressing/clicking it must not
         // reopen the dropdown (focus moves to the box on press, before the Click fires)
-        if (PART_ClearSearch.IsPointerOver) return;
+        if (PART_Search.IsClearButtonPointerOver) return;
 
         if (!PART_SearchPopup.IsOpen && !string.IsNullOrEmpty(PART_Search.Text))
         {
@@ -326,17 +327,12 @@ public partial class SettingsWindowView : PhControl
         // search box
         PART_Search.PlaceholderText = GetSearchPlaceholder();
         PART_Search.TextChanged += TxtSearch_TextChanged;
-        PART_Search.KeyDown += TxtSearch_KeyDown;
-        PART_Search.GotFocus += TxtSearch_GotFocus;
-        PART_Search.LostFocus += TxtSearch_LostFocus;
+        PART_Search.TextBox.KeyDown += TxtSearch_KeyDown;
+        PART_Search.TextBox.GotFocus += TxtSearch_GotFocus;
+        PART_Search.TextBox.LostFocus += TxtSearch_LostFocus;
         // clicking the box re-opens the dropdown even when it is already focused
         // (GotFocus won't fire again after a light-dismiss left focus in place)
-        PART_Search.AddHandler(PointerReleasedEvent, TxtSearch_PointerReleased, RoutingStrategies.Tunnel);
-        PART_ClearSearch.Click += (_, _) =>
-        {
-            PART_Search.Text = string.Empty;
-            PART_Search.Focus();
-        };
+        PART_Search.TextBox.AddHandler(PointerReleasedEvent, TxtSearch_PointerReleased, RoutingStrategies.Tunnel);
         PART_SearchResults.Tapped += SearchResults_Tapped;
 
         // sidebar
@@ -359,7 +355,7 @@ public partial class SettingsWindowView : PhControl
     /// <summary>
     /// Moves keyboard focus to the search box.
     /// </summary>
-    public void FocusSearch() => PART_Search?.Focus();
+    public void FocusSearch() => PART_Search?.FocusSearch();
 
 
     /// <summary>
@@ -412,7 +408,7 @@ public partial class SettingsWindowView : PhControl
         // ListBoxItem, which then owns the focus adorner. Tearing down the popup while a
         // child still owns the adorner mutates the adorner layer mid-detach and throws
         // ArgumentOutOfRangeException (Popup.Close → PopupRoot.SetChild → detach).
-        PART_Search.Focus();
+        PART_Search.FocusSearch();
 
         PART_SearchResults.SelectedItem = null;
         PART_SearchPopup.IsOpen = false;
