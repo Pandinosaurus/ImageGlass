@@ -21,6 +21,7 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Svg.Skia;
 using ImageGlass.Common;
+using ImageGlass.Common.Localization;
 using ImageGlass.Common.Photoing;
 using ImageGlass.Common.ServiceProviders;
 using ImageGlass.Common.Types;
@@ -49,8 +50,6 @@ public partial class ToolbarControl : PhControl
     public readonly List<ToolbarItemModel> _groupOverflowItemModels = [];
     private readonly List<Control> _itemElements = [];
     private double _lastOverflowWidth;
-
-    private bool _shouldUpdateMenuText = false;
 
 
 
@@ -120,13 +119,6 @@ public partial class ToolbarControl : PhControl
         _lastOverflowWidth = e.NewSize.Width;
 
         HandleOverflow();
-    }
-
-
-    protected override void OnIgLanguageChanged()
-    {
-        base.OnIgLanguageChanged();
-        _shouldUpdateMenuText = true;
     }
 
 
@@ -258,55 +250,6 @@ public partial class ToolbarControl : PhControl
     private void PART_BtnMainMenu_DropdownOpened(ContextMenu sender, RoutedEventArgs e)
     {
         RefreshMainMenuState();
-    }
-
-
-    /// <summary>
-    /// Refreshes the dynamic state of the main menu (localized text, editing app name,
-    /// per-format enablement, and external tool entries) just before it is shown.
-    /// Shared by the in-app dropdown menu and the macOS native menu.
-    /// </summary>
-    public void RefreshMainMenuState()
-    {
-        UpdateMenuTextIfNeeded();
-
-        // 1. update editing app name
-        EditingApp.UpdateAppNameForMenuEdit(PART_MnuEdit);
-
-        // 2. update per-format enablement of menu items
-        UpdateMenuItemEnableStates();
-
-        // 3. rebuild external tool entries in the Tools submenu
-        BuildExternalToolMenuItems();
-    }
-
-
-    /// <summary>
-    /// Updates the enabled state of format-dependent menu items (animated and multi-frame).
-    /// Separated out so the macOS native menu can reuse it without the structural
-    /// external-tool rebuild (which must not run while AppKit is iterating the menu).
-    /// </summary>
-    private void UpdateMenuItemEnableStates()
-    {
-        // animated format
-        var isAnimator = Core.Photos.Current?.Bitmap is AnimatorImpl;
-        PART_MnuToggleImageAnimation.IsEnabled = isAnimator;
-        PART_MnuViewChannels.IsEnabled
-            = PART_MnuInvertColors.IsEnabled
-            = PART_MnuRotateLeft.IsEnabled
-            = PART_MnuRotateRight.IsEnabled
-            = PART_MnuFlipHorizontal.IsEnabled
-            = PART_MnuFlipVertical.IsEnabled
-            = !isAnimator;
-
-        // multi-frame format
-        var hasMultiFrames = Core.Photos.CurrentMetadata?.FrameCount > 1;
-        PART_MnuExportFrames.IsEnabled
-            = PART_MnuViewNextFrame.IsEnabled
-            = PART_MnuViewPreviousFrame.IsEnabled
-            = PART_MnuViewFirstFrame.IsEnabled
-            = PART_MnuViewLastFrame.IsEnabled
-            = hasMultiFrames;
     }
 
 
@@ -573,15 +516,14 @@ public partial class ToolbarControl : PhControl
 
 
     /// <summary>
-    /// Updates the text and hotkey text of main menu if needed.
+    /// Refreshes the hotkey text of every main-menu item from the current config. Runs on each menu
+    /// open so edits made in the Keyboard settings page (or any hotkey change) show immediately.
     /// </summary>
     private void UpdateMenuTextIfNeeded()
     {
-        if (!_shouldUpdateMenuText) return;
         if (PART_MainMenu.Items is not ItemCollection items) return;
 
         LoadMenuText(items);
-        _shouldUpdateMenuText = false;
     }
 
 
@@ -711,6 +653,93 @@ public partial class ToolbarControl : PhControl
             items.Insert(sepEndIndex + i, mnu);
         }
     }
+
+
+    /// <summary>
+    /// Refreshes the dynamic state of the main menu (localized text, editing app name,
+    /// per-format enablement, and external tool entries) just before it is shown.
+    /// Shared by the in-app dropdown menu and the macOS native menu.
+    /// </summary>
+    public void RefreshMainMenuState()
+    {
+        UpdateMenuTextIfNeeded();
+
+        // 1. update editing app name
+        EditingApp.UpdateAppNameForMenuEdit(PART_MnuEdit);
+
+        // 2. update per-format enablement of menu items
+        UpdateMenuItemEnableStates();
+
+        // 3. rebuild external tool entries in the Tools submenu
+        BuildExternalToolMenuItems();
+    }
+
+
+    /// <summary>
+    /// Updates the enabled state of format-dependent menu items (animated and multi-frame).
+    /// Separated out so the macOS native menu can reuse it without the structural
+    /// external-tool rebuild (which must not run while AppKit is iterating the menu).
+    /// </summary>
+    private void UpdateMenuItemEnableStates()
+    {
+        // animated format
+        var isAnimator = Core.Photos.Current?.Bitmap is AnimatorImpl;
+        PART_MnuToggleImageAnimation.IsEnabled = isAnimator;
+        PART_MnuViewChannels.IsEnabled
+            = PART_MnuInvertColors.IsEnabled
+            = PART_MnuRotateLeft.IsEnabled
+            = PART_MnuRotateRight.IsEnabled
+            = PART_MnuFlipHorizontal.IsEnabled
+            = PART_MnuFlipVertical.IsEnabled
+            = !isAnimator;
+
+        // multi-frame format
+        var hasMultiFrames = Core.Photos.CurrentMetadata?.FrameCount > 1;
+        PART_MnuExportFrames.IsEnabled
+            = PART_MnuViewNextFrame.IsEnabled
+            = PART_MnuViewPreviousFrame.IsEnabled
+            = PART_MnuViewFirstFrame.IsEnabled
+            = PART_MnuViewLastFrame.IsEnabled
+            = hasMultiFrames;
+    }
+    
+
+    /// <summary>
+    /// Maps each visible leaf menu action to its localized path (e.g. <c>File / Open…</c>), plus the
+    /// set of all menu keys (so a hidden item can be told from a non-menu one). For the Keyboard page.
+    /// </summary>
+    public (Dictionary<LangId, string> Paths, HashSet<LangId> AllKeys) GetMenuActionMap()
+    {
+        var paths = new Dictionary<LangId, string>();
+        var allKeys = new HashSet<LangId>();
+        CollectMenuActions(PART_MainMenu.Items, [], true, paths, allKeys);
+        return (paths, allKeys);
+    }
+
+
+    private static void CollectMenuActions(ItemCollection items, List<string> parents, bool ancestorsVisible,
+        Dictionary<LangId, string> paths, HashSet<LangId> allKeys)
+    {
+        foreach (var it in items)
+        {
+            if (it is not PhMenuItem item) continue;
+
+            if (item.LangKey is LangId key) allKeys.Add(key);
+            var visible = ancestorsVisible && item.IsVisible;
+
+            // group: descend with its localized label appended to the path
+            if (item.Items.Count > 0)
+            {
+                CollectMenuActions(item.Items, [.. parents, GetNativeHeader(item)], visible, paths, allKeys);
+            }
+            // visible leaf action
+            else if (visible && item.LangKey is LangId leafKey)
+            {
+                paths[leafKey] = string.Join(" / ", parents.Append(GetNativeHeader(item)));
+            }
+        }
+    }
+
 
     #endregion // Methods
 

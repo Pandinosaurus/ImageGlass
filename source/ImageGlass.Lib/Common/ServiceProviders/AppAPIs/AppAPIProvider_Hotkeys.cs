@@ -46,8 +46,12 @@ public partial class AppAPIProvider
     public bool IsQuickBrowsing => _isQuickBrowsingPhotos;
 
 
-    // list of all menu items & default action, hotkeys
-    private static IReadOnlyCollection<HotkeySingleAction> _defaultMenuList => [
+    /// <summary>
+    /// Gets all menu items with their default action and hotkeys. Rebuilt on each access, so it always
+    /// yields the pristine defaults even after <see cref="RegisterHotkeys"/> has overwritten the live
+    /// <see cref="_menuMap"/> hotkeys with the user's config. Used by the Keyboard settings page.
+    /// </summary>
+    public static IReadOnlyCollection<HotkeySingleAction> DefaultMenuList => [
         new(LangId.FrmMain_MnuMain,                 API.IG_OpenMainMenu,        MKeys.Alt, Key.F),
 
         // File
@@ -183,7 +187,7 @@ public partial class AppAPIProvider
 
     // a map of menu and its action.
     private static Dictionary<LangId, HotkeySingleAction> _menuMap { get; set; }
-        = new(_defaultMenuList.Select(ac => new KeyValuePair<LangId, HotkeySingleAction>(Lang.GetKey(ac.LangKey)!.Value, ac)));
+        = new(DefaultMenuList.Select(ac => new KeyValuePair<LangId, HotkeySingleAction>(Lang.GetKey(ac.LangKey)!.Value, ac)));
 
 
     /// <summary>
@@ -201,6 +205,17 @@ public partial class AppAPIProvider
         // clear first so this can be re-run after a settings change (e.g. toolbar buttons
         // edited): rebuild the map from scratch instead of leaving stale TryAdd entries
         AppHotkeysMap.Clear();
+
+        // reset menu actions to their built-in hotkeys first, so a removed user-hotkey reverts to
+        // default (step 2 below only overrides keys present in the user config, never clears them)
+        foreach (var def in DefaultMenuList)
+        {
+            var key = Lang.GetKey(def.LangKey);
+            if (key is not null && _menuMap.TryGetValue(key.Value, out var action))
+            {
+                action.Hotkeys = def.Hotkeys;
+            }
+        }
 
         // 0. load main menu button hotkey text
         var mainMenuHotkeys = Core.Config.MenuHotkeys.GetValueOrDefault(LangId.FrmMain_MnuMain)

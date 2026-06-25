@@ -304,6 +304,7 @@ public enum ResxIconId
     IconImageForward,
     IconLivePhoto,
     IconFolderOpen,
+    IconEdit,
     IconWeatherMoon,
     IconWeatherSunny,
 }
