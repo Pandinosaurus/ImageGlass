@@ -809,12 +809,29 @@ public partial class Config
         else LightTheme = th.FolderName;
 
 
-        // 5. follow the theme's background unless the user set a custom one.
-        //    "not custom" = empty/transparent sentinel, or still matching the previous theme's bg
-        //    (compare parsed colors so hex casing/format differences don't read as custom).
+        // 5. follow the theme's bg unless the user set a custom one. "Not custom" = empty, or it
+        //    matches a theme it could have been following: the previous/active theme, or — after an
+        //    OS-mode switch across restarts — the other mode's configured theme.
         var currentBg = BHelper.ColorFromHex(BackgroundColor);
-        var prevThemeBg = BHelper.ColorFromHex(Core.Theme.Colors.BgColor);
-        if (currentBg.IsEmpty || currentBg == prevThemeBg || forceUpdateBackground)
+        var isFollowingTheme = currentBg.IsEmpty
+            || currentBg == BHelper.ColorFromHex(Core.Theme.Colors.BgColor)
+            || currentBg == BHelper.ColorFromHex(th.Colors.BgColor);
+
+        // not matched? at startup Core.Theme is a placeholder, so the value may have been following
+        // the other OS-mode's theme from the previous session — check that pack's bg too
+        if (!isFollowingTheme && !forceUpdateBackground)
+        {
+            var otherName = darkMode ? LightTheme : DarkTheme;
+            if (!string.IsNullOrEmpty(otherName)
+                && !otherName.Equals(th.FolderName, StringComparison.OrdinalIgnoreCase))
+            {
+                var other = await FindAndLoadThemePackAsync(otherName, useFallBackTheme: false,
+                    throwIfThemeInvalid: false);
+                isFollowingTheme = other.IsValid && currentBg == BHelper.ColorFromHex(other.Colors.BgColor);
+            }
+        }
+
+        if (isFollowingTheme || forceUpdateBackground)
         {
             BackgroundColor = th.Colors.BgColor;
         }
