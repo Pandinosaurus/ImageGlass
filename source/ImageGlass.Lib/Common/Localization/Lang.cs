@@ -875,7 +875,7 @@ public class Lang
         new(LangId.FrmSettings_Toolbar_ConfigBindingName, "Config name"),
         new(LangId.FrmSettings_Toolbar_ConfigBindingValue, "Config value"),
         new(LangId.FrmSettings_Toolbar_ClickAction, "Click action"),
-        new(LangId.FrmSettings_Toolbar_RecordHotkeyHint, "Click here, then press a shortcut to add it"),
+        new(LangId.FrmSettings_Toolbar_RecordHotkeyHint, "Click here, then press a hotkey"),
         new(LangId.FrmSettings_Toolbar_BuiltInReadonly, "This is a built-in button, so its properties can't be changed."),
 
         new(LangId.FrmSettings_Toolbar_ArrangeHint, "Drag to reorder items, or move them between lists to add and remove. Arrow keys can also be used for positioning."),
@@ -904,7 +904,13 @@ public class Lang
 
 
         #region FrmSettings > Tab Keyboard
-
+        new(LangId.FrmSettings_Keyboard_MenuHotkeys, "Menu hotkeys"),
+        new(LangId.FrmSettings_Keyboard_Action, "Action"),
+        new(LangId.FrmSettings_Keyboard_SearchPlaceholder, "Search actions…"),
+        new(LangId.FrmSettings_Keyboard_NoResults, "No matching actions"),
+        new(LangId.FrmSettings_Keyboard_EditTitle, "Edit hotkeys"),
+        new(LangId.FrmSettings_Keyboard_DefaultHotkeys, "Default: {0}"),
+        new(LangId.FrmSettings_Keyboard_Conflict, "This hotkey is assigned to more than one action."),
         #endregion // FrmSettings > Tab Mouse & Keyboard
 
 
