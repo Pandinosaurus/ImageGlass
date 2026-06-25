@@ -41,7 +41,7 @@ public sealed class SettingsViewModel : PhReactive
     /// <summary>
     /// Gets the shared index of all setting rows (for search + navigate-by-config).
     /// </summary>
-    public SettingsIndex Indexing { get; } = new();
+    public SettingsRegistry Registry { get; } = new();
 
 
     /// <summary>

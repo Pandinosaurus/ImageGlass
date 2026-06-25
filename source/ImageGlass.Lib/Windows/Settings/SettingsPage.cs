@@ -26,10 +26,7 @@ using System;
 namespace ImageGlass.Common.Windows;
 
 /// <summary>
-/// A single settings page (tab) in the navigation. It hosts a content view created lazily by the
-/// <c>createView</c> factory (so the search index can be populated up front), and provides
-/// scroll-to-setting support. The per-tab content lives in a <see cref="SettingsPageView"/>; this
-/// wrapper exists once and is parameterized per nav item — see <see cref="SettingsNavItem"/>.
+/// A single settings page (tab) in the navigation.
 /// </summary>
 public sealed class SettingsPage : PhControl
 {
@@ -64,7 +61,7 @@ public sealed class SettingsPage : PhControl
 
     /// <summary>
     /// Builds the page content once; the view registers its setting items into the shared
-    /// <see cref="SettingsIndex"/> as it builds.
+    /// <see cref="SettingsRegistry"/> as it builds.
     /// </summary>
     public void EnsureBuilt()
     {
@@ -79,7 +76,7 @@ public sealed class SettingsPage : PhControl
     /// Scrolls the given setting into view and focuses it (themed focus ring) so the user
     /// can spot where the search/config navigation landed.
     /// </summary>
-    public void ScrollToItem(SettingItem item)
+    public static void ScrollToItem(SettingItem item)
     {
         var target = item.Target;
         if (target is null) return;

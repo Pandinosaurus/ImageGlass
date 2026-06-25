@@ -23,8 +23,8 @@ using ImageGlass.Common;
 using ImageGlass.Common.Localization;
 using ImageGlass.Common.ServiceProviders;
 using ImageGlass.UI;
-using System;
 using ImageGlass.UI.Viewer;
+using System;
 
 namespace ImageGlass.Tools;
 

@@ -175,7 +175,7 @@
                             Background="Transparent">
                             <Grid.Styles>
                                 <Style Selector="TickBar">
-                                    <Setter Property="ReservedSpace" Value="{Binding #PART_Track.Thumb.Bounds}" />
+                                    <Setter Property="ReservedSpace" Value="{CompiledBinding #PART_Track.Thumb.Bounds}" />
                                 </Style>
                             </Grid.Styles>
                             <Grid
@@ -270,7 +270,7 @@
                             Background="Transparent">
                             <Grid.Styles>
                                 <Style Selector="TickBar">
-                                    <Setter Property="ReservedSpace" Value="{Binding #PART_Track.Thumb.Bounds}" />
+                                    <Setter Property="ReservedSpace" Value="{CompiledBinding #PART_Track.Thumb.Bounds}" />
                                 </Style>
                             </Grid.Styles>
                             <Grid

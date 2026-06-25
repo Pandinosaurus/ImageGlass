@@ -21,7 +21,6 @@ using Avalonia.Input;
 using Avalonia.Media;
 using ImageGlass.Common;
 using ImageGlass.Common.ServiceProviders;
-using ImageGlass.Common.ServiceProviders.FileSearchService;
 using ImageGlass.Mac.Common.ServiceProviders;
 using System;
 

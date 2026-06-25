@@ -110,7 +110,7 @@ public abstract class SettingsPageView : PhControl
     /// </summary>
     protected void RegisterSearchKey(Control target, LangId label, ConfigId? id, LangId? section)
     {
-        VM.Indexing.Register(new SettingItem
+        VM.Registry.Register(new SettingItem
         {
             Id = id,
             Label = label,

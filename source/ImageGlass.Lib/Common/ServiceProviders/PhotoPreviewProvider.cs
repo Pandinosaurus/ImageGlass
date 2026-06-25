@@ -18,7 +18,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 using ImageGlass.Common.Extensions;
 using ImageGlass.Common.Photoing;
-using ImageGlass.Common.Types;
 using SkiaSharp;
 using System;
 using System.Threading;

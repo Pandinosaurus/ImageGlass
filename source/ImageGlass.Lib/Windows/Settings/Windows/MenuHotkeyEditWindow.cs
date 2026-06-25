@@ -18,6 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 using Avalonia.Controls;
 using Avalonia.Layout;
+using Avalonia.Media;
 using ImageGlass.Common.Localization;
 using ImageGlass.Common.Types;
 using ImageGlass.UI;
@@ -68,14 +69,20 @@ internal sealed class MenuHotkeyEditWindow : DialogWindow
         // Enter is reserved for the hotkey recorder, so it must not submit the dialog
         PressEnterToSubmit = false;
 
-        _pathLabel = new PhTextBlock { Text = actionPath, FontWeight = Avalonia.Media.FontWeight.SemiBold };
-
+        _pathLabel = new PhTextBlock
+        {
+            Text = actionPath,
+            FontWeight = FontWeight.SemiBold
+        };
         _picker = new PhHotkeyPicker { Hotkeys = [.. current] };
-
         _restoreBtn = new PhButton { Variant = PhButtonVariant.Link };
         _restoreBtn.Click += (_, _) => _picker.Hotkeys = [.. _defaultHotkeys];
 
-        _defaultLabel = new PhTextBlock { Opacity = 0.7, TextWrapping = Avalonia.Media.TextWrapping.Wrap };
+        _defaultLabel = new PhTextBlock
+        {
+            Opacity = 0.7,
+            TextWrapping = TextWrapping.Wrap
+        };
 
         // reset link with the default-hotkey hint directly below it
         var footer = new StackPanel

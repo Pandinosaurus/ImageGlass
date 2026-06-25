@@ -26,7 +26,7 @@ namespace ImageGlass.Common.Windows;
 /// A registry of all <see cref="SettingItem"/>s across every settings page.
 /// Used to power the search box and navigate-by-<see cref="ConfigId"/>.
 /// </summary>
-public sealed class SettingsIndex
+public sealed class SettingsRegistry
 {
     private readonly List<SettingItem> _items = [];
 

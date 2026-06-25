@@ -179,24 +179,17 @@ public partial class SettingsWindowView : PhControl
     }
 
 
-    // re-focusing the box (Tab, or a click that moves focus in) re-opens the dropdown when
-    // it already holds a query (light-dismiss closed it, but the unchanged text won't
-    // re-fire TextChanged). Focus moves on pointer-press, so the clear-button guard matters.
     private void TxtSearch_GotFocus(object? sender, FocusChangedEventArgs e)
     {
         TryReopenSearchPopup();
     }
 
 
-    // a click re-opens the dropdown even when the box already has focus (GotFocus won't fire)
     private void TxtSearch_PointerReleased(object? sender, PointerReleasedEventArgs e)
     {
         TryReopenSearchPopup();
     }
 
-
-    // close the dropdown when focus leaves the search box for something outside the popup
-    // (Tab / Shift+Tab); keep it open when focus moves into the popup (clicking a result)
     private void TxtSearch_LostFocus(object? sender, RoutedEventArgs e)
     {
         if (!PART_SearchPopup.IsOpen) return;
@@ -215,8 +208,6 @@ public partial class SettingsWindowView : PhControl
     /// </summary>
     private void TryReopenSearchPopup()
     {
-        // the clear button closes the popup via its Click; pressing/clicking it must not
-        // reopen the dropdown (focus moves to the box on press, before the Click fires)
         if (PART_Search.IsClearButtonPointerOver) return;
 
         if (!PART_SearchPopup.IsOpen && !string.IsNullOrEmpty(PART_Search.Text))
@@ -231,7 +222,7 @@ public partial class SettingsWindowView : PhControl
     /// </summary>
     private void UpdateSearchResults()
     {
-        var results = _vm.Indexing.Search(PART_Search.Text).Take(25).ToList();
+        var results = _vm.Registry.Search(PART_Search.Text).Take(25).ToList();
         PART_SearchResults.ItemsSource = results;
         PART_SearchPopup.IsOpen = results.Count > 0;
 
@@ -292,8 +283,6 @@ public partial class SettingsWindowView : PhControl
 
     private void SearchResults_Tapped(object? sender, TappedEventArgs e)
     {
-        // navigate on a real tap (press + release on the same item), not on pointer-press,
-        // so press-and-hold does not trigger navigation
         if (PART_SearchResults.SelectedItem is SettingItem item)
         {
             e.Handled = true;
@@ -330,8 +319,6 @@ public partial class SettingsWindowView : PhControl
         PART_Search.TextBox.KeyDown += TxtSearch_KeyDown;
         PART_Search.TextBox.GotFocus += TxtSearch_GotFocus;
         PART_Search.TextBox.LostFocus += TxtSearch_LostFocus;
-        // clicking the box re-opens the dropdown even when it is already focused
-        // (GotFocus won't fire again after a light-dismiss left focus in place)
         PART_Search.TextBox.AddHandler(PointerReleasedEvent, TxtSearch_PointerReleased, RoutingStrategies.Tunnel);
         PART_SearchResults.Tapped += SearchResults_Tapped;
 
@@ -382,7 +369,7 @@ public partial class SettingsWindowView : PhControl
     /// </summary>
     public void NavigateToConfig(string? configId)
     {
-        var item = _vm.Indexing.FindByConfigId(configId);
+        var item = _vm.Registry.FindByConfigId(configId);
         if (item is null) return;
 
         JumpToSetting(item);
@@ -404,10 +391,6 @@ public partial class SettingsWindowView : PhControl
 
     private void JumpToSetting(SettingItem item)
     {
-        // Move focus OUT of the popup before closing it. Clicking a result focuses its
-        // ListBoxItem, which then owns the focus adorner. Tearing down the popup while a
-        // child still owns the adorner mutates the adorner layer mid-detach and throws
-        // ArgumentOutOfRangeException (Popup.Close → PopupRoot.SetChild → detach).
         PART_Search.FocusSearch();
 
         PART_SearchResults.SelectedItem = null;
@@ -416,7 +399,7 @@ public partial class SettingsWindowView : PhControl
         NavigateTo(item.PageNavId);
         if (_pages.TryGetValue(item.PageNavId, out var page))
         {
-            page.ScrollToItem(item);
+            SettingsPage.ScrollToItem(item);
         }
     }
 

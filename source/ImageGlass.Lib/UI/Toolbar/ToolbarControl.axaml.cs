@@ -702,7 +702,7 @@ public partial class ToolbarControl : PhControl
             = PART_MnuViewLastFrame.IsEnabled
             = hasMultiFrames;
     }
-    
+
 
     /// <summary>
     /// Maps each visible leaf menu action to its localized path (e.g. <c>File / Open…</c>), plus the

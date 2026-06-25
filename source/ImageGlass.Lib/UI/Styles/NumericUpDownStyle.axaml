@@ -1,6 +1,7 @@
 <Styles
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:coll="using:System.Collections"
     xmlns:types="using:ImageGlass.Common.Types">
 
     <!--
@@ -34,8 +35,8 @@
                             AcceptsReturn="False"
                             CornerRadius="{TemplateBinding CornerRadius}"
                             Foreground="{TemplateBinding Foreground}"
-                            InnerLeftContent="{Binding InnerLeftContent, RelativeSource={RelativeSource TemplatedParent}}"
-                            InnerRightContent="{Binding InnerRightContent, RelativeSource={RelativeSource TemplatedParent}}"
+                            InnerLeftContent="{CompiledBinding InnerLeftContent, RelativeSource={RelativeSource TemplatedParent}}"
+                            InnerRightContent="{CompiledBinding InnerRightContent, RelativeSource={RelativeSource TemplatedParent}}"
                             IsReadOnly="{TemplateBinding IsReadOnly}"
                             PlaceholderForeground="{TemplateBinding PlaceholderForeground}"
                             PlaceholderText="{TemplateBinding PlaceholderText}"
@@ -50,8 +51,8 @@
         <!--  error message: small text in the critical color (matches TextBox)  -->
         <Style Selector="^ /template/ DataValidationErrors">
             <Setter Property="ErrorTemplate">
-                <DataTemplate>
-                    <ItemsControl Foreground="{DynamicResource IG_TextDangerBrush}" ItemsSource="{Binding}">
+                <DataTemplate x:DataType="coll:IEnumerable">
+                    <ItemsControl Foreground="{DynamicResource IG_TextDangerBrush}" ItemsSource="{CompiledBinding}">
                         <ItemsControl.Styles>
                             <Style Selector="TextBlock">
                                 <Setter Property="TextWrapping" Value="Wrap" />

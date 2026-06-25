@@ -155,5 +155,5 @@ public sealed class MenuHotkeyRowModel : PhReactive
         var sb = b.Select(h => h.KeyString).OrderBy(s => s, StringComparer.Ordinal);
         return sa.SequenceEqual(sb);
     }
-    
+
 }

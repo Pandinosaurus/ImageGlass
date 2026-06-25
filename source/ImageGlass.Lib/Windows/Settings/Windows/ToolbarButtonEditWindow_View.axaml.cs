@@ -32,13 +32,6 @@ using System.Threading.Tasks;
 
 namespace ImageGlass.Common.Windows;
 
-/// <summary>
-/// The content view of <see cref="ToolbarButtonEditWindow"/>: all editable fields of a
-/// <see cref="ToolbarItemModel"/>: id, icon (a theme-icon picker with a "Custom…" SVG path option),
-/// text, alignment, the toggle config binding, and the click action (executable, argument, a live
-/// command preview and a list of recordable hotkeys). Owns all field behavior; the hosting window
-/// only collects the validated result.
-/// </summary>
 public partial class ToolbarButtonEditWindowView : PhControl
 {
     /// <summary>

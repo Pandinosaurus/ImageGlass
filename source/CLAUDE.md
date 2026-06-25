@@ -226,7 +226,7 @@ Reuse the `StreamGeometry` icon resources via `{StaticResource IconName}`: `Icon
 ### 1. Reactive Programming — `PhReactive`
 - All ViewModels inherit from `PhReactive : INotifyPropertyChanged`
 - Thread-safe property change notifications using `Lock` (not `object`)
-- Use with Avalonia compiled bindings: `{Binding PropertyName}`
+- Use with Avalonia compiled bindings: `{CompiledBinding PropertyName}`
 - Example:
   ```csharp
   public class MainWindowViewModel : PhReactive
@@ -383,7 +383,7 @@ Occurs in `Program.cs` before Avalonia app setup (Linux/Mac have equivalent regi
 ### Avalonia-Specific
 - **Reuse UI components**: when building UI, always check and reuse the existing controls in `ImageGlass.Lib/UI/` (e.g. `PhButton`, `PhTextBox`, `PhTextBlock` in `UI/BaseControls/`) instead of raw Avalonia controls; use the app's style resources via `Resx`/`ResxId` (`Common/Types/Resx.cs`) rather than hardcoding colors/brushes. See the **Designing UI** section for the full controls/resources/icons/fonts inventory.
 - **Platform-conditional visibility**: hide/show controls per platform with the XAML `OnPlatform` markup extension directly on `IsVisible`, not with `OperatingSystem.IsWindows()` in code-behind. Example: `IsVisible="{OnPlatform False, Windows=True, x:TypeArguments=x:Boolean}"` (see `UI/Toolbar/ToolbarControl.axaml`).
-- **Compiled bindings**: `AvaloniaUseCompiledBindingsByDefault = true` (type-safe, zero-runtime cost)
+- **Compiled bindings**: `AvaloniaUseCompiledBindingsByDefault = true` (type-safe, zero-runtime cost). Always write `{CompiledBinding ...}` explicitly in XAML — never `{Binding ...}` — including in styles, `ControlTheme`s, and `DataTemplate`s. Compiled bindings need an `x:DataType` in scope; for a self-binding to an untyped collection (e.g. a `DataValidationErrors` error template) set `x:DataType` on the `DataTemplate` (e.g. `coll:IEnumerable` via `xmlns:coll="using:System.Collections"`). Element/ancestor/`TemplatedParent` bindings (`#name`, `$parent[Type]`, `RelativeSource={RelativeSource TemplatedParent}`) infer their type and need no `x:DataType`.
 - **Attached behaviors**: Prefer to UI trigger patterns for event handling
 - **Threading**: Use `Dispatcher.UIThread.Post()` or `Dispatcher.UIThread.InvokeAsync()` for cross-thread updates
 - **Resources**: XAML/PNG/ICO in `Assets/`, referenced via `avares://` protocol

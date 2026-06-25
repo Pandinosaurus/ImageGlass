@@ -22,10 +22,10 @@ using ImageGlass.Common.Actions;
 using ImageGlass.Common.AppThemes;
 using ImageGlass.Common.Photoing;
 using ImageGlass.Common.Types;
+using ImageGlass.Common.Types.JsonTypeConverters;
 using System;
 using System.IO;
 using System.Text.Json.Serialization;
-using ImageGlass.Common.Types.JsonTypeConverters;
 
 namespace ImageGlass.UI;
 

@@ -25,10 +25,7 @@ using System.Collections.Generic;
 namespace ImageGlass.Common.Windows;
 
 /// <summary>
-/// Modal window to create a new custom toolbar button or to view/edit an existing one. The fields
-/// (id, icon, text, alignment, config binding and the click action with its hotkeys) live in
-/// <see cref="ToolbarButtonEditWindowView"/>; this window adds the OK/Cancel buttons and exposes the
-/// result. Built-in buttons are shown read-only (all fields disabled, single Close button).
+/// Modal window to create a new custom toolbar button or to view/edit an existing one.
 /// </summary>
 internal sealed class ToolbarButtonEditWindow : DialogWindow
 {
@@ -51,10 +48,7 @@ internal sealed class ToolbarButtonEditWindow : DialogWindow
 
 
     /// <summary>
-    /// Opens the window to create a new custom button (when <paramref name="model"/> is null) or to
-    /// edit/view an existing one. <paramref name="takenIds"/> are the button IDs already in use (the
-    /// edited button's own ID excluded) for the uniqueness check. When <paramref name="isBuiltIn"/>
-    /// is set the button is shown read-only.
+    /// Opens the window to create a new custom button or to edit/view an existing one.
     /// </summary>
     public ToolbarButtonEditWindow(ToolbarItemModel? model, ISet<string> takenIds, bool isBuiltIn)
     {

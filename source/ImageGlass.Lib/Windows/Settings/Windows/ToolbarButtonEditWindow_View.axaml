@@ -8,7 +8,6 @@
     mc:Ignorable="d"
     d:DesignWidth="500">
 
-    <!--  cap the height so the many fields stay on-screen on short displays; the window sizes to content otherwise  -->
     <ScrollViewer
         MaxHeight="500"
         HorizontalScrollBarVisibility="Disabled"
@@ -19,7 +18,7 @@
             Orientation="Vertical"
             Spacing="14">
 
-            <!--  Read-only note (built-in buttons); kept outside PART_Fields so it stays legible while the fields are disabled  -->
+            <!--  Read-only note (built-in buttons)  -->
             <ui:PhTextBlock
                 x:Name="PART_ReadonlyNote"
                 IsVisible="False"

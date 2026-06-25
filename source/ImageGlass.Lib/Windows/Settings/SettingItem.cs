@@ -24,8 +24,6 @@ namespace ImageGlass.Common.Windows;
 
 /// <summary>
 /// Describes a single searchable/navigable setting row rendered on a settings page.
-/// Pages register their items into the <see cref="SettingsIndex"/> as they are built,
-/// which powers both the search box and navigate-by-<see cref="ConfigId"/>.
 /// </summary>
 public sealed class SettingItem
 {
