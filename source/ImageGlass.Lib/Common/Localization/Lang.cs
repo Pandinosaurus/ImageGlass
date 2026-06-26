@@ -1023,6 +1023,7 @@ public class Lang
         new(LangId.FrmSettings_Tools_EditTool, "Edit external tool"),
         new(LangId.FrmSettings_Tools_Integrated, "Integrated"),
         new(LangId.FrmSettings_Tools_IntegratedWith, "Integrated with {0}"),
+        new(LangId.FrmSettings_Tools_Errors_ToolIdDuplicated, "The tool ID \"{0}\" is already in use."),
         #endregion // FrmSettings > Tab Tools
 
 

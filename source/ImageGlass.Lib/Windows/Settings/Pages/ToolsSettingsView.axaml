@@ -1,0 +1,49 @@
+<windows:SettingsPageView
+    x:Class="ImageGlass.Common.Windows.ToolsSettingsView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:ui="using:ImageGlass.UI"
+    xmlns:windows="using:ImageGlass.Common.Windows"
+    mc:Ignorable="d"
+    d:DesignWidth="600"
+    HorizontalAlignment="Stretch">
+
+    <StackPanel Orientation="Vertical" Spacing="10">
+
+        <!--  Add + Get more tools  -->
+        <StackPanel Orientation="Horizontal" Spacing="8">
+            <ui:PhButton
+                x:Name="PART_AddTool"
+                MinWidth="100"
+                HorizontalContentAlignment="Center" />
+            <ui:PhButton
+                x:Name="PART_GetMoreTools"
+                VerticalAlignment="Center"
+                Variant="Link" />
+        </StackPanel>
+
+        <!--  Empty state  -->
+        <ui:PhTextBlock
+            x:Name="PART_Empty"
+            FontStyle="Italic"
+            IsVisible="False"
+            LangKey="_Empty"
+            Opacity="0.6" />
+
+        <!--  Tools table  -->
+        <Border
+            x:Name="PART_TableBorder"
+            MaxWidth="1500"
+            Background="{DynamicResource IG_BackgroundNeutralBrush}"
+            BorderBrush="{DynamicResource IG_BorderControlBrush}"
+            BorderThickness="1"
+            ClipToBounds="True"
+            CornerRadius="{DynamicResource ControlCornerRadius}">
+            <Grid x:Name="PART_TableBody" ColumnDefinitions="Auto,*,Auto,Auto" />
+        </Border>
+
+    </StackPanel>
+
+</windows:SettingsPageView>

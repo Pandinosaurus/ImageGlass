@@ -367,6 +367,18 @@ public static class Core
     }
 
 
+    /// <summary>
+    /// Rebuilds the external tools in <see cref="ToolRegistry"/> from the current
+    /// <see cref="Config.Tools"/>. Call after the tools setting is edited so the live registry
+    /// (and thus the Tools menu / <c>IG_OpenTool</c>) reflects the changes.
+    /// </summary>
+    public static void ReloadExternalTools()
+    {
+        ToolRegistry.RemoveExternalTools();
+        RegisterExternalTools();
+    }
+
+
     public static bool SetTheme(IgTheme theme)
     {
         if (Core.Theme == theme) return false;

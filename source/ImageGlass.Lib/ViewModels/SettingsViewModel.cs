@@ -137,8 +137,16 @@ public sealed class SettingsViewModel : PhReactive
             _ = Core.Config.LoadCurrentLanguageAsync();
         }
 
-        // updated hotkeys after toolbar buttons or menu hotkeys edited
-        if (changedIds.Contains(ConfigId.ToolbarButtons) || changedIds.Contains(ConfigId.MenuHotkeys))
+        // external tools edited → rebuild the registry so the Tools menu / IG_OpenTool use the new values
+        if (changedIds.Contains(ConfigId.Tools))
+        {
+            Core.ReloadExternalTools();
+        }
+
+        // updated hotkeys after toolbar buttons, menu hotkeys, or external tools edited
+        if (changedIds.Contains(ConfigId.ToolbarButtons)
+            || changedIds.Contains(ConfigId.MenuHotkeys)
+            || changedIds.Contains(ConfigId.Tools))
         {
             Core.API.RegisterHotkeys();
         }

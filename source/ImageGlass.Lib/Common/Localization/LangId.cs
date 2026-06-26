@@ -678,6 +678,7 @@ public enum LangId
     FrmSettings_Tools_EditTool,
     FrmSettings_Tools_Integrated,
     FrmSettings_Tools_IntegratedWith,
+    FrmSettings_Tools_Errors_ToolIdDuplicated,
     #endregion // FrmSettings > Tab Tools
 
 

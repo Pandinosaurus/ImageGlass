@@ -335,7 +335,7 @@ public partial class AppearanceSettingsView : SettingsPageView
         }
         else
         {
-            var btn = BuildUninstallButton();
+            var btn = BuildDeleteButton();
             btn.Click += async (_, _) => await UninstallThemeAsync(theme);
             uninstallBtn = btn;
             controls.Children.Add(btn);
@@ -632,21 +632,18 @@ public partial class AppearanceSettingsView : SettingsPageView
 
 
     /// <summary>
-    /// Builds the square "X" uninstall tool button (stroked glyph, like the search clear button). It
-    /// never toggles (acts as a plain button) and starts hidden — the card hover handler fades it in.
+    /// Builds the square "X" uninstall tool button.
     /// </summary>
-    private static PhToolButton BuildUninstallButton()
+    private static PhToolButton BuildDeleteButton()
     {
         var glyph = new Avalonia.Controls.Shapes.Path
         {
-            Width = 9,
-            Height = 9,
+            Width = 12,
+            Height = 12,
             Data = Resx.GetIcon(ResxIconId.IconClose),
             Stretch = Stretch.Uniform,
-            StrokeThickness = 1.4,
-            StrokeLineCap = PenLineCap.Round,
         };
-        glyph[!Avalonia.Controls.Shapes.Path.StrokeProperty] = Resx.CreateBinding(ResxId.IG_ThemeForegroundBrush);
+        glyph[!Avalonia.Controls.Shapes.Path.FillProperty] = Resx.CreateBinding(ResxId.IG_ThemeForegroundBrush);
 
         return new PhToolButton
         {
