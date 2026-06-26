@@ -29,18 +29,16 @@
             <ui:PhToolButton
                 x:Name="PART_ClearButton"
                 Margin="2,4,4,4"
-                Padding="7"
+                Padding="6"
                 Cursor="Hand"
                 IsVisible="{CompiledBinding #PART_TextBox.Text, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}">
                 <Path
-                    Width="8"
-                    Height="8"
+                    Width="10"
+                    Height="10"
                     Data="{StaticResource IconClose}"
+                    Fill="{DynamicResource TextControlForeground}"
                     Opacity="0.6"
-                    Stretch="Uniform"
-                    Stroke="{DynamicResource TextControlForeground}"
-                    StrokeLineCap="Round"
-                    StrokeThickness="1" />
+                    Stretch="Uniform" />
             </ui:PhToolButton>
         </ui:PhTextBox.InnerRightContent>
     </ui:PhTextBox>

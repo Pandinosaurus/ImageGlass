@@ -151,18 +151,14 @@ public class PhHotkeyPicker : PhControl
             VerticalAlignment = VerticalAlignment.Center,
         };
 
-        // the shared close icon is a stroke-only X, so render it with a stroked Path (not a filled
-        // PathIcon, which would draw nothing)
         var icon = new Path
         {
-            Width = 9,
-            Height = 9,
+            Width = 11,
+            Height = 11,
             Data = Resx.GetIcon(ResxIconId.IconClose),
             Stretch = Stretch.Uniform,
-            StrokeThickness = 1.2,
-            StrokeLineCap = PenLineCap.Round,
         };
-        icon[!Shape.StrokeProperty] = Resx.CreateBinding(ResxId.TextControlForeground);
+        icon[!Shape.FillProperty] = Resx.CreateBinding(ResxId.TextControlForeground);
 
         // a PhToolButton gives the square tool-button shape with the app's hover + press feedback
         var remove = new PhToolButton
