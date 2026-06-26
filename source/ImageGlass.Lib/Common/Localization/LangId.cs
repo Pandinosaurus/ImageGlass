@@ -646,7 +646,6 @@ public enum LangId
     FrmSettings_Keyboard_SearchPlaceholder,
     FrmSettings_Keyboard_NoResults,
     FrmSettings_Keyboard_EditTitle,
-    FrmSettings_Keyboard_DefaultHotkeys,
     FrmSettings_Keyboard_Conflict,
     #endregion // FrmSettings > Tab Mouse & Keyboard
 

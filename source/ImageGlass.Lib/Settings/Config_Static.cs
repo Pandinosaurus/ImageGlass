@@ -760,7 +760,7 @@ public partial class Config
     /// </summary>
     public async Task LoadCurrentLanguageAsync()
     {
-        var langPath = BHelper.BaseDir(Dir.Language, Language);
+        var langPath = Lang.ResolveFilePath(Language);
         var lang = new Lang(langPath);
 
         // load language pack

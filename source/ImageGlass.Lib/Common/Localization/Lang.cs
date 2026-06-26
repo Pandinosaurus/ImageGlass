@@ -16,6 +16,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
+using ImageGlass.Common.Types;
 using System;
 using System.Collections.Frozen;
 using System.Collections.Generic;
@@ -60,7 +61,7 @@ public class Lang
     /// Example: <c>C:\ImageGlass\Languages\Vietnameses.iglang.json</c>
     /// </summary>
     [JsonIgnore]
-    private string FilePath { get; set; } = "English";
+    public string FilePath { get; private set; } = "English";
 
 
     /// <summary>
@@ -69,6 +70,13 @@ public class Lang
     /// </summary>
     [JsonIgnore]
     public string FileName => Path.GetFileName(FilePath);
+
+
+    /// <summary>
+    /// Check if the this is the built-in language pack.
+    /// </summary>
+    [JsonIgnore]
+    public bool IsBuiltIn => !Path.IsPathRooted(FilePath);
 
 
     /// <summary>
@@ -253,6 +261,80 @@ public class Lang
     /// </summary>
     /// <param name="key">The key to get the language string</param>
     public string Get(LangId? key) => Get(key, []);
+
+
+    /// <summary>
+    /// Resolves a stored language value (a bare <c>*.iglang.json</c> file name or an absolute path)
+    /// to a full path. A user pack in the Config dir takes precedence over a built-in pack of the
+    /// same name in the app base dir.
+    /// </summary>
+    public static string ResolveFilePath(string fileNameOrPath)
+    {
+        if (string.IsNullOrEmpty(fileNameOrPath) || Path.IsPathRooted(fileNameOrPath))
+            return fileNameOrPath;
+
+        var userPath = BHelper.ConfigDir(Dir.Language, fileNameOrPath);
+        if (File.Exists(userPath)) return userPath;
+
+        return BHelper.BaseDir(Dir.Language, fileNameOrPath);
+    }
+
+
+    /// <summary>
+    /// Loads every installed language pack: built-in packs from the app base dir and user packs
+    /// from the Config dir. Packs are de-duplicated by file name (a user pack shadows a built-in
+    /// one of the same name). The result is sorted by local name.
+    /// </summary>
+    public static async Task<List<Lang>> LoadAllLanguagePacksAsync()
+    {
+        var found = new Dictionary<string, Lang>(StringComparer.OrdinalIgnoreCase);
+
+        // base dir (built-in) first, then Config dir (user) so user packs win on a name clash
+        foreach (var rootDir in new[] { BHelper.BaseDir(Dir.Language), BHelper.ConfigDir(Dir.Language) })
+        {
+            if (!Directory.Exists(rootDir)) continue;
+
+            foreach (var file in Directory.EnumerateFiles(rootDir, "*.iglang.json"))
+            {
+                var lang = new Lang(file);
+                await lang.LoadAsync().ConfigureAwait(false);
+                found[lang.FileName] = lang;
+            }
+        }
+
+        return found.Values
+            .OrderBy(l => l.Metadata.LocalName, StringComparer.CurrentCultureIgnoreCase)
+            .ToList();
+    }
+
+
+    /// <summary>
+    /// Installs language packs by copying the given <c>*.iglang.json</c> files into the user
+    /// language folder. Returns the number of files copied successfully.
+    /// </summary>
+    public static async Task<int> InstallLanguagePacksAsync(IEnumerable<string> iglangFilePaths)
+    {
+        var destDir = BHelper.ConfigDir(Dir.Language);
+        Directory.CreateDirectory(destDir);
+
+        return await Task.Run(() =>
+        {
+            var count = 0;
+            foreach (var file in iglangFilePaths)
+            {
+                if (!File.Exists(file)) continue;
+                try
+                {
+                    File.Copy(file, Path.Combine(destDir, Path.GetFileName(file)), overwrite: true);
+                    count++;
+                }
+                catch { }
+            }
+
+            return count;
+        }).ConfigureAwait(false);
+    }
+
 
     #endregion // Public Methods
 
@@ -909,7 +991,6 @@ public class Lang
         new(LangId.FrmSettings_Keyboard_SearchPlaceholder, "Search actions…"),
         new(LangId.FrmSettings_Keyboard_NoResults, "No matching actions"),
         new(LangId.FrmSettings_Keyboard_EditTitle, "Edit hotkeys"),
-        new(LangId.FrmSettings_Keyboard_DefaultHotkeys, "Default: {0}"),
         new(LangId.FrmSettings_Keyboard_Conflict, "This hotkey is assigned to more than one action."),
         #endregion // FrmSettings > Tab Mouse & Keyboard
 

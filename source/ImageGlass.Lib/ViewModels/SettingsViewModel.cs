@@ -131,6 +131,12 @@ public sealed class SettingsViewModel : PhReactive
             Core.UpdateDestColorProfile();
         }
 
+        // language pack changed → reload it live (setting Core.Lang raises Core.LanguageChanged)
+        if (changedIds.Contains(ConfigId.Language))
+        {
+            _ = Core.Config.LoadCurrentLanguageAsync();
+        }
+
         // updated hotkeys after toolbar buttons or menu hotkeys edited
         if (changedIds.Contains(ConfigId.ToolbarButtons) || changedIds.Contains(ConfigId.MenuHotkeys))
         {

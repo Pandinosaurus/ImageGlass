@@ -114,7 +114,7 @@ internal sealed class MenuHotkeyEditWindow : DialogWindow
 
         var defaultText = string.Join(", ", _defaultHotkeys.Select(h => h.KeyString));
         if (string.IsNullOrEmpty(defaultText)) defaultText = Core.Lang[LangId._Empty];
-        _defaultLabel.Text = Core.Lang[LangId.FrmSettings_Keyboard_DefaultHotkeys, defaultText];
+        _defaultLabel.Text = defaultText;
     }
 
 
