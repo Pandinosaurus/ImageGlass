@@ -25,6 +25,7 @@ using Avalonia.Layout;
 using Avalonia.Markup.Xaml.MarkupExtensions;
 using Avalonia.Media;
 using Avalonia.Threading;
+using ImageGlass.Common;
 using ImageGlass.Common.Types;
 using System;
 using System.Collections.Generic;
@@ -40,14 +41,19 @@ public class PhTableControl : PhControl
 {
     private static readonly Thickness CELL_PADDING = new(10, 6);
     private static readonly TimeSpan REVEAL_DURATION = TimeSpan.FromMilliseconds(120);
+    private const double FLASH_OPACITY = 0.18;
 
     private readonly Border _frame;
     private readonly Grid _grid;
+    private readonly ScrollViewer _scroll;
     private readonly TextBlock _emptyLabel;
 
     private readonly List<RowVisual> _rows = [];
+    private readonly List<Control> _headerCells = []; // pinned to the top while the body scrolls
+    private Border? _headerBg; // opaque header fill (re-resolved on theme change)
     private int _hoveredRow = -1;
     private int _focusedRow = -1;
+    private DispatcherTimer? _flashTimer;
 
 
     #region Public Properties
@@ -73,12 +79,22 @@ public class PhTableControl : PhControl
         _grid.PointerMoved += Grid_PointerMoved;
         _grid.PointerExited += Grid_PointerExited;
 
+        // scrolls internally when the control is given a MaxHeight (e.g. a page fitting it to the window)
+        _scroll = new ScrollViewer
+        {
+            HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled,
+            VerticalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto,
+            Content = _grid,
+        };
+        // keep the header row visually pinned to the top while the body scrolls under it
+        _scroll.ScrollChanged += (_, _) => SyncStickyHeader();
+
         _frame = new Border
         {
             HorizontalAlignment = HorizontalAlignment.Stretch,
             BorderThickness = new Thickness(1),
             ClipToBounds = true,
-            Child = _grid,
+            Child = _scroll,
         };
         _frame[!Border.BackgroundProperty] = Resx.CreateBinding(ResxId.IG_BackgroundNeutralBrush);
         _frame[!Border.BorderBrushProperty] = Resx.CreateBinding(ResxId.IG_BorderControlBrush);
@@ -106,10 +122,12 @@ public class PhTableControl : PhControl
     /// </summary>
     public void Build(IReadOnlyList<PhTableColumn> columns, IReadOnlyList<PhTableRow> rows)
     {
+        _flashTimer?.Stop();
         _grid.Children.Clear();
         _grid.RowDefinitions.Clear();
         _grid.ColumnDefinitions.Clear();
         _rows.Clear();
+        _headerCells.Clear();
         _hoveredRow = _focusedRow = -1;
 
         var hasRows = rows.Count > 0;
@@ -123,14 +141,24 @@ public class PhTableControl : PhControl
         foreach (var col in columns)
         {
             _grid.ColumnDefinitions.Add(new ColumnDefinition(
-                col.Star ? new GridLength(1, GridUnitType.Star) : GridLength.Auto));
+                col.Star ? new GridLength(1, GridUnitType.Star) : GridLength.Auto)
+            {
+                MinWidth = col.MinWidth,
+            });
         }
         _grid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Auto));
 
-        // header row + underline spanning all columns
+        // header row + underline spanning all columns. The header is the grid's row 0, but is kept
+        // visually pinned to the top via a render-transform synced to the scroll offset (SyncStickyHeader);
+        // an opaque background occludes the rows scrolling beneath it.
         _grid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
-        for (var c = 0; c < contentCols; c++) AddCell(HeaderCell(columns[c].Header), 0, c);
-        AddCell(HLine(ResxId.IG_BorderControlBrush, VerticalAlignment.Bottom), 0, 0, totalCols);
+
+        _headerBg = new Border { IsHitTestVisible = false };
+        ApplyHeaderBackground();
+        AddHeaderCell(_headerBg, 0, totalCols);
+
+        for (var c = 0; c < contentCols; c++) AddHeaderCell(HeaderCell(columns[c].Header), c);
+        AddHeaderCell(HLine(ResxId.IG_BorderControlBrush, VerticalAlignment.Bottom), 0, totalCols);
 
         // data rows
         for (var i = 0; i < rows.Count; i++)
@@ -146,6 +174,12 @@ public class PhTableControl : PhControl
             highlight.Transitions = new Transitions { FadeTransition() };
             AddCell(highlight, row, 0, totalCols);
 
+            // accent flash layer (above the hover tint): pulsed by FlashRow to notify the user
+            var flash = new Border { IsHitTestVisible = false, Opacity = 0 };
+            flash[!Border.BackgroundProperty] = new DynamicResourceExtension("PhAccentFill");
+            flash.Transitions = new Transitions { FadeTransition() };
+            AddCell(flash, row, 0, totalCols);
+
             // separator above every row except the first
             if (i > 0) AddCell(HLine(ResxId.IG_BorderNeutralBrush, VerticalAlignment.Top), row, 0, totalCols);
 
@@ -154,7 +188,7 @@ public class PhTableControl : PhControl
             var (actionsCell, buttons) = BuildActionsCell(spec.Actions, i);
             AddCell(actionsCell, row, contentCols);
 
-            _rows.Add(new RowVisual(highlight, actionsCell, buttons));
+            _rows.Add(new RowVisual(highlight, flash, actionsCell, buttons, spec.Key));
         }
     }
 
@@ -199,6 +233,50 @@ public class PhTableControl : PhControl
         return new Border { Padding = CELL_PADDING, Child = content };
     }
 
+
+    /// <summary>
+    /// Scrolls the row carrying <paramref name="key"/> into view and pulses its accent background.
+    /// No-op when no row matches.
+    /// </summary>
+    public void FlashRow(string key)
+    {
+        var index = _rows.FindIndex(r => string.Equals(r.Key, key, StringComparison.OrdinalIgnoreCase));
+        if (index >= 0) FlashRow(index);
+    }
+
+
+    /// <summary>
+    /// Scrolls the row at <paramref name="index"/> into view and pulses its accent background.
+    /// </summary>
+    public void FlashRow(int index)
+    {
+        if (index < 0 || index >= _rows.Count) return;
+        var flash = _rows[index].Flash;
+
+        // defer so a freshly (re)built row has had a layout pass before we scroll/measure
+        Dispatcher.UIThread.Post(() =>
+        {
+            flash.BringIntoView();
+
+            _flashTimer?.Stop();
+            var pulses = 0;
+            flash.Opacity = FLASH_OPACITY;
+
+            // toggle opacity (smoothed by the fade transition); end hidden after a few pulses
+            _flashTimer = new DispatcherTimer { Interval = REVEAL_DURATION + TimeSpan.FromMilliseconds(140) };
+            _flashTimer.Tick += (_, _) =>
+            {
+                flash.Opacity = flash.Opacity > 0 ? 0 : FLASH_OPACITY;
+                if (++pulses >= 5)
+                {
+                    flash.Opacity = 0;
+                    _flashTimer!.Stop();
+                }
+            };
+            _flashTimer.Start();
+        }, DispatcherPriority.Loaded);
+    }
+
     #endregion // Public Methods
 
 
@@ -206,8 +284,11 @@ public class PhTableControl : PhControl
 
     private void Grid_PointerMoved(object? sender, PointerEventArgs e)
     {
-        var y = e.GetPosition(_grid).Y;
-        var index = RowAt(y);
+        // ignore the band covered by the pinned header (it sits visually on top of the rows while scrolled)
+        var headerHeight = _headerBg?.Bounds.Height ?? 0;
+        var overHeader = e.GetPosition(_scroll).Y < headerHeight;
+
+        var index = overHeader ? -1 : RowAt(e.GetPosition(_grid).Y);
         if (index == _hoveredRow) return;
 
         _hoveredRow = index;
@@ -265,6 +346,52 @@ public class PhTableControl : PhControl
         Grid.SetColumn(content, col);
         if (colSpan > 1) Grid.SetColumnSpan(content, colSpan);
         _grid.Children.Add(content);
+    }
+
+
+    /// <summary>
+    /// Adds a header-row (row 0) cell that stays pinned to the top: drawn above the data rows
+    /// (<see cref="Visual.ZIndex"/>) and translated by the scroll offset in <see cref="SyncStickyHeader"/>.
+    /// </summary>
+    private void AddHeaderCell(Control content, int col, int colSpan = 1)
+    {
+        content.ZIndex = 1;
+        AddCell(content, 0, col, colSpan);
+        _headerCells.Add(content);
+    }
+
+
+    /// <summary>
+    /// Translates the header cells down by the current vertical scroll offset so they appear fixed
+    /// at the top while the body scrolls beneath them.
+    /// </summary>
+    private void SyncStickyHeader()
+    {
+        var y = _scroll.Offset.Y;
+        foreach (var cell in _headerCells)
+        {
+            cell.RenderTransform = y > 0 ? new TranslateTransform(0, y) : null;
+        }
+    }
+
+
+    /// <summary>
+    /// Gives the sticky header an opaque fill (the theme neutral color forced to full alpha) so the
+    /// rows scrolling beneath it don't bleed through. Re-resolved on theme change.
+    /// </summary>
+    private void ApplyHeaderBackground()
+    {
+        if (_headerBg is null) return;
+
+        var c = Resx.Get<ISolidColorBrush>(ResxId.IG_BackgroundNeutralBrush)?.Color ?? Colors.Transparent;
+        _headerBg.Background = new SolidColorBrush(new Color(255, c.R, c.G, c.B));
+    }
+
+
+    protected override void OnIgThemeChanged(ThemePackChangedEventArgs e)
+    {
+        base.OnIgThemeChanged(e);
+        ApplyHeaderBackground();
     }
 
 
@@ -375,7 +502,8 @@ public class PhTableControl : PhControl
     /// <summary>
     /// Per-row visuals the reveal logic toggles.
     /// </summary>
-    private sealed record RowVisual(Border Highlight, Border Actions, List<PhToolButton> Buttons);
+    private sealed record RowVisual(Border Highlight, Border Flash, Border Actions,
+        List<PhToolButton> Buttons, string? Key);
 }
 
 
@@ -395,6 +523,11 @@ public sealed class PhTableColumn
     /// Gets, sets whether the column fills remaining width (<c>*</c>); otherwise it auto-fits its content.
     /// </summary>
     public bool Star { get; set; }
+
+    /// <summary>
+    /// Gets, sets the column's minimum width (0 = none).
+    /// </summary>
+    public double MinWidth { get; set; }
 }
 
 
@@ -436,4 +569,9 @@ public sealed class PhTableRow
     /// Gets, sets the row's actions, rendered as hover/focus-revealed icon buttons.
     /// </summary>
     public IReadOnlyList<PhTableAction> Actions { get; set; } = [];
+
+    /// <summary>
+    /// Gets, sets an optional identifier used to locate the row later (e.g. for <see cref="PhTableControl.FlashRow(string)"/>).
+    /// </summary>
+    public string? Key { get; set; }
 }
