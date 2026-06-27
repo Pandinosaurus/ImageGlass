@@ -36,7 +36,6 @@ public partial class SettingsWindow : DialogWindow
     private PhButton _btnResetSettings = null!;
 
 
-    // override dialog window default settings — no width clamping (free resize)
     protected override int MIN_WIDTH => 0;
     protected override int MAX_WIDTH => int.MaxValue;
     protected override Thickness ContentPadding => new(0);

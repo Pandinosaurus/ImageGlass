@@ -26,6 +26,14 @@ using System.Threading;
 
 namespace ImageGlass.Common.Photoing;
 
+
+/// <summary>
+/// A read-only snapshot of a registered codec (for diagnostics / settings UI).
+/// </summary>
+public sealed record CodecInfo(string CodecId, string CodecName, int DecodePriority,
+    IReadOnlyList<string> SupportedExtensions, bool IsPlugin);
+
+
 /// <summary>
 /// Provides deterministic selection and lifetime management for registered photo codecs.
 /// </summary>
@@ -114,6 +122,26 @@ public sealed class CodecRegistry : PhDisposable
         {
             return SelectWithCache(_decodeCodecByExt, _decodeCodecs, ext,
                 c => c.CanDecode(metadata, context), nameof(SelectDecodeCodec));
+        }
+    }
+
+
+    /// <summary>
+    /// Returns a read-only snapshot of the registered codecs, ordered by decode priority
+    /// (highest first). Informational only (for diagnostics / settings UI).
+    /// </summary>
+    public IReadOnlyList<CodecInfo> GetCodecInfos()
+    {
+        lock (_lock)
+        {
+            var list = new List<CodecInfo>(_decodeCodecs.Count);
+            foreach (var c in _decodeCodecs)
+            {
+                var isBuiltIn = c is SvgCodecAdapter or SkiaCodecAdapter or MagickCodecAdapter;
+                list.Add(new CodecInfo(c.CodecId, c.CodecName, c.DecodePriority,
+                    c.SupportedExtensions, !isBuiltIn));
+            }
+            return list;
         }
     }
 

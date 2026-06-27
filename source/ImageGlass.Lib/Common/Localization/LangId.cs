@@ -46,6 +46,7 @@ public enum LangId
     _Email,
     _Install,
     _Refresh,
+    _TypeToFilter,
     _Delete,
     _Add,
     _Edit,
@@ -57,6 +58,7 @@ public enum LangId
     _Argument,
     _CommandPreview,
     _FileExtension,
+    _Codec,
     _Empty,
     _MoveUp,
     _MoveDown,
@@ -113,6 +115,8 @@ public enum LangId
     _Validation_UnsignedFloatValueOnly,
     _Validation_FileNameValueOnly,
     _Validation_FilePathValueOnly,
+    _Validation_FileExtensionValueOnly,
+    _Validation_FileExtensionsValueOnly,
 
     #endregion // General
 
@@ -643,7 +647,6 @@ public enum LangId
     #region FrmSettings > Tab Keyboard
     FrmSettings_Keyboard_MenuHotkeys,
     FrmSettings_Keyboard_Action,
-    FrmSettings_Keyboard_SearchPlaceholder,
     FrmSettings_Keyboard_NoResults,
     FrmSettings_Keyboard_EditTitle,
     FrmSettings_Keyboard_Conflict,

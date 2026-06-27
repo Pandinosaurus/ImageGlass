@@ -386,6 +386,7 @@ public class Lang
         new(LangId._Email, "Email"), //v9.0
         new(LangId._Install, "Install…"),
         new(LangId._Refresh, "Refresh"),
+        new(LangId._TypeToFilter, "Type to filter…"),
         new(LangId._Delete, "Delete"),
         new(LangId._Add, "Add"),
         new(LangId._Edit, "Edit"),
@@ -397,6 +398,7 @@ public class Lang
         new(LangId._Argument, "Argument"),
         new(LangId._CommandPreview, "Command preview"),
         new(LangId._FileExtension, "File extension"),
+        new(LangId._Codec, "Codec"),
         new(LangId._Empty, "(empty)"),
         new(LangId._MoveUp, "Move up"),
         new(LangId._MoveDown, "Move down"),
@@ -454,6 +456,8 @@ public class Lang
         new(LangId._Validation_UnsignedFloatValueOnly, "Must be a non-negative number"),
         new(LangId._Validation_FileNameValueOnly, "Invalid filename"),
         new(LangId._Validation_FilePathValueOnly, "Invalid file path"),
+        new(LangId._Validation_FileExtensionValueOnly, "Must be a single file extension (e.g. .psd)"),
+        new(LangId._Validation_FileExtensionsValueOnly, "Must be file extensions separated by ';' (e.g. .jpg;.png)"),
 
         #endregion // General
     
@@ -988,7 +992,6 @@ public class Lang
         #region FrmSettings > Tab Keyboard
         new(LangId.FrmSettings_Keyboard_MenuHotkeys, "Menu hotkeys"),
         new(LangId.FrmSettings_Keyboard_Action, "Action"),
-        new(LangId.FrmSettings_Keyboard_SearchPlaceholder, "Search actions…"),
         new(LangId.FrmSettings_Keyboard_NoResults, "No matching actions"),
         new(LangId.FrmSettings_Keyboard_EditTitle, "Edit hotkeys"),
         new(LangId.FrmSettings_Keyboard_Conflict, "This hotkey is assigned to more than one action."),

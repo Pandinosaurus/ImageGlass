@@ -138,7 +138,7 @@ public partial class MenuHotkeysEditorControl : PhControl
         base.OnIgLanguageChanged();
 
         PART_Reset.Text = Core.Lang[LangId._ResetToDefault];
-        PART_Search.PlaceholderText = Core.Lang[LangId.FrmSettings_Keyboard_SearchPlaceholder];
+        PART_Search.PlaceholderText = Core.Lang[LangId._TypeToFilter];
 
         // re-localize paths in place (no rebuild) so reopening the page stays fast
         RelocalizeRows();

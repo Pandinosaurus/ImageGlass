@@ -27,8 +27,7 @@ using System.Collections.Generic;
 namespace ImageGlass.Common.Windows;
 
 /// <summary>
-/// A single item in the settings sidebar. Maps a localized group label + icon to the
-/// page that is shown when the item is selected.
+/// A single item in the settings sidebar.
 /// </summary>
 public sealed class SettingsNavItem
 {
@@ -72,8 +71,7 @@ public sealed class SettingsNavItem
 
 
     /// <summary>
-    /// Builds the default sidebar item list. Items without a content factory show a placeholder
-    /// until their real per-tab view is implemented.
+    /// Builds the default sidebar item list, each mapped to the view its page hosts.
     /// </summary>
     public static List<SettingsNavItem> CreateDefaultList()
     {
@@ -99,7 +97,8 @@ public sealed class SettingsNavItem
                 (vm, navId, label) => new MouseSettingsView(vm, navId, label)),
             CreateNavItem("keyboard", LangId.FrmSettings_Nav_Keyboard, ICON_KEYBOARD, 0,
                 (vm, navId, label) => new KeyboardSettingsView(vm, navId, label)),
-            CreateNavItem("file_assocs", LangId.FrmSettings_Nav_FileTypeAssociations, ICON_FILE_ASSOC, 0),
+            CreateNavItem("file_assocs", LangId.FrmSettings_Nav_FileTypeAssociations, ICON_FILE_ASSOC, 0,
+                (vm, navId, label) => new FileTypeAssociationsSettingsView(vm, navId, label)),
             CreateNavItem("tools", LangId.FrmSettings_Nav_Tools, ICON_TOOLS, 0,
                 (vm, navId, label) => new ToolsSettingsView(vm, navId, label)),
             CreateNavItem("language", LangId.FrmSettings_Nav_Language, ICON_LANGUAGE, 0,
@@ -111,12 +110,12 @@ public sealed class SettingsNavItem
 
 
     private static SettingsNavItem CreateNavItem(string navId, LangId label, string iconData, int indent,
-        Func<SettingsViewModel, string, LangId?, Control>? createView = null)
+        Func<SettingsViewModel, string, LangId?, Control> createView)
         => CreateNavItem(navId, label, ParseIcon(iconData), indent, createView);
 
 
     private static SettingsNavItem CreateNavItem(string navId, LangId label, Geometry? icon, int indent,
-        Func<SettingsViewModel, string, LangId?, Control>? createView = null)
+        Func<SettingsViewModel, string, LangId?, Control> createView)
     {
         return new SettingsNavItem
         {
@@ -124,16 +123,9 @@ public sealed class SettingsNavItem
             Label = label,
             Icon = icon,
             IndentLevel = indent,
-            CreatePage = vm => new SettingsPage(vm, navId, createView ?? CreatePlaceholderView),
+            CreatePage = vm => new SettingsPage(vm, navId, createView),
         };
     }
-
-
-    /// <summary>
-    /// Placeholder content for nav items whose real per-tab view isn't implemented yet.
-    /// </summary>
-    private static TextBlock CreatePlaceholderView(SettingsViewModel vm, string navId, LangId? label)
-        => new TextBlock { Text = "TODO", Opacity = 0.6, TextWrapping = TextWrapping.Wrap };
 
 
     /// <summary>
