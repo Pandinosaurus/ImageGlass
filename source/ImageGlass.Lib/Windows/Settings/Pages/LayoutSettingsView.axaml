@@ -82,45 +82,6 @@
 
     <StackPanel Orientation="Vertical">
 
-        <!--  Window  -->
-        <ui:PhTextBlock Classes="group" LangKey="FrmSettings_Window" />
-        <StackPanel Margin="{DynamicResource SettingsGroupIndent}">
-            <CheckBox x:Name="PART_ShowAppIcon">
-                <ui:PhTextBlock LangKey="FrmSettings_ShowAppIcon" TextWrapping="Wrap" />
-            </CheckBox>
-            <CheckBox x:Name="PART_EnableCenterWindowFit">
-                <ui:PhTextBlock LangKey="FrmSettings_EnableCenterWindowFit" TextWrapping="Wrap" />
-            </CheckBox>
-
-            <!--  Image information tags  -->
-            <StackPanel Margin="0,10,0,0" Spacing="{DynamicResource SettingsLabelInputGap}">
-                <ui:PhTextBlock FontWeight="SemiBold" LangKey="FrmSettings_ImageInfoTags" />
-                <ui:PhTextBox
-                    x:Name="PART_ImageInfoTags"
-                    Width="{StaticResource LayoutSectionWidth}"
-                    MinHeight="70"
-                    HorizontalAlignment="Left"
-                    AcceptsReturn="True"
-                    FontFamily="{x:Static types:Const.FONT_CODE}"
-                    TextWrapping="Wrap" />
-                <ui:PhButton
-                    x:Name="PART_ResetImageInfoTags"
-                    HorizontalAlignment="Left"
-                    Variant="Link" />
-
-                <ui:PhTextBlock Margin="0,8,0,0" LangKey="FrmSettings_AvailableImageInfoTags" />
-                <SelectableTextBlock
-                    x:Name="PART_AvailableTags"
-                    MaxWidth="{StaticResource LayoutSectionWidth}"
-                    HorizontalAlignment="Left"
-                    FontFamily="{x:Static types:Const.FONT_CODE}"
-                    FontSize="{x:Static types:Const.FONT_SIZE_SMALL}"
-                    Opacity="0.7"
-                    TextWrapping="Wrap" />
-            </StackPanel>
-        </StackPanel>
-
-
         <!--  Controls  -->
         <ui:PhTextBlock Classes="group" LangKey="FrmSettings_Controls" />
         <StackPanel Margin="{DynamicResource SettingsGroupIndent}">
@@ -153,7 +114,7 @@
                 Padding="12"
                 HorizontalAlignment="Left"
                 Background="{DynamicResource IG_ThemeBackgroundBrush}"
-                BorderBrush="{DynamicResource IG_BorderNeutralBrush}"
+                BorderBrush="{DynamicResource TextControlBorderBrush}"
                 BorderThickness="1"
                 CornerRadius="{DynamicResource ControlCornerRadius}">
                 <Grid RowDefinitions="Auto,Auto,*,Auto,Auto" RowSpacing="8">
@@ -226,6 +187,47 @@
             </Border>
 
         </StackPanel>
+
+
+
+        <!--  Window  -->
+        <ui:PhTextBlock Classes="group" LangKey="FrmSettings_Window" />
+        <StackPanel Margin="{DynamicResource SettingsGroupIndent}">
+            <CheckBox x:Name="PART_ShowAppIcon">
+                <ui:PhTextBlock LangKey="FrmSettings_ShowAppIcon" TextWrapping="Wrap" />
+            </CheckBox>
+            <CheckBox x:Name="PART_EnableCenterWindowFit">
+                <ui:PhTextBlock LangKey="FrmSettings_EnableCenterWindowFit" TextWrapping="Wrap" />
+            </CheckBox>
+
+            <!--  Image information tags  -->
+            <StackPanel Margin="0,10,0,0" Spacing="{DynamicResource SettingsLabelInputGap}">
+                <ui:PhTextBlock FontWeight="SemiBold" LangKey="FrmSettings_ImageInfoTags" />
+                <ui:PhTextBox
+                    x:Name="PART_ImageInfoTags"
+                    Width="{StaticResource LayoutSectionWidth}"
+                    MinHeight="70"
+                    HorizontalAlignment="Left"
+                    AcceptsReturn="True"
+                    FontFamily="{x:Static types:Const.FONT_CODE}"
+                    TextWrapping="Wrap" />
+                <ui:PhButton
+                    x:Name="PART_ResetImageInfoTags"
+                    HorizontalAlignment="Left"
+                    Variant="Link" />
+
+                <ui:PhTextBlock Margin="0,8,0,0" LangKey="FrmSettings_AvailableImageInfoTags" />
+                <SelectableTextBlock
+                    x:Name="PART_AvailableTags"
+                    MaxWidth="{StaticResource LayoutSectionWidth}"
+                    HorizontalAlignment="Left"
+                    FontFamily="{x:Static types:Const.FONT_CODE}"
+                    FontSize="{x:Static types:Const.FONT_SIZE_SMALL}"
+                    Opacity="0.7"
+                    TextWrapping="Wrap" />
+            </StackPanel>
+        </StackPanel>
+
 
     </StackPanel>
 
