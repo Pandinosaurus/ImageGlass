@@ -85,6 +85,7 @@ public record ModalWindowOptions
     public bool IsRememberOptionVisible { get; set; }
     public bool? IsInputVisible { get; set; }
     public string InputValue { get; set; } = string.Empty;
+    public string? InputPlaceholder { get; set; }
     public TextBoxAcceptValue AcceptValue { get; set; } = TextBoxAcceptValue.Any;
     public bool? ShowInTaskbar { get; set; }
 }

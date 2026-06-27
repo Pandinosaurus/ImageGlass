@@ -167,6 +167,18 @@ public partial class ModalWindow : DialogWindow
 
 
     /// <summary>
+    /// Gets, sets the placeholder text of the input control.
+    /// </summary>
+    public string? InputPlaceholder
+    {
+        get => GetValue(InputPlaceholderProperty);
+        set => SetValue(InputPlaceholderProperty, value);
+    }
+    public static readonly StyledProperty<string?> InputPlaceholderProperty =
+        AvaloniaProperty.Register<ModalWindow, string?>(nameof(InputPlaceholder));
+
+
+    /// <summary>
     /// Gets, sets the progress value.
     /// </summary>
     public double ProgressValue
@@ -462,6 +474,7 @@ public partial class ModalWindow : DialogWindow
             [!PhTextBox.AcceptValueProperty] = this[!AcceptValueProperty],
             [!TextBox.TextProperty] = this[!InputValueProperty],
             [!TextBox.IsVisibleProperty] = this[!IsInputVisibleProperty],
+            [!TextBox.PlaceholderTextProperty] = this[!InputPlaceholderProperty],
         };
         var lblDetails = new Border
         {
@@ -661,6 +674,7 @@ public partial class ModalWindow : DialogWindow
             ThumbnailIcon = options.ThumbnailIcon,
             InputValue = options.InputValue,
             AcceptValue = options.AcceptValue,
+            InputPlaceholder = options.InputPlaceholder,
             IsInputVisible = options.IsInputVisible ?? false,
             IsRememberOptionVisible = options.IsRememberOptionVisible,
             ShowInTaskbar = options.ShowInTaskbar ?? true,
