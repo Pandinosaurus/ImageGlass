@@ -112,7 +112,7 @@ public partial class GeneralSettingsView : SettingsPageView
         }
         catch { }
 
-        // no associated editor → reveal in explorer instead
+        // no associated editor -> reveal in explorer instead
         BHelper.OpenFilePath(filePath);
     }
 

@@ -90,7 +90,7 @@ public partial class EditAppWindowView : PhControl
 
     /// <summary>
     /// Normalizes an extension key: trims each segment, lowercases it, drops empties/duplicates,
-    /// and rejoins with <c>;</c> (e.g. <c>"  .JPG ;  .svg "</c> → <c>".jpg;.svg"</c>).
+    /// and rejoins with <c>;</c> (e.g. <c>"  .JPG ;  .svg "</c> -> <c>".jpg;.svg"</c>).
     /// </summary>
     private static string NormalizeExtensions(string? raw)
     {

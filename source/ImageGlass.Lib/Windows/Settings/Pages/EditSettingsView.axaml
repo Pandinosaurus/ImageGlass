@@ -73,27 +73,11 @@
                 HorizontalAlignment="Left"
                 HorizontalContentAlignment="Center" />
 
-            <!--  empty state  -->
-            <ui:PhTextBlock
-                x:Name="PART_AppsEmpty"
-                Margin="0,10,0,0"
-                FontStyle="Italic"
-                LangKey="_Empty"
-                Opacity="0.6" />
-
             <!--  apps table (rows built in code-behind)  -->
-            <Border
+            <ui:PhTableControl
                 x:Name="PART_AppsTable"
-                MaxWidth="1500"
                 Margin="0,10,0,0"
-                HorizontalAlignment="Left"
-                Background="{DynamicResource IG_BackgroundNeutralBrush}"
-                BorderBrush="{DynamicResource IG_BorderControlBrush}"
-                BorderThickness="1"
-                ClipToBounds="True"
-                CornerRadius="{DynamicResource ControlCornerRadius}">
-                <Grid x:Name="PART_AppsTableBody" ColumnDefinitions="Auto,Auto,*,Auto,Auto" />
-            </Border>
+                HorizontalAlignment="Stretch" />
         </StackPanel>
 
     </StackPanel>

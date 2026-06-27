@@ -164,7 +164,7 @@ public partial class ToolbarEditorControl : PhControl
         // the theme (and thus icon paths) may have changed while this page was detached;
         // drop cached icons so they reload for the current dark/light pack
         _svgCache.Clear();
-        base.OnLoaded(e); // base triggers OnIgLanguageChanged → RenderAll with fresh icons
+        base.OnLoaded(e); // base triggers OnIgLanguageChanged -> RenderAll with fresh icons
     }
 
 

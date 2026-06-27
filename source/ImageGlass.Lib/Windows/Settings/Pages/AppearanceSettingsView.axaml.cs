@@ -207,7 +207,7 @@ public partial class AppearanceSettingsView : SettingsPageView
     {
         if (!Config.UninstallThemePack(theme)) return;
 
-        // a removed pack can't stay selected → revert that mode to its default
+        // a removed pack can't stay selected -> revert that mode to its default
         if (IsSelectedForDark(theme)) VM.SetValue(ConfigId.DarkTheme, Const.DEFAULT_THEME);
         if (IsSelectedForLight(theme)) VM.SetValue(ConfigId.LightTheme, Const.DEFAULT_LIGHT_THEME);
 
@@ -550,7 +550,7 @@ public partial class AppearanceSettingsView : SettingsPageView
             var bmp = await Task.Run(() => DecodePreview(path, PREVIEW_DECODE_WIDTH));
             if (bmp is null) return;
 
-            // a newer reload happened while decoding → drop this stale result
+            // a newer reload happened while decoding -> drop this stale result
             if (gen != _themeListGeneration)
             {
                 bmp.Dispose();

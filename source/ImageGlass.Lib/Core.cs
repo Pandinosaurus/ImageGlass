@@ -468,7 +468,7 @@ public static class Core
 
         var bgNeutralAlpha = 100;
         var bgColor = AppThemeColors.BgBrush.Color.NoAlpha();
-        var bgNeutral = bgColor.Blend(Core.Theme.InvertedBaseColor, 0.9f, bgNeutralAlpha);
+        var bgNeutral = bgColor.Blend(Core.Theme.InvertedBaseColor, 0.95f, bgNeutralAlpha);
         var borderNeutral = bgColor.Blend(Core.Theme.InvertedBaseColor, 0.8f, bgNeutralAlpha / 2);
         var borderControl = bgColor.Blend(Core.Theme.InvertedBaseColor, 0.5f, bgNeutralAlpha / 2);
 

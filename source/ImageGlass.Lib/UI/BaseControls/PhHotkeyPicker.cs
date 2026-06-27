@@ -33,9 +33,7 @@ using System.Linq;
 namespace ImageGlass.UI;
 
 /// <summary>
-/// Records and lists keyboard shortcuts: a recorder box on top (focus it and press a chord to add a
-/// hotkey) with the recorded hotkeys shown as removable chips below. Read or replace the whole set
-/// through <see cref="Hotkeys"/>.
+/// Records and lists keyboard shortcuts.
 /// </summary>
 public class PhHotkeyPicker : PhControl
 {

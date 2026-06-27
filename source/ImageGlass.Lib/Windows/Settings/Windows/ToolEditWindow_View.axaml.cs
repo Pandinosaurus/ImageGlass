@@ -44,7 +44,7 @@ public partial class ToolEditWindowView : PhControl
     {
         base.OnIgLanguageChanged();
 
-        // "Integrated with {0}" → label text + "ImageGlass.SDK" link (+ any trailing text)
+        // "Integrated with {0}" -> label text + "ImageGlass.SDK" link (+ any trailing text)
         var template = Core.Lang[LangId.FrmSettings_Tools_IntegratedWith];
         var idx = template.IndexOf("{0}", System.StringComparison.Ordinal);
 

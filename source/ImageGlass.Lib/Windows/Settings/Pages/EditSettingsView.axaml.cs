@@ -18,7 +18,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Layout;
 using Avalonia.Media;
 using ImageGlass.Common.Localization;
 using ImageGlass.Common.Types;
@@ -36,7 +35,7 @@ namespace ImageGlass.Common.Windows;
 /// </summary>
 public partial class EditSettingsView : SettingsPageView
 {
-    private static readonly Thickness CELL_PADDING = new(10, 6);
+    private static readonly FontFamily _codeFont = new(Const.FONT_CODE);
 
     // working copy of the editing apps (keyed by file-extension string); staged into the VM on change
     private readonly Dictionary<string, EditingApp> _apps = [];
@@ -133,7 +132,7 @@ public partial class EditSettingsView : SettingsPageView
         if (await window.ShowAsync(TopLevel.GetTopLevel(this) as PhWindow) != DialogExitCode.OK) return;
         if (string.IsNullOrEmpty(window.ResultExtKey)) return;
 
-        // editing may rename the extension key → drop the old entry first
+        // editing may rename the extension key -> drop the old entry first
         if (extKey is not null) _apps.Remove(extKey);
         _apps[window.ResultExtKey] = window.ResultApp;
 
@@ -160,49 +159,46 @@ public partial class EditSettingsView : SettingsPageView
     /// </summary>
     private void RebuildAppsTable()
     {
-        PART_AppsTableBody.Children.Clear();
-        PART_AppsTableBody.RowDefinitions.Clear();
+        PhTableColumn[] columns =
+        [
+            new() { Header = Core.Lang[LangId._FileExtension] },
+            new() { Header = Core.Lang[LangId.FrmSettings_EditApps_AppName] },
+            new() { Header = Core.Lang[LangId._Executable], Star = true },
+            new() { Header = Core.Lang[LangId._Argument] },
+        ];
 
-        var hasApps = _apps.Count > 0;
-        PART_AppsEmpty.IsVisible = !hasApps;
-        PART_AppsTable.IsVisible = hasApps;
-        if (!hasApps) return;
-
-
-        // 1. header row + underline spanning all columns
-        PART_AppsTableBody.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
-        AddCell(HeaderCell(LangId._FileExtension), 0, 0);
-        AddCell(HeaderCell(LangId.FrmSettings_EditApps_AppName), 0, 1);
-        AddCell(HeaderCell(LangId._Executable), 0, 2);
-        AddCell(HeaderCell(LangId._Argument), 0, 3);
-        AddCell(new TextBlock(), 0, 4); // actions column (no header)
-        AddCell(HLine(ResxId.IG_BorderControlBrush, VerticalAlignment.Bottom), 0, 0, 5);
-
-
-        // 2. data rows (sorted by extension; the ".*" catch-all is forced to the bottom)
+        // sorted by extension; the ".*" catch-all is forced to the bottom
         var extKeys = _apps.Keys
             .OrderBy(IsWildcardKey) // false (specific) sorts before true (catch-all)
             .ThenBy(k => k, StringComparer.OrdinalIgnoreCase)
             .ToList();
-        for (var i = 0; i < extKeys.Count; i++)
+
+        var rows = new List<PhTableRow>(extKeys.Count);
+        foreach (var extKey in extKeys)
         {
-            var extKey = extKeys[i];
             var app = _apps[extKey];
-            var row = i + 1;
-            PART_AppsTableBody.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
-
-            // separator above every row except the first
-            if (i > 0) AddCell(HLine(ResxId.IG_BorderNeutralBrush, VerticalAlignment.Top), row, 0, 5);
-
-            var extCell = TextCell(extKey, maxWidth: 160);
-            extCell.FontFamily = Const.FONT_CODE;
-            AddCell(extCell, row, 0);
-
-            AddCell(TextCell(app.AppName, maxWidth: 160), row, 1);
-            AddCell(TextCell(app.Executable), row, 2);
-            AddCell(string.IsNullOrEmpty(app.Argument) ? EmptyCell() : TextCell(app.Argument, maxWidth: 180), row, 3);
-            AddCell(ActionsCell(extKey), row, 4);
+            var key = extKey; // capture for the action closures
+            rows.Add(new PhTableRow
+            {
+                Cells =
+                [
+                    PhTableControl.TextCell(extKey, maxWidth: 160, selectable: true, font: _codeFont),
+                    PhTableControl.TextCell(app.AppName, maxWidth: 160, selectable: true),
+                    PhTableControl.TextCell(app.Executable, selectable: true),
+                    string.IsNullOrEmpty(app.Argument)
+                        ? PhTableControl.TextCell(Core.Lang[LangId._Empty], muted: true)
+                        : PhTableControl.TextCell(app.Argument, maxWidth: 180, selectable: true),
+                ],
+                Actions =
+                [
+                    new() { Icon = ResxIconId.IconEdit, Tooltip = Core.Lang[LangId._Edit], Click = () => _ = AddOrEditAppAsync(key) },
+                    new() { Icon = ResxIconId.IconClose, Tooltip = Core.Lang[LangId._Delete], Click = () => DeleteApp(key) },
+                ],
+            });
         }
+
+        PART_AppsTable.EmptyText = Core.Lang[LangId._Empty];
+        PART_AppsTable.Build(columns, rows);
     }
 
 
@@ -212,90 +208,5 @@ public partial class EditSettingsView : SettingsPageView
     private static bool IsWildcardKey(string extKey) => extKey
         .Split(';', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
         .Contains(EditingApp.ALL_EXTENSIONS);
-
-
-    #region Table cell builders
-
-    private void AddCell(Control content, int row, int col, int colSpan = 1)
-    {
-        Grid.SetRow(content, row);
-        Grid.SetColumn(content, col);
-        if (colSpan > 1) Grid.SetColumnSpan(content, colSpan);
-        PART_AppsTableBody.Children.Add(content);
-    }
-
-
-    /// <summary>
-    /// Creates a 1px horizontal rule whose color follows the theme (via a dynamic resource binding).
-    /// </summary>
-    private static Border HLine(ResxId brushId, VerticalAlignment align)
-    {
-        var line = new Border { Height = 1, VerticalAlignment = align };
-        line[!Border.BackgroundProperty] = Resx.CreateBinding(brushId);
-
-        return line;
-    }
-
-
-    private static PhTextBlock HeaderCell(LangId key) => new()
-    {
-        LangKey = key,
-        FontWeight = FontWeight.SemiBold,
-        Padding = CELL_PADDING,
-        VerticalAlignment = VerticalAlignment.Center,
-    };
-
-
-    private static SelectableTextBlock TextCell(string text, double maxWidth = 0)
-    {
-        var tb = new SelectableTextBlock
-        {
-            Text = text,
-            Padding = CELL_PADDING,
-            VerticalAlignment = VerticalAlignment.Center,
-            TextTrimming = TextTrimming.CharacterEllipsis,
-            IsTabStop = false,
-        };
-        if (maxWidth > 0) tb.MaxWidth = maxWidth;
-        if (!string.IsNullOrEmpty(text)) ToolTip.SetTip(tb, text);
-
-        return tb;
-    }
-
-
-    private static TextBlock EmptyCell() => new()
-    {
-        Text = Core.Lang[LangId._Empty],
-        Padding = CELL_PADDING,
-        FontStyle = FontStyle.Italic,
-        Opacity = 0.6,
-        VerticalAlignment = VerticalAlignment.Center,
-    };
-
-
-    private Border ActionsCell(string extKey)
-    {
-        var btnEdit = new PhButton { Variant = PhButtonVariant.Link, Text = Core.Lang[LangId._Edit] };
-        btnEdit.Click += async (_, _) => await AddOrEditAppAsync(extKey);
-
-        var btnDelete = new PhButton { Variant = PhButtonVariant.Link, Text = Core.Lang[LangId._Delete] };
-        btnDelete.Click += (_, _) => DeleteApp(extKey);
-
-        var panel = new StackPanel
-        {
-            Orientation = Orientation.Horizontal,
-            Spacing = 6,
-            VerticalAlignment = VerticalAlignment.Center,
-        };
-        panel.Children.AddRange([btnEdit, btnDelete]);
-
-        return new Border
-        {
-            Padding = new Thickness(8, 2),
-            Child = panel,
-        };
-    }
-
-    #endregion // Table cell builders
 
 }

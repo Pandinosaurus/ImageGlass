@@ -80,7 +80,7 @@ public sealed class SettingsViewModel : PhReactive
     {
         if (_pending.Count == 0) return;
 
-        // 1. push staged values into the live config (raises PropertyChanged → live UI updates)
+        // 1. push staged values into the live config (raises PropertyChanged -> live UI updates)
         var changedIds = _pending.Keys.ToList();
         foreach (var (id, value) in _pending)
         {
@@ -131,13 +131,13 @@ public sealed class SettingsViewModel : PhReactive
             Core.UpdateDestColorProfile();
         }
 
-        // language pack changed → reload it live (setting Core.Lang raises Core.LanguageChanged)
+        // language pack changed -> reload it live (setting Core.Lang raises Core.LanguageChanged)
         if (changedIds.Contains(ConfigId.Language))
         {
             _ = Core.Config.LoadCurrentLanguageAsync();
         }
 
-        // external tools edited → rebuild the registry so the Tools menu / IG_OpenTool use the new values
+        // external tools edited -> rebuild the registry so the Tools menu / IG_OpenTool use the new values
         if (changedIds.Contains(ConfigId.Tools))
         {
             Core.ReloadExternalTools();
@@ -151,7 +151,7 @@ public sealed class SettingsViewModel : PhReactive
             Core.API.RegisterHotkeys();
         }
 
-        // theme pack changed → re-apply live. omit the accent so ApplyThemePackAsync reads the live
+        // theme pack changed -> re-apply live. omit the accent so ApplyThemePackAsync reads the live
         // OS accent itself; passing the derived Core.AccentColor would make a system-accent pack
         // inherit the previous pack's accent (and darken it again each time)
         if (changedIds.Any(static id => id is ConfigId.DarkTheme or ConfigId.LightTheme)

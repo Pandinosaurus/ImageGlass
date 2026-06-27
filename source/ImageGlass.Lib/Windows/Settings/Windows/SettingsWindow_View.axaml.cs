@@ -359,7 +359,7 @@ public partial class SettingsWindowView : PhControl
         var item = _navItems.FirstOrDefault(i => i.NavId == navId);
         if (item is null) return;
 
-        PART_Sidebar.SelectedItem = item; // raises SelectionChanged → ShowPage
+        PART_Sidebar.SelectedItem = item; // raises SelectionChanged -> ShowPage
     }
 
 

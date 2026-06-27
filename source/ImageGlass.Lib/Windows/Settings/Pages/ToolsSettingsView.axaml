@@ -24,25 +24,8 @@
                 Variant="Link" />
         </StackPanel>
 
-        <!--  Empty state  -->
-        <ui:PhTextBlock
-            x:Name="PART_Empty"
-            FontStyle="Italic"
-            IsVisible="False"
-            LangKey="_Empty"
-            Opacity="0.6" />
-
-        <!--  Tools table  -->
-        <Border
-            x:Name="PART_TableBorder"
-            MaxWidth="1500"
-            Background="{DynamicResource IG_BackgroundNeutralBrush}"
-            BorderBrush="{DynamicResource IG_BorderControlBrush}"
-            BorderThickness="1"
-            ClipToBounds="True"
-            CornerRadius="{DynamicResource ControlCornerRadius}">
-            <Grid x:Name="PART_TableBody" ColumnDefinitions="Auto,*,Auto,Auto" />
-        </Border>
+        <!--  Tools table (rows built in code-behind)  -->
+        <ui:PhTableControl x:Name="PART_Table" HorizontalAlignment="Stretch" />
 
     </StackPanel>
 

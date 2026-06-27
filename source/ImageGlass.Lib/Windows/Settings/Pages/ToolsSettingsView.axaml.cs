@@ -18,8 +18,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Controls.Shapes;
-using Avalonia.Layout;
 using Avalonia.Markup.Xaml.MarkupExtensions;
 using Avalonia.Media;
 using ImageGlass.Common.Localization;
@@ -41,7 +39,6 @@ namespace ImageGlass.Common.Windows;
 /// </summary>
 public partial class ToolsSettingsView : SettingsPageView
 {
-    private static readonly Thickness CELL_PADDING = new(10, 6);
     private const double NAME_MAX_WIDTH = 220;
     private const double HOTKEY_MAX_WIDTH = 200;
 
@@ -138,37 +135,30 @@ public partial class ToolsSettingsView : SettingsPageView
     /// </summary>
     private void RebuildTable()
     {
-        PART_TableBody.Children.Clear();
-        PART_TableBody.RowDefinitions.Clear();
+        PhTableColumn[] columns =
+        [
+            new() { Header = Core.Lang[LangId._Name] },
+            new() { Header = Core.Lang[LangId._Executable], Star = true },
+            new() { Header = Core.Lang[LangId._Hotkeys] },
+        ];
 
-        var hasTools = _tools.Count > 0;
-        PART_Empty.IsVisible = !hasTools;
-        PART_TableBorder.IsVisible = hasTools;
-        if (!hasTools) return;
-
-        // header row + underline spanning all columns
-        PART_TableBody.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
-        AddCell(HeaderCell(LangId._Name), 0, 0);
-        AddCell(HeaderCell(LangId._Executable), 0, 1);
-        AddCell(HeaderCell(LangId._Hotkeys), 0, 2);
-        AddCell(new Panel(), 0, 3); // actions column (no header)
-        AddCell(HLine(ResxId.IG_BorderControlBrush, VerticalAlignment.Bottom), 0, 0, 4);
-
-        // data rows
-        for (var i = 0; i < _tools.Count; i++)
+        var rows = _tools.Select(tool => new PhTableRow
         {
-            var tool = _tools[i];
-            var row = i + 1;
-            PART_TableBody.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
+            Cells =
+            [
+                NameCell(tool),
+                PhTableControl.TextCell(tool.Executable, selectable: true),
+                PhTableControl.TextCell(HotkeysText(tool), HOTKEY_MAX_WIDTH),
+            ],
+            Actions =
+            [
+                new() { Icon = ResxIconId.IconEdit, Tooltip = Core.Lang[LangId._Edit], Click = () => _ = AddOrEditToolAsync(tool) },
+                new() { Icon = ResxIconId.IconClose, Tooltip = Core.Lang[LangId._Delete], Click = () => DeleteTool(tool) },
+            ],
+        }).ToList();
 
-            // separator above every row except the first
-            if (i > 0) AddCell(HLine(ResxId.IG_BorderNeutralBrush, VerticalAlignment.Top), row, 0, 4);
-
-            AddCell(NameCell(tool), row, 0);
-            AddCell(TextCell(tool.Executable), row, 1);
-            AddCell(TextCell(HotkeysText(tool), HOTKEY_MAX_WIDTH), row, 2);
-            AddCell(ActionsCell(tool), row, 3);
-        }
+        PART_Table.EmptyText = Core.Lang[LangId._Empty];
+        PART_Table.Build(columns, rows);
     }
 
 
@@ -178,69 +168,20 @@ public partial class ToolsSettingsView : SettingsPageView
 
     #region Table cell builders
 
-    private void AddCell(Control content, int row, int col, int colSpan = 1)
-    {
-        Grid.SetRow(content, row);
-        Grid.SetColumn(content, col);
-        if (colSpan > 1) Grid.SetColumnSpan(content, colSpan);
-        PART_TableBody.Children.Add(content);
-    }
-
-
-    /// <summary>
-    /// Creates a 1px horizontal rule whose color follows the theme (via a dynamic resource binding).
-    /// </summary>
-    private static Border HLine(ResxId brushId, VerticalAlignment align)
-    {
-        var line = new Border { Height = 1, VerticalAlignment = align };
-        line[!Border.BackgroundProperty] = Resx.CreateBinding(brushId);
-
-        return line;
-    }
-
-
-    private static PhTextBlock HeaderCell(LangId key) => new()
-    {
-        LangKey = key,
-        FontWeight = FontWeight.SemiBold,
-        Padding = CELL_PADDING,
-        VerticalAlignment = VerticalAlignment.Center,
-    };
-
-
-    /// <summary>
-    /// A text cell that truncates with an ellipsis (optionally capped to <paramref name="maxWidth"/>),
-    /// with a tooltip showing the full text.
-    /// </summary>
-    private static Border TextCell(string text, double maxWidth = 0)
-    {
-        var tb = new TextBlock
-        {
-            Text = text,
-            Padding = CELL_PADDING,
-            VerticalAlignment = VerticalAlignment.Center,
-            TextTrimming = TextTrimming.CharacterEllipsis,
-        };
-        if (maxWidth > 0) tb.MaxWidth = maxWidth;
-        if (!string.IsNullOrEmpty(text)) ToolTip.SetTip(tb, text);
-
-        return new Border { Child = tb };
-    }
-
-
     /// <summary>
     /// The name cell: the tool name (capped + truncated), with the "Integrated" badge below when set.
     /// </summary>
-    private Control NameCell(ExternalTool tool)
+    private static Control NameCell(ExternalTool tool)
     {
-        var name = new TextBlock
+        var name = new SelectableTextBlock
         {
             Text = string.IsNullOrWhiteSpace(tool.ToolName) ? tool.ToolId : tool.ToolName,
             MaxWidth = NAME_MAX_WIDTH,
             TextTrimming = TextTrimming.CharacterEllipsis,
+            IsTabStop = false,
         };
 
-        var stack = new StackPanel { Spacing = 2, VerticalAlignment = VerticalAlignment.Center };
+        var stack = new StackPanel { Spacing = 2 };
         stack.Children.Add(name);
 
         if (tool.IsIntegrated)
@@ -254,55 +195,7 @@ public partial class ToolsSettingsView : SettingsPageView
             stack.Children.Add(badge);
         }
 
-        return new Border { Padding = CELL_PADDING, Child = stack };
-    }
-
-
-    /// <summary>
-    /// The actions cell: Edit + Delete icon buttons.
-    /// </summary>
-    private Border ActionsCell(ExternalTool tool)
-    {
-        var panel = new StackPanel
-        {
-            Orientation = Orientation.Horizontal,
-            Spacing = 2,
-            HorizontalAlignment = HorizontalAlignment.Right,
-            VerticalAlignment = VerticalAlignment.Center,
-        };
-        panel.Children.Add(IconButton(ResxIconId.IconEdit, LangId._Edit, () => _ = AddOrEditToolAsync(tool)));
-        panel.Children.Add(IconButton(ResxIconId.IconClose, LangId._Delete, () => DeleteTool(tool)));
-
-        return new Border { Padding = new Thickness(8, 2), Child = panel };
-    }
-
-
-    /// <summary>
-    /// Builds a tool-button with a filled icon glyph and a tooltip.
-    /// </summary>
-    private static PhToolButton IconButton(ResxIconId icon, LangId tooltip, Action onClick)
-    {
-        var glyph = new Path
-        {
-            Width = Const.FONT_SIZE_BODY,
-            Height = Const.FONT_SIZE_BODY,
-            Data = Resx.GetIcon(icon),
-            Stretch = Stretch.Uniform,
-        };
-        glyph[!Shape.FillProperty] = Resx.CreateBinding(ResxId.TextControlForeground);
-
-        var btn = new PhToolButton
-        {
-            Padding = new Thickness(7),
-            VerticalAlignment = VerticalAlignment.Center,
-            Focusable = false,
-            IsTabStop = false,
-            Content = glyph,
-        };
-        ToolTip.SetTip(btn, Core.Lang[tooltip]);
-        btn.Click += (_, _) => onClick();
-
-        return btn;
+        return PhTableControl.WrapCell(stack);
     }
 
     #endregion // Table cell builders

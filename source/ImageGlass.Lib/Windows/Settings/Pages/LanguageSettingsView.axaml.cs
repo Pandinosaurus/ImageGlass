@@ -168,7 +168,7 @@ public partial class LanguageSettingsView : SettingsPageView
         var path = file?.TryGetLocalPath();
         if (string.IsNullOrEmpty(path)) return;
 
-        // export from a fresh instance so SaveAsFileAsync's English→placeholder rewrite never
+        // export from a fresh instance so SaveAsFileAsync's English->placeholder rewrite never
         // mutates the metadata of the entry still shown in the combo
         var toExport = selected.IsBuiltIn ? new Lang(string.Empty) { Items = Lang.DefaultLangMap } : selected;
         await toExport.SaveAsFileAsync(path);

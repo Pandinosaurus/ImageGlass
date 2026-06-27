@@ -86,7 +86,7 @@ public partial class SettingsWindow : DialogWindow
     {
         base.OnLoaded(e);
 
-        // a specific setting was requested → jump to it (overrides the restored page)
+        // a specific setting was requested -> jump to it (overrides the restored page)
         if (!string.IsNullOrWhiteSpace(_targetConfigId))
         {
             _viewEl.NavigateToConfig(_targetConfigId);

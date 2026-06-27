@@ -31,7 +31,7 @@ every payload `.exe`/`.dll` *and* the package itself.
 
 ## Usage
 
-Run from VS Code (Terminal → Run Task) or the CLI:
+Run from VS Code (Terminal -> Run Task) or the CLI:
 
 ```powershell
 # Microsoft Store (unsigned)
@@ -71,7 +71,7 @@ a trust chain) but **not** package-signed — only the `.msixbundle` itself is s
 ## Notes
 
 - **Version.** Both flavours use `<Major>.<Minor>.<IgBundleBuild>.0`, derived from
-  `Directory.Build.props` (e.g. short `10.0.2` + build `535` → `10.0.535.0`). The
+  `Directory.Build.props` (e.g. short `10.0.2` + build `535` -> `10.0.535.0`). The
   build number lives in the 3rd part because the Microsoft Store reserves the 4th
   (revision) part, which must be `0`. Bump `<IgBundleBuild>` per release. Override
   the whole value with `-PackageVersion`.
