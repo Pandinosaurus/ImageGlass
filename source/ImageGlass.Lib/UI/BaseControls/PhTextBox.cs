@@ -56,6 +56,16 @@ public partial class PhTextBox : TextBox
     private static partial Regex Regex_UnsignedIntValueOnly();
 
 
+    // a single extension: optional leading dot + alphanumerics (e.g. ".psd" or "psd")
+    [GeneratedRegex(@"^\s*\.?[A-Za-z0-9]+\s*$", RegexOptions.IgnoreCase, "en-US")]
+    private static partial Regex Regex_FileExtensionValueOnly();
+
+
+    // ".*" (all extensions), or one/more dot + alphanumeric extensions separated by ";" (e.g. ".jpg;.png")
+    [GeneratedRegex(@"^\s*\.(\*|[A-Za-z0-9]+)(\s*;\s*\.(\*|[A-Za-z0-9]+))*\s*$", RegexOptions.IgnoreCase, "en-US")]
+    private static partial Regex Regex_FileExtensionsValueOnly();
+
+
     #endregion // Private Regex
 
 
@@ -222,6 +232,18 @@ public partial class PhTextBox : TextBox
                     if (!isValid) error = new ValidationException(Core.Lang[LangId._Validation_UnsignedFloatValueOnly]);
                     break;
 
+                // a single file extension (e.g. ".psd")
+                case TextBoxAcceptValue.FileExtensionValueOnly:
+                    isValid = Regex_FileExtensionValueOnly().IsMatch(textValue);
+                    if (!isValid) error = new ValidationException(Core.Lang[LangId._Validation_FileExtensionValueOnly]);
+                    break;
+
+                // one or more file extensions separated by ";" (e.g. ".jpg;.png" or ".*")
+                case TextBoxAcceptValue.FileExtensionsValueOnly:
+                    isValid = Regex_FileExtensionsValueOnly().IsMatch(textValue);
+                    if (!isValid) error = new ValidationException(Core.Lang[LangId._Validation_FileExtensionsValueOnly]);
+                    break;
+
                 // Valid filename only
                 case TextBoxAcceptValue.FileNameValueOnly:
                     var badChars = Path.GetInvalidFileNameChars();
@@ -341,4 +363,6 @@ public enum TextBoxAcceptValue
     UnsignedFloatValueOnly,
     FileNameValueOnly,
     FilePathValueOnly,
+    FileExtensionValueOnly,
+    FileExtensionsValueOnly,
 }

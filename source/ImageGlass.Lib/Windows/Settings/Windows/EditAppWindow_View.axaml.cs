@@ -31,18 +31,12 @@ namespace ImageGlass.Common.Windows;
 /// </summary>
 public partial class EditAppWindowView : PhControl
 {
-    // ".*" (all extensions), or one/more dot + alphanumeric extensions separated by ";"
-    // (e.g. ".jpg;.png"); surrounding/inner whitespace is tolerated and normalized away on submit
-    private const string EXT_PATTERN = @"^\s*\.(\*|[A-Za-z0-9]+)(\s*;\s*\.(\*|[A-Za-z0-9]+))*\s*$";
-
-
     public EditAppWindowView()
     {
         InitializeComponent();
 
         // the extension must be ".*" (all) or dot + alphanumeric (".jpg", ".jpg;.png")
-        PART_Extension.AcceptValue = TextBoxAcceptValue.RegexPattern;
-        PART_Extension.RegexPattern = EXT_PATTERN;
+        PART_Extension.AcceptValue = TextBoxAcceptValue.FileExtensionsValueOnly;
     }
 
 
