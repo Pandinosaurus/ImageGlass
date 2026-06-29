@@ -67,6 +67,10 @@ public enum LangId
     _Separator,
     _Icon,
     _Description,
+    _Type,
+    _Version,
+    _Author,
+    _View,
     _GetHelp,
     _Start,
 
@@ -422,6 +426,7 @@ public enum LangId
     FrmSettings_Nav_Keyboard,
     FrmSettings_Nav_FileTypeAssociations,
     FrmSettings_Nav_Tools,
+    FrmSettings_Nav_Plugins,
     FrmSettings_Nav_Language,
     FrmSettings_Nav_Appearance,
     #endregion // FrmSettings > Navbar
@@ -683,6 +688,17 @@ public enum LangId
     FrmSettings_Tools_IntegratedWith,
     FrmSettings_Tools_Errors_ToolIdDuplicated,
     #endregion // FrmSettings > Tab Tools
+
+
+    #region FrmSettings > Tab Plugins
+    FrmSettings_Plugins_OpenPluginFolder,
+    FrmSettings_Plugins_GetMorePlugins,
+    FrmSettings_Plugins_SupportedExtensions,
+    FrmSettings_Plugins_ViewMetadata,
+    FrmSettings_Plugins_FolderPath,
+    FrmSettings_Plugins_RestartRequired,
+    FrmSettings_Plugins_InstallSuccess,
+    #endregion // FrmSettings > Tab Plugins
 
 
     #region FrmSettings > Tab Language

@@ -327,6 +327,45 @@ public sealed unsafe class PluginRegistry : PhDisposable
 
 
     /// <summary>
+    /// Reads the codec-reported supported extensions for the loaded plugin with the given id,
+    /// re-probing each codec capability live so the result reflects the codec itself and ignores
+    /// any manifest <c>supportedExtensions</c> override. Returns an empty array when the plugin
+    /// is not loaded or reports none.
+    /// </summary>
+    public string[] GetCodecSupportedExtensions(string pluginId)
+    {
+        NativePlugin? handle;
+        lock (_lock)
+        {
+            if (!_plugins.TryGetValue(pluginId, out handle)) return [];
+        }
+
+        var set = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var result = new List<string>();
+        foreach (var entry in handle.Codecs)
+        {
+            var codecApi = (IGCodecApi*)entry.CodecApiPtr;
+            if (codecApi == null || codecApi->GetCapability == null) continue;
+
+            IGCodecCapability cap = default;
+            IGStatus status;
+            try { status = codecApi->GetCapability(&cap); }
+            catch { continue; }
+            if (status != IGStatus.OK) continue;
+
+            foreach (var ext in MarshalCapability(in cap).SupportedExtensions)
+            {
+                if (string.IsNullOrEmpty(ext)) continue;
+                var normalized = ext.StartsWith('.') ? ext.ToLowerInvariant() : "." + ext.ToLowerInvariant();
+                if (set.Add(normalized)) result.Add(normalized);
+            }
+        }
+
+        return [.. result];
+    }
+
+
+    /// <summary>
     /// Scans the given directory for native plugin manifests
     /// (<c>igplugin.json</c>) and returns one entry per valid manifest found.
     /// Does NOT load any libraries; manifest deserialization only.

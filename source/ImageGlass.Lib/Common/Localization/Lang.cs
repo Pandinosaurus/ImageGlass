@@ -407,6 +407,10 @@ public class Lang
         new(LangId._Separator, "Separator"),
         new(LangId._Icon, "Icon"),
         new(LangId._Description, "Description"),
+        new(LangId._Type, "Type"),
+        new(LangId._Version, "Version"),
+        new(LangId._Author, "Author"),
+        new(LangId._View, "View"),
         new(LangId._GetHelp, "Get help"),
         new(LangId._Start, "Start"),
 
@@ -764,6 +768,7 @@ public class Lang
         new(LangId.FrmSettings_Nav_Keyboard, "Keyboard"),
         new(LangId.FrmSettings_Nav_FileTypeAssociations, "File type associations"),
         new(LangId.FrmSettings_Nav_Tools, "Tools"),
+        new(LangId.FrmSettings_Nav_Plugins, "Plugins"),
         new(LangId.FrmSettings_Nav_Language, "Language"),
         new(LangId.FrmSettings_Nav_Appearance, "Appearance"),
         #endregion // FrmSettings > Navbar
@@ -1028,6 +1033,17 @@ public class Lang
         new(LangId.FrmSettings_Tools_IntegratedWith, "Integrated with {0}"),
         new(LangId.FrmSettings_Tools_Errors_ToolIdDuplicated, "The tool ID \"{0}\" is already in use."),
         #endregion // FrmSettings > Tab Tools
+
+
+        #region FrmSettings > Tab Plugins
+        new(LangId.FrmSettings_Plugins_OpenPluginFolder, "Open plugin folder"),
+        new(LangId.FrmSettings_Plugins_GetMorePlugins, "Get more plugins…"),
+        new(LangId.FrmSettings_Plugins_SupportedExtensions, "Supported extensions"),
+        new(LangId.FrmSettings_Plugins_ViewMetadata, "Plugin information"),
+        new(LangId.FrmSettings_Plugins_FolderPath, "Folder"),
+        new(LangId.FrmSettings_Plugins_RestartRequired, "Restart ImageGlass to apply the changes."),
+        new(LangId.FrmSettings_Plugins_InstallSuccess, "Plugin installed successfully"),
+        #endregion // FrmSettings > Tab Plugins
 
 
         #region FrmSettings > Tab Language
