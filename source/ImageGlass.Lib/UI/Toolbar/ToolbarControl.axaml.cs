@@ -50,6 +50,8 @@ public partial class ToolbarControl : PhControl
     public readonly List<ToolbarItemModel> _groupOverflowItemModels = [];
     private readonly List<Control> _itemElements = [];
     private double _lastOverflowWidth;
+    private double _overflowSlotWidth; // sticky width of the overflow button + spacing
+    private bool _overflowUpdateQueued;
 
 
 
@@ -92,14 +94,13 @@ public partial class ToolbarControl : PhControl
 
     #region Control Events
 
-    protected override async void OnLoaded(RoutedEventArgs e)
+    protected override void OnLoaded(RoutedEventArgs e)
     {
         base.OnLoaded(e);
 
         Core.Config.PropertyChanged += Config_PropertyChanged;
 
-        await Task.Delay(100);
-        HandleOverflow();
+        ScheduleOverflowUpdate();
     }
 
 
@@ -118,7 +119,25 @@ public partial class ToolbarControl : PhControl
         if (Math.Abs(e.NewSize.Width - _lastOverflowWidth) < 0.5) return;
         _lastOverflowWidth = e.NewSize.Width;
 
-        HandleOverflow();
+        ScheduleOverflowUpdate();
+    }
+
+
+    /// <summary>
+    /// Coalesces overflow recalculation into a single post-layout pass, so bursts of size changes
+    /// (startup, DPI settle, full-screen enter/exit) run <see cref="HandleOverflow"/> once with the
+    /// final, settled bounds instead of flickering through intermediate states.
+    /// </summary>
+    private void ScheduleOverflowUpdate()
+    {
+        if (_overflowUpdateQueued) return;
+        _overflowUpdateQueued = true;
+
+        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+        {
+            _overflowUpdateQueued = false;
+            HandleOverflow();
+        }, Avalonia.Threading.DispatcherPriority.Loaded);
     }
 
 
@@ -411,64 +430,79 @@ public partial class ToolbarControl : PhControl
 
 
     /// <summary>
-    /// Updates item position and alignment.
+    /// Recomputes which primary items overflow and whether the primary group is centered. All width
+    /// math uses stable inputs (the container width + sticky per-item rendered widths), and the
+    /// self-toggled overflow-button slot is excluded, so the result never flip-flops between passes.
     /// </summary>
     private void HandleOverflow()
     {
-        _groupOverflowItemModels.Clear();
+        // use the control's own width (reliably current in the layout/size events) rather than the
+        // child PART_Root.Bounds, which can lag a frame behind on full-screen exit and report the
+        // stale (full-screen) width -> primary buttons stay centered over a small window (overlap)
+        var rootWidth = Bounds.Width;
+        if (rootWidth <= 0.5) return; // not laid out yet
 
-        // 1. calculate how much space can I safely use for center toolbar items
-        // before they hit the right-side panel
-        var availableSpaceOfCenterToolbar =
-            (PART_Root.Bounds.Width / 2) // center line
-            - PART_PrimaryGroup.Bounds.Width / 2 // shifts calculation for primary panel
-            - PART_RightGroup.Bounds.Width // reserves space
-            - Core.Config.ToolbarIconHeight; // safety gap
+        var spacing = ToolbarControlModel.ItemSpacing;
+        var iconSize = Core.Config.ToolbarIconHeight;
+        var padding = PART_Root.Padding.Left + PART_Root.Padding.Right;
 
-
-        // 2. if has no space,
-        // align items to the left to have more space
-        if (availableSpaceOfCenterToolbar <= 0)
+        // sticky overflow-button slot (width + spacing). Captured while visible so toggling its
+        // visibility below never feeds back into the width math.
+        if (PART_BtnOverflowMenu.IsVisible && PART_BtnOverflowMenu.Bounds.Width > 0)
         {
-            PART_PrimaryGroup.HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Left;
+            _overflowSlotWidth = PART_BtnOverflowMenu.Bounds.Width + spacing;
         }
-        else
-        {
-            PART_PrimaryGroup.HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center;
-        }
+        var overflowSlot = _overflowSlotWidth > 0 ? _overflowSlotWidth : iconSize + spacing;
 
+        // right-group width EXCLUDING the overflow button -> stable regardless of overflow state
+        var rightWidth = PART_RightGroup.Bounds.Width
+            - (PART_BtnOverflowMenu.IsVisible ? overflowSlot : 0);
+        if (rightWidth < 0) rightWidth = 0;
 
-        // 3. event if after the items aligned to the left
-        // it does not have enough space to fit the toolbar,
-        // we need to hide the items until preserve enough space
-
-        // 3.1 calculate available width for visible items
-        var usedWidth = 0d;
-        var availableWidth = PART_Root.Bounds.Width
-            - PART_Root.Padding.Left
-            - PART_Root.Padding.Right
-            - PART_RightGroup.Bounds.Width
-            - (_groupPrimaryItemModels.Count * ToolbarControlModel.ItemSpacing);
-
-        // 3.2 check if we should hide the item
+        // natural width of all primary items (sticky widths; spacing only between items)
+        var primaryCount = _groupPrimaryItemModels.Count;
+        var primaryNaturalWidth = 0d;
         foreach (var item in _groupPrimaryItemModels)
         {
-            if (!_metadataMap.TryGetValue(item.SourceIndex, out var meta)) continue;
-            usedWidth += meta.RenderedWidth;
-
-            // check if the item has enough space to show
-            item.IsNotOverflow = availableWidth >= usedWidth;
-
-
-            // add overflow item
-            if (!item.IsNotOverflow)
-            {
-                _groupOverflowItemModels.Add(item);
-            }
+            if (_metadataMap.TryGetValue(item.SourceIndex, out var m)) primaryNaturalWidth += m.RenderedWidth;
         }
+        primaryNaturalWidth += spacing * Math.Max(0, primaryCount - 1);
 
-        // 4. show the overflow button if there are hidden icons
-        PART_BtnOverflowMenu.IsVisible = usedWidth > availableWidth;
+        // wait until the items have a measured width (avoids an early 0-width pass)
+        if (primaryCount > 0 && primaryNaturalWidth <= 0) return;
+
+
+        // 1. does everything fit without needing the overflow button?
+        var availableNoBtn = rootWidth - padding - rightWidth;
+        var fitsAll = primaryNaturalWidth <= availableNoBtn;
+
+        // reserve the overflow-button slot ONLY when overflowing, so a non-overflowing toolbar
+        // isn't pushed into overflow by reserving space it doesn't need
+        var availableWidth = availableNoBtn - (fitsAll ? 0 : overflowSlot);
+
+
+        // 2. mark overflow items (from the end)
+        _groupOverflowItemModels.Clear();
+        var usedWidth = 0d;
+        for (var i = 0; i < primaryCount; i++)
+        {
+            var item = _groupPrimaryItemModels[i];
+            if (!_metadataMap.TryGetValue(item.SourceIndex, out var meta)) continue;
+
+            usedWidth += meta.RenderedWidth + (i > 0 ? spacing : 0);
+            item.IsNotOverflow = usedWidth <= availableWidth;
+            if (!item.IsNotOverflow) _groupOverflowItemModels.Add(item);
+        }
+        var hasOverflow = _groupOverflowItemModels.Count > 0;
+        PART_BtnOverflowMenu.IsVisible = hasOverflow;
+
+
+        // 3. center only when nothing overflows AND the centered group clears the right group;
+        // otherwise left-align for maximum space
+        var centeredGap = rootWidth / 2 - primaryNaturalWidth / 2 - rightWidth - iconSize;
+        PART_PrimaryGroup.HorizontalAlignment = (!hasOverflow && centeredGap > 0)
+            ? Avalonia.Layout.HorizontalAlignment.Center
+            : Avalonia.Layout.HorizontalAlignment.Left;
     }
 
 
