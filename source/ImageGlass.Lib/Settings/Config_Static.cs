@@ -981,17 +981,23 @@ public partial class Config
 
         writer.WriteStartObject();
 
-        // collect all property names across all layers (preserves override order)
+        // index each layer once for O(1) case-insensitive lookups (was O(n^2): a linear
+        // EnumerateObject scan per key, up to 4x per key across the layers)
+        var defaultMap = IndexProperties(defaultDoc);
+        var userMap = IndexProperties(userDoc);
+        var adminMap = IndexProperties(adminDoc);
+
+        // collect all property names across all layers
         var allKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        CollectKeys(defaultDoc, allKeys);
-        CollectKeys(userDoc, allKeys);
+        allKeys.UnionWith(defaultMap.Keys);
+        allKeys.UnionWith(userMap.Keys);
         foreach (var k in cliOverrides.Keys) allKeys.Add(k);
-        CollectKeys(adminDoc, allKeys);
+        allKeys.UnionWith(adminMap.Keys);
 
         foreach (var key in allKeys)
         {
             // admin > CLI > user > default (last wins)
-            if (TryGetProperty(adminDoc, key, out var adminVal))
+            if (adminMap.TryGetValue(key, out var adminVal))
             {
                 writer.WritePropertyName(key);
                 adminVal.WriteTo(writer);
@@ -1000,12 +1006,12 @@ public partial class Config
             {
                 WriteCliValue(writer, key, cliRaw);
             }
-            else if (TryGetProperty(userDoc, key, out var userVal))
+            else if (userMap.TryGetValue(key, out var userVal))
             {
                 writer.WritePropertyName(key);
                 userVal.WriteTo(writer);
             }
-            else if (TryGetProperty(defaultDoc, key, out var defVal))
+            else if (defaultMap.TryGetValue(key, out var defVal))
             {
                 writer.WritePropertyName(key);
                 defVal.WriteTo(writer);
@@ -1020,36 +1026,20 @@ public partial class Config
 
 
     /// <summary>
-    /// Collects top-level property names from a <see cref="JsonDocument"/>.
+    /// Indexes a <see cref="JsonDocument"/>'s top-level properties into a case-insensitive map.
+    /// First occurrence wins, matching the previous first-match lookup behavior.
     /// </summary>
-    private static void CollectKeys(JsonDocument? doc, HashSet<string> keys)
+    private static Dictionary<string, JsonElement> IndexProperties(JsonDocument? doc)
     {
-        if (doc == null) return;
-        foreach (var prop in doc.RootElement.EnumerateObject())
-        {
-            keys.Add(prop.Name);
-        }
-    }
-
-
-    /// <summary>
-    /// Tries to get a top-level property from a <see cref="JsonDocument"/> (case-insensitive).
-    /// </summary>
-    private static bool TryGetProperty(JsonDocument? doc, string name, out JsonElement value)
-    {
-        value = default;
-        if (doc == null) return false;
+        var map = new Dictionary<string, JsonElement>(StringComparer.OrdinalIgnoreCase);
+        if (doc == null) return map;
 
         foreach (var prop in doc.RootElement.EnumerateObject())
         {
-            if (prop.Name.Equals(name, StringComparison.OrdinalIgnoreCase))
-            {
-                value = prop.Value;
-                return true;
-            }
+            map.TryAdd(prop.Name, prop.Value);
         }
 
-        return false;
+        return map;
     }
 
 

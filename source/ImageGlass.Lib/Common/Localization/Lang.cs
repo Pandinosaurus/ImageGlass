@@ -17,6 +17,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 using ImageGlass.Common.Types;
+using ImageGlass.Common.Types.JsonTypeConverters;
 using System;
 using System.Collections.Frozen;
 using System.Collections.Generic;
@@ -46,8 +47,10 @@ public class Lang
     public LangMetadata Metadata { get; set; } = new();
 
     /// <summary>
-    /// Gets, sets the language string dictionary.
+    /// Gets, sets the language string dictionary. Unknown keys (from version-skewed packs) are
+    /// skipped on load rather than collapsing onto <c>default(LangId)</c>.
     /// </summary>
+    [JsonConverter(typeof(JsonLangItemsConverter))]
     public IDictionary<LangId, string> Items { get; set; } = FrozenDictionary<LangId, string>.Empty;
 
     #endregion // JSON Serializable Properties
@@ -150,7 +153,11 @@ public class Lang
             Metadata = lang.Metadata;
             Items = lang.Items.ToFrozenDictionary();
         }
-        catch { }
+        catch (Exception ex)
+        {
+            // don't let a bad pack abort startup, but surface it (this silently hid a real bug)
+            System.Diagnostics.Debug.WriteLine($"[Lang.LoadAsync] failed for '{FilePath}': {ex.Message}");
+        }
     }
 
 
@@ -341,19 +348,31 @@ public class Lang
 
 
     /// <summary>
-    /// Map of <see cref="LangId"/> and language key.
+    /// Map of <see cref="LangId"/> and language key. Built once (these never change at runtime);
+    /// previously a computed property that rebuilt the whole frozen dictionary on every access.
     /// </summary>
-    public static FrozenDictionary<LangId, string> KeysMap => new Dictionary<LangId, string>(
-            Enum.GetNames<LangId>()
-                .Select(langKey => new KeyValuePair<LangId, string>(Enum.Parse<LangId>(langKey), langKey)))
-        .ToFrozenDictionary();
+    public static FrozenDictionary<LangId, string> KeysMap { get; }
 
 
     /// <summary>
-    /// Map of <see cref="LangId"/> and default localization.
+    /// Map of <see cref="LangId"/> and default localization. Built once; see <see cref="KeysMap"/>.
     /// </summary>
-    public static FrozenDictionary<LangId, string> DefaultLangMap => new Dictionary<LangId, string>(_defaultLangList)
-        .ToFrozenDictionary();
+    public static FrozenDictionary<LangId, string> DefaultLangMap { get; }
+
+
+    // build the read-only maps once; the static ctor runs after all static field initializers,
+    // so _defaultLangList (declared below) is already populated here.
+    static Lang()
+    {
+        var keys = new Dictionary<LangId, string>();
+        foreach (var name in Enum.GetNames<LangId>())
+        {
+            keys[Enum.Parse<LangId>(name)] = name;
+        }
+        KeysMap = keys.ToFrozenDictionary();
+
+        DefaultLangMap = new Dictionary<LangId, string>(_defaultLangList).ToFrozenDictionary();
+    }
 
 
     // the default language list

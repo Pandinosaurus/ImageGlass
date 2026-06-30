@@ -54,10 +54,12 @@ public partial class Photo : PhDisposable
     private readonly SemaphoreSlim _thumbnailLock = new(1, 1);
 
     /// <summary>
-    /// Limits how many different Photo instances
-    /// load thumbnails concurrently across the entire app.
+    /// Limits how many different Photo instances load thumbnails concurrently across the entire
+    /// app. Scaled to the CPU so the first screen of gallery thumbnails isn't serialized through
+    /// just a few slots (was a fixed 4).
     /// </summary>
-    private static readonly SemaphoreSlim _thumbnailThrottleLock = new(4, 4);
+    private static readonly int _thumbnailConcurrency = Math.Clamp(Environment.ProcessorCount - 1, 4, 16);
+    private static readonly SemaphoreSlim _thumbnailThrottleLock = new(_thumbnailConcurrency, _thumbnailConcurrency);
 
 
 
