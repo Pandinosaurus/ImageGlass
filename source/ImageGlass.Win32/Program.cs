@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 using Avalonia;
 using Avalonia.Input;
 using ImageGlass.Common;
-using ImageGlass.Common.Types;
+using ImageGlass.Common.Loggers;
 using ImageGlass.ViewModels;
 using ImageGlass.Win32.Common.ServiceProviders;
 using ImageGlass.Win32.Windows;

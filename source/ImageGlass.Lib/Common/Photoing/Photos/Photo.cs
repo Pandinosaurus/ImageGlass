@@ -19,6 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 using Avalonia;
 using Avalonia.Media.Imaging;
 using ImageGlass.Common.Extensions;
+using ImageGlass.Common.Loggers;
 using ImageGlass.Common.Types;
 using ImageMagick;
 using SkiaSharp;

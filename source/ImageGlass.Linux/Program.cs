@@ -20,9 +20,9 @@ using Avalonia;
 using Avalonia.Input;
 using Avalonia.Media;
 using ImageGlass.Common;
+using ImageGlass.Common.Loggers;
 using ImageGlass.Common.ServiceProviders;
 using ImageGlass.Common.ServiceProviders.FileSearchService;
-using ImageGlass.Common.Types;
 using ImageGlass.Linux.Common.ServiceProviders;
 using System;
 

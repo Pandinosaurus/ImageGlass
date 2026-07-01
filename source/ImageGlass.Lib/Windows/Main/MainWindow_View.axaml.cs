@@ -23,6 +23,7 @@ using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using D2Phap.FileWatcherEx;
 using ImageGlass.Common.Localization;
+using ImageGlass.Common.Loggers;
 using ImageGlass.Common.Photoing;
 using ImageGlass.Common.ServiceProviders;
 using ImageGlass.Common.ServiceProviders.FileSearchService;
@@ -88,8 +89,8 @@ public partial class MainWindowView : PhControl
         // load image from command line arguments
         LoadImagesFromCmdArgs();
 
-        ImageGlass.Common.Types.StartupTrace.Mark("MainView:loaded");
-        ImageGlass.Common.Types.StartupTrace.Flush();
+        StartupTrace.Mark("MainView:loaded");
+        StartupTrace.Flush();
     }
 
 

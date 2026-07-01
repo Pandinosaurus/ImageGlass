@@ -20,8 +20,8 @@ using Avalonia;
 using Avalonia.Input;
 using Avalonia.Media;
 using ImageGlass.Common;
+using ImageGlass.Common.Loggers;
 using ImageGlass.Common.ServiceProviders;
-using ImageGlass.Common.Types;
 using ImageGlass.Mac.Common.ServiceProviders;
 using System;
 

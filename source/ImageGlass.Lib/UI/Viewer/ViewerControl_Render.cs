@@ -24,6 +24,7 @@ using Avalonia.Media.TextFormatting;
 using Avalonia.Threading;
 using ImageGlass.Common;
 using ImageGlass.Common.Extensions;
+using ImageGlass.Common.Loggers;
 using ImageGlass.Common.Photoing;
 using ImageGlass.Common.Types;
 using ImageGlass.UI.Viewer.Checkerboard;

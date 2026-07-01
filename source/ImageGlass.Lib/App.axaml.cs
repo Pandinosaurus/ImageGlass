@@ -27,6 +27,7 @@ using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using ImageGlass.Common.AppThemes;
 using ImageGlass.Common.Localization;
+using ImageGlass.Common.Loggers;
 using ImageGlass.Common.Photoing;
 using ImageGlass.Common.ServiceProviders;
 using ImageGlass.Common.Types;
