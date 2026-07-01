@@ -69,22 +69,22 @@ public partial class LanguageSettingsView : SettingsPageView
                 VM.SetValue(ConfigId.Language, ToConfigValue(lang));
             }
         };
-        RegisterSearchKey(PART_LanguageList, LangId.FrmSettings_DisplayLanguage, ConfigId.Language, null);
+        RegisterSearchKey(PART_LanguageList, LangId.Settings_DisplayLanguage, ConfigId.Language, null);
 
-        SetLocalizedText(PART_RefreshLanguages, LangId.FrmSettings_Refresh);
+        SetLocalizedText(PART_RefreshLanguages, LangId.Settings_Refresh);
         PART_RefreshLanguages.Click += async (_, _) => await ReloadLanguagesAsync();
-        RegisterSearchKey(PART_RefreshLanguages, LangId.FrmSettings_Refresh, null, null);
+        RegisterSearchKey(PART_RefreshLanguages, LangId.Settings_Refresh, null, null);
 
-        SetLocalizedText(PART_InstallLanguage, LangId.FrmSettings_InstallNewLanguagePack);
+        SetLocalizedText(PART_InstallLanguage, LangId.Settings_InstallNewLanguagePack);
         PART_InstallLanguage.Click += async (_, _) => await InstallLanguagesAsync();
-        RegisterSearchKey(PART_InstallLanguage, LangId.FrmSettings_InstallNewLanguagePack, null, null);
+        RegisterSearchKey(PART_InstallLanguage, LangId.Settings_InstallNewLanguagePack, null, null);
 
-        BindLink(PART_GetMoreLanguages, LangId.FrmSettings_GetMoreLanguagePacks, LANGUAGES_URL,
+        BindLink(PART_GetMoreLanguages, LangId.Settings_GetMoreLanguagePacks, LANGUAGES_URL,
             () => _ = BHelper.OpenUrlAsync(this, LANGUAGES_URL, "from_setting_language"));
 
-        SetLocalizedText(PART_ExportLanguage, LangId.FrmSettings_ExportLanguagePack);
+        SetLocalizedText(PART_ExportLanguage, LangId.Settings_ExportLanguagePack);
         PART_ExportLanguage.Click += async (_, _) => await ExportLanguageAsync();
-        RegisterSearchKey(PART_ExportLanguage, LangId.FrmSettings_ExportLanguagePack, null, null);
+        RegisterSearchKey(PART_ExportLanguage, LangId.Settings_ExportLanguagePack, null, null);
 
         _ = ReloadLanguagesAsync();
     }

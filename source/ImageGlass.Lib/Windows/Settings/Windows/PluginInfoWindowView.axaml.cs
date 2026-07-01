@@ -46,7 +46,7 @@ public partial class PluginInfoWindowView : PhControl
     {
         base.OnIgLanguageChanged();
 
-        PART_OpenFolder.Text = Core.Lang[LangId.FrmSettings_Plugins_OpenPluginFolder];
+        PART_OpenFolder.Text = Core.Lang[LangId.Settings_Plugins_OpenPluginFolder];
     }
 
 

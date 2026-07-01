@@ -72,13 +72,13 @@ public partial class ToolsSettingsView : SettingsPageView
         SetLocalizedText(PART_AddTool, LangId._Add);
         PART_AddTool.Click += async (_, _) => await AddOrEditToolAsync(null);
 
-        SetLocalizedText(PART_GetMoreTools, LangId.FrmMain_MnuGetMoreTools);
+        SetLocalizedText(PART_GetMoreTools, LangId.Menu_MnuGetMoreTools);
         PART_GetMoreTools.Click += (_, _) => AppAPIProvider.IG_GetMoreTools();
 
         // rebuild on language change (also performs the initial render)
         AddLangRefresher(RebuildTable);
 
-        RegisterSearchKey(PART_AddTool, LangId.FrmSettings_Nav_Tools, ConfigId.Tools, LangId.FrmSettings_Nav_Tools);
+        RegisterSearchKey(PART_AddTool, LangId.Settings_Nav_Tools, ConfigId.Tools, LangId.Settings_Nav_Tools);
     }
 
 
@@ -188,7 +188,7 @@ public partial class ToolsSettingsView : SettingsPageView
         {
             var badge = new PhTextBlock
             {
-                Text = Core.Lang[LangId.FrmSettings_Tools_Integrated],
+                Text = Core.Lang[LangId.Settings_Tools_Integrated],
                 FontSize = Const.FONT_SIZE_SMALL,
             };
             badge[!TextBlock.ForegroundProperty] = new DynamicResourceExtension("PhAccentFill");

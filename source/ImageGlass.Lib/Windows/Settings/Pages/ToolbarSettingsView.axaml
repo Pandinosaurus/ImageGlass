@@ -13,15 +13,15 @@
     <StackPanel Orientation="Vertical">
 
         <!--  Appearance  -->
-        <ui:PhTextBlock Classes="group" LangKey="FrmSettings_Appearance" />
+        <ui:PhTextBlock Classes="group" LangKey="Settings_Appearance" />
         <StackPanel Margin="{DynamicResource SettingsGroupIndent}" Spacing="10">
             <CheckBox x:Name="PART_ShowToolbarInFullscreen">
-                <ui:PhTextBlock LangKey="FrmSettings_Toolbar_ShowToolbarInFullscreen" TextWrapping="Wrap" />
+                <ui:PhTextBlock LangKey="Settings_Toolbar_ShowToolbarInFullscreen" TextWrapping="Wrap" />
             </CheckBox>
 
             <!--  Toolbar icon size (10 - 100)  -->
             <StackPanel Spacing="{DynamicResource SettingsLabelInputGap}">
-                <ui:PhTextBlock x:Name="PART_IconHeightLabel" LangKey="FrmSettings_Toolbar_ToolbarIconHeight" />
+                <ui:PhTextBlock x:Name="PART_IconHeightLabel" LangKey="Settings_Toolbar_ToolbarIconHeight" />
                 <Slider
                     x:Name="PART_ToolbarIconHeight"
                     Width="200"
@@ -35,7 +35,7 @@
 
 
         <!--  Toolbar buttons  -->
-        <ui:PhTextBlock Classes="group" LangKey="FrmSettings_Toolbar_ToolbarButtons" />
+        <ui:PhTextBlock Classes="group" LangKey="Settings_Toolbar_ToolbarButtons" />
         <StackPanel Margin="{DynamicResource SettingsGroupIndent}">
             <windows:ToolbarEditorControl x:Name="PART_Editor" />
         </StackPanel>

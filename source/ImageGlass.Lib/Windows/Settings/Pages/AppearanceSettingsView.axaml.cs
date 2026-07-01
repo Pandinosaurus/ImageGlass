@@ -103,7 +103,7 @@ public partial class AppearanceSettingsView : SettingsPageView
 
         // Viewer background color (group has no heading)
         BindColorPicker(PART_BgColor, ConfigId.BackgroundColor, Core.Theme.Colors.BgColor,
-            LangId.FrmSettings_BackgroundColor, null);
+            LangId.Settings_BackgroundColor, null);
 
         BuildThemeSection();
     }
@@ -123,7 +123,7 @@ public partial class AppearanceSettingsView : SettingsPageView
         if (!isWin11) return;
 
         BindEnumDropdown(PART_WindowBackdrop, ConfigId.WindowBackdrop, BackdropStyle.Mica,
-            LangId.FrmSettings_WindowBackdrop, null);
+            LangId.Settings_WindowBackdrop, null);
     }
 
     #endregion // Appearance group
@@ -137,19 +137,19 @@ public partial class AppearanceSettingsView : SettingsPageView
     /// </summary>
     private void BuildThemeSection()
     {
-        SetLocalizedText(PART_InstallTheme, LangId.FrmSettings_Theme_InstallTheme);
+        SetLocalizedText(PART_InstallTheme, LangId.Settings_Theme_InstallTheme);
         PART_InstallTheme.Click += async (_, _) => await InstallThemesAsync();
-        RegisterSearchKey(PART_InstallTheme, LangId.FrmSettings_Theme_InstallTheme, null, LangId.FrmSettings_Theme);
+        RegisterSearchKey(PART_InstallTheme, LangId.Settings_Theme_InstallTheme, null, LangId.Settings_Theme);
 
-        SetLocalizedText(PART_RefreshThemes, LangId.FrmSettings_Refresh);
+        SetLocalizedText(PART_RefreshThemes, LangId.Settings_Refresh);
         PART_RefreshThemes.Click += async (_, _) => await ReloadThemesAsync();
-        RegisterSearchKey(PART_RefreshThemes, LangId.FrmSettings_Refresh, null, LangId.FrmSettings_Theme);
+        RegisterSearchKey(PART_RefreshThemes, LangId.Settings_Refresh, null, LangId.Settings_Theme);
 
-        SetLocalizedText(PART_OpenThemeFolder, LangId.FrmSettings_Theme_OpenThemeFolder);
+        SetLocalizedText(PART_OpenThemeFolder, LangId.Settings_Theme_OpenThemeFolder);
         PART_OpenThemeFolder.Click += (_, _) => BHelper.OpenFolderPath(Config.ThemePacksDir);
-        RegisterSearchKey(PART_OpenThemeFolder, LangId.FrmSettings_Theme_OpenThemeFolder, null, LangId.FrmSettings_Theme);
+        RegisterSearchKey(PART_OpenThemeFolder, LangId.Settings_Theme_OpenThemeFolder, null, LangId.Settings_Theme);
 
-        BindLink(PART_GetMoreThemes, LangId.FrmSettings_Theme_GetMoreThemes, THEMES_URL,
+        BindLink(PART_GetMoreThemes, LangId.Settings_Theme_GetMoreThemes, THEMES_URL,
             () => _ = BHelper.OpenUrlAsync(this, THEMES_URL, "from_setting_appearance"));
 
         // refresh card labels/tooltips on language change (cards persist; texts are re-applied in place)
@@ -515,18 +515,18 @@ public partial class AppearanceSettingsView : SettingsPageView
     /// </summary>
     private void ApplyThemeCardTexts()
     {
-        var darkLabel = Core.Lang[LangId.FrmSettings_DarkTheme];
-        var lightLabel = Core.Lang[LangId.FrmSettings_LightTheme];
+        var darkLabel = Core.Lang[LangId.Settings_DarkTheme];
+        var lightLabel = Core.Lang[LangId.Settings_LightTheme];
 
         foreach (var c in _cards)
         {
             c.DarkText.Text = darkLabel;
             c.LightText.Text = lightLabel;
-            ToolTip.SetTip(c.DarkButton, Core.Lang[LangId.FrmSettings_UseThemeForDarkMode]);
-            ToolTip.SetTip(c.LightButton, Core.Lang[LangId.FrmSettings_UseThemeForLightMode]);
+            ToolTip.SetTip(c.DarkButton, Core.Lang[LangId.Settings_UseThemeForDarkMode]);
+            ToolTip.SetTip(c.LightButton, Core.Lang[LangId.Settings_UseThemeForLightMode]);
             c.ModeBadge.Text = Core.Lang[c.Theme.Settings.IsDarkMode
-                ? LangId.FrmSettings_DarkTheme
-                : LangId.FrmSettings_LightTheme];
+                ? LangId.Settings_DarkTheme
+                : LangId.Settings_LightTheme];
 
             if (c.UninstallButton is not null)
                 ToolTip.SetTip(c.UninstallButton, Core.Lang[LangId._Delete]);

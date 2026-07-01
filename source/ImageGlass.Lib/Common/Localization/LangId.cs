@@ -1,4 +1,4 @@
-﻿/*
+/*
 ImageGlass - A Fast, Seamless Photo Viewer
 Copyright (C) 2010 - 2026 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
@@ -30,22 +30,22 @@ public enum LangId
     _LearnMore,
     _Continue,
     _Quit,
-    _Back,
-    _Next,
-    _Save,
-    _Error,
+//    _Back,
+//    _Next,
+//    _Save,
+//    _Error,
     _Warning,
     _Copy,
     _Browse,
     _Reset,
     _ResetToDefault,
     _CheckForUpdate,
-    _Download,
+//    _Download,
     _Update,
     _Website,
-    _Email,
-    _Install,
-    _Refresh,
+//    _Email,
+//    _Install,
+//    _Refresh,
     _TypeToFilter,
     _Delete,
     _Add,
@@ -53,17 +53,17 @@ public enum LangId
     _ID,
     _Name,
     _Hotkeys,
-    _AddHotkey,
+//    _AddHotkey,
     _Executable,
     _Argument,
     _CommandPreview,
     _FileExtension,
     _Codec,
     _Empty,
-    _MoveUp,
-    _MoveDown,
-    _MoveLeft,
-    _MoveRight,
+//    _MoveUp,
+//    _MoveDown,
+//    _MoveLeft,
+//    _MoveRight,
     _Separator,
     _Icon,
     _Description,
@@ -84,15 +84,15 @@ public enum LangId
     _InvalidAction,
     _InvalidAction_Transformation,
 
-    _UserAction_MenuNotFound,
-    _UserAction_MethodNotFound,
-    _UserAction_MethodArgumentNotSupported,
+//    _UserAction_MenuNotFound,
+//    _UserAction_MethodNotFound,
+//    _UserAction_MethodArgumentNotSupported,
     _UserAction_Win32ExeError,
 
     // Gallery tooltip
     _Metadata_FileSize,
-    _Metadata_FileCreationTime,
-    _Metadata_FileLastAccessTime,
+//    _Metadata_FileCreationTime,
+//    _Metadata_FileLastAccessTime,
     _Metadata_FileLastWriteTime,
     _Metadata_FrameCount,
     _Metadata_ExifRatingPercent,
@@ -179,211 +179,211 @@ public enum LangId
     #region Main Window
 
     #region Main Window > General
-    FrmMain_MnuMain,
-    FrmMain_MnuToolbarOverflow,
-    FrmMain_PicMain_ErrorText,
+    Menu_MnuMain,
+    Menu_MnuToolbarOverflow,
+    _PicMain_ErrorText,
 
-    FrmMain_OpenFileDialog,
-    FrmMain_Loading,
-    FrmMain_OpenWith,
-    FrmMain_ReachedFirstImage,
-    FrmMain_ReachedLastImage,
-    FrmMain_ClipboardImage,
-    FrmMain_FolderAccessPrompt,
+    _OpenFileDialog,
+    _Loading,
+//    FrmMain_OpenWith,
+    _ReachedFirstImage,
+    _ReachedLastImage,
+    _ClipboardImage,
+    _FolderAccessPrompt,
     #endregion // Main Window > General
 
 
     #region Main Window > Main Menu
 
     #region Main Menu > File
-    FrmMain_MnuFile,
-    FrmMain_MnuOpenFile,
-    FrmMain_MnuNewWindow,
-    FrmMain_MnuNewWindow_Error,
+    Menu_MnuFile,
+    Menu_MnuOpenFile,
+    Menu_MnuNewWindow,
+    Menu_MnuNewWindow_Error,
 
-    FrmMain_MnuSave,
-    FrmMain_MnuSave_Confirm,
-    FrmMain_MnuSave_ConfirmDescription,
-    FrmMain_MnuSave_Saving,
-    FrmMain_MnuSave_Success,
-    FrmMain_MnuSave_Error,
-    FrmMain_MnuSaveAs,
-    FrmMain_MnuExportFrames,
+    Menu_MnuSave,
+    Menu_MnuSave_Confirm,
+    Menu_MnuSave_ConfirmDescription,
+    Menu_MnuSave_Saving,
+    Menu_MnuSave_Success,
+    Menu_MnuSave_Error,
+    Menu_MnuSaveAs,
+    Menu_MnuExportFrames,
 
-    FrmMain_MnuOpenWith,
-    FrmMain_MnuEdit,
-    FrmMain_MnuEdit_AppNotFound,
-    FrmMain_MnuPrint,
-    FrmMain_MnuPrint_Error,
-    FrmMain_MnuShare,
-    FrmMain_MnuShare_Error,
-    FrmMain_MnuOpenLocation,
+    Menu_MnuOpenWith,
+    Menu_MnuEdit,
+    Menu_MnuEdit_AppNotFound,
+    Menu_MnuPrint,
+    Menu_MnuPrint_Error,
+    Menu_MnuShare,
+    Menu_MnuShare_Error,
+    Menu_MnuOpenLocation,
 
-    FrmMain_MnuRename,
-    FrmMain_MnuRename_Description,
-    FrmMain_MnuMoveToRecycleBin,
-    FrmMain_MnuMoveToRecycleBin_Description,
-    FrmMain_MnuDeleteFromHardDisk,
-    FrmMain_MnuDeleteFromHardDisk_Description,
+    Menu_MnuRename,
+    Menu_MnuRename_Description,
+    Menu_MnuMoveToRecycleBin,
+    Menu_MnuMoveToRecycleBin_Description,
+    Menu_MnuDeleteFromHardDisk,
+    Menu_MnuDeleteFromHardDisk_Description,
 
     #endregion // Main Menu > File
 
 
     #region Main Menu > Navigation
-    FrmMain_MnuNavigation,
-    FrmMain_MnuViewNext,
-    FrmMain_MnuViewPrevious,
+    Menu_MnuNavigation,
+    Menu_MnuViewNext,
+    Menu_MnuViewPrevious,
 
-    FrmMain_MnuGoTo,
-    FrmMain_MnuGoTo_Description,
-    FrmMain_MnuGoToFirst,
-    FrmMain_MnuGoToLast,
+    Menu_MnuGoTo,
+    Menu_MnuGoTo_Description,
+    Menu_MnuGoToFirst,
+    Menu_MnuGoToLast,
 
-    FrmMain_MnuViewNextFrame,
-    FrmMain_MnuViewPreviousFrame,
-    FrmMain_MnuViewFirstFrame,
-    FrmMain_MnuViewLastFrame,
+    Menu_MnuViewNextFrame,
+    Menu_MnuViewPreviousFrame,
+    Menu_MnuViewFirstFrame,
+    Menu_MnuViewLastFrame,
     #endregion // Main Menu > Navigation
 
 
     #region Main Menu > Zoom
-    FrmMain_MnuZoom,
-    FrmMain_MnuZoomIn,
-    FrmMain_MnuZoomOut,
-    FrmMain_MnuCustomZoom,
-    FrmMain_MnuCustomZoom_Description,
-    FrmMain_MnuScaleToFit,
-    FrmMain_MnuScaleToFill,
-    FrmMain_MnuActualSize,
-    FrmMain_MnuLockZoom,
-    FrmMain_MnuAutoZoom,
-    FrmMain_MnuScaleToWidth,
-    FrmMain_MnuScaleToHeight,
+    Menu_MnuZoom,
+    Menu_MnuZoomIn,
+    Menu_MnuZoomOut,
+    Menu_MnuCustomZoom,
+    Menu_MnuCustomZoom_Description,
+    Menu_MnuScaleToFit,
+    Menu_MnuScaleToFill,
+    Menu_MnuActualSize,
+    Menu_MnuLockZoom,
+    Menu_MnuAutoZoom,
+    Menu_MnuScaleToWidth,
+    Menu_MnuScaleToHeight,
     #endregion // Main Menu > Zoom
 
 
     #region Main Menu > Panning
-    FrmMain_MnuPanning,
+    Menu_MnuPanning,
 
-    FrmMain_MnuPanLeft,
-    FrmMain_MnuPanRight,
-    FrmMain_MnuPanUp,
-    FrmMain_MnuPanDown,
+    Menu_MnuPanLeft,
+    Menu_MnuPanRight,
+    Menu_MnuPanUp,
+    Menu_MnuPanDown,
 
-    FrmMain_MnuPanToLeftSide,
-    FrmMain_MnuPanToRightSide,
-    FrmMain_MnuPanToTop,
-    FrmMain_MnuPanToBottom,
+    Menu_MnuPanToLeftSide,
+    Menu_MnuPanToRightSide,
+    Menu_MnuPanToTop,
+    Menu_MnuPanToBottom,
     #endregion // Main Menu > Panning
 
 
     #region Main Menu > Image
-    FrmMain_MnuImage,
+    Menu_MnuImage,
 
-    FrmMain_MnuRefresh,
-    FrmMain_MnuReload,
-    FrmMain_MnuReloadImageList,
-    FrmMain_MnuUnload,
+    Menu_MnuRefresh,
+    Menu_MnuReload,
+    Menu_MnuReloadImageList,
+    Menu_MnuUnload,
 
-    FrmMain_MnuViewChannels,
-    FrmMain_MnuLoadingOrders,
+    Menu_MnuViewChannels,
+    Menu_MnuLoadingOrders,
 
-    FrmMain_MnuInvertColors,
-    FrmMain_MnuToggleImageAnimation,
+    Menu_MnuInvertColors,
+    Menu_MnuToggleImageAnimation,
 
-    FrmMain_MnuRotateLeft,
-    FrmMain_MnuRotateRight,
-    FrmMain_MnuFlipHorizontal,
-    FrmMain_MnuFlipVertical,
+    Menu_MnuRotateLeft,
+    Menu_MnuRotateRight,
+    Menu_MnuFlipHorizontal,
+    Menu_MnuFlipVertical,
 
-    FrmMain_MnuSetDesktopBackground,
-    FrmMain_MnuSetDesktopBackground_Error,
-    FrmMain_MnuSetDesktopBackground_Success,
-    FrmMain_MnuSetLockScreen,
-    FrmMain_MnuSetLockScreen_Error,
-    FrmMain_MnuSetLockScreen_Success,
+    Menu_MnuSetDesktopBackground,
+    Menu_MnuSetDesktopBackground_Error,
+    Menu_MnuSetDesktopBackground_Success,
+    Menu_MnuSetLockScreen,
+    Menu_MnuSetLockScreen_Error,
+    Menu_MnuSetLockScreen_Success,
 
-    FrmMain_MnuImageProperties,
+    Menu_MnuImageProperties,
     #endregion // Main Menu > Image
 
 
     #region Main Menu > Clipboard
-    FrmMain_MnuClipboard,
-    FrmMain_MnuCopyFile,
-    FrmMain_MnuCopyFile_Success,
-    FrmMain_MnuCopyImagePixels,
-    FrmMain_MnuCopyImagePixels_Copying,
-    FrmMain_MnuCopyImagePixels_Success,
-    FrmMain_MnuCutFile,
-    FrmMain_MnuCutFile_Success,
-    FrmMain_MnuCopyPath,
-    FrmMain_MnuCopyPath_Success,
-    FrmMain_MnuPasteImage,
-    FrmMain_MnuPasteImage_Error,
-    FrmMain_MnuClearClipboard,
-    FrmMain_MnuClearClipboard_Success,
+    Menu_MnuClipboard,
+    Menu_MnuCopyFile,
+    Menu_MnuCopyFile_Success,
+    Menu_MnuCopyImagePixels,
+    Menu_MnuCopyImagePixels_Copying,
+    Menu_MnuCopyImagePixels_Success,
+    Menu_MnuCutFile,
+    Menu_MnuCutFile_Success,
+    Menu_MnuCopyPath,
+    Menu_MnuCopyPath_Success,
+    Menu_MnuPasteImage,
+//    FrmMain_MnuPasteImage_Error,
+    Menu_MnuClearClipboard,
+    Menu_MnuClearClipboard_Success,
     #endregion // Main Menu > Clipboard
 
 
-    FrmMain_MnuWindowFit,
-    FrmMain_MnuFullScreen,
-    FrmMain_MnuFrameless,
-    FrmMain_MnuFrameless_EnableDescription,
-    FrmMain_MnuSlideshow,
+    Menu_MnuWindowFit,
+    Menu_MnuFullScreen,
+    Menu_MnuFrameless,
+    Menu_MnuFrameless_EnableDescription,
+    Menu_MnuSlideshow,
 
 
     #region Main Menu > Layout
-    FrmMain_MnuLayout,
-    FrmMain_MnuToggleToolbar,
-    FrmMain_MnuToggleGallery,
-    FrmMain_MnuToggleCheckerboard,
-    FrmMain_MnuToggleTopMost,
-    FrmMain_MnuToggleTopMost_Enable,
-    FrmMain_MnuToggleTopMost_Disable,
-    FrmMain_MnuChangeBackgroundColor,
+    Menu_MnuLayout,
+    Menu_MnuToggleToolbar,
+    Menu_MnuToggleGallery,
+    Menu_MnuToggleCheckerboard,
+    Menu_MnuToggleTopMost,
+    Menu_MnuToggleTopMost_Enable,
+    Menu_MnuToggleTopMost_Disable,
+    Menu_MnuChangeBackgroundColor,
     #endregion // Main Menu > Layout
 
     #region Main Menu > Tools
-    FrmMain_MnuTools,
-    FrmMain_MnuColorPicker,
-    FrmMain_MnuCropTool,
-    FrmMain_MnuResizeTool,
-    FrmMain_MnuFrameNav,
-    FrmMain_MnuGetMoreTools,
+    Menu_MnuTools,
+    Menu_MnuColorPicker,
+    Menu_MnuCropTool,
+    Menu_MnuResizeTool,
+    Menu_MnuFrameNav,
+    Menu_MnuGetMoreTools,
 
-    FrmMain_MnuLosslessCompression,
-    FrmMain_MnuLosslessCompression_Confirm,
-    FrmMain_MnuLosslessCompression_Description,
-    FrmMain_MnuLosslessCompression_Compressing,
-    FrmMain_MnuLosslessCompression_Done,
+    Menu_MnuLosslessCompression,
+    Menu_MnuLosslessCompression_Confirm,
+    Menu_MnuLosslessCompression_Description,
+    Menu_MnuLosslessCompression_Compressing,
+    Menu_MnuLosslessCompression_Done,
     #endregion // Main Menu > Tools
 
-    FrmMain_MnuSettings,
+    Menu_MnuSettings,
 
     #region Main Menu > Help
-    FrmMain_MnuHelp,
-    FrmMain_MnuAbout,
-    FrmMain_MnuQuickSetup,
-    FrmMain_MnuReportIssue,
-    FrmMain_MnuCheckForUpdate_NewVersion,
-    FrmMain_MnuCheckForUpdate_NoUpdate,
-    FrmMain_MnuCheckForUpdate_Checking,
-    FrmMain_MnuCheckForUpdate_Failed,
-    FrmMain_MnuCheckForUpdate_SkipVersion,
-    FrmMain_MnuCheckForUpdate_CurrentVersion,
-    FrmMain_MnuCheckForUpdate_LatestVersion,
-    FrmMain_MnuCheckForUpdate_PublishedDate,
+    Menu_MnuHelp,
+    Menu_MnuAbout,
+    Menu_MnuQuickSetup,
+    Menu_MnuReportIssue,
+    Menu_MnuCheckForUpdate_NewVersion,
+    Menu_MnuCheckForUpdate_NoUpdate,
+    Menu_MnuCheckForUpdate_Checking,
+    Menu_MnuCheckForUpdate_Failed,
+    Menu_MnuCheckForUpdate_SkipVersion,
+    Menu_MnuCheckForUpdate_CurrentVersion,
+    Menu_MnuCheckForUpdate_LatestVersion,
+    Menu_MnuCheckForUpdate_PublishedDate,
 
-    FrmMain_MnuSetDefaultPhotoViewer,
-    FrmMain_MnuSetDefaultPhotoViewer_Success,
-    FrmMain_MnuSetDefaultPhotoViewer_Error,
+    Menu_MnuSetDefaultPhotoViewer,
+    Menu_MnuSetDefaultPhotoViewer_Success,
+    Menu_MnuSetDefaultPhotoViewer_Error,
 
-    FrmMain_MnuRemoveDefaultPhotoViewer,
-    FrmMain_MnuRemoveDefaultPhotoViewer_Success,
-    FrmMain_MnuRemoveDefaultPhotoViewer_Error,
+    Menu_MnuRemoveDefaultPhotoViewer,
+    Menu_MnuRemoveDefaultPhotoViewer_Success,
+    Menu_MnuRemoveDefaultPhotoViewer_Error,
     #endregion // Main Menu > Help
 
-    FrmMain_MnuExit,
+    Menu_MnuExit,
 
 
     #endregion // Main Window > Main Menu
@@ -391,456 +391,456 @@ public enum LangId
     #endregion // Main Window
 
 
-    #region FrmAbout
-    FrmAbout_Slogan,
-    FrmAbout_Version,
-    FrmAbout_License,
-    FrmAbout_Privacy,
-    FrmAbout_Thanks,
-    FrmAbout_LogoDesigner,
-    FrmAbout_Collaborator,
-    FrmAbout_Contact,
-    FrmAbout_Homepage,
-    FrmAbout_Email,
-    FrmAbout_Credits,
-    FrmAbout_Donate,
-    #endregion // FrmAbout
+    #region About (general)
+    _Slogan,
+    _AboutVersion,
+    _License,
+    _Privacy,
+//    FrmAbout_Thanks,
+//    FrmAbout_LogoDesigner,
+//    FrmAbout_Collaborator,
+//    FrmAbout_Contact,
+    _Homepage,
+//    FrmAbout_Email,
+    _Credits,
+    _Donate,
+    #endregion // About (general)
 
 
-    #region FrmSettings
+    #region Settings
 
-    FrmSettings_ResetSettings,
-    FrmSettings_UnmanagedSettingReminder,
-    FrmSettings_SearchPlaceholder,
+    Settings_ResetSettings,
+    Settings_UnmanagedSettingReminder,
+    Settings_SearchPlaceholder,
 
-    #region FrmSettings > Navbar
-    FrmSettings_Nav_General,
-    FrmSettings_Nav_Image,
-    FrmSettings_Nav_Slideshow,
-    FrmSettings_Nav_Edit,
-    FrmSettings_Nav_Viewer,
-    FrmSettings_Nav_Toolbar,
-    FrmSettings_Nav_Gallery,
-    FrmSettings_Nav_Layout,
-    FrmSettings_Nav_Mouse,
-    FrmSettings_Nav_Keyboard,
-    FrmSettings_Nav_FileTypeAssociations,
-    FrmSettings_Nav_Tools,
-    FrmSettings_Nav_Plugins,
-    FrmSettings_Nav_Language,
-    FrmSettings_Nav_Appearance,
-    #endregion // FrmSettings > Navbar
+    #region Settings > Navbar
+    Settings_Nav_General,
+    Settings_Nav_Image,
+    Settings_Nav_Slideshow,
+    Settings_Nav_Edit,
+    Settings_Nav_Viewer,
+    Settings_Nav_Toolbar,
+    Settings_Nav_Gallery,
+    Settings_Nav_Layout,
+    Settings_Nav_Mouse,
+    Settings_Nav_Keyboard,
+    Settings_Nav_FileTypeAssociations,
+    Settings_Nav_Tools,
+    Settings_Nav_Plugins,
+    Settings_Nav_Language,
+    Settings_Nav_Appearance,
+    #endregion // Settings > Navbar
 
 
-    #region FrmSettings > Tab General
+    #region Settings > Tab General
     // General > General
-    FrmSettings_StartupDir,
-    FrmSettings_ConfigDir,
-    FrmSettings_UserConfigFile,
+    Settings_StartupDir,
+    Settings_ConfigDir,
+    Settings_UserConfigFile,
 
     // General > Startup
-    FrmSettings_Startup,
-    FrmSettings_EnableWelcomeImage,
-    FrmSettings_EnableLastSeenImage,
+    Settings_Startup,
+    Settings_EnableWelcomeImage,
+    Settings_EnableLastSeenImage,
 
-    FrmSettings_StartupBoost,
-    FrmSettings_StartupBoost_Description,
-    FrmSettings_StartupBoost_Enabled,
-    FrmSettings_StartupBoost_Disabled,
-    FrmSettings_StartupBoost_Error,
-    FrmSettings_EnableStartupBoost,
-    FrmSettings_DisableStartupBoost,
-    FrmSettings_OpenStartupAppsSetting,
+//    FrmSettings_StartupBoost,
+//    FrmSettings_StartupBoost_Description,
+//    FrmSettings_StartupBoost_Enabled,
+//    FrmSettings_StartupBoost_Disabled,
+//    FrmSettings_StartupBoost_Error,
+//    FrmSettings_EnableStartupBoost,
+//    FrmSettings_DisableStartupBoost,
+//    FrmSettings_OpenStartupAppsSetting,
 
     // General > Real-time update
-    FrmSettings_RealTimeFileUpdate,
-    FrmSettings_EnableFileWatcher,
-    FrmSettings_EnableAutoOpenNewAddedImage,
+//    FrmSettings_RealTimeFileUpdate,
+    Settings_EnableFileWatcher,
+    Settings_EnableAutoOpenNewAddedImage,
 
     // General > App update
-    FrmSettings_AppUpdate,
+    Settings_AppUpdate,
 
     // General > Others
-    FrmSettings_Others,
-    FrmSettings_AutoUpdate,
-    FrmSettings_EnableMultiInstances,
-    FrmSettings_ShowAppIcon,
-    FrmSettings_InAppMessageDuration,
-    FrmSettings_ImageInfoTags,
-    FrmSettings_AvailableImageInfoTags,
-    #endregion // FrmSettings > Tab General
+    Settings_Others,
+    Settings_AutoUpdate,
+    Settings_EnableMultiInstances,
+    Settings_ShowAppIcon,
+    Settings_InAppMessageDuration,
+    Settings_ImageInfoTags,
+    Settings_AvailableImageInfoTags,
+    #endregion // Settings > Tab General
 
 
-    #region FrmSettings > Tab Image
+    #region Settings > Tab Image
     // Image > Browsing
-    FrmSettings_Browsing,
-    FrmSettings_ImageLoadingOrder,
-    FrmSettings_EnableExplorerSortOrder,
-    FrmSettings_EnableSubfoldersLoading,
-    FrmSettings_EnableImageFolderGrouping,
-    FrmSettings_EnableHiddenImagesLoading,
-    FrmSettings_EnableLoopBackNavigation,
-    FrmSettings_EnableImagePreview,
+    Settings_Browsing,
+    Settings_ImageLoadingOrder,
+    Settings_EnableExplorerSortOrder,
+    Settings_EnableSubfoldersLoading,
+    Settings_EnableImageFolderGrouping,
+    Settings_EnableHiddenImagesLoading,
+    Settings_EnableLoopBackNavigation,
+    Settings_EnableImagePreview,
 
-    FrmSettings_ImagePreview,
-    FrmSettings_EmbeddedThumbnail,
-    FrmSettings_EnableOnlyLoadRawPreview,
-    FrmSettings_EnableOnlyLoadNonRawPreview,
-    FrmSettings_MinEmbeddedThumbnailSize,
-    FrmSettings_MinEmbeddedThumbnailSize_Width,
-    FrmSettings_MinEmbeddedThumbnailSize_Height,
+    Settings_ImagePreview,
+//    FrmSettings_EmbeddedThumbnail,
+    Settings_EnableOnlyLoadRawPreview,
+    Settings_EnableOnlyLoadNonRawPreview,
+    Settings_MinEmbeddedThumbnailSize,
+    Settings_MinEmbeddedThumbnailSize_Width,
+    Settings_MinEmbeddedThumbnailSize_Height,
 
     // Image > File watcher
-    FrmSettings_FileWatcher,
+    Settings_FileWatcher,
 
     // Image > Caching
-    FrmSettings_Caching,
-    FrmSettings_ImageBoosterCacheCount,
-    FrmSettings_ImageBoosterCacheMaxMemoryInMb,
-    FrmSettings_ImageBoosterCacheMaxDimension,
-    FrmSettings_ImageBoosterCacheMaxFileSizeInMb,
+    Settings_Caching,
+//    FrmSettings_ImageBoosterCacheCount,
+    Settings_ImageBoosterCacheMaxMemoryInMb,
+    Settings_ImageBoosterCacheMaxDimension,
+    Settings_ImageBoosterCacheMaxFileSizeInMb,
 
     // Image > Color management
-    FrmSettings_ColorManagement,
-    FrmSettings_EnableAlwaysApplyColorProfile,
-    FrmSettings_ColorProfile,
-    FrmSettings_CurrentMonitorProfile_Description,
-    #endregion // FrmSettings > Tab Image
+    Settings_ColorManagement,
+    Settings_EnableAlwaysApplyColorProfile,
+    Settings_ColorProfile,
+    Settings_CurrentMonitorProfile_Description,
+    #endregion // Settings > Tab Image
 
 
-    #region FrmSettings > Tab Slideshow
+    #region Settings > Tab Slideshow
     // Slideshow > Appearance
-    FrmSettings_Slideshow_Appearance,
-    FrmSettings_EnableSlideshowCountdown,
-    FrmSettings_EnableFullscreenSlideshow,
-    FrmSettings_SlideshowBackgroundColor,
+    Settings_Slideshow_Appearance,
+    Settings_EnableSlideshowCountdown,
+    Settings_EnableFullscreenSlideshow,
+    Settings_SlideshowBackgroundColor,
 
     // Slideshow > Playback
-    FrmSettings_Slideshow_Playback,
-    FrmSettings_EnableLoopSlideshow,
-    FrmSettings_EnableSlideshowRandomInterval,
-    FrmSettings_SlideshowInterval,
-    FrmSettings_SlideshowInterval_From,
-    FrmSettings_SlideshowInterval_To,
+    Settings_Slideshow_Playback,
+    Settings_EnableLoopSlideshow,
+    Settings_EnableSlideshowRandomInterval,
+    Settings_SlideshowInterval,
+    Settings_SlideshowInterval_From,
+    Settings_SlideshowInterval_To,
 
-    FrmSettings_SlideshowImagesToNotifySound,
-    #endregion // FrmSettings > Tab Slideshow
+    Settings_SlideshowImagesToNotifySound,
+    #endregion // Settings > Tab Slideshow
 
 
-    #region FrmSettings > Tab Edit
+    #region Settings > Tab Edit
     // Edit > Saving
-    FrmSettings_Edit_Saving,
-    FrmSettings_EnableDeleteConfirmation,
-    FrmSettings_EnableSaveConfirmation,
-    FrmSettings_EnablePreserveModifiedDate,
-    FrmSettings_EnableOpenSaveAsInCurrentFolder,
-    FrmSettings_ImageEditQuality,
+    Settings_Edit_Saving,
+    Settings_EnableDeleteConfirmation,
+    Settings_EnableSaveConfirmation,
+    Settings_EnablePreserveModifiedDate,
+    Settings_EnableOpenSaveAsInCurrentFolder,
+    Settings_ImageEditQuality,
 
     // Edit > Clipboard
-    FrmSettings_Clipboard,
-    FrmSettings_EnableCopyMultipleFiles,
-    FrmSettings_EnableCutMultipleFiles,
+    Settings_Clipboard,
+    Settings_EnableCopyMultipleFiles,
+    Settings_EnableCutMultipleFiles,
 
     // Edit > Image editing apps
-    FrmSettings_AfterEditingAction,
-    FrmSettings_EditApps,
-    FrmSettings_EditApps_AppName,
-    FrmSettings_EditAppDialog_AddApp,
-    FrmSettings_EditAppDialog_EditApp,
-    #endregion // FrmSettings > Tab Edit
+    Settings_AfterEditingAction,
+    Settings_EditApps,
+    Settings_EditApps_AppName,
+    Settings_EditAppDialog_AddApp,
+    Settings_EditAppDialog_EditApp,
+    #endregion // Settings > Tab Edit
 
 
-    #region FrmSettings > Tab Layout
+    #region Settings > Tab Layout
     // Layout > Window
-    FrmSettings_Window,
+    Settings_Window,
 
     // Layout > Controls
-    FrmSettings_Controls,
-    FrmSettings_Layout_ArrangeHint,
-    FrmSettings_Layout_Viewer,
+    Settings_Controls,
+    Settings_Layout_ArrangeHint,
+    Settings_Layout_Viewer,
 
     // Layout > Layout
-    FrmSettings_Layout_Order,
-    FrmSettings_Layout_Toolbar,
-    FrmSettings_Layout_ToolbarContext,
-    FrmSettings_Layout_Gallery,
-    FrmSettings_Layout_ToolbarPosition,
-    FrmSettings_Layout_ToolbarContextPosition,
-    FrmSettings_Layout_GalleryPosition,
-    #endregion // FrmSettings > Tab Layout
+//    FrmSettings_Layout_Order,
+    Settings_Layout_Toolbar,
+//    FrmSettings_Layout_ToolbarContext,
+    Settings_Layout_Gallery,
+    Settings_Layout_ToolbarPosition,
+//    FrmSettings_Layout_ToolbarContextPosition,
+    Settings_Layout_GalleryPosition,
+    #endregion // Settings > Tab Layout
 
 
-    #region FrmSettings > Tab Viewer
+    #region Settings > Tab Viewer
     // Viewer > Appearance
-    FrmSettings_Appearance,
-    FrmSettings_ShowCheckerboardOnlyImageRegion,
-    FrmSettings_EnableNavigationButtons,
-    FrmSettings_EnableCenterWindowFit,
-    FrmSettings_EnableVectorRenderer,
-    FrmSettings_CheckerboardMode,
+    Settings_Appearance,
+//    FrmSettings_ShowCheckerboardOnlyImageRegion,
+    Settings_EnableNavigationButtons,
+    Settings_EnableCenterWindowFit,
+    Settings_EnableVectorRenderer,
+    Settings_CheckerboardMode,
 
     // Viewer > Panning
-    FrmSettings_Panning,
-    FrmSettings_EnableFreePan,
-    FrmSettings_PanMargin,
-    FrmSettings_PanSpeed,
+    Settings_Panning,
+    Settings_EnableFreePan,
+    Settings_PanMargin,
+    Settings_PanSpeed,
 
     // Viewer > Zooming
-    FrmSettings_Zooming,
-    FrmSettings_ImageInterpolation,
-    FrmSettings_ImageInterpolation_ScaleDown,
-    FrmSettings_ImageInterpolation_ScaleUp,
-    FrmSettings_ZoomSpeed,
-    FrmSettings_ZoomLevels,
-    FrmSettings_UseSmoothZooming,
-    FrmSettings_LoadDefaultZoomLevels,
-    #endregion // FrmSettings > Tab Viewer
+    Settings_Zooming,
+    Settings_ImageInterpolation,
+    Settings_ImageInterpolation_ScaleDown,
+    Settings_ImageInterpolation_ScaleUp,
+    Settings_ZoomSpeed,
+    Settings_ZoomLevels,
+    Settings_UseSmoothZooming,
+    Settings_LoadDefaultZoomLevels,
+    #endregion // Settings > Tab Viewer
 
 
-    #region FrmSettings > Tab Toolbar
+    #region Settings > Tab Toolbar
     // Toolbar > Toolbar
-    FrmSettings_Toolbar_ShowToolbarInFullscreen,
-    FrmSettings_Toolbar_ToolbarIconHeight,
+    Settings_Toolbar_ShowToolbarInFullscreen,
+    Settings_Toolbar_ToolbarIconHeight,
 
-    FrmSettings_Toolbar_AddNewButton,
-    FrmSettings_Toolbar_EditButton,
-    FrmSettings_Toolbar_ButtonJson,
+    Settings_Toolbar_AddNewButton,
+    Settings_Toolbar_EditButton,
+//    FrmSettings_Toolbar_ButtonJson,
 
-    FrmSettings_Toolbar_ToolbarButtons,
-    FrmSettings_Toolbar_AddCustomButton,
-    FrmSettings_Toolbar_AvailableButtons,
-    FrmSettings_Toolbar_CurrentButtons,
-    FrmSettings_Toolbar_Errors_ButtonIdRequired,
-    FrmSettings_Toolbar_Errors_ButtonIdDuplicated,
-    FrmSettings_Toolbar_Errors_ButtonExecutableRequired,
+    Settings_Toolbar_ToolbarButtons,
+    Settings_Toolbar_AddCustomButton,
+    Settings_Toolbar_AvailableButtons,
+    Settings_Toolbar_CurrentButtons,
+//    FrmSettings_Toolbar_Errors_ButtonIdRequired,
+    Settings_Toolbar_Errors_ButtonIdDuplicated,
+//    FrmSettings_Toolbar_Errors_ButtonExecutableRequired,
 
-    FrmSettings_Toolbar_ButtonText,
-    FrmSettings_Toolbar_ShowButtonText,
-    FrmSettings_Toolbar_AlignRight,
-    FrmSettings_Toolbar_CustomIcon,
-    FrmSettings_Toolbar_ConfigBinding,
-    FrmSettings_Toolbar_ConfigBindingName,
-    FrmSettings_Toolbar_ConfigBindingValue,
-    FrmSettings_Toolbar_ClickAction,
-    FrmSettings_Toolbar_RecordHotkeyHint,
-    FrmSettings_Toolbar_BuiltInReadonly,
+    Settings_Toolbar_ButtonText,
+    Settings_Toolbar_ShowButtonText,
+    Settings_Toolbar_AlignRight,
+    Settings_Toolbar_CustomIcon,
+    Settings_Toolbar_ConfigBinding,
+    Settings_Toolbar_ConfigBindingName,
+    Settings_Toolbar_ConfigBindingValue,
+//    FrmSettings_Toolbar_ClickAction,
+    Settings_Toolbar_RecordHotkeyHint,
+    Settings_Toolbar_BuiltInReadonly,
 
-    FrmSettings_Toolbar_ArrangeHint,
-    #endregion // FrmSettings > Tab Toolbar
+    Settings_Toolbar_ArrangeHint,
+    #endregion // Settings > Tab Toolbar
 
 
-    #region FrmSettings > Tab Gallery
+    #region Settings > Tab Gallery
     // Gallery > Gallery
-    FrmSettings_ShowGalleryInFullscreen,
-    FrmSettings_ShowGalleryFileName,
-    FrmSettings_EnableGalleryShellThumbnail,
-    FrmSettings_ThumbnailSize,
-    FrmSettings_GalleryCacheSizeInMb,
-    FrmSettings_GalleryColumns,
-    #endregion // FrmSettings > Tab Gallery
+    Settings_ShowGalleryInFullscreen,
+    Settings_ShowGalleryFileName,
+    Settings_EnableGalleryShellThumbnail,
+    Settings_ThumbnailSize,
+    Settings_GalleryCacheSizeInMb,
+    Settings_GalleryColumns,
+    #endregion // Settings > Tab Gallery
 
 
-    #region FrmSettings > Tab Mouse
+    #region Settings > Tab Mouse
     // Mouse > Mouse wheel action
-    FrmSettings_MouseWheelAction,
+    Settings_MouseWheelAction,
     // Mouse > Mouse click action
-    FrmSettings_MouseClickAction,
-    FrmSettings_MouseClickAction_Hint,
-    #endregion // FrmSettings > Tab Mouse
+    Settings_MouseClickAction,
+//    FrmSettings_MouseClickAction_Hint,
+    #endregion // Settings > Tab Mouse
 
 
-    #region FrmSettings > Tab Keyboard
-    FrmSettings_Keyboard_MenuHotkeys,
-    FrmSettings_Keyboard_Action,
-    FrmSettings_Keyboard_NoResults,
-    FrmSettings_Keyboard_EditTitle,
-    FrmSettings_Keyboard_Conflict,
-    #endregion // FrmSettings > Tab Mouse & Keyboard
+    #region Settings > Tab Keyboard
+    Settings_Keyboard_MenuHotkeys,
+    Settings_Keyboard_Action,
+    Settings_Keyboard_NoResults,
+    Settings_Keyboard_EditTitle,
+    Settings_Keyboard_Conflict,
+    #endregion // Settings > Tab Mouse & Keyboard
 
 
-    #region FrmSettings > Tab File type associations
+    #region Settings > Tab File type associations
     // File type associations > File extension icons
-    FrmSettings_FileExtensionIcons,
-    FrmSettings_FileExtensionIcons_Description,
-    FrmSettings_OpenExtensionIconFolder,
-    FrmSettings_GetExtensionIconPacks,
+    Settings_FileExtensionIcons,
+    Settings_FileExtensionIcons_Description,
+    Settings_OpenExtensionIconFolder,
+    Settings_GetExtensionIconPacks,
 
     // File type associations > Default photo viewer
-    FrmSettings_DefaultPhotoViewer,
-    FrmSettings_DefaultPhotoViewer_Description,
-    FrmSettings_MakeDefault,
-    FrmSettings_RemoveDefault,
-    FrmSettings_OpenDefaultAppsSetting,
+    Settings_DefaultPhotoViewer,
+    Settings_DefaultPhotoViewer_Description,
+    Settings_MakeDefault,
+    Settings_RemoveDefault,
+    Settings_OpenDefaultAppsSetting,
 
     // File type associations > File formats
-    FrmSettings_FileFormats,
-    FrmSettings_TotalSupportedFormats,
-    FrmSettings_AddNewFileExtension,
+    Settings_FileFormats,
+    Settings_TotalSupportedFormats,
+    Settings_AddNewFileExtension,
 
-    #endregion // FrmSettings > Tab File type associations
+    #endregion // Settings > Tab File type associations
 
 
-    #region FrmSettings > Tab Tools
+    #region Settings > Tab Tools
     // Tools > Tools
-    FrmSettings_Tools_AddNewTool,
-    FrmSettings_Tools_EditTool,
-    FrmSettings_Tools_Integrated,
-    FrmSettings_Tools_IntegratedWith,
-    FrmSettings_Tools_Errors_ToolIdDuplicated,
-    #endregion // FrmSettings > Tab Tools
+    Settings_Tools_AddNewTool,
+    Settings_Tools_EditTool,
+    Settings_Tools_Integrated,
+    Settings_Tools_IntegratedWith,
+    Settings_Tools_Errors_ToolIdDuplicated,
+    #endregion // Settings > Tab Tools
 
 
-    #region FrmSettings > Tab Plugins
-    FrmSettings_Plugins_OpenPluginFolder,
-    FrmSettings_Plugins_GetMorePlugins,
-    FrmSettings_Plugins_SupportedExtensions,
-    FrmSettings_Plugins_ViewMetadata,
-    FrmSettings_Plugins_FolderPath,
-    FrmSettings_Plugins_RestartRequired,
-    FrmSettings_Plugins_InstallSuccess,
-    #endregion // FrmSettings > Tab Plugins
+    #region Settings > Tab Plugins
+    Settings_Plugins_OpenPluginFolder,
+    Settings_Plugins_GetMorePlugins,
+    Settings_Plugins_SupportedExtensions,
+    Settings_Plugins_ViewMetadata,
+    Settings_Plugins_FolderPath,
+    Settings_Plugins_RestartRequired,
+    Settings_Plugins_InstallSuccess,
+    #endregion // Settings > Tab Plugins
 
 
-    #region FrmSettings > Tab Language
+    #region Settings > Tab Language
     // Language > Language
-    FrmSettings_DisplayLanguage,
-    FrmSettings_Refresh,
-    FrmSettings_InstallNewLanguagePack,
-    FrmSettings_GetMoreLanguagePacks,
-    FrmSettings_ExportLanguagePack,
-    FrmSettings_Contributors,
-    #endregion // FrmSettings > Tab Language
+    Settings_DisplayLanguage,
+    Settings_Refresh,
+    Settings_InstallNewLanguagePack,
+    Settings_GetMoreLanguagePacks,
+    Settings_ExportLanguagePack,
+    Settings_Contributors,
+    #endregion // Settings > Tab Language
 
 
-    #region FrmSettings > Tab Appearance
+    #region Settings > Tab Appearance
     // Appearance > Appearance
-    FrmSettings_WindowBackdrop,
-    FrmSettings_BackgroundColor,
+    Settings_WindowBackdrop,
+    Settings_BackgroundColor,
 
     // Appearance > Theme
-    FrmSettings_Theme,
-    FrmSettings_DarkTheme,
-    FrmSettings_LightTheme,
-    FrmSettings_Author,
-    FrmSettings_Theme_OpenThemeFolder,
-    FrmSettings_Theme_GetMoreThemes,
-    FrmSettings_Theme_InstallTheme,
+    Settings_Theme,
+    Settings_DarkTheme,
+    Settings_LightTheme,
+//    FrmSettings_Author,
+    Settings_Theme_OpenThemeFolder,
+    Settings_Theme_GetMoreThemes,
+    Settings_Theme_InstallTheme,
 
-    FrmSettings_UseThemeForDarkMode,
-    FrmSettings_UseThemeForLightMode,
-    #endregion // FrmSettings > Tab Appearance
+    Settings_UseThemeForDarkMode,
+    Settings_UseThemeForLightMode,
+    #endregion // Settings > Tab Appearance
 
-    #endregion // FrmSettings
+    #endregion // Settings
 
 
-    #region FrmCrop
-    FrmCrop_LblAspectRatio,
-    FrmCrop_LblLocation,
-    FrmCrop_LblSize,
+    #region Tool: Crop
+    Tool_Crop_LblAspectRatio,
+    Tool_Crop_LblLocation,
+    Tool_Crop_LblSize,
 
-    FrmCrop_SelectionAspectRatio_FreeRatio,
-    FrmCrop_SelectionAspectRatio_Custom,
-    FrmCrop_SelectionAspectRatio_Original,
+    Tool_Crop_SelectionAspectRatio_FreeRatio,
+    Tool_Crop_SelectionAspectRatio_Custom,
+    Tool_Crop_SelectionAspectRatio_Original,
 
-    FrmCrop_BtnReset,
-    FrmCrop_BtnSave,
-    FrmCrop_BtnSaveAs,
-    FrmCrop_BtnCrop,
-    FrmCrop_BtnCopy,
+    Tool_Crop_BtnReset,
+    Tool_Crop_BtnSave,
+    Tool_Crop_BtnSaveAs,
+    Tool_Crop_BtnCrop,
+    Tool_Crop_BtnCopy,
 
 
     // Crop settings
-    FrmCropSettings_Title,
-    FrmCropSettings_ChkCloseToolAfterSaving,
-    FrmCropSettings_LblDefaultSelection,
-    FrmCropSettings_ChkAutoCenterSelection,
+    Tool_Crop_Title,
+    Tool_Crop_ChkCloseToolAfterSaving,
+    Tool_Crop_LblDefaultSelection,
+    Tool_Crop_ChkAutoCenterSelection,
 
-    FrmCropSettings_DefaultSelectionType_UseTheLastSelection,
-    FrmCropSettings_DefaultSelectionType_SelectNone,
-    FrmCropSettings_DefaultSelectionType_SelectX,
-    FrmCropSettings_DefaultSelectionType_SelectAll,
-    FrmCropSettings_DefaultSelectionType_CustomArea,
-    #endregion // FrmCrop
+    Tool_Crop_DefaultSelectionType_UseTheLastSelection,
+    Tool_Crop_DefaultSelectionType_SelectNone,
+    Tool_Crop_DefaultSelectionType_SelectX,
+    Tool_Crop_DefaultSelectionType_SelectAll,
+    Tool_Crop_DefaultSelectionType_CustomArea,
+    #endregion // Tool: Crop
 
 
-    #region FrmColorPicker
-    FrmColorPicker_BtnSettings_Tooltip,
+    #region Tool: Color picker
+//    FrmColorPicker_BtnSettings_Tooltip,
 
     // Color picker settings
-    FrmColorPickerSettings_Title,
-    FrmColorPickerSettings_ChkShowRgbA,
-    FrmColorPickerSettings_ChkShowHexA,
-    FrmColorPickerSettings_ChkShowHslA,
-    FrmColorPickerSettings_ChkShowHsvA,
-    FrmColorPickerSettings_ChkShowCmykA,
-    FrmColorPickerSettings_ChkShowCIELabA,
-    #endregion // FrmColorPicker
+    Tool_ColorPicker_Title,
+    Tool_ColorPicker_ChkShowRgbA,
+    Tool_ColorPicker_ChkShowHexA,
+    Tool_ColorPicker_ChkShowHslA,
+    Tool_ColorPicker_ChkShowHsvA,
+    Tool_ColorPicker_ChkShowCmykA,
+    Tool_ColorPicker_ChkShowCIELabA,
+    #endregion // Tool: Color picker
 
 
-    #region FrmToolNotFound
-    FrmToolNotFound_Title,
-    FrmToolNotFound_BtnSelectExecutable,
-    FrmToolNotFound_LblHeading,
-    FrmToolNotFound_LblDescription,
-    FrmToolNotFound_LblDownloadToolText,
-    #endregion // FrmToolNotFound
+    #region Tool not found (unused)
+//    FrmToolNotFound_Title,
+//    FrmToolNotFound_BtnSelectExecutable,
+//    FrmToolNotFound_LblHeading,
+//    FrmToolNotFound_LblDescription,
+//    FrmToolNotFound_LblDownloadToolText,
+    #endregion // Tool not found (unused)
 
 
-    #region FrmHotkeyPicker
-    FrmHotkeyPicker_LblHotkey,
-    #endregion // FrmHotkeyPicker
+    #region Hotkey picker (unused)
+//    FrmHotkeyPicker_LblHotkey,
+    #endregion // Hotkey picker (unused)
 
 
-    #region FrmResize
-    FrmResize_RadResizeByPixels,
-    FrmResize_RadResizeByPercentage,
-    FrmResize_ChkKeepRatio,
-    FrmResize_LblResample,
-    FrmResize_LblCurrentSize,
-    FrmResize_LblNewSize,
-    #endregion // FrmResize
+    #region Tool: Resizer
+    Tool_Resizer_RadResizeByPixels,
+    Tool_Resizer_RadResizeByPercentage,
+    Tool_Resizer_ChkKeepRatio,
+    Tool_Resizer_LblResample,
+    Tool_Resizer_LblCurrentSize,
+    Tool_Resizer_LblNewSize,
+    #endregion // Tool: Resizer
 
 
     #region igcmd.exe
 
-    _IgCommandExe_DefaultError_Heading,
-    _IgCommandExe_DefaultError_Description,
+//    _IgCommandExe_DefaultError_Heading,
+//    _IgCommandExe_DefaultError_Description,
 
-    #region FrmSlideshow
-    FrmSlideshow_PauseSlideshow,
-    FrmSlideshow_ResumeSlideshow,
-    FrmSlideshow_MnuPauseResumeSlideshow,
-    FrmSlideshow_MnuToggleCountdown,
-    FrmSlideshow_MnuExitSlideshow,
-    #endregion // FrmSlideshow
-
-
-    #region FrmExportFrames
-    FrmExportFrames_Title,
-    FrmExportFrames_FolderPickerTitle,
-    FrmExportFrames_Exporting,
-    FrmExportFrames_ExportDone,
-    FrmExportFrames_OpenOutputFolder,
-    #endregion // FrmExportFrames
+    #region Slideshow (general)
+    _PauseSlideshow,
+    _ResumeSlideshow,
+    _MnuPauseResumeSlideshow,
+    _MnuToggleCountdown,
+    _MnuExitSlideshow,
+    #endregion // Slideshow (general)
 
 
-    #region FrmQuickSetup
-    FrmQuickSetup_Text,
-    FrmQuickSetup_StepInfo,
-    FrmQuickSetup_SkipQuickSetup,
+    #region Export frames (general)
+    _Title,
+    _FolderPickerTitle,
+    _Exporting,
+    _ExportDone,
+    _OpenOutputFolder,
+    #endregion // Export frames (general)
 
-    FrmQuickSetup_SeeWhatNew,
-    FrmQuickSetup_SelectProfile,
-    FrmQuickSetup_StandardUser,
-    FrmQuickSetup_ProfessionalUser,
-    FrmQuickSetup_SettingProfileDescription,
 
-    FrmQuickSetup_SettingsWillBeApplied,
-    FrmQuickSetup_SetDefaultViewer,
-    FrmQuickSetup_SetDefaultViewer_Description,
+    #region Quick setup (unused)
+//    FrmQuickSetup_Text,
+//    FrmQuickSetup_StepInfo,
+//    FrmQuickSetup_SkipQuickSetup,
 
-    FrmQuickSetup_ConfirmCloseProcess,
-    #endregion // FrmQuickSetup
+//    FrmQuickSetup_SeeWhatNew,
+//    FrmQuickSetup_SelectProfile,
+//    FrmQuickSetup_StandardUser,
+//    FrmQuickSetup_ProfessionalUser,
+//    FrmQuickSetup_SettingProfileDescription,
+
+//    FrmQuickSetup_SettingsWillBeApplied,
+//    FrmQuickSetup_SetDefaultViewer,
+//    FrmQuickSetup_SetDefaultViewer_Description,
+
+//    FrmQuickSetup_ConfirmCloseProcess,
+    #endregion // Quick setup (unused)
 
     #endregion // igcmd.exe
 

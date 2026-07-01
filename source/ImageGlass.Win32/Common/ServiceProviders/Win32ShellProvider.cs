@@ -1,4 +1,4 @@
-﻿/*
+/*
 ImageGlass - A Fast, Seamless Photo Viewer
 Copyright (C) 2010 - 2026 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
@@ -237,8 +237,8 @@ public class Win32ShellProvider : PhDisposable, IShellProvider
             {
                 _ = await ModalWindow.ShowInfoAsync(null, new ModalWindowOptions
                 {
-                    Title = Core.Lang[LangId.FrmMain_MnuEdit],
-                    Heading = Core.Lang[LangId.FrmMain_MnuEdit_AppNotFound],
+                    Title = Core.Lang[LangId.Menu_MnuEdit],
+                    Heading = Core.Lang[LangId.Menu_MnuEdit_AppNotFound],
                     Description = filePath,
                 });
                 return;
@@ -258,7 +258,7 @@ public class Win32ShellProvider : PhDisposable, IShellProvider
             {
                 _ = await ModalWindow.ShowErrorAsync(null, new ModalWindowOptions
                 {
-                    Title = string.Format(Core.Lang[LangId.FrmMain_MnuEdit], "(Microsoft Paint)"),
+                    Title = string.Format(Core.Lang[LangId.Menu_MnuEdit], "(Microsoft Paint)"),
                     Description = ex.Message + $"\r\n\r\n{filePath}",
                 });
             }
@@ -308,7 +308,7 @@ public class Win32ShellProvider : PhDisposable, IShellProvider
             // show error: file does not have associated app
             _ = await ModalWindow.ShowErrorAsync(null, new ModalWindowOptions
             {
-                Title = string.Format(Core.Lang[LangId.FrmMain_MnuEdit]),
+                Title = string.Format(Core.Lang[LangId.Menu_MnuEdit]),
                 Description = win32ErrorMsg + $"\r\n\r\n{filePath}",
             });
         }

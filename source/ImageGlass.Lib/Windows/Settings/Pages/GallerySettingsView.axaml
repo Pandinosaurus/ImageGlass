@@ -14,23 +14,23 @@
     <StackPanel Orientation="Vertical">
 
         <!--  Appearance  -->
-        <ui:PhTextBlock Classes="group" LangKey="FrmSettings_Appearance" />
+        <ui:PhTextBlock Classes="group" LangKey="Settings_Appearance" />
         <StackPanel Margin="{DynamicResource SettingsGroupIndent}" Spacing="10">
             <StackPanel>
                 <CheckBox x:Name="PART_ShowGalleryInFullscreen">
-                    <ui:PhTextBlock LangKey="FrmSettings_ShowGalleryInFullscreen" TextWrapping="Wrap" />
+                    <ui:PhTextBlock LangKey="Settings_ShowGalleryInFullscreen" TextWrapping="Wrap" />
                 </CheckBox>
                 <CheckBox x:Name="PART_ShowGalleryFileName">
-                    <ui:PhTextBlock LangKey="FrmSettings_ShowGalleryFileName" TextWrapping="Wrap" />
+                    <ui:PhTextBlock LangKey="Settings_ShowGalleryFileName" TextWrapping="Wrap" />
                 </CheckBox>
                 <CheckBox x:Name="PART_ShellThumbnail">
-                    <ui:PhTextBlock LangKey="FrmSettings_EnableGalleryShellThumbnail" TextWrapping="Wrap" />
+                    <ui:PhTextBlock LangKey="Settings_EnableGalleryShellThumbnail" TextWrapping="Wrap" />
                 </CheckBox>
             </StackPanel>
 
             <!--  Gallery columns (1 - 100)  -->
             <StackPanel Spacing="{DynamicResource SettingsLabelInputGap}">
-                <ui:PhTextBlock x:Name="PART_GalleryColumnsLabel" LangKey="FrmSettings_GalleryColumns" />
+                <ui:PhTextBlock x:Name="PART_GalleryColumnsLabel" LangKey="Settings_GalleryColumns" />
                 <Slider
                     x:Name="PART_GalleryColumns"
                     Width="200"
@@ -43,7 +43,7 @@
 
             <!--  Thumbnail size (px)  -->
             <StackPanel Spacing="{DynamicResource SettingsLabelInputGap}">
-                <ui:PhTextBlock x:Name="PART_ThumbnailSizeLabel" LangKey="FrmSettings_ThumbnailSize" />
+                <ui:PhTextBlock x:Name="PART_ThumbnailSizeLabel" LangKey="Settings_ThumbnailSize" />
                 <Slider
                     x:Name="PART_ThumbnailSize"
                     Width="200"
@@ -56,7 +56,7 @@
 
             <!--  Gallery cache size (MB)  -->
             <StackPanel Spacing="{DynamicResource SettingsLabelInputGap}">
-                <ui:PhTextBlock LangKey="FrmSettings_GalleryCacheSizeInMb" TextWrapping="Wrap" />
+                <ui:PhTextBlock LangKey="Settings_GalleryCacheSizeInMb" TextWrapping="Wrap" />
                 <ui:PhTextBox
                     x:Name="PART_GalleryCacheSize"
                     Width="200"

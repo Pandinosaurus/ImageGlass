@@ -11,12 +11,12 @@
         <NativeMenu>
             <NativeMenuItem
                 Click="AppMenuAbout_Click"
-                CommandParameter="FrmMain_MnuAbout"
+                CommandParameter="Menu_MnuAbout"
                 Header="About ImageGlass" />
             <NativeMenuItemSeparator />
             <NativeMenuItem
                 Click="AppMenuSettings_Click"
-                CommandParameter="FrmMain_MnuSettings"
+                CommandParameter="Menu_MnuSettings"
                 Header="Settings…" />
         </NativeMenu>
     </NativeMenu.Menu>

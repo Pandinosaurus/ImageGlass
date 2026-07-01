@@ -1,4 +1,4 @@
-﻿/*
+/*
 ImageGlass - A Fast, Seamless Photo Viewer
 Copyright (C) 2010 - 2026 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
@@ -65,8 +65,8 @@ public partial class ExportFramesWindow : ModalWindow
     {
         base.OnIgLanguageChanged();
 
-        Title = Core.Lang[LangId.FrmExportFrames_Title];
-        Heading = Core.Lang[LangId.FrmExportFrames_Title];
+        Title = Core.Lang[LangId._Title];
+        Heading = Core.Lang[LangId._Title];
         Button1Text = Core.Lang[LangId._Start];
         Button2Text = Core.Lang[LangId._Cancel];
     }
@@ -138,7 +138,7 @@ public partial class ExportFramesWindow : ModalWindow
 
                     IsProgressIndeterminate = false;
                     ProgressValue = percent;
-                    Title = $"{Core.Lang[LangId.FrmExportFrames_Title]} ({percent}%)";
+                    Title = $"{Core.Lang[LangId._Title]} ({percent}%)";
 
                     // done
                     if (info.FrameNumber == info.FrameCount)
@@ -146,10 +146,10 @@ public partial class ExportFramesWindow : ModalWindow
                         _btn1.IsEnabled = true;
                         _btn1.Focus(Avalonia.Input.NavigationMethod.Tab);
                         IsButton1Visible = true;
-                        Button1Text = Core.Lang[LangId.FrmExportFrames_OpenOutputFolder];
+                        Button1Text = Core.Lang[LangId._OpenOutputFolder];
 
                         Button2Text = Core.Lang[LangId._Close];
-                        Description = string.Format(Core.Lang[LangId.FrmExportFrames_ExportDone],
+                        Description = string.Format(Core.Lang[LangId._ExportDone],
                             info.FrameNumber,
                             $"\"{destDirPath}\"");
 
@@ -162,7 +162,7 @@ public partial class ExportFramesWindow : ModalWindow
                     {
                         var frameFilePath = Path.Combine(destDirPath, info.FileName);
 
-                        Description = string.Format(Core.Lang[LangId.FrmExportFrames_Exporting],
+                        Description = string.Format(Core.Lang[LangId._Exporting],
                             info.FrameNumber,
                             info.FrameCount,
                             $"\"{frameFilePath}\"");

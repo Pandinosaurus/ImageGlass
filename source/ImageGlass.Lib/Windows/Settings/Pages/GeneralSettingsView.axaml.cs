@@ -53,28 +53,28 @@ public partial class GeneralSettingsView : SettingsPageView
         var userConfig = BHelper.ConfigDir(Config.CONFIG_USER);
 
         // Locations
-        BindLink(PART_StartupDir, LangId.FrmSettings_StartupDir, startupDir,
+        BindLink(PART_StartupDir, LangId.Settings_StartupDir, startupDir,
             () => BHelper.OpenFolderPath(startupDir));
-        BindLink(PART_ConfigDir, LangId.FrmSettings_ConfigDir, configDir,
+        BindLink(PART_ConfigDir, LangId.Settings_ConfigDir, configDir,
             () => BHelper.OpenFolderPath(configDir));
-        BindLink(PART_UserConfig, LangId.FrmSettings_UserConfigFile, userConfig,
+        BindLink(PART_UserConfig, LangId.Settings_UserConfigFile, userConfig,
             () => OpenUserConfigFile(userConfig));
 
         // Startup
         BindToggle(PART_WelcomeImage, ConfigId.EnableWelcomeImage,
-            LangId.FrmSettings_EnableWelcomeImage, LangId.FrmSettings_Startup);
+            LangId.Settings_EnableWelcomeImage, LangId.Settings_Startup);
         BindToggle(PART_LastSeenImage, ConfigId.EnableLastSeenImage,
-            LangId.FrmSettings_EnableLastSeenImage, LangId.FrmSettings_Startup);
+            LangId.Settings_EnableLastSeenImage, LangId.Settings_Startup);
         BindToggle(PART_MultiInstances, ConfigId.EnableMultiInstances,
-            LangId.FrmSettings_EnableMultiInstances, LangId.FrmSettings_Startup);
+            LangId.Settings_EnableMultiInstances, LangId.Settings_Startup);
 
         // App update — AutoUpdate is stored as a date string; "0" means disabled.
         BindAutoUpdateToggle(PART_AutoUpdate, ConfigId.AutoUpdate,
-            LangId.FrmSettings_AutoUpdate, LangId.FrmSettings_AppUpdate);
+            LangId.Settings_AutoUpdate, LangId.Settings_AppUpdate);
 
         // Others
         BindIntInput(PART_MsgDuration, ConfigId.InAppMessageDuration,
-            LangId.FrmSettings_InAppMessageDuration, LangId.FrmSettings_Others);
+            LangId.Settings_InAppMessageDuration, LangId.Settings_Others);
     }
 
 

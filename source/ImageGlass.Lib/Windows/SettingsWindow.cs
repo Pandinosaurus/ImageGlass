@@ -100,13 +100,13 @@ public partial class SettingsWindow : DialogWindow
     {
         base.OnIgLanguageChanged();
 
-        Title = Core.Lang[LangId.FrmMain_MnuSettings];
+        Title = Core.Lang[LangId.Menu_MnuSettings];
         Button1Text = Core.Lang[LangId._OK];
         Button2Text = Core.Lang[LangId._Cancel];
         Button3Text = Core.Lang[LangId._Apply];
 
         if (_btnGetHelp is not null) _btnGetHelp.Text = Core.Lang[LangId._GetHelp];
-        if (_btnResetSettings is not null) _btnResetSettings.Text = Core.Lang[LangId.FrmSettings_ResetSettings];
+        if (_btnResetSettings is not null) _btnResetSettings.Text = Core.Lang[LangId.Settings_ResetSettings];
     }
 
 
@@ -191,14 +191,14 @@ public partial class SettingsWindow : DialogWindow
             await BHelper.OpenUrlAsync(this, "https://imageglass.org/docs", campaign);
         });
 
-        _btnResetSettings = CreateLinkButton(Core.Lang[LangId.FrmSettings_ResetSettings], async () =>
+        _btnResetSettings = CreateLinkButton(Core.Lang[LangId.Settings_ResetSettings], async () =>
         {
             // TODO: perform the actual reset-to-defaults.
             // For now, confirm the action so the UX/wiring is in place.
             _ = await ModalWindow.ShowWarningAsync(this, new ModalWindowOptions
             {
-                Title = Core.Lang[LangId.FrmSettings_ResetSettings],
-                Heading = Core.Lang[LangId.FrmSettings_ResetSettings],
+                Title = Core.Lang[LangId.Settings_ResetSettings],
+                Heading = Core.Lang[LangId.Settings_ResetSettings],
             }, ModalWindowButton.Yes_No);
         });
 

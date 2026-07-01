@@ -74,8 +74,8 @@ internal sealed class ToolbarButtonEditWindow : DialogWindow
         base.OnIgLanguageChanged();
 
         Title = Core.Lang[_isEditMode
-            ? LangId.FrmSettings_Toolbar_EditButton
-            : LangId.FrmSettings_Toolbar_AddNewButton];
+            ? LangId.Settings_Toolbar_EditButton
+            : LangId.Settings_Toolbar_AddNewButton];
         Button1Text = Core.Lang[LangId._OK];
         Button2Text = Core.Lang[_isReadOnly ? LangId._Close : LangId._Cancel];
     }

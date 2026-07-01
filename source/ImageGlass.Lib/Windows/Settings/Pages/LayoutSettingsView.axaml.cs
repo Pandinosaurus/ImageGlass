@@ -109,9 +109,9 @@ public partial class LayoutSettingsView : SettingsPageView
     {
         // Window
         BindToggle(PART_ShowAppIcon, ConfigId.ShowAppIcon,
-            LangId.FrmSettings_ShowAppIcon, LangId.FrmSettings_Window, true);
+            LangId.Settings_ShowAppIcon, LangId.Settings_Window, true);
         BindToggle(PART_EnableCenterWindowFit, ConfigId.EnableCenterWindowFit,
-            LangId.FrmSettings_EnableCenterWindowFit, LangId.FrmSettings_Window, true);
+            LangId.Settings_EnableCenterWindowFit, LangId.Settings_Window, true);
         BuildImageInfoTags();
 
         // Controls
@@ -143,8 +143,8 @@ public partial class LayoutSettingsView : SettingsPageView
         // available tags: selectable so they can be copied, separated by the same delimiter
         PART_AvailableTags.Text = string.Join(TAG_SEPARATOR, _availableTags);
 
-        RegisterSearchKey(PART_ImageInfoTags, LangId.FrmSettings_ImageInfoTags,
-            ConfigId.ImageInfoTags, LangId.FrmSettings_Window);
+        RegisterSearchKey(PART_ImageInfoTags, LangId.Settings_ImageInfoTags,
+            ConfigId.ImageInfoTags, LangId.Settings_Window);
     }
 
 
@@ -202,10 +202,10 @@ public partial class LayoutSettingsView : SettingsPageView
                 ApplyPosition(LayoutControl.Gallery, pos);
         };
 
-        RegisterSearchKey(PART_ToolbarPosition, LangId.FrmSettings_Layout_ToolbarPosition,
-            ConfigId.Layout, LangId.FrmSettings_Controls);
-        RegisterSearchKey(PART_GalleryPosition, LangId.FrmSettings_Layout_GalleryPosition,
-            ConfigId.Layout, LangId.FrmSettings_Controls);
+        RegisterSearchKey(PART_ToolbarPosition, LangId.Settings_Layout_ToolbarPosition,
+            ConfigId.Layout, LangId.Settings_Controls);
+        RegisterSearchKey(PART_GalleryPosition, LangId.Settings_Layout_GalleryPosition,
+            ConfigId.Layout, LangId.Settings_Controls);
     }
 
 
@@ -244,8 +244,8 @@ public partial class LayoutSettingsView : SettingsPageView
     private void BuildArranger()
     {
         // draggable control chips
-        _toolbarChip = CreateChip(LangId.FrmSettings_Layout_Toolbar);
-        _galleryChip = CreateChip(LangId.FrmSettings_Layout_Gallery);
+        _toolbarChip = CreateChip(LangId.Settings_Layout_Toolbar);
+        _galleryChip = CreateChip(LangId.Settings_Layout_Gallery);
 
         // the floating ghost (hidden until a drag starts; parented to its host only while dragging)
         _ghost = new PhButton
@@ -271,8 +271,8 @@ public partial class LayoutSettingsView : SettingsPageView
         foreach (var zone in _zones)
         {
             var ownerKey = zone.Owner == LayoutControl.Toolbar
-                ? LangId.FrmSettings_Layout_Toolbar
-                : LangId.FrmSettings_Layout_Gallery;
+                ? LangId.Settings_Layout_Toolbar
+                : LangId.Settings_Layout_Gallery;
 
             var label = new TextBlock { Classes = { "slotLabel" } };
             AddLangRefresher(() => label.Text = Core.Lang[ownerKey]);

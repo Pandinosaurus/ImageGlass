@@ -1,4 +1,4 @@
-﻿/*
+/*
 ImageGlass - A Fast, Seamless Photo Viewer
 Copyright (C) 2010 - 2026 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
@@ -380,7 +380,7 @@ public partial class AppStatusInfo : PhDisposable
 
             if (Core.ClipboardImage is not null)
             {
-                strBuilder.Append(Core.Lang[LangId.FrmMain_ClipboardImage]);
+                strBuilder.Append(Core.Lang[LangId._ClipboardImage]);
                 count++;
             }
 

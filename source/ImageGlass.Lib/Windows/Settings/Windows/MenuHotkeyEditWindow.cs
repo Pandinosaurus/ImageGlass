@@ -105,12 +105,12 @@ internal sealed class MenuHotkeyEditWindow : DialogWindow
     {
         base.OnIgLanguageChanged();
 
-        Title = Core.Lang[LangId.FrmSettings_Keyboard_EditTitle];
+        Title = Core.Lang[LangId.Settings_Keyboard_EditTitle];
         Button1Text = Core.Lang[LangId._OK];
         Button2Text = Core.Lang[LangId._Cancel];
 
         _restoreBtn.Text = Core.Lang[LangId._ResetToDefault];
-        _picker.PlaceholderText = Core.Lang[LangId.FrmSettings_Toolbar_RecordHotkeyHint];
+        _picker.PlaceholderText = Core.Lang[LangId.Settings_Toolbar_RecordHotkeyHint];
 
         var defaultText = string.Join(", ", _defaultHotkeys.Select(h => h.KeyString));
         if (string.IsNullOrEmpty(defaultText)) defaultText = Core.Lang[LangId._Empty];

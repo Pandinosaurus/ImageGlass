@@ -232,29 +232,29 @@ public partial class FrameNavToolControl : PhControl, IToolControl
     /// </summary>
     private void UpdateHotkeyTooltip()
     {
-        PART_BtnViewFirstFrame.VM.Text = nameof(LangId.FrmMain_MnuViewFirstFrame);
+        PART_BtnViewFirstFrame.VM.Text = nameof(LangId.Menu_MnuViewFirstFrame);
         PART_BtnViewFirstFrame.VM.HotkeyText
-            = AppAPIProvider.GetMenuHotkeyText(LangId.FrmMain_MnuViewFirstFrame);
+            = AppAPIProvider.GetMenuHotkeyText(LangId.Menu_MnuViewFirstFrame);
 
-        PART_BtnViewPreviousFrame.VM.Text = nameof(LangId.FrmMain_MnuViewPreviousFrame);
+        PART_BtnViewPreviousFrame.VM.Text = nameof(LangId.Menu_MnuViewPreviousFrame);
         PART_BtnViewPreviousFrame.VM.HotkeyText
-            = AppAPIProvider.GetMenuHotkeyText(LangId.FrmMain_MnuViewPreviousFrame);
+            = AppAPIProvider.GetMenuHotkeyText(LangId.Menu_MnuViewPreviousFrame);
 
-        PART_BtnToggleAnimation.VM.Text = nameof(LangId.FrmMain_MnuToggleImageAnimation);
+        PART_BtnToggleAnimation.VM.Text = nameof(LangId.Menu_MnuToggleImageAnimation);
         PART_BtnToggleAnimation.VM.HotkeyText
-            = AppAPIProvider.GetMenuHotkeyText(LangId.FrmMain_MnuToggleImageAnimation);
+            = AppAPIProvider.GetMenuHotkeyText(LangId.Menu_MnuToggleImageAnimation);
 
-        PART_BtnViewNextFrame.VM.Text = nameof(LangId.FrmMain_MnuViewNextFrame);
+        PART_BtnViewNextFrame.VM.Text = nameof(LangId.Menu_MnuViewNextFrame);
         PART_BtnViewNextFrame.VM.HotkeyText
-            = AppAPIProvider.GetMenuHotkeyText(LangId.FrmMain_MnuViewNextFrame);
+            = AppAPIProvider.GetMenuHotkeyText(LangId.Menu_MnuViewNextFrame);
 
-        PART_BtnViewLastFrame.VM.Text = nameof(LangId.FrmMain_MnuViewLastFrame);
+        PART_BtnViewLastFrame.VM.Text = nameof(LangId.Menu_MnuViewLastFrame);
         PART_BtnViewLastFrame.VM.HotkeyText
-            = AppAPIProvider.GetMenuHotkeyText(LangId.FrmMain_MnuViewLastFrame);
+            = AppAPIProvider.GetMenuHotkeyText(LangId.Menu_MnuViewLastFrame);
 
-        PART_BtnExportFrame.VM.Text = nameof(LangId.FrmMain_MnuExportFrames);
+        PART_BtnExportFrame.VM.Text = nameof(LangId.Menu_MnuExportFrames);
         PART_BtnExportFrame.VM.HotkeyText
-            = AppAPIProvider.GetMenuHotkeyText(LangId.FrmMain_MnuExportFrames);
+            = AppAPIProvider.GetMenuHotkeyText(LangId.Menu_MnuExportFrames);
 
     }
 

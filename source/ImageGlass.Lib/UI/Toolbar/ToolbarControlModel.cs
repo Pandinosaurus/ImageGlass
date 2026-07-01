@@ -1,4 +1,4 @@
-﻿/*
+/*
 ImageGlass - A Fast, Seamless Photo Viewer
 Copyright (C) 2010 - 2026 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
@@ -33,7 +33,7 @@ public class ToolbarControlModel : PhReactive
 
     public static ToolbarItemModel ButtonOverflowVM => new()
     {
-        Text = Core.Lang[LangId.FrmMain_MnuToolbarOverflow],
+        Text = Core.Lang[LangId.Menu_MnuToolbarOverflow],
         Image = nameof(IgThemeIcon.MainMenu),
     };
 
@@ -49,7 +49,7 @@ public class ToolbarControlModel : PhReactive
         }
     } = new()
     {
-        Text = Core.Lang[LangId.FrmMain_MnuMain],
+        Text = Core.Lang[LangId.Menu_MnuMain],
         Image = nameof(IgThemeIcon.MainMenu),
     };
 

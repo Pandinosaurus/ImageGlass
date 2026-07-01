@@ -56,7 +56,7 @@ internal sealed class PluginInfoWindow : DialogWindow
     {
         base.OnIgLanguageChanged();
 
-        Title = Core.Lang[LangId.FrmSettings_Plugins_ViewMetadata];
+        Title = Core.Lang[LangId.Settings_Plugins_ViewMetadata];
         Button1Text = Core.Lang[LangId._OK];
     }
 

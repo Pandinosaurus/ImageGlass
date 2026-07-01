@@ -49,22 +49,22 @@ public partial class SlideshowSettingsView : SettingsPageView
     {
         // Appearance
         BindToggle(PART_FullscreenSlideshow, ConfigId.EnableFullscreenSlideshow,
-            LangId.FrmSettings_EnableFullscreenSlideshow, LangId.FrmSettings_Slideshow_Appearance, true);
+            LangId.Settings_EnableFullscreenSlideshow, LangId.Settings_Slideshow_Appearance, true);
         BindToggle(PART_SlideshowCountdown, ConfigId.EnableSlideshowCountdown,
-            LangId.FrmSettings_EnableSlideshowCountdown, LangId.FrmSettings_Slideshow_Appearance, true);
+            LangId.Settings_EnableSlideshowCountdown, LangId.Settings_Slideshow_Appearance, true);
         BindColorPicker(PART_BgColor, ConfigId.SlideshowBackgroundColor, "#000000",
-            LangId.FrmSettings_SlideshowBackgroundColor, LangId.FrmSettings_Slideshow_Appearance);
+            LangId.Settings_SlideshowBackgroundColor, LangId.Settings_Slideshow_Appearance);
 
         // Playback
         BindToggle(PART_LoopSlideshow, ConfigId.EnableLoopSlideshow,
-            LangId.FrmSettings_EnableLoopSlideshow, LangId.FrmSettings_Slideshow_Playback, true);
+            LangId.Settings_EnableLoopSlideshow, LangId.Settings_Slideshow_Playback, true);
         BindToggle(PART_RandomInterval, ConfigId.EnableSlideshowRandomInterval,
-            LangId.FrmSettings_EnableSlideshowRandomInterval, LangId.FrmSettings_Slideshow_Playback);
+            LangId.Settings_EnableSlideshowRandomInterval, LangId.Settings_Slideshow_Playback);
 
         BindDoubleInput(PART_SlideshowInterval, ConfigId.SlideshowInterval,
-            LangId.FrmSettings_SlideshowInterval, LangId.FrmSettings_Slideshow_Playback, 5d);
+            LangId.Settings_SlideshowInterval, LangId.Settings_Slideshow_Playback, 5d);
         BindDoubleInput(PART_SlideshowIntervalTo, ConfigId.SlideshowIntervalTo,
-            LangId.FrmSettings_SlideshowInterval, LangId.FrmSettings_Slideshow_Playback, 5d);
+            LangId.Settings_SlideshowInterval, LangId.Settings_Slideshow_Playback, 5d);
 
         // the "to" interval + the heading range only apply when random interval is on
         PART_RandomInterval.IsCheckedChanged += (_, _) => UpdateIntervalUI();
@@ -75,7 +75,7 @@ public partial class SlideshowSettingsView : SettingsPageView
 
         // Notification
         BindUIntInput(PART_NotifySound, ConfigId.SlideshowImagesToNotifySound,
-            LangId.FrmSettings_SlideshowImagesToNotifySound, LangId.FrmSettings_Slideshow_Playback);
+            LangId.Settings_SlideshowImagesToNotifySound, LangId.Settings_Slideshow_Playback);
     }
 
 
@@ -101,7 +101,7 @@ public partial class SlideshowSettingsView : SettingsPageView
     /// </summary>
     private void UpdateIntervalHeading()
     {
-        var heading = $"{Core.Lang[LangId.FrmSettings_SlideshowInterval]} {FormatInterval(PART_SlideshowInterval.Text)}";
+        var heading = $"{Core.Lang[LangId.Settings_SlideshowInterval]} {FormatInterval(PART_SlideshowInterval.Text)}";
         if (PART_RandomInterval.IsChecked ?? false)
         {
             heading += $" - {FormatInterval(PART_SlideshowIntervalTo.Text)}";

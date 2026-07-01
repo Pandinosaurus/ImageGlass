@@ -61,29 +61,29 @@ public partial class ViewerSettingsView : SettingsPageView
     {
         // Appearance
         BindToggle(PART_NavButtons, ConfigId.EnableNavigationButtons,
-            LangId.FrmSettings_EnableNavigationButtons, LangId.FrmSettings_Appearance, true);
+            LangId.Settings_EnableNavigationButtons, LangId.Settings_Appearance, true);
         BindToggle(PART_VectorRenderer, ConfigId.EnableVectorRenderer,
-            LangId.FrmSettings_EnableVectorRenderer, LangId.FrmSettings_Appearance, true);
+            LangId.Settings_EnableVectorRenderer, LangId.Settings_Appearance, true);
         BindEnumDropdown(PART_CheckerboardMode, ConfigId.CheckerboardMode, CheckerboardType.None,
-            LangId.FrmSettings_CheckerboardMode, LangId.FrmSettings_Appearance);
+            LangId.Settings_CheckerboardMode, LangId.Settings_Appearance);
 
         // Panning
         BindToggle(PART_FreePan, ConfigId.EnableFreePan,
-            LangId.FrmSettings_EnableFreePan, LangId.FrmSettings_Panning);
+            LangId.Settings_EnableFreePan, LangId.Settings_Panning);
         BindDoubleInput(PART_PanMargin, ConfigId.PanMargin,
-            LangId.FrmSettings_PanMargin, LangId.FrmSettings_Panning);
+            LangId.Settings_PanMargin, LangId.Settings_Panning);
         BindSlider(PART_PanSpeed, ConfigId.PanSpeed,
-            LangId.FrmSettings_PanSpeed, LangId.FrmSettings_Panning, 20d, PART_PanSpeedLabel);
+            LangId.Settings_PanSpeed, LangId.Settings_Panning, 20d, PART_PanSpeedLabel);
 
         // Zooming
         BindEnumDropdown(PART_InterpolationScaleDown, ConfigId.ImageInterpolationScaleDown,
             ImageInterpolation.LinearMipmapNearest,
-            LangId.FrmSettings_ImageInterpolation_ScaleDown, LangId.FrmSettings_Zooming);
+            LangId.Settings_ImageInterpolation_ScaleDown, LangId.Settings_Zooming);
         BindEnumDropdown(PART_InterpolationScaleUp, ConfigId.ImageInterpolationScaleUp,
             ImageInterpolation.Nearest,
-            LangId.FrmSettings_ImageInterpolation_ScaleUp, LangId.FrmSettings_Zooming);
+            LangId.Settings_ImageInterpolation_ScaleUp, LangId.Settings_Zooming);
         BindSlider(PART_ZoomSpeed, ConfigId.ZoomSpeed,
-            LangId.FrmSettings_ZoomSpeed, LangId.FrmSettings_Zooming, 0d, PART_ZoomSpeedLabel);
+            LangId.Settings_ZoomSpeed, LangId.Settings_Zooming, 0d, PART_ZoomSpeedLabel);
 
         BuildZoomLevels();
     }
@@ -114,13 +114,13 @@ public partial class ViewerSettingsView : SettingsPageView
         PART_ZoomLevels.TextChanged += (_, _) => StageZoomLevels(reformat: false);
         PART_ZoomLevels.LostFocus += (_, _) => StageZoomLevels(reformat: true);
 
-        SetLocalizedText(PART_LoadDefaultZoomLevels, LangId.FrmSettings_LoadDefaultZoomLevels);
+        SetLocalizedText(PART_LoadDefaultZoomLevels, LangId.Settings_LoadDefaultZoomLevels);
         PART_LoadDefaultZoomLevels.Click += (_, _) => PART_ZoomLevels.Text = DEFAULT_ZOOM_LEVELS;
 
         UpdateZoomLevelsEnabled();
 
-        RegisterSearchKey(PART_ZoomLevels, LangId.FrmSettings_ZoomLevels,
-            ConfigId.ZoomLevels, LangId.FrmSettings_Zooming);
+        RegisterSearchKey(PART_ZoomLevels, LangId.Settings_ZoomLevels,
+            ConfigId.ZoomLevels, LangId.Settings_Zooming);
     }
 
 

@@ -45,7 +45,7 @@ public partial class ToolEditWindowView : PhControl
         base.OnIgLanguageChanged();
 
         // "Integrated with {0}" -> label text + "ImageGlass.SDK" link (+ any trailing text)
-        var template = Core.Lang[LangId.FrmSettings_Tools_IntegratedWith];
+        var template = Core.Lang[LangId.Settings_Tools_IntegratedWith];
         var idx = template.IndexOf("{0}", System.StringComparison.Ordinal);
 
         PART_IntegratedBefore.Text = idx < 0 ? template : template[..idx];
@@ -90,7 +90,7 @@ public partial class ToolEditWindowView : PhControl
             if (_takenIds.Contains(id))
             {
                 DataValidationErrors.SetError(PART_Id,
-                    new ValidationException(Core.Lang[LangId.FrmSettings_Tools_Errors_ToolIdDuplicated, id]));
+                    new ValidationException(Core.Lang[LangId.Settings_Tools_Errors_ToolIdDuplicated, id]));
                 idOk = false;
             }
         }

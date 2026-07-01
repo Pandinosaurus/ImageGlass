@@ -168,7 +168,7 @@ internal sealed class MacFolderAccessManager
         {
             picked = await sp.OpenFolderPickerAsync(new FolderPickerOpenOptions
             {
-                Title = Core.Lang[LangId.FrmMain_FolderAccessPrompt],
+                Title = Core.Lang[LangId._FolderAccessPrompt],
                 AllowMultiple = false,
                 SuggestedStartLocation = startLocation,
             });

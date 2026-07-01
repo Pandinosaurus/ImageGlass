@@ -128,7 +128,7 @@ public partial class PhActionEditorControl : PhControl
         base.OnIgLanguageChanged();
 
         ToolTip.SetTip(PART_Browse, Core.Lang[LangId._Browse]);
-        PART_Hotkeys.PlaceholderText = Core.Lang[LangId.FrmSettings_Toolbar_RecordHotkeyHint];
+        PART_Hotkeys.PlaceholderText = Core.Lang[LangId.Settings_Toolbar_RecordHotkeyHint];
     }
 
     #endregion // Override Methods

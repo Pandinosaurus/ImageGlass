@@ -21,7 +21,7 @@
 
         <!--  App name  -->
         <StackPanel Spacing="5">
-            <ui:PhTextBlock LangKey="FrmSettings_EditApps_AppName" />
+            <ui:PhTextBlock LangKey="Settings_EditApps_AppName" />
             <ui:PhTextBox
                 x:Name="PART_AppName"
                 IsRequired="True"

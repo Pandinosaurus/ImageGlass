@@ -87,8 +87,8 @@ public partial class MouseSettingsView : SettingsPageView
 
         AddLangRefresher(RebuildWheelTable);
 
-        RegisterSearchKey(PART_ResetWheel, LangId.FrmSettings_MouseWheelAction,
-            ConfigId.MouseWheelActions, LangId.FrmSettings_MouseWheelAction);
+        RegisterSearchKey(PART_ResetWheel, LangId.Settings_MouseWheelAction,
+            ConfigId.MouseWheelActions, LangId.Settings_MouseWheelAction);
     }
 
 
@@ -195,8 +195,8 @@ public partial class MouseSettingsView : SettingsPageView
 
         AddLangRefresher(RebuildClickTable);
 
-        RegisterSearchKey(PART_ResetClick, LangId.FrmSettings_MouseClickAction,
-            ConfigId.MouseClickActions, LangId.FrmSettings_MouseClickAction);
+        RegisterSearchKey(PART_ResetClick, LangId.Settings_MouseClickAction,
+            ConfigId.MouseClickActions, LangId.Settings_MouseClickAction);
     }
 
 

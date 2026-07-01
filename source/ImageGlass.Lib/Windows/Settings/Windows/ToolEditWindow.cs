@@ -68,8 +68,8 @@ internal sealed class ToolEditWindow : DialogWindow
         base.OnIgLanguageChanged();
 
         Title = Core.Lang[_isEditMode
-            ? LangId.FrmSettings_Tools_EditTool
-            : LangId.FrmSettings_Tools_AddNewTool];
+            ? LangId.Settings_Tools_EditTool
+            : LangId.Settings_Tools_AddNewTool];
         Button1Text = Core.Lang[LangId._OK];
         Button2Text = Core.Lang[LangId._Cancel];
     }

@@ -47,18 +47,18 @@ public partial class GallerySettingsView : SettingsPageView
     {
         // Appearance
         BindToggle(PART_ShowGalleryInFullscreen, ConfigId.ShowGalleryInFullscreen,
-            LangId.FrmSettings_ShowGalleryInFullscreen, LangId.FrmSettings_Appearance);
+            LangId.Settings_ShowGalleryInFullscreen, LangId.Settings_Appearance);
         BindToggle(PART_ShowGalleryFileName, ConfigId.ShowGalleryFileName,
-            LangId.FrmSettings_ShowGalleryFileName, LangId.FrmSettings_Appearance, true);
+            LangId.Settings_ShowGalleryFileName, LangId.Settings_Appearance, true);
         BindToggle(PART_ShellThumbnail, ConfigId.EnableGalleryShellThumbnail,
-            LangId.FrmSettings_EnableGalleryShellThumbnail, LangId.FrmSettings_Appearance, true);
+            LangId.Settings_EnableGalleryShellThumbnail, LangId.Settings_Appearance, true);
 
         BindUIntSlider(PART_GalleryColumns, ConfigId.GalleryColumns,
-            LangId.FrmSettings_GalleryColumns, LangId.FrmSettings_Appearance, 3u, PART_GalleryColumnsLabel);
+            LangId.Settings_GalleryColumns, LangId.Settings_Appearance, 3u, PART_GalleryColumnsLabel);
         BindUIntSlider(PART_ThumbnailSize, ConfigId.ThumbnailSize,
-            LangId.FrmSettings_ThumbnailSize, LangId.FrmSettings_Appearance, 70u, PART_ThumbnailSizeLabel);
+            LangId.Settings_ThumbnailSize, LangId.Settings_Appearance, 70u, PART_ThumbnailSizeLabel);
 
         BindUIntInput(PART_GalleryCacheSize, ConfigId.GalleryCacheSizeInMb,
-            LangId.FrmSettings_GalleryCacheSizeInMb, LangId.FrmSettings_Appearance, 100u);
+            LangId.Settings_GalleryCacheSizeInMb, LangId.Settings_Appearance, 100u);
     }
 }

@@ -14,7 +14,7 @@
     <StackPanel Orientation="Vertical">
 
         <!--  Browsing  -->
-        <ui:PhTextBlock Classes="group" LangKey="FrmSettings_Browsing" />
+        <ui:PhTextBlock Classes="group" LangKey="Settings_Browsing" />
         <StackPanel Margin="{DynamicResource SettingsGroupIndent}">
 
             <!--  Loading order + order type (side by side)  -->
@@ -23,7 +23,7 @@
                 Orientation="Horizontal"
                 Spacing="10">
                 <StackPanel Spacing="{DynamicResource SettingsLabelInputGap}">
-                    <ui:PhTextBlock LangKey="FrmSettings_ImageLoadingOrder" />
+                    <ui:PhTextBlock LangKey="Settings_ImageLoadingOrder" />
                     <ComboBox x:Name="PART_OrderBy" MinWidth="200" />
                 </StackPanel>
                 <StackPanel VerticalAlignment="Bottom">
@@ -32,54 +32,54 @@
             </StackPanel>
 
             <CheckBox x:Name="PART_ExplorerSortOrder" IsVisible="{OnPlatform False, Windows=True, x:TypeArguments=x:Boolean}">
-                <ui:PhTextBlock LangKey="FrmSettings_EnableExplorerSortOrder" TextWrapping="Wrap" />
+                <ui:PhTextBlock LangKey="Settings_EnableExplorerSortOrder" TextWrapping="Wrap" />
             </CheckBox>
             <CheckBox x:Name="PART_SubfoldersLoading">
-                <ui:PhTextBlock LangKey="FrmSettings_EnableSubfoldersLoading" TextWrapping="Wrap" />
+                <ui:PhTextBlock LangKey="Settings_EnableSubfoldersLoading" TextWrapping="Wrap" />
             </CheckBox>
             <CheckBox x:Name="PART_FolderGrouping">
-                <ui:PhTextBlock LangKey="FrmSettings_EnableImageFolderGrouping" TextWrapping="Wrap" />
+                <ui:PhTextBlock LangKey="Settings_EnableImageFolderGrouping" TextWrapping="Wrap" />
             </CheckBox>
             <CheckBox x:Name="PART_HiddenImages">
-                <ui:PhTextBlock LangKey="FrmSettings_EnableHiddenImagesLoading" TextWrapping="Wrap" />
+                <ui:PhTextBlock LangKey="Settings_EnableHiddenImagesLoading" TextWrapping="Wrap" />
             </CheckBox>
             <CheckBox x:Name="PART_LoopBack">
-                <ui:PhTextBlock LangKey="FrmSettings_EnableLoopBackNavigation" TextWrapping="Wrap" />
+                <ui:PhTextBlock LangKey="Settings_EnableLoopBackNavigation" TextWrapping="Wrap" />
             </CheckBox>
 
 
             <!--  Sub-group: Image preview  -->
-            <ui:PhTextBlock Classes="subgroup" LangKey="FrmSettings_ImagePreview" />
+            <ui:PhTextBlock Classes="subgroup" LangKey="Settings_ImagePreview" />
             <StackPanel Margin="{DynamicResource SettingsGroupIndent}">
                 <CheckBox x:Name="PART_ImagePreview">
-                    <ui:PhTextBlock LangKey="FrmSettings_EnableImagePreview" TextWrapping="Wrap" />
+                    <ui:PhTextBlock LangKey="Settings_EnableImagePreview" TextWrapping="Wrap" />
                 </CheckBox>
                 <CheckBox x:Name="PART_OnlyRawPreview">
-                    <ui:PhTextBlock LangKey="FrmSettings_EnableOnlyLoadRawPreview" TextWrapping="Wrap" />
+                    <ui:PhTextBlock LangKey="Settings_EnableOnlyLoadRawPreview" TextWrapping="Wrap" />
                 </CheckBox>
                 <CheckBox x:Name="PART_OnlyNonRawPreview">
-                    <ui:PhTextBlock LangKey="FrmSettings_EnableOnlyLoadNonRawPreview" TextWrapping="Wrap" />
+                    <ui:PhTextBlock LangKey="Settings_EnableOnlyLoadNonRawPreview" TextWrapping="Wrap" />
                 </CheckBox>
 
                 <!--  Minimum embedded-thumbnail size (visible only when a preview-only option is on)  -->
                 <StackPanel x:Name="PART_PreviewSizeSection">
                     <ui:PhTextBlock
                         Margin="0,8,0,8"
-                        LangKey="FrmSettings_MinEmbeddedThumbnailSize"
+                        LangKey="Settings_MinEmbeddedThumbnailSize"
                         TextWrapping="Wrap" />
                     <StackPanel
                         Margin="{DynamicResource SettingsGroupIndent}"
                         Orientation="Horizontal"
                         Spacing="14">
                         <StackPanel Spacing="{DynamicResource SettingsLabelInputGap}">
-                            <ui:PhTextBlock LangKey="FrmSettings_MinEmbeddedThumbnailSize_Width" />
+                            <ui:PhTextBlock LangKey="Settings_MinEmbeddedThumbnailSize_Width" />
                             <ui:PhTextBox
                                 x:Name="PART_PreviewMinWidth"
                                 Width="150"
                                 AcceptValue="UnsignedIntValueOnly" />
                         </StackPanel>
                         <StackPanel Spacing="{DynamicResource SettingsLabelInputGap}">
-                            <ui:PhTextBlock LangKey="FrmSettings_MinEmbeddedThumbnailSize_Height" />
+                            <ui:PhTextBlock LangKey="Settings_MinEmbeddedThumbnailSize_Height" />
                             <ui:PhTextBox
                                 x:Name="PART_PreviewMinHeight"
                                 Width="150"
@@ -93,26 +93,26 @@
 
 
         <!--  File watcher  -->
-        <ui:PhTextBlock Classes="group" LangKey="FrmSettings_FileWatcher" />
+        <ui:PhTextBlock Classes="group" LangKey="Settings_FileWatcher" />
         <StackPanel Margin="{DynamicResource SettingsGroupIndent}">
             <CheckBox x:Name="PART_FileWatcher">
-                <ui:PhTextBlock LangKey="FrmSettings_EnableFileWatcher" TextWrapping="Wrap" />
+                <ui:PhTextBlock LangKey="Settings_EnableFileWatcher" TextWrapping="Wrap" />
             </CheckBox>
             <CheckBox x:Name="PART_AutoOpenNewAddedImage">
-                <ui:PhTextBlock LangKey="FrmSettings_EnableAutoOpenNewAddedImage" TextWrapping="Wrap" />
+                <ui:PhTextBlock LangKey="Settings_EnableAutoOpenNewAddedImage" TextWrapping="Wrap" />
             </CheckBox>
         </StackPanel>
 
 
         <!--  Color management  -->
-        <ui:PhTextBlock Classes="group" LangKey="FrmSettings_ColorManagement" />
+        <ui:PhTextBlock Classes="group" LangKey="Settings_ColorManagement" />
         <StackPanel Margin="{DynamicResource SettingsGroupIndent}">
             <CheckBox x:Name="PART_AlwaysApplyColorProfile">
-                <ui:PhTextBlock LangKey="FrmSettings_EnableAlwaysApplyColorProfile" TextWrapping="Wrap" />
+                <ui:PhTextBlock LangKey="Settings_EnableAlwaysApplyColorProfile" TextWrapping="Wrap" />
             </CheckBox>
 
             <StackPanel Margin="0,10,0,0" Spacing="{DynamicResource SettingsLabelInputGap}">
-                <ui:PhTextBlock LangKey="FrmSettings_ColorProfile" />
+                <ui:PhTextBlock LangKey="Settings_ColorProfile" />
                 <StackPanel Orientation="Horizontal" Spacing="10">
                     <ComboBox x:Name="PART_ColorProfile" MinWidth="200" />
                     <ui:PhButton x:Name="PART_BrowseColorProfile" VerticalAlignment="Stretch" />
@@ -130,7 +130,7 @@
                     x:Name="PART_MonitorProfileNote"
                     FontSize="{x:Static types:Const.FONT_SIZE_SMALL}"
                     FontStyle="Italic"
-                    LangKey="FrmSettings_CurrentMonitorProfile_Description"
+                    LangKey="Settings_CurrentMonitorProfile_Description"
                     Opacity="0.6"
                     TextWrapping="Wrap" />
             </StackPanel>
@@ -138,10 +138,10 @@
 
 
         <!--  Caching  -->
-        <ui:PhTextBlock Classes="group" LangKey="FrmSettings_Caching" />
+        <ui:PhTextBlock Classes="group" LangKey="Settings_Caching" />
         <StackPanel Margin="{DynamicResource SettingsGroupIndent}" Spacing="10">
             <StackPanel Spacing="{DynamicResource SettingsLabelInputGap}">
-                <ui:PhTextBlock LangKey="FrmSettings_ImageBoosterCacheMaxMemoryInMb" TextWrapping="Wrap" />
+                <ui:PhTextBlock LangKey="Settings_ImageBoosterCacheMaxMemoryInMb" TextWrapping="Wrap" />
                 <ui:PhTextBox
                     x:Name="PART_CacheMaxMemory"
                     Width="200"
@@ -149,7 +149,7 @@
                     AcceptValue="UnsignedIntValueOnly" />
             </StackPanel>
             <StackPanel Spacing="{DynamicResource SettingsLabelInputGap}">
-                <ui:PhTextBlock LangKey="FrmSettings_ImageBoosterCacheMaxDimension" TextWrapping="Wrap" />
+                <ui:PhTextBlock LangKey="Settings_ImageBoosterCacheMaxDimension" TextWrapping="Wrap" />
                 <ui:PhTextBox
                     x:Name="PART_CacheMaxDimension"
                     Width="200"
@@ -157,7 +157,7 @@
                     AcceptValue="UnsignedIntValueOnly" />
             </StackPanel>
             <StackPanel Spacing="{DynamicResource SettingsLabelInputGap}">
-                <ui:PhTextBlock LangKey="FrmSettings_ImageBoosterCacheMaxFileSizeInMb" TextWrapping="Wrap" />
+                <ui:PhTextBlock LangKey="Settings_ImageBoosterCacheMaxFileSizeInMb" TextWrapping="Wrap" />
                 <ui:PhTextBox
                     x:Name="PART_CacheMaxFileSize"
                     Width="200"

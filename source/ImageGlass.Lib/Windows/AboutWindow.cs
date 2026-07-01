@@ -114,16 +114,16 @@ public partial class AboutWindow : DialogWindow
     {
         base.OnIgLanguageChanged();
 
-        Title = Core.Lang[LangId.FrmMain_MnuAbout];
+        Title = Core.Lang[LangId.Menu_MnuAbout];
         Button1Text = Core.Lang[LangId._Close];
 
-        _lblSlogan.Text = Core.Lang[LangId.FrmAbout_Slogan];
-        _lblCredits.Text = Core.Lang[LangId.FrmAbout_Credits];
-        _btnWebsite.Text = Core.Lang[LangId.FrmAbout_Homepage];
+        _lblSlogan.Text = Core.Lang[LangId._Slogan];
+        _lblCredits.Text = Core.Lang[LangId._Credits];
+        _btnWebsite.Text = Core.Lang[LangId._Homepage];
         _btnGitHub.Text = "GitHub";
-        _btnEula.Text = Core.Lang[LangId.FrmAbout_License];
-        _btnPrivacy.Text = Core.Lang[LangId.FrmAbout_Privacy];
-        _btnDonate.Text = "❤️ " + Core.Lang[LangId.FrmAbout_Donate];
+        _btnEula.Text = Core.Lang[LangId._License];
+        _btnPrivacy.Text = Core.Lang[LangId._Privacy];
+        _btnDonate.Text = "❤️ " + Core.Lang[LangId._Donate];
         _btnCheckForUpdate.Text = Core.Lang[LangId._CheckForUpdate];
 
         UpdateVersionText();
@@ -141,7 +141,7 @@ public partial class AboutWindow : DialogWindow
         var dotnetVersion = RuntimeInformation.FrameworkDescription;
 
         _lblVersion.Text = $"""
-            {Core.Lang[LangId.FrmAbout_Version]} {Core.BuildInfo.AppVersion}
+            {Core.Lang[LangId._AboutVersion]} {Core.BuildInfo.AppVersion}
             {magickVersion}
             {dotnetVersion}
             """;

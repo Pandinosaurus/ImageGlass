@@ -74,8 +74,8 @@ internal sealed class EditAppWindow : DialogWindow
         base.OnIgLanguageChanged();
 
         Title = Core.Lang[_isEditMode
-            ? LangId.FrmSettings_EditAppDialog_EditApp
-            : LangId.FrmSettings_EditAppDialog_AddApp];
+            ? LangId.Settings_EditAppDialog_EditApp
+            : LangId.Settings_EditAppDialog_AddApp];
         Button1Text = Core.Lang[LangId._OK];
         Button2Text = Core.Lang[LangId._Cancel];
     }

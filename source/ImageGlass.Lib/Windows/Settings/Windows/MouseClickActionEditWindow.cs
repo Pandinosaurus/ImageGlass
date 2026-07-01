@@ -70,7 +70,7 @@ internal sealed class MouseClickActionEditWindow : DialogWindow
     {
         base.OnIgLanguageChanged();
 
-        Title = $"{_eventLabel} – {Core.Lang[LangId.FrmSettings_MouseClickAction]}";
+        Title = $"{_eventLabel} – {Core.Lang[LangId.Settings_MouseClickAction]}";
         Button1Text = Core.Lang[LangId._OK];
         Button2Text = Core.Lang[LangId._Cancel];
     }

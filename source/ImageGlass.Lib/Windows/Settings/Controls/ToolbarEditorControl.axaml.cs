@@ -172,7 +172,7 @@ public partial class ToolbarEditorControl : PhControl
     {
         base.OnIgLanguageChanged();
 
-        PART_AddCustomBtn.Text = Core.Lang[LangId.FrmSettings_Toolbar_AddCustomButton];
+        PART_AddCustomBtn.Text = Core.Lang[LangId.Settings_Toolbar_AddCustomButton];
         PART_ResetBtn.Text = Core.Lang[LangId._ResetToDefault];
 
         // tooltips and the available-list sort order are language-dependent

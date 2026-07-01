@@ -20,7 +20,7 @@
 
             <!--  Display language  -->
             <StackPanel Spacing="{DynamicResource SettingsLabelInputGap}">
-                <ui:PhTextBlock LangKey="FrmSettings_DisplayLanguage" />
+                <ui:PhTextBlock LangKey="Settings_DisplayLanguage" />
 
                 <StackPanel
                     HorizontalAlignment="Left"
@@ -49,7 +49,7 @@
                                     <Grid ColumnDefinitions="Auto,*" IsVisible="{CompiledBinding Metadata.Author, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}">
                                         <ui:PhTextBlock
                                             FontSize="{x:Static types:Const.FONT_SIZE_SMALL}"
-                                            LangKey="FrmSettings_Contributors"
+                                            LangKey="Settings_Contributors"
                                             Opacity="0.6" />
                                         <TextBlock
                                             Grid.Column="1"

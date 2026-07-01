@@ -50,9 +50,9 @@ public partial class ToolbarSettingsView : SettingsPageView
     {
         // Appearance
         BindToggle(PART_ShowToolbarInFullscreen, ConfigId.ShowToolbarInFullscreen,
-            LangId.FrmSettings_Toolbar_ShowToolbarInFullscreen, LangId.FrmSettings_Appearance);
+            LangId.Settings_Toolbar_ShowToolbarInFullscreen, LangId.Settings_Appearance);
         BindUIntSlider(PART_ToolbarIconHeight, ConfigId.ToolbarIconHeight,
-            LangId.FrmSettings_Toolbar_ToolbarIconHeight, LangId.FrmSettings_Appearance,
+            LangId.Settings_Toolbar_ToolbarIconHeight, LangId.Settings_Appearance,
             (uint)Const.TOOLBAR_ICON_HEIGHT, PART_IconHeightLabel);
 
         // Toolbar buttons
@@ -73,8 +73,8 @@ public partial class ToolbarSettingsView : SettingsPageView
         PART_Editor.ButtonsChanged += (_, _) =>
             VM.SetValue(ConfigId.ToolbarButtons, PART_Editor.CurrentButtons);
 
-        RegisterSearchKey(PART_Editor, LangId.FrmSettings_Toolbar_ToolbarButtons,
-            ConfigId.ToolbarButtons, LangId.FrmSettings_Toolbar_ToolbarButtons);
+        RegisterSearchKey(PART_Editor, LangId.Settings_Toolbar_ToolbarButtons,
+            ConfigId.ToolbarButtons, LangId.Settings_Toolbar_ToolbarButtons);
     }
 
 }

@@ -63,26 +63,26 @@ public partial class EditSettingsView : SettingsPageView
     {
         // Saving
         BindToggle(PART_DeleteConfirmation, ConfigId.EnableDeleteConfirmation,
-            LangId.FrmSettings_EnableDeleteConfirmation, LangId.FrmSettings_Edit_Saving, true);
+            LangId.Settings_EnableDeleteConfirmation, LangId.Settings_Edit_Saving, true);
         BindToggle(PART_SaveConfirmation, ConfigId.EnableSaveConfirmation,
-            LangId.FrmSettings_EnableSaveConfirmation, LangId.FrmSettings_Edit_Saving, true);
+            LangId.Settings_EnableSaveConfirmation, LangId.Settings_Edit_Saving, true);
         BindToggle(PART_PreserveModifiedDate, ConfigId.EnablePreserveModifiedDate,
-            LangId.FrmSettings_EnablePreserveModifiedDate, LangId.FrmSettings_Edit_Saving);
+            LangId.Settings_EnablePreserveModifiedDate, LangId.Settings_Edit_Saving);
         BindToggle(PART_OpenSaveAsInCurrentFolder, ConfigId.EnableOpenSaveAsInCurrentFolder,
-            LangId.FrmSettings_EnableOpenSaveAsInCurrentFolder, LangId.FrmSettings_Edit_Saving, true);
+            LangId.Settings_EnableOpenSaveAsInCurrentFolder, LangId.Settings_Edit_Saving, true);
 
         BindUIntSlider(PART_ImageEditQuality, ConfigId.ImageEditQuality,
-            LangId.FrmSettings_ImageEditQuality, LangId.FrmSettings_Edit_Saving, 80u, PART_ImageEditQualityLabel);
+            LangId.Settings_ImageEditQuality, LangId.Settings_Edit_Saving, 80u, PART_ImageEditQualityLabel);
 
         // Clipboard
         BindToggle(PART_CopyMultipleFiles, ConfigId.EnableCopyMultipleFiles,
-            LangId.FrmSettings_EnableCopyMultipleFiles, LangId.FrmSettings_Clipboard, true);
+            LangId.Settings_EnableCopyMultipleFiles, LangId.Settings_Clipboard, true);
         BindToggle(PART_CutMultipleFiles, ConfigId.EnableCutMultipleFiles,
-            LangId.FrmSettings_EnableCutMultipleFiles, LangId.FrmSettings_Clipboard, true);
+            LangId.Settings_EnableCutMultipleFiles, LangId.Settings_Clipboard, true);
 
         // Image editing apps
         BindEnumDropdown(PART_AfterEditingAction, ConfigId.AfterEditingAction, AfterEditAppAction.Nothing,
-            LangId.FrmSettings_AfterEditingAction, LangId.FrmSettings_EditApps);
+            LangId.Settings_AfterEditingAction, LangId.Settings_EditApps);
 
         BuildEditApps();
     }
@@ -106,7 +106,7 @@ public partial class EditSettingsView : SettingsPageView
         // rebuild on language change (also performs the initial render)
         AddLangRefresher(RebuildAppsTable);
 
-        RegisterSearchKey(PART_AddApp, LangId.FrmSettings_EditApps, ConfigId.EditApps, LangId.FrmSettings_EditApps);
+        RegisterSearchKey(PART_AddApp, LangId.Settings_EditApps, ConfigId.EditApps, LangId.Settings_EditApps);
     }
 
 
@@ -162,7 +162,7 @@ public partial class EditSettingsView : SettingsPageView
         PhTableColumn[] columns =
         [
             new() { Header = Core.Lang[LangId._FileExtension] },
-            new() { Header = Core.Lang[LangId.FrmSettings_EditApps_AppName] },
+            new() { Header = Core.Lang[LangId.Settings_EditApps_AppName] },
             new() { Header = Core.Lang[LangId._Executable], Star = true },
             new() { Header = Core.Lang[LangId._Argument] },
         ];

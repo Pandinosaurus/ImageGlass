@@ -49,7 +49,7 @@ public sealed class LosslessCompressionTool : ITool
         {
             _ = await ModalWindow.ShowInfoAsync(context.Window, new ModalWindowOptions
             {
-                Title = Core.Lang[LangId.FrmMain_MnuLosslessCompression],
+                Title = Core.Lang[LangId.Menu_MnuLosslessCompression],
                 Heading = Core.Lang[LangId._NotSupported],
                 Description = filePath,
                 Thumbnail = Core.Photos.Current?.GalleryThumbnail,

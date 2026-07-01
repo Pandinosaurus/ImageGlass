@@ -21,34 +21,34 @@
 
 
         <!--  Startup  -->
-        <ui:PhTextBlock Classes="group" LangKey="FrmSettings_Startup" />
+        <ui:PhTextBlock Classes="group" LangKey="Settings_Startup" />
         <StackPanel Margin="{DynamicResource SettingsGroupIndent}">
             <CheckBox x:Name="PART_WelcomeImage">
-                <ui:PhTextBlock LangKey="FrmSettings_EnableWelcomeImage" TextWrapping="Wrap" />
+                <ui:PhTextBlock LangKey="Settings_EnableWelcomeImage" TextWrapping="Wrap" />
             </CheckBox>
             <CheckBox x:Name="PART_LastSeenImage">
-                <ui:PhTextBlock LangKey="FrmSettings_EnableLastSeenImage" TextWrapping="Wrap" />
+                <ui:PhTextBlock LangKey="Settings_EnableLastSeenImage" TextWrapping="Wrap" />
             </CheckBox>
             <CheckBox x:Name="PART_MultiInstances">
-                <ui:PhTextBlock LangKey="FrmSettings_EnableMultiInstances" TextWrapping="Wrap" />
+                <ui:PhTextBlock LangKey="Settings_EnableMultiInstances" TextWrapping="Wrap" />
             </CheckBox>
         </StackPanel>
 
 
         <!--  App update  -->
-        <ui:PhTextBlock Classes="group" LangKey="FrmSettings_AppUpdate" />
+        <ui:PhTextBlock Classes="group" LangKey="Settings_AppUpdate" />
         <StackPanel Margin="{DynamicResource SettingsGroupIndent}">
             <CheckBox x:Name="PART_AutoUpdate">
-                <ui:PhTextBlock LangKey="FrmSettings_AutoUpdate" TextWrapping="Wrap" />
+                <ui:PhTextBlock LangKey="Settings_AutoUpdate" TextWrapping="Wrap" />
             </CheckBox>
         </StackPanel>
 
 
         <!--  Others  -->
-        <ui:PhTextBlock Classes="group" LangKey="FrmSettings_Others" />
+        <ui:PhTextBlock Classes="group" LangKey="Settings_Others" />
         <StackPanel Margin="{DynamicResource SettingsGroupIndent}">
             <StackPanel Spacing="{DynamicResource SettingsLabelInputGap}">
-                <ui:PhTextBlock LangKey="FrmSettings_InAppMessageDuration" TextWrapping="Wrap" />
+                <ui:PhTextBlock LangKey="Settings_InAppMessageDuration" TextWrapping="Wrap" />
                 <ui:PhTextBox
                     x:Name="PART_MsgDuration"
                     Width="200"

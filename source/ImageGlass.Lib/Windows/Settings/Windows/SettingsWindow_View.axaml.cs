@@ -348,7 +348,7 @@ public partial class SettingsWindowView : PhControl
     /// <summary>
     /// Builds the search box placeholder, appending the focus hotkey (e.g. "Search settings… (Ctrl+K)").
     /// </summary>
-    private static string GetSearchPlaceholder() => $"{Core.Lang[LangId.FrmSettings_SearchPlaceholder]} ({_searchHotkey.KeyString})";
+    private static string GetSearchPlaceholder() => $"{Core.Lang[LangId.Settings_SearchPlaceholder]} ({_searchHotkey.KeyString})";
 
 
     /// <summary>

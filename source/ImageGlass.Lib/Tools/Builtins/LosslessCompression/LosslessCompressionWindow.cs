@@ -65,9 +65,9 @@ public partial class LosslessCompressionWindow : ModalWindow
     {
         base.OnIgLanguageChanged();
 
-        Title = Core.Lang[LangId.FrmMain_MnuLosslessCompression];
-        Heading = Core.Lang[LangId.FrmMain_MnuLosslessCompression_Confirm];
-        Description = Core.Lang[LangId.FrmMain_MnuLosslessCompression_Description];
+        Title = Core.Lang[LangId.Menu_MnuLosslessCompression];
+        Heading = Core.Lang[LangId.Menu_MnuLosslessCompression_Confirm];
+        Description = Core.Lang[LangId.Menu_MnuLosslessCompression_Description];
         Button1Text = Core.Lang[LangId._Yes];
         Button2Text = Core.Lang[LangId._No];
     }
@@ -120,8 +120,8 @@ public partial class LosslessCompressionWindow : ModalWindow
         IsProgressIndeterminate = true;
         ProgressValue = 0;
 
-        Heading = Core.Lang[LangId.FrmMain_MnuLosslessCompression_Compressing];
-        Description = Core.Lang[LangId.FrmMain_MnuLosslessCompression_Description];
+        Heading = Core.Lang[LangId.Menu_MnuLosslessCompression_Compressing];
+        Description = Core.Lang[LangId.Menu_MnuLosslessCompression_Description];
         Note = $"""
             {fi.FullName}
 
@@ -141,7 +141,7 @@ public partial class LosslessCompressionWindow : ModalWindow
                 var percent = Math.Round((1 - (newFi.Length * 1f / oldFileLength)) * 100f, 2);
 
                 Button2Text = Core.Lang[LangId._Close];
-                Heading = Core.Lang[LangId.FrmMain_MnuLosslessCompression_Done];
+                Heading = Core.Lang[LangId.Menu_MnuLosslessCompression_Done];
                 Note = $"""
                     {newFi.FullName}
 

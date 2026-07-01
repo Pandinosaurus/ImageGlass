@@ -69,7 +69,7 @@
 
         <!--  Supported extensions  -->
         <StackPanel x:Name="PART_ExtensionsRow" Spacing="5">
-            <ui:PhTextBlock LangKey="FrmSettings_Plugins_SupportedExtensions" />
+            <ui:PhTextBlock LangKey="Settings_Plugins_SupportedExtensions" />
             <Border Classes="valueBox">
                 <SelectableTextBlock x:Name="PART_Extensions" TextWrapping="Wrap" />
             </Border>
@@ -97,7 +97,7 @@
 
         <!--  Folder (1 line, truncated + tooltip) + open-folder link  -->
         <StackPanel x:Name="PART_FolderRow" Spacing="5">
-            <ui:PhTextBlock LangKey="FrmSettings_Plugins_FolderPath" />
+            <ui:PhTextBlock LangKey="Settings_Plugins_FolderPath" />
             <Border Classes="valueBox">
                 <SelectableTextBlock x:Name="PART_Folder" TextTrimming="CharacterEllipsis" />
             </Border>

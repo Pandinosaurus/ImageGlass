@@ -40,7 +40,7 @@
 
             <!--  Window backdrop (Windows 11 only)  -->
             <StackPanel x:Name="PART_BackdropSection" Spacing="{DynamicResource SettingsLabelInputGap}">
-                <ui:PhTextBlock LangKey="FrmSettings_WindowBackdrop" />
+                <ui:PhTextBlock LangKey="Settings_WindowBackdrop" />
                 <ComboBox
                     x:Name="PART_WindowBackdrop"
                     MinWidth="200"
@@ -49,7 +49,7 @@
 
             <!--  Viewer background color  -->
             <StackPanel Margin="0,14,0,0" Spacing="{DynamicResource SettingsLabelInputGap}">
-                <ui:PhTextBlock LangKey="FrmSettings_BackgroundColor" />
+                <ui:PhTextBlock LangKey="Settings_BackgroundColor" />
                 <ui:PhColorPickerControl x:Name="PART_BgColor" HorizontalAlignment="Left" />
             </StackPanel>
 
@@ -57,7 +57,7 @@
 
 
         <!--  Theme  -->
-        <ui:PhTextBlock Classes="group" LangKey="FrmSettings_Theme" />
+        <ui:PhTextBlock Classes="group" LangKey="Settings_Theme" />
         <StackPanel x:Name="PART_ThemeGroup" Margin="{DynamicResource SettingsGroupIndent}">
 
             <!--  Theme actions  -->
@@ -99,7 +99,7 @@
                                 Opacity="0.8" />
                             <ui:PhTextBlock
                                 FontSize="{x:Static types:Const.FONT_SIZE_SMALL}"
-                                LangKey="FrmSettings_DarkTheme"
+                                LangKey="Settings_DarkTheme"
                                 Opacity="0.8" />
                         </StackPanel>
                         <SelectableTextBlock
@@ -128,7 +128,7 @@
                                 Opacity="0.8" />
                             <ui:PhTextBlock
                                 FontSize="{x:Static types:Const.FONT_SIZE_SMALL}"
-                                LangKey="FrmSettings_LightTheme"
+                                LangKey="Settings_LightTheme"
                                 Opacity="0.8" />
                         </StackPanel>
                         <SelectableTextBlock

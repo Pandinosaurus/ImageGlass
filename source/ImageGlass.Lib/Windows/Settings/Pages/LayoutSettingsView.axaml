@@ -83,17 +83,17 @@
     <StackPanel Orientation="Vertical">
 
         <!--  Controls  -->
-        <ui:PhTextBlock Classes="group" LangKey="FrmSettings_Controls" />
+        <ui:PhTextBlock Classes="group" LangKey="Settings_Controls" />
         <StackPanel Margin="{DynamicResource SettingsGroupIndent}">
 
             <!--  Position dropdowns  -->
             <StackPanel Orientation="Horizontal" Spacing="14">
                 <StackPanel Spacing="{DynamicResource SettingsLabelInputGap}">
-                    <ui:PhTextBlock LangKey="FrmSettings_Layout_ToolbarPosition" />
+                    <ui:PhTextBlock LangKey="Settings_Layout_ToolbarPosition" />
                     <ComboBox x:Name="PART_ToolbarPosition" MinWidth="200" />
                 </StackPanel>
                 <StackPanel Spacing="{DynamicResource SettingsLabelInputGap}">
-                    <ui:PhTextBlock LangKey="FrmSettings_Layout_GalleryPosition" />
+                    <ui:PhTextBlock LangKey="Settings_Layout_GalleryPosition" />
                     <ComboBox x:Name="PART_GalleryPosition" MinWidth="200" />
                 </StackPanel>
             </StackPanel>
@@ -103,7 +103,7 @@
                 MaxWidth="{StaticResource TextContentMaxWidth}"
                 Margin="0,14,0,8"
                 HorizontalAlignment="Left"
-                LangKey="FrmSettings_Layout_ArrangeHint"
+                LangKey="Settings_Layout_ArrangeHint"
                 Opacity="0.7"
                 TextWrapping="Wrap" />
 
@@ -150,7 +150,7 @@
                             <ui:PhTextBlock
                                 HorizontalAlignment="Center"
                                 VerticalAlignment="Center"
-                                LangKey="FrmSettings_Layout_Viewer"
+                                LangKey="Settings_Layout_Viewer"
                                 Opacity="0.5" />
                         </Border>
                         <Grid Grid.Column="2">
@@ -191,18 +191,18 @@
 
 
         <!--  Window  -->
-        <ui:PhTextBlock Classes="group" LangKey="FrmSettings_Window" />
+        <ui:PhTextBlock Classes="group" LangKey="Settings_Window" />
         <StackPanel Margin="{DynamicResource SettingsGroupIndent}">
             <CheckBox x:Name="PART_ShowAppIcon">
-                <ui:PhTextBlock LangKey="FrmSettings_ShowAppIcon" TextWrapping="Wrap" />
+                <ui:PhTextBlock LangKey="Settings_ShowAppIcon" TextWrapping="Wrap" />
             </CheckBox>
             <CheckBox x:Name="PART_EnableCenterWindowFit">
-                <ui:PhTextBlock LangKey="FrmSettings_EnableCenterWindowFit" TextWrapping="Wrap" />
+                <ui:PhTextBlock LangKey="Settings_EnableCenterWindowFit" TextWrapping="Wrap" />
             </CheckBox>
 
             <!--  Image information tags  -->
             <StackPanel Margin="0,10,0,0" Spacing="{DynamicResource SettingsLabelInputGap}">
-                <ui:PhTextBlock FontWeight="SemiBold" LangKey="FrmSettings_ImageInfoTags" />
+                <ui:PhTextBlock FontWeight="SemiBold" LangKey="Settings_ImageInfoTags" />
                 <ui:PhTextBox
                     x:Name="PART_ImageInfoTags"
                     Width="{StaticResource LayoutSectionWidth}"
@@ -216,7 +216,7 @@
                     HorizontalAlignment="Left"
                     Variant="Link" />
 
-                <ui:PhTextBlock Margin="0,8,0,0" LangKey="FrmSettings_AvailableImageInfoTags" />
+                <ui:PhTextBlock Margin="0,8,0,0" LangKey="Settings_AvailableImageInfoTags" />
                 <SelectableTextBlock
                     x:Name="PART_AvailableTags"
                     MaxWidth="{StaticResource LayoutSectionWidth}"

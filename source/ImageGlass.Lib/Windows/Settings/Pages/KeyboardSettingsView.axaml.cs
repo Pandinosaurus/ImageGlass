@@ -54,8 +54,8 @@ public partial class KeyboardSettingsView : SettingsPageView
         PART_Editor.HotkeysChanged += (_, _) =>
             VM.SetValue(ConfigId.MenuHotkeys, PART_Editor.CurrentHotkeys);
 
-        RegisterSearchKey(PART_Editor, LangId.FrmSettings_Keyboard_MenuHotkeys,
-            ConfigId.MenuHotkeys, LangId.FrmSettings_Keyboard_MenuHotkeys);
+        RegisterSearchKey(PART_Editor, LangId.Settings_Keyboard_MenuHotkeys,
+            ConfigId.MenuHotkeys, LangId.Settings_Keyboard_MenuHotkeys);
     }
 
 }

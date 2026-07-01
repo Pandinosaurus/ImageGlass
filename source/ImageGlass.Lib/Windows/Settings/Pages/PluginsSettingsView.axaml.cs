@@ -73,10 +73,10 @@ public partial class PluginsSettingsView : SettingsPageView
         SetLocalizedText(PART_AddPlugin, LangId._Add);
         PART_AddPlugin.Click += async (_, _) => await AddPluginsAsync();
 
-        SetLocalizedText(PART_OpenFolder, LangId.FrmSettings_Plugins_OpenPluginFolder);
+        SetLocalizedText(PART_OpenFolder, LangId.Settings_Plugins_OpenPluginFolder);
         PART_OpenFolder.Click += (_, _) => BHelper.OpenFolderPath(BHelper.ConfigDir(Dir.Plugins));
 
-        SetLocalizedText(PART_GetMorePlugins, LangId.FrmSettings_Plugins_GetMorePlugins);
+        SetLocalizedText(PART_GetMorePlugins, LangId.Settings_Plugins_GetMorePlugins);
         PART_GetMorePlugins.Click += (_, _) =>
             _ = BHelper.OpenUrlAsync(this, "https://imageglass.org/plugins", "from_plugin_settings");
 
@@ -85,7 +85,7 @@ public partial class PluginsSettingsView : SettingsPageView
         // rebuild on language change (also performs the initial render)
         AddLangRefresher(RebuildTable);
 
-        RegisterSearchKey(PART_AddPlugin, LangId.FrmSettings_Nav_Plugins, null, LangId.FrmSettings_Nav_Plugins);
+        RegisterSearchKey(PART_AddPlugin, LangId.Settings_Nav_Plugins, null, LangId.Settings_Nav_Plugins);
     }
 
 
@@ -113,7 +113,7 @@ public partial class PluginsSettingsView : SettingsPageView
             AllowMultiple = true,
             FileTypeFilter =
             [
-                new FilePickerFileType(Core.Lang[LangId.FrmSettings_Nav_Plugins])
+                new FilePickerFileType(Core.Lang[LangId.Settings_Nav_Plugins])
                 {
                     Patterns = [PLUGIN_PACKAGE_PATTERN],
                 },
@@ -150,8 +150,8 @@ public partial class PluginsSettingsView : SettingsPageView
         // installed plugins are only loaded at startup -> hint the user to restart
         if (installed > 0)
         {
-            PART_InstallHint.Text = Core.Lang[LangId.FrmSettings_Plugins_InstallSuccess]
-                + ". " + Core.Lang[LangId.FrmSettings_Plugins_RestartRequired];
+            PART_InstallHint.Text = Core.Lang[LangId.Settings_Plugins_InstallSuccess]
+                + ". " + Core.Lang[LangId.Settings_Plugins_RestartRequired];
             PART_InstallHint.IsVisible = true;
         }
     }

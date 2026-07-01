@@ -114,7 +114,7 @@ public partial class ToolbarButtonEditWindowView : PhControl
             if (_takenIds.Contains(id))
             {
                 DataValidationErrors.SetError(PART_Id,
-                    new ValidationException(Core.Lang[LangId.FrmSettings_Toolbar_Errors_ButtonIdDuplicated, id]));
+                    new ValidationException(Core.Lang[LangId.Settings_Toolbar_Errors_ButtonIdDuplicated, id]));
                 idOk = false;
             }
         }
@@ -184,7 +184,7 @@ public partial class ToolbarButtonEditWindowView : PhControl
     /// </summary>
     private void PopulateImageOptions()
     {
-        _imageOptions = [new IconOption(null, Core.Lang[LangId.FrmSettings_Toolbar_CustomIcon])];
+        _imageOptions = [new IconOption(null, Core.Lang[LangId.Settings_Toolbar_CustomIcon])];
         foreach (var icon in Enum.GetValues<IgThemeIcon>())
         {
             if (icon == IgThemeIcon.AppLogo) continue;

@@ -22,7 +22,7 @@
             <ui:PhTextBlock
                 x:Name="PART_ReadonlyNote"
                 IsVisible="False"
-                LangKey="FrmSettings_Toolbar_BuiltInReadonly"
+                LangKey="Settings_Toolbar_BuiltInReadonly"
                 Opacity="0.8"
                 TextWrapping="Wrap" />
 
@@ -42,7 +42,7 @@
                             PlaceholderText="Btn_MyAction" />
                     </StackPanel>
                     <StackPanel Spacing="5">
-                        <ui:PhTextBlock LangKey="FrmSettings_Toolbar_ButtonText" />
+                        <ui:PhTextBlock LangKey="Settings_Toolbar_ButtonText" />
                         <ui:PhTextBox x:Name="PART_Text" Width="200" />
                     </StackPanel>
                 </StackPanel>
@@ -80,16 +80,16 @@
                 <!--  Toggles (kept tight, not on the 14px field rhythm)  -->
                 <StackPanel>
                     <CheckBox x:Name="PART_ShowText">
-                        <ui:PhTextBlock LangKey="FrmSettings_Toolbar_ShowButtonText" TextWrapping="Wrap" />
+                        <ui:PhTextBlock LangKey="Settings_Toolbar_ShowButtonText" TextWrapping="Wrap" />
                     </CheckBox>
                     <CheckBox x:Name="PART_AlignRight">
-                        <ui:PhTextBlock LangKey="FrmSettings_Toolbar_AlignRight" TextWrapping="Wrap" />
+                        <ui:PhTextBlock LangKey="Settings_Toolbar_AlignRight" TextWrapping="Wrap" />
                     </CheckBox>
 
                     <!--  Toggle binding: the checkbox reveals the config name + value inputs  -->
                     <StackPanel Spacing="5">
                         <CheckBox x:Name="PART_EnableConfigBinding">
-                            <ui:PhTextBlock LangKey="FrmSettings_Toolbar_ConfigBinding" TextWrapping="Wrap" />
+                            <ui:PhTextBlock LangKey="Settings_Toolbar_ConfigBinding" TextWrapping="Wrap" />
                         </CheckBox>
                         <StackPanel
                             x:Name="PART_ConfigBindingInputs"
@@ -98,11 +98,11 @@
                             Orientation="Horizontal"
                             Spacing="14">
                             <StackPanel Spacing="5">
-                                <ui:PhTextBlock LangKey="FrmSettings_Toolbar_ConfigBindingName" />
+                                <ui:PhTextBlock LangKey="Settings_Toolbar_ConfigBindingName" />
                                 <ui:PhTextBox x:Name="PART_ConfigBinding" Width="200" />
                             </StackPanel>
                             <StackPanel Spacing="5">
-                                <ui:PhTextBlock LangKey="FrmSettings_Toolbar_ConfigBindingValue" />
+                                <ui:PhTextBlock LangKey="Settings_Toolbar_ConfigBindingValue" />
                                 <ui:PhTextBox x:Name="PART_ConfigBindingValue" Width="200" />
                             </StackPanel>
                         </StackPanel>

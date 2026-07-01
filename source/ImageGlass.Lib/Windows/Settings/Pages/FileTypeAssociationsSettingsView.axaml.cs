@@ -142,19 +142,19 @@ public partial class FileTypeAssociationsSettingsView : SettingsPageView
     /// </summary>
     private void BuildExtensionIcons()
     {
-        SetLocalizedText(PART_OpenExtIconFolder, LangId.FrmSettings_OpenExtensionIconFolder);
+        SetLocalizedText(PART_OpenExtIconFolder, LangId.Settings_OpenExtensionIconFolder);
         PART_OpenExtIconFolder.Click += (_, _) =>
             BHelper.OpenFolderPath(BHelper.ConfigDir(Dir.ExtIcons));
 
         // the description references the open-folder button name via its {0} placeholder
-        AddLangRefresher(() => PART_ExtIconsDesc.LangParams = Core.Lang[LangId.FrmSettings_OpenExtensionIconFolder]);
+        AddLangRefresher(() => PART_ExtIconsDesc.LangParams = Core.Lang[LangId.Settings_OpenExtensionIconFolder]);
 
-        SetLocalizedText(PART_GetExtIconPacks, LangId.FrmSettings_GetExtensionIconPacks);
+        SetLocalizedText(PART_GetExtIconPacks, LangId.Settings_GetExtensionIconPacks);
         PART_GetExtIconPacks.Click += async (_, _) =>
             await BHelper.OpenUrlAsync(this, EXT_ICON_PACKS_URL, "from_ext_icons");
 
-        RegisterSearchKey(PART_OpenExtIconFolder, LangId.FrmSettings_FileExtensionIcons, null,
-            LangId.FrmSettings_FileExtensionIcons);
+        RegisterSearchKey(PART_OpenExtIconFolder, LangId.Settings_FileExtensionIcons, null,
+            LangId.Settings_FileExtensionIcons);
     }
 
     #endregion // File extension icons
@@ -168,17 +168,17 @@ public partial class FileTypeAssociationsSettingsView : SettingsPageView
     /// </summary>
     private void BuildDefaultPhotoViewer()
     {
-        SetLocalizedText(PART_MakeDefault, LangId.FrmSettings_MakeDefault);
-        AddLangRefresher(() => ToolTip.SetTip(PART_MakeDefault, Core.Lang[LangId.FrmSettings_UnmanagedSettingReminder]));
+        SetLocalizedText(PART_MakeDefault, LangId.Settings_MakeDefault);
+        AddLangRefresher(() => ToolTip.SetTip(PART_MakeDefault, Core.Lang[LangId.Settings_UnmanagedSettingReminder]));
         PART_MakeDefault.Click += async (_, _) => await AppAPIProvider.IG_SetDefaultPhotoViewerAsync();
 
-        SetLocalizedText(PART_RemoveDefault, LangId.FrmSettings_RemoveDefault);
+        SetLocalizedText(PART_RemoveDefault, LangId.Settings_RemoveDefault);
         PART_RemoveDefault.Click += async (_, _) => await AppAPIProvider.IG_RemoveDefaultPhotoViewerAsync();
 
-        SetLocalizedText(PART_OpenDefaultApps, LangId.FrmSettings_OpenDefaultAppsSetting);
+        SetLocalizedText(PART_OpenDefaultApps, LangId.Settings_OpenDefaultAppsSetting);
         PART_OpenDefaultApps.Click += async (_, _) => await BHelper.OpenUrlAsync(this, DEFAULT_APPS_URI, "from_default_apps");
 
-        RegisterSearchKey(PART_MakeDefault, LangId.FrmSettings_DefaultPhotoViewer, null, LangId.FrmSettings_DefaultPhotoViewer);
+        RegisterSearchKey(PART_MakeDefault, LangId.Settings_DefaultPhotoViewer, null, LangId.Settings_DefaultPhotoViewer);
     }
 
     #endregion // Default photo viewer
@@ -226,8 +226,8 @@ public partial class FileTypeAssociationsSettingsView : SettingsPageView
         // rebuild on language change (also performs the initial render)
         AddLangRefresher(RebuildTable);
 
-        RegisterSearchKey(PART_AddFormat, LangId.FrmSettings_FileFormats, ConfigId.FileFormats,
-            LangId.FrmSettings_FileFormats);
+        RegisterSearchKey(PART_AddFormat, LangId.Settings_FileFormats, ConfigId.FileFormats,
+            LangId.Settings_FileFormats);
     }
 
 
@@ -246,7 +246,7 @@ public partial class FileTypeAssociationsSettingsView : SettingsPageView
         var win = TopLevel.GetTopLevel(this) as PhWindow;
         var result = await ModalWindow.ShowInputAsync(win, new ModalWindowOptions
         {
-            Title = Core.Lang[LangId.FrmSettings_AddNewFileExtension],
+            Title = Core.Lang[LangId.Settings_AddNewFileExtension],
             Description = Core.Lang[LangId._FileExtension],
             InputPlaceholder = ".jpg",
             AcceptValue = TextBoxAcceptValue.FileExtensionValueOnly,

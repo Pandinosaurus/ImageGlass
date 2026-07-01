@@ -189,9 +189,9 @@ public partial class App : Application
     }
 
 
-    private void AppMenuAbout_Click(object? sender, EventArgs e) => RunAppMenuAction(LangId.FrmMain_MnuAbout);
+    private void AppMenuAbout_Click(object? sender, EventArgs e) => RunAppMenuAction(LangId.Menu_MnuAbout);
 
-    private void AppMenuSettings_Click(object? sender, EventArgs e) => RunAppMenuAction(LangId.FrmMain_MnuSettings);
+    private void AppMenuSettings_Click(object? sender, EventArgs e) => RunAppMenuAction(LangId.Menu_MnuSettings);
 
 
     /// <summary>
@@ -219,7 +219,7 @@ public partial class App : Application
             var text = Core.Lang[langId];
             if (!string.IsNullOrWhiteSpace(text)) item.Header = text;
 
-            if (langId == LangId.FrmMain_MnuSettings)
+            if (langId == LangId.Menu_MnuSettings)
             {
                 item.Gesture = new KeyGesture(Key.OemComma, KeyModifiers.Meta);
             }

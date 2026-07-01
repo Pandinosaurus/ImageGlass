@@ -43,7 +43,7 @@ public partial class UpdateWindow : ModalWindow
     {
         ShowInTaskbar = true;
         Title = Core.Lang[LangId._CheckForUpdate];
-        Description = Core.Lang[LangId.FrmMain_MnuCheckForUpdate_CurrentVersion, Core.BuildInfo.AppVersion];
+        Description = Core.Lang[LangId.Menu_MnuCheckForUpdate_CurrentVersion, Core.BuildInfo.AppVersion];
     }
 
 
@@ -72,7 +72,7 @@ public partial class UpdateWindow : ModalWindow
     {
         var btnSkip = new PhButton
         {
-            Content = Core.Lang[LangId.FrmMain_MnuCheckForUpdate_SkipVersion],
+            Content = Core.Lang[LangId.Menu_MnuCheckForUpdate_SkipVersion],
             Padding = new Thickness(6, 2),
             Background = Brushes.Transparent,
             BorderThickness = new Thickness(0),
@@ -104,12 +104,12 @@ public partial class UpdateWindow : ModalWindow
         // header: version + date
         var lblVersion = new TextBlock
         {
-            Text = Core.Lang[LangId.FrmMain_MnuCheckForUpdate_LatestVersion, release.Version],
+            Text = Core.Lang[LangId.Menu_MnuCheckForUpdate_LatestVersion, release.Version],
             FontWeight = FontWeight.SemiBold,
         };
         var lblDate = new TextBlock
         {
-            Text = Core.Lang[LangId.FrmMain_MnuCheckForUpdate_PublishedDate, release.PublishedDate],
+            Text = Core.Lang[LangId.Menu_MnuCheckForUpdate_PublishedDate, release.PublishedDate],
             FontSize = Const.FONT_SIZE_SMALL,
             Opacity = 0.55,
         };
@@ -170,7 +170,7 @@ public partial class UpdateWindow : ModalWindow
     public void SetCheckingState()
     {
         _result = null;
-        Heading = Core.Lang[LangId.FrmMain_MnuCheckForUpdate_Checking];
+        Heading = Core.Lang[LangId.Menu_MnuCheckForUpdate_Checking];
 
         IsProgressVisible = true;
         IsProgressIndeterminate = true;
@@ -200,7 +200,7 @@ public partial class UpdateWindow : ModalWindow
         {
             var release = result.Release!;
 
-            Heading = Core.Lang[LangId.FrmMain_MnuCheckForUpdate_NewVersion];
+            Heading = Core.Lang[LangId.Menu_MnuCheckForUpdate_NewVersion];
             Note = null;
             ModalExtraContent = CreateUpdateAvailableContent(release);
 
@@ -219,7 +219,7 @@ public partial class UpdateWindow : ModalWindow
         }
         else if (result.Status == UpdateCheckStatus.CheckFailed)
         {
-            Heading = Core.Lang[LangId.FrmMain_MnuCheckForUpdate_Failed];
+            Heading = Core.Lang[LangId.Menu_MnuCheckForUpdate_Failed];
             Description = result.ErrorMessage;
             Note = null;
 
@@ -234,7 +234,7 @@ public partial class UpdateWindow : ModalWindow
         else
         {
             // NoUpdate
-            Heading = Core.Lang[LangId.FrmMain_MnuCheckForUpdate_NoUpdate];
+            Heading = Core.Lang[LangId.Menu_MnuCheckForUpdate_NoUpdate];
             Note = null;
 
             IsButton1Visible = false;

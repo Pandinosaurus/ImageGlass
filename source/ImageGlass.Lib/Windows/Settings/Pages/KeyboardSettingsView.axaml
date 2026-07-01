@@ -13,7 +13,7 @@
     <StackPanel Orientation="Vertical">
 
         <!--  Menu hotkeys  -->
-        <ui:PhTextBlock Classes="group" LangKey="FrmSettings_Keyboard_MenuHotkeys" />
+        <ui:PhTextBlock Classes="group" LangKey="Settings_Keyboard_MenuHotkeys" />
         <StackPanel Margin="{DynamicResource SettingsGroupIndent}">
             <windows:MenuHotkeysEditorControl x:Name="PART_Editor" />
         </StackPanel>

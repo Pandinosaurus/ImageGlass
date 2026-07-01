@@ -98,14 +98,14 @@
             <ui:PhTextBlock
                 MaxWidth="{StaticResource TextContentMaxWidth}"
                 HorizontalAlignment="Left"
-                LangKey="FrmSettings_Toolbar_ArrangeHint"
+                LangKey="Settings_Toolbar_ArrangeHint"
                 Opacity="0.7"
                 TextWrapping="Wrap" />
 
 
             <!--  Current buttons: primary | secondary side by side, equal height  -->
             <StackPanel Spacing="6">
-                <ui:PhTextBlock FontWeight="SemiBold" LangKey="FrmSettings_Toolbar_CurrentButtons" />
+                <ui:PhTextBlock FontWeight="SemiBold" LangKey="Settings_Toolbar_CurrentButtons" />
 
                 <Grid ColumnSpacing="8">
                     <Grid.ColumnDefinitions>
@@ -134,7 +134,7 @@
 
             <!--  Available buttons: full width, below the Current buttons  -->
             <StackPanel Spacing="6">
-                <ui:PhTextBlock FontWeight="SemiBold" LangKey="FrmSettings_Toolbar_AvailableButtons" />
+                <ui:PhTextBlock FontWeight="SemiBold" LangKey="Settings_Toolbar_AvailableButtons" />
                 <Grid>
                     <Border x:Name="PART_AvailableZone" Classes="zone">
                         <WrapPanel x:Name="PART_AvailableGroup" />

@@ -167,9 +167,9 @@ public partial class AppAPIProvider
 
         var files = await App.MainWindow.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
         {
-            Title = Core.Lang[LangId.FrmMain_MnuOpenFile],
+            Title = Core.Lang[LangId.Menu_MnuOpenFile],
             FileTypeFilter = [
-                new FilePickerFileType(Core.Lang[LangId.FrmMain_OpenFileDialog]) {
+                new FilePickerFileType(Core.Lang[LangId._OpenFileDialog]) {
                     Patterns = supportFileExtPatterns,
                 },
             ],
@@ -244,9 +244,9 @@ public partial class AppAPIProvider
         {
             _ = ModalWindow.ShowInfoAsync(App.MainWindow, new ModalWindowOptions
             {
-                Title = Core.Lang[LangId.FrmMain_MnuNewWindow],
-                Heading = Core.Lang[LangId.FrmMain_MnuNewWindow],
-                Description = Core.Lang[LangId.FrmMain_MnuNewWindow_Error],
+                Title = Core.Lang[LangId.Menu_MnuNewWindow],
+                Heading = Core.Lang[LangId.Menu_MnuNewWindow],
+                Description = Core.Lang[LangId.Menu_MnuNewWindow_Error],
             });
             return;
         }
@@ -285,10 +285,10 @@ public partial class AppAPIProvider
         {
             var modal = await ModalWindow.ShowWarningAsync(App.MainWindow, new ModalWindowOptions
             {
-                Title = Core.Lang[LangId.FrmMain_MnuSave],
-                Heading = Core.Lang[LangId.FrmMain_MnuSave_Confirm],
+                Title = Core.Lang[LangId.Menu_MnuSave],
+                Heading = Core.Lang[LangId.Menu_MnuSave_Confirm],
                 Description = srcFilePath,
-                Note = Core.Lang[LangId.FrmMain_MnuSave_ConfirmDescription],
+                Note = Core.Lang[LangId.Menu_MnuSave_ConfirmDescription],
                 IsRememberOptionVisible = true,
                 Thumbnail = Core.Photos.Current?.GalleryThumbnail,
             }, ModalWindowButton.Yes_No);
@@ -339,7 +339,7 @@ public partial class AppAPIProvider
         // 2. create file save picker
         var result = await App.MainWindow.StorageProvider.SaveFilePickerWithResultAsync(new FilePickerSaveOptions
         {
-            Title = Core.Lang[LangId.FrmMain_MnuSaveAs],
+            Title = Core.Lang[LangId.Menu_MnuSaveAs],
             FileTypeChoices = SavingExts.FilePickerFileTypeChoices,
             ShowOverwritePrompt = !Core.Config.EnableSaveConfirmation, // only show 1 prompt
             SuggestedStartLocation = initSaveDir,
@@ -361,13 +361,13 @@ public partial class AppAPIProvider
             // show confirm dialog
             var modal = await ModalWindow.ShowWarningAsync(App.MainWindow, new ModalWindowOptions
             {
-                Title = Core.Lang[LangId.FrmMain_MnuSaveAs],
-                Heading = Core.Lang[LangId.FrmMain_MnuSave_Confirm],
+                Title = Core.Lang[LangId.Menu_MnuSaveAs],
+                Heading = Core.Lang[LangId.Menu_MnuSave_Confirm],
                 Description = $"""
                 {destFilePath}
                 {BHelper.FormatSize(fi.Length)}
                 """,
-                Note = Core.Lang[LangId.FrmMain_MnuSave_ConfirmDescription],
+                Note = Core.Lang[LangId.Menu_MnuSave_ConfirmDescription],
                 IsRememberOptionVisible = true,
             }, ModalWindowButton.Yes_No);
 
@@ -400,7 +400,7 @@ public partial class AppAPIProvider
         var hasSrcPath = !string.IsNullOrEmpty(Core.Photos.CurrentFilePath);
         Exception? error = null;
 
-        _ = Message.ShowAsync(destFilePath, Core.Lang[LangId.FrmMain_MnuSave_Saving]);
+        _ = Message.ShowAsync(destFilePath, Core.Lang[LangId.Menu_MnuSave_Saving]);
 
 
         // 1. save photo
@@ -459,8 +459,8 @@ public partial class AppAPIProvider
 
             _ = await ModalWindow.ShowErrorAsync(App.MainWindow, new ModalWindowOptions
             {
-                Title = Core.Lang[LangId.FrmMain_MnuSave],
-                Heading = Core.Lang[LangId.FrmMain_MnuSave_Error],
+                Title = Core.Lang[LangId.Menu_MnuSave],
+                Heading = Core.Lang[LangId.Menu_MnuSave_Error],
                 Description = $"""
                 {error.Source}:
                 {error.Message}
@@ -497,7 +497,7 @@ public partial class AppAPIProvider
         }
 
 
-        _ = Message.ShowAsync(destFilePath, Core.Lang[LangId.FrmMain_MnuSave_Success]);
+        _ = Message.ShowAsync(destFilePath, Core.Lang[LangId.Menu_MnuSave_Success]);
 
 
         // 4. emits saved event
@@ -523,7 +523,7 @@ public partial class AppAPIProvider
         // 1. open folder picker
         var results = await App.MainWindow.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
         {
-            Title = Core.Lang[LangId.FrmExportFrames_FolderPickerTitle],
+            Title = Core.Lang[LangId._FolderPickerTitle],
         });
 
         var destDirPath = results.ToArray().FirstOrDefault()?.TryGetLocalPath();
@@ -585,7 +585,7 @@ public partial class AppAPIProvider
         {
             _ = await ModalWindow.ShowErrorAsync(App.MainWindow, new ModalWindowOptions
             {
-                Title = Core.Lang[LangId.FrmMain_MnuOpenWith],
+                Title = Core.Lang[LangId.Menu_MnuOpenWith],
                 Description = Core.Lang[LangId._CreatingFileError],
             });
         }
@@ -614,7 +614,7 @@ public partial class AppAPIProvider
         {
             _ = await ModalWindow.ShowErrorAsync(App.MainWindow, new ModalWindowOptions
             {
-                Title = Core.Lang[LangId.FrmMain_MnuOpenWith],
+                Title = Core.Lang[LangId.Menu_MnuOpenWith],
                 Description = Core.Lang[LangId._CreatingFileError],
             });
         }
@@ -629,8 +629,8 @@ public partial class AppAPIProvider
             {
                 _ = await ModalWindow.ShowErrorAsync(App.MainWindow, new ModalWindowOptions
                 {
-                    Title = Core.Lang[LangId.FrmMain_MnuPrint],
-                    Heading = Core.Lang[LangId.FrmMain_MnuPrint_Error],
+                    Title = Core.Lang[LangId.Menu_MnuPrint],
+                    Heading = Core.Lang[LangId.Menu_MnuPrint_Error],
                     Description = ex.Message,
                 });
             }
@@ -662,7 +662,7 @@ public partial class AppAPIProvider
         {
             _ = ModalWindow.ShowErrorAsync(App.MainWindow, new ModalWindowOptions
             {
-                Title = Core.Lang[LangId.FrmMain_MnuShare],
+                Title = Core.Lang[LangId.Menu_MnuShare],
                 Description = Core.Lang[LangId._CreatingFileError],
             });
         }
@@ -676,8 +676,8 @@ public partial class AppAPIProvider
             {
                 _ = ModalWindow.ShowErrorAsync(App.MainWindow, new ModalWindowOptions
                 {
-                    Title = Core.Lang[LangId.FrmMain_MnuShare],
-                    Description = $"{Core.Lang[LangId.FrmMain_MnuShare_Error]}\r\n\r\n{ex.Message}",
+                    Title = Core.Lang[LangId.Menu_MnuShare],
+                    Description = $"{Core.Lang[LangId.Menu_MnuShare_Error]}\r\n\r\n{ex.Message}",
                 });
             }
         }
@@ -704,7 +704,7 @@ public partial class AppAPIProvider
         var currentFolder = Path.GetDirectoryName(oldFilePath) ?? string.Empty;
         var ext = Path.GetExtension(oldFilePath);
         var newName = Path.GetFileNameWithoutExtension(oldFilePath);
-        var title = Core.Lang[LangId.FrmMain_MnuRename];
+        var title = Core.Lang[LangId.Menu_MnuRename];
 
         // 2. show popup
         var result = await ModalWindow.ShowInputAsync(App.MainWindow, new ModalWindowOptions
@@ -713,7 +713,7 @@ public partial class AppAPIProvider
             Description = $"""
             {oldFilePath}
 
-            {Core.Lang[LangId.FrmMain_MnuRename_Description]}
+            {Core.Lang[LangId.Menu_MnuRename_Description]}
             """,
             InputValue = newName,
             AcceptValue = TextBoxAcceptValue.FileNameValueOnly,
@@ -782,16 +782,16 @@ public partial class AppAPIProvider
 
         var canDelete = true;
         var title = moveToRecycleBin
-            ? Core.Lang[LangId.FrmMain_MnuMoveToRecycleBin]
-            : Core.Lang[LangId.FrmMain_MnuDeleteFromHardDisk];
+            ? Core.Lang[LangId.Menu_MnuMoveToRecycleBin]
+            : Core.Lang[LangId.Menu_MnuDeleteFromHardDisk];
 
 
         // 1. show confirm dialog
         if (Core.Config.EnableDeleteConfirmation)
         {
             var heading = moveToRecycleBin
-                ? Core.Lang[LangId.FrmMain_MnuMoveToRecycleBin_Description]
-                : Core.Lang[LangId.FrmMain_MnuDeleteFromHardDisk_Description];
+                ? Core.Lang[LangId.Menu_MnuMoveToRecycleBin_Description]
+                : Core.Lang[LangId.Menu_MnuDeleteFromHardDisk_Description];
             var thumbnailIcon = moveToRecycleBin
                 ? StockIconId.RecycleBin
                 : StockIconId.Delete;
@@ -916,8 +916,8 @@ public partial class AppAPIProvider
             var isFirst = Core.Photos.CurrentIndex == 0;
 
             _ = Message.ShowAsync(Core.Lang[isFirst
-                ? LangId.FrmMain_ReachedFirstImage
-                : LangId.FrmMain_ReachedLastImage]);
+                ? LangId._ReachedFirstImage
+                : LangId._ReachedLastImage]);
             return;
         }
 
@@ -969,8 +969,8 @@ public partial class AppAPIProvider
         var oldIndex = Core.Photos.CurrentIndex + 1;
         var result = await ModalWindow.ShowInputAsync(App.MainWindow, new ModalWindowOptions
         {
-            Title = Core.Lang[LangId.FrmMain_MnuGoTo],
-            Description = Core.Lang[LangId.FrmMain_MnuGoTo_Description],
+            Title = Core.Lang[LangId.Menu_MnuGoTo],
+            Description = Core.Lang[LangId.Menu_MnuGoTo_Description],
             InputValue = oldIndex.ToString(),
             AcceptValue = TextBoxAcceptValue.UnsignedIntValueOnly,
         });
@@ -1100,8 +1100,8 @@ public partial class AppAPIProvider
 
         var result = await ModalWindow.ShowInputAsync(App.MainWindow, new ModalWindowOptions
         {
-            Title = Core.Lang[LangId.FrmMain_MnuCustomZoom],
-            Description = Core.Lang[LangId.FrmMain_MnuCustomZoom_Description],
+            Title = Core.Lang[LangId.Menu_MnuCustomZoom],
+            Description = Core.Lang[LangId.Menu_MnuCustomZoom_Description],
             InputValue = oldZoom.ToString(),
             AcceptValue = TextBoxAcceptValue.UnsignedFloatValueOnly,
             ThumbnailIcon = StockIconId.Find,
@@ -1543,7 +1543,7 @@ public partial class AppAPIProvider
         {
             _ = Message.ShowAsync(
                 Core.Lang[LangId._InvalidAction],
-                Core.Lang[LangId.FrmMain_MnuViewChannels]);
+                Core.Lang[LangId.Menu_MnuViewChannels]);
         }
     }
 
@@ -1571,7 +1571,7 @@ public partial class AppAPIProvider
         {
             _ = await ModalWindow.ShowErrorAsync(App.MainWindow, new ModalWindowOptions
             {
-                Title = Core.Lang[LangId.FrmMain_MnuOpenWith],
+                Title = Core.Lang[LangId.Menu_MnuOpenWith],
                 Description = Core.Lang[LangId._CreatingFileError],
             });
             return;
@@ -1636,7 +1636,7 @@ public partial class AppAPIProvider
         {
             _ = Message.ShowAsync(
                 Core.Lang[LangId._InvalidAction],
-                Core.Lang[LangId.FrmMain_MnuInvertColors]);
+                Core.Lang[LangId.Menu_MnuInvertColors]);
         }
     }
 
@@ -1829,8 +1829,8 @@ public partial class AppAPIProvider
         _ = Message.ShowAsync(Core.Lang[LangId._CreatingFile], delayMs: 500);
 
         var title = forLockScreen
-            ? Core.Lang[LangId.FrmMain_MnuSetLockScreen]
-            : Core.Lang[LangId.FrmMain_MnuSetDesktopBackground];
+            ? Core.Lang[LangId.Menu_MnuSetLockScreen]
+            : Core.Lang[LangId.Menu_MnuSetDesktopBackground];
 
 
         // 1. create temp image if needed
@@ -1869,15 +1869,15 @@ public partial class AppAPIProvider
 
 
             var successMsg = forLockScreen
-                ? Core.Lang[LangId.FrmMain_MnuSetLockScreen_Success]
-                : Core.Lang[LangId.FrmMain_MnuSetDesktopBackground_Success];
+                ? Core.Lang[LangId.Menu_MnuSetLockScreen_Success]
+                : Core.Lang[LangId.Menu_MnuSetDesktopBackground_Success];
             _ = Message.ShowAsync(successMsg);
         }
         catch (Exception ex)
         {
             var heading = forLockScreen
-                ? Core.Lang[LangId.FrmMain_MnuSetLockScreen_Error]
-                : Core.Lang[LangId.FrmMain_MnuSetDesktopBackground_Error];
+                ? Core.Lang[LangId.Menu_MnuSetLockScreen_Error]
+                : Core.Lang[LangId.Menu_MnuSetDesktopBackground_Error];
 
             _ = await ModalWindow.ShowErrorAsync(App.MainWindow, new ModalWindowOptions
             {
@@ -1992,7 +1992,7 @@ public partial class AppAPIProvider
 
         // 2. show message
         await Message.ClearAsync();
-        _ = Message.ShowAsync(Core.Lang[LangId.FrmMain_MnuCopyImagePixels_Copying], delayMs: 1000);
+        _ = Message.ShowAsync(Core.Lang[LangId.Menu_MnuCopyImagePixels_Copying], delayMs: 1000);
 
 
         // 3. copy to clipboard
@@ -2001,13 +2001,13 @@ public partial class AppAPIProvider
             var abmp = SkiaCodec.ToWritableBitmap(bmp);
             await App.MainWindow.Clipboard.SetBitmapAsync(abmp);
 
-            _ = Message.ShowAsync(Core.Lang[LangId.FrmMain_MnuCopyImagePixels_Success]);
+            _ = Message.ShowAsync(Core.Lang[LangId.Menu_MnuCopyImagePixels_Success]);
         }
         catch (Exception ex)
         {
             await ModalWindow.ShowErrorAsync(App.MainWindow, new ModalWindowOptions
             {
-                Title = Core.Lang[LangId.FrmMain_MnuCopyImagePixels],
+                Title = Core.Lang[LangId.Menu_MnuCopyImagePixels],
                 Description = ex.Message,
             });
         }
@@ -2026,7 +2026,7 @@ public partial class AppAPIProvider
             await App.MainWindow.Clipboard.SetTextAsync(Core.Photos.CurrentFilePath);
 
             // show message
-            _ = Message.ShowAsync(Core.Lang[LangId.FrmMain_MnuCopyPath_Success]);
+            _ = Message.ShowAsync(Core.Lang[LangId.Menu_MnuCopyPath_Success]);
         }
         catch { }
     }
@@ -2097,15 +2097,15 @@ public partial class AppAPIProvider
             await App.MainWindow.Clipboard.SetDataAsync(dt);
 
             _ = Message.ShowAsync(Core.Lang[forCutting
-                    ? LangId.FrmMain_MnuCutFile_Success
-                    : LangId.FrmMain_MnuCopyFile_Success,
+                    ? LangId.Menu_MnuCutFile_Success
+                    : LangId.Menu_MnuCopyFile_Success,
                 Core.StringClipboard.Count]);
         }
         catch (Exception ex)
         {
             await ModalWindow.ShowErrorAsync(App.MainWindow, new ModalWindowOptions
             {
-                Title = Core.Lang[forCutting ? LangId.FrmMain_MnuCutFile : LangId.FrmMain_MnuCopyFile],
+                Title = Core.Lang[forCutting ? LangId.Menu_MnuCutFile : LangId.Menu_MnuCopyFile],
                 Description = ex.Message,
             });
         }
@@ -2127,7 +2127,7 @@ public partial class AppAPIProvider
 
 
         // show message
-        _ = Message.ShowAsync(Core.Lang[LangId.FrmMain_MnuClearClipboard_Success]);
+        _ = Message.ShowAsync(Core.Lang[LangId.Menu_MnuClearClipboard_Success]);
     }
 
     #endregion // Clipboard APIs
@@ -2343,8 +2343,8 @@ public partial class AppAPIProvider
         if (showMessage && enabled)
         {
             _ = Message.ShowAsync(
-                Core.Lang[LangId.FrmMain_MnuFrameless_EnableDescription],
-                Core.Lang[LangId.FrmMain_MnuFrameless]);
+                Core.Lang[LangId.Menu_MnuFrameless_EnableDescription],
+                Core.Lang[LangId.Menu_MnuFrameless]);
         }
     }
 
@@ -2619,8 +2619,8 @@ public partial class AppAPIProvider
         else Core.Slideshow?.Pause();
 
         _ = Message.ShowAsync(Core.Lang[isPaused
-            ? LangId.FrmSlideshow_ResumeSlideshow
-            : LangId.FrmSlideshow_PauseSlideshow]);
+            ? LangId._ResumeSlideshow
+            : LangId._PauseSlideshow]);
     }
 
     #endregion // Window Modes APIs
@@ -2761,8 +2761,8 @@ public partial class AppAPIProvider
         Core.Config.EnableWindowTopMost = enabled.Value;
 
         _ = Message.ShowAsync(Core.Lang[enabled.Value
-            ? LangId.FrmMain_MnuToggleTopMost_Enable
-            : LangId.FrmMain_MnuToggleTopMost_Disable]);
+            ? LangId.Menu_MnuToggleTopMost_Enable
+            : LangId.Menu_MnuToggleTopMost_Disable]);
     }
 
 
@@ -2784,7 +2784,7 @@ public partial class AppAPIProvider
 
             var cp = new PhColorPickerDialog(oldColor, defaultColor)
             {
-                Title = Core.Lang[LangId.FrmMain_MnuChangeBackgroundColor],
+                Title = Core.Lang[LangId.Menu_MnuChangeBackgroundColor],
             };
             var result = await cp.ShowAsync(App.MainWindow);
 
@@ -3070,12 +3070,12 @@ public partial class AppAPIProvider
             await ModalWindow.ShowInfoAsync(App.MainWindow, new ModalWindowOptions
             {
                 Title = Core.Lang[enable
-                    ? LangId.FrmMain_MnuSetDefaultPhotoViewer
-                    : LangId.FrmMain_MnuRemoveDefaultPhotoViewer],
+                    ? LangId.Menu_MnuSetDefaultPhotoViewer
+                    : LangId.Menu_MnuRemoveDefaultPhotoViewer],
                 Heading = Core.Lang[enable
-                    ? LangId.FrmMain_MnuSetDefaultPhotoViewer_Success
-                    : LangId.FrmMain_MnuRemoveDefaultPhotoViewer_Success],
-                Note = enable ? Core.Lang[LangId.FrmSettings_UnmanagedSettingReminder] : null,
+                    ? LangId.Menu_MnuSetDefaultPhotoViewer_Success
+                    : LangId.Menu_MnuRemoveDefaultPhotoViewer_Success],
+                Note = enable ? Core.Lang[LangId.Settings_UnmanagedSettingReminder] : null,
                 NoteStyle = InfoBarSeverity.Warning,
             });
         }
@@ -3084,11 +3084,11 @@ public partial class AppAPIProvider
             await ModalWindow.ShowErrorAsync(App.MainWindow, new ModalWindowOptions
             {
                 Title = Core.Lang[enable
-                    ? LangId.FrmMain_MnuSetDefaultPhotoViewer
-                    : LangId.FrmMain_MnuRemoveDefaultPhotoViewer],
+                    ? LangId.Menu_MnuSetDefaultPhotoViewer
+                    : LangId.Menu_MnuRemoveDefaultPhotoViewer],
                 Heading = Core.Lang[enable
-                    ? LangId.FrmMain_MnuSetDefaultPhotoViewer_Error
-                    : LangId.FrmMain_MnuRemoveDefaultPhotoViewer_Error],
+                    ? LangId.Menu_MnuSetDefaultPhotoViewer_Error
+                    : LangId.Menu_MnuRemoveDefaultPhotoViewer_Error],
                 Description = ex.Message,
                 Details = ex.ToString(),
             });

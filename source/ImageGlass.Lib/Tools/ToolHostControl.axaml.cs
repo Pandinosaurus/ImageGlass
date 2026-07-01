@@ -101,7 +101,7 @@ public partial class ToolHostControl : PhControl
         base.OnIgLanguageChanged();
 
         CloseButtonTooltipText = Core.Lang[LangId._Close];
-        SettingsButtonTooltipText = Core.Lang[LangId.FrmMain_MnuSettings];
+        SettingsButtonTooltipText = Core.Lang[LangId.Menu_MnuSettings];
     }
 
 

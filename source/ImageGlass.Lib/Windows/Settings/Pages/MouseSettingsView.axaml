@@ -13,7 +13,7 @@
     <StackPanel Orientation="Vertical">
 
         <!--  Mouse wheel action  -->
-        <ui:PhTextBlock Classes="group" LangKey="FrmSettings_MouseWheelAction" />
+        <ui:PhTextBlock Classes="group" LangKey="Settings_MouseWheelAction" />
         <StackPanel Margin="{DynamicResource SettingsGroupIndent}" Spacing="14">
             <StackPanel x:Name="PART_WheelTable" Spacing="14" />
 
@@ -25,7 +25,7 @@
 
 
         <!--  Mouse click action  -->
-        <ui:PhTextBlock Classes="group" LangKey="FrmSettings_MouseClickAction" />
+        <ui:PhTextBlock Classes="group" LangKey="Settings_MouseClickAction" />
         <StackPanel Margin="{DynamicResource SettingsGroupIndent}" Spacing="14">
             <StackPanel x:Name="PART_ClickTable" Spacing="14" />
 

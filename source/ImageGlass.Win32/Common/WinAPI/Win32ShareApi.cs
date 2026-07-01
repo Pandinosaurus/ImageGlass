@@ -1,4 +1,4 @@
-﻿/*
+/*
 ImageGlass - A Fast, Seamless Photo Viewer
 Copyright (C) 2010 - 2026 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
@@ -91,7 +91,7 @@ public static class Win32ShareApi
         {
             await ModalWindow.ShowErrorAsync(null, new ModalWindowOptions
             {
-                Title = Core.Lang[ImageGlass.Common.Localization.LangId.FrmMain_MnuShare],
+                Title = Core.Lang[ImageGlass.Common.Localization.LangId.Menu_MnuShare],
                 Heading = ex.Message,
                 Details = ex.ToString(),
             });

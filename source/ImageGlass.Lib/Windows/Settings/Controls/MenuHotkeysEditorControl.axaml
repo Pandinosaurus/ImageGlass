@@ -53,7 +53,7 @@
                             <ui:PhTextBlock
                                 Grid.Column="0"
                                 FontWeight="SemiBold"
-                                LangKey="FrmSettings_Keyboard_Action" />
+                                LangKey="Settings_Keyboard_Action" />
                             <ui:PhTextBlock
                                 Grid.Column="1"
                                 FontWeight="SemiBold"
@@ -157,7 +157,7 @@
                 Margin="2,4,0,0"
                 FontStyle="Italic"
                 IsVisible="False"
-                LangKey="FrmSettings_Keyboard_NoResults"
+                LangKey="Settings_Keyboard_NoResults"
                 Opacity="0.6" />
 
         </StackPanel>

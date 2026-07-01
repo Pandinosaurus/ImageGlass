@@ -129,7 +129,7 @@ public sealed class MenuHotkeyRowModel : PhReactive
     /// otherwise the full hotkey text (useful when the cell is truncated), or <c>null</c> when empty.
     /// </summary>
     public string? HotkeysTooltip => IsConflict
-        ? Core.Lang[LangId.FrmSettings_Keyboard_Conflict]
+        ? Core.Lang[LangId.Settings_Keyboard_Conflict]
         : HotkeysText.Length > 0 ? HotkeysText : null;
 
     #endregion // Public Properties
