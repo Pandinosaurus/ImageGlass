@@ -672,10 +672,12 @@ public static class Core
 
         if (string.IsNullOrWhiteSpace(pathToLoad) && Core.Args.Length >= 2)
         {
-            // get path from params
+            // get path from params, skipping "-p:" config overrides and "--" flags
+            // (e.g. --ig-startup-trace) so a flag is never taken as the image path
             var cmdPath = Core.Args
                 .Skip(1)
-                .FirstOrDefault(i => !i.StartsWith(Const.CONFIG_CMD_PREFIX, StringComparison.Ordinal));
+                .FirstOrDefault(i => !i.StartsWith(Const.CONFIG_CMD_PREFIX, StringComparison.Ordinal)
+                    && !i.StartsWith("--", StringComparison.Ordinal));
 
             if (!string.IsNullOrEmpty(cmdPath))
             {

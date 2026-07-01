@@ -87,6 +87,9 @@ public partial class MainWindowView : PhControl
 
         // load image from command line arguments
         LoadImagesFromCmdArgs();
+
+        ImageGlass.Common.Types.StartupTrace.Mark("MainView:loaded");
+        ImageGlass.Common.Types.StartupTrace.Flush();
     }
 
 

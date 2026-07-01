@@ -95,6 +95,7 @@ public partial class App : Application
     /// </summary>
     public override async void OnFrameworkInitializationCompleted()
     {
+        StartupTrace.Mark("OnFwInit:enter");
         _ = ApplyUIConfigsAsync();
         PlatformSettings?.ColorValuesChanged += PlatformSettings_ColorValuesChanged;
 
@@ -124,20 +125,25 @@ public partial class App : Application
             Core.UpdateInitImagePath();
 
             // set main window
+            StartupTrace.Mark("MainWindow:ctor:begin");
             CreateMainWindowIfNotExist();
+            StartupTrace.Mark("MainWindow:ctor:end");
 
             // discover native (in-process) codec plugins from the _plugins folder (background)
             Core.DiscoverPlugins();
 
             // register external (OOP) tools from Config.Tools (igconfig.json)
             Core.RegisterExternalTools();
+            StartupTrace.Mark("RegisterTools:done");
 
             // wait for UI settings ready
             await _taskUi.Task;
+            StartupTrace.Mark("Theme:ready");
 
             // show main window
             desktop.MainWindow = MainWindow;
             MainWindow.Show();
+            StartupTrace.Mark("MainWindow:show");
         }
 
         base.OnFrameworkInitializationCompleted();
@@ -300,12 +306,14 @@ public partial class App : Application
         // 2. load app configs (merges default, user, CLI -p: args, and admin configs)
         Core.Args = Environment.GetCommandLineArgs();
         Core.Config = Config.Load(Config.CONFIG_USER, Core.Args);
+        StartupTrace.Mark("InitInstance:configLoaded");
 
         // Initialize lock manager with loaded config
         ServiceProviders.FeatureManager.Refresh();
 
         // 3. initialize service providers
         installServicesFn();
+        StartupTrace.Mark("InitInstance:servicesReady");
 
 
         // 4. handle app command lines
@@ -335,6 +343,10 @@ public partial class App : Application
     /// </summary>
     private static async Task<bool> HandleCommandLineAsync(string[] args)
     {
+        // enable the opt-in startup profiler if requested (flag may appear anywhere in the args);
+        // marks recorded earlier are buffered, so this still captures them on Flush
+        StartupTrace.EnableFromArgs(args);
+
         if (args.Length < 1) return false;
 
         var topCmd = args[0];
@@ -486,6 +498,7 @@ public partial class App : Application
             Core.OnThemeChanged();
         }
 
+        StartupTrace.Mark("ApplyThemePack:done");
         _ = _taskUi.TrySetResult();
     }
 

@@ -21,7 +21,17 @@ namespace ImageGlass.Common.Types;
 
 public static class ExeParams
 {
-    public static string SINGLE_INSTANCE => "single-instance";
+    /// <summary>
+    /// Single instance message
+    /// </summary>
+    public static string SINGLE_INSTANCE => "--ig-single-instance";
+
+    /// <summary>
+    /// Opt-in startup profiler (see StartupTrace); writes ig_startup_trace.log to the config dir
+    /// </summary>
+    public static string STARTUP_TRACE => "--ig-startup-trace";
+
+
 
 
     // UI result options
@@ -29,6 +39,7 @@ public static class ExeParams
     public static string HIDE_ADMIN_REQUIRED_ERROR_UI => "--hide-admin-error-ui";
     public static string PER_MACHINE => "--per-machine";
     public static string STARTUP_BOOST => "--startup-boost";
+
 
 
     // igcmd.exe

@@ -43,7 +43,9 @@ public partial class MainWindow : PhWindow
 
     public MainWindow()
     {
+        StartupTrace.Mark("MainWindow:InitComponent:begin");
         InitializeComponent();
+        StartupTrace.Mark("MainWindow:InitComponent:end");
         _status = new AppStatusInfo(PART_MainView.PART_Viewer);
 
 
@@ -75,6 +77,7 @@ public partial class MainWindow : PhWindow
 
     protected override async void OnOpened(EventArgs e)
     {
+        StartupTrace.Mark("MainWindow:opened");
         base.OnOpened(e);
 
         if (Core.Config.EnableWindowFit)
@@ -110,7 +113,9 @@ public partial class MainWindow : PhWindow
         base.OnLoaded(e);
 
         // register app hotkeys
+        StartupTrace.Mark("Hotkeys:register:begin");
         Core.API.RegisterHotkeys();
+        StartupTrace.Mark("Hotkeys:register:end");
 
         // build the macOS menu bar (window-level) from the existing main menu;
         // the application (⌘) menu is defined in App.axaml

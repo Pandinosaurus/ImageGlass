@@ -22,6 +22,7 @@ using Avalonia.Media;
 using ImageGlass.Common;
 using ImageGlass.Common.ServiceProviders;
 using ImageGlass.Common.ServiceProviders.FileSearchService;
+using ImageGlass.Common.Types;
 using ImageGlass.Linux.Common.ServiceProviders;
 using System;
 
@@ -35,6 +36,7 @@ sealed class Program
     [STAThread]
     public static int Main(string[] args)
     {
+        StartupTrace.Mark("Main:start");
         Core.BuildInfo = new AppBuildInfo();
 
         var isHandled = App.InitializeAppInstance(args, () =>
@@ -49,6 +51,7 @@ sealed class Program
 
         if (isHandled) return 0;
 
+        StartupTrace.Mark("Avalonia:start");
         return BuildAvaloniaApp()
             .StartWithClassicDesktopLifetime(args);
     }

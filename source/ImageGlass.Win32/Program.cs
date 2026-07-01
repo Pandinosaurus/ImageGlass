@@ -19,6 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 using Avalonia;
 using Avalonia.Input;
 using ImageGlass.Common;
+using ImageGlass.Common.Types;
 using ImageGlass.ViewModels;
 using ImageGlass.Win32.Common.ServiceProviders;
 using ImageGlass.Win32.Windows;
@@ -34,6 +35,7 @@ sealed class Program
     [STAThread]
     public static int Main(string[] args)
     {
+        StartupTrace.Mark("Main:start");
         Core.BuildInfo = new AppBuildInfo();
 
         var isHandled = App.InitializeAppInstance(args, () =>
@@ -48,6 +50,7 @@ sealed class Program
 
         if (isHandled) return 0;
 
+        StartupTrace.Mark("Avalonia:start");
         return BuildAvaloniaApp()
             .StartWithClassicDesktopLifetime(args);
     }
