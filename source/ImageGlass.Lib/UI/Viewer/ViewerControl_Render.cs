@@ -335,6 +335,9 @@ public partial class ViewerControl
     {
         lock (_lock)
         {
+            PhotoTrace.Mark("render:first-draw", Photo?.FilePath,
+                $"{img?.Width ?? 0}x{img?.Height ?? 0}, vector={IsVectorSource()}");
+
             // vector images don't need raster caching
             if (IsVectorSource())
             {
@@ -452,6 +455,9 @@ public partial class ViewerControl
 
         // use the processed (color-managed) image if available, otherwise the source
         _mipmapCache = MipmapTileCache.Create(_imgRender ?? _imgSource);
+
+        PhotoTrace.Mark("render:mipmap-cache", Photo?.FilePath,
+            _mipmapCache is null ? "not created (image too small)" : "created");
     }
 
 

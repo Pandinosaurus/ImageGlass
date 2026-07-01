@@ -27,7 +27,7 @@ namespace ImageGlass.Common.Types;
 
 /// <summary>
 /// Opt-in, cross-platform startup profiler. Records wall-clock milestones from process start to the
-/// first window paint and writes them to <c>ig_startup_trace.log</c> in the config dir.
+/// first window paint and writes them to <c>ig_startup_trace.log</c> in the <see cref="Dir.Logs"/> folder of the config dir.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -128,7 +128,7 @@ public static class StartupTrace
 
             try
             {
-                var logPath = BHelper.ConfigDir("ig_startup_trace.log");
+                var logPath = BHelper.ConfigDir(Dir.Logs, "ig_startup_trace.log");
                 File.AppendAllText(logPath, string.Join(Environment.NewLine, lines)
                     + Environment.NewLine + Environment.NewLine);
             }

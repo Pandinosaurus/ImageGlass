@@ -347,6 +347,9 @@ public partial class App : Application
         // marks recorded earlier are buffered, so this still captures them on Flush
         StartupTrace.EnableFromArgs(args);
 
+        // enable the opt-in photo-loading profiler if requested (see PhotoTrace)
+        PhotoTrace.EnableFromArgs(args);
+
         if (args.Length < 1) return false;
 
         var topCmd = args[0];

@@ -445,8 +445,42 @@ public partial class Photo : PhDisposable
         var codec = Core.CodecRegistry.SelectDecodeCodec(meta, context)
             ?? throw new FormatException("IGE: No codec available to decode the current file.");
 
+        // codec-agnostic trace: covers built-in and plugin codecs uniformly
+        var isPlugin = codec is not (SvgCodecAdapter or SkiaCodecAdapter or MagickCodecAdapter);
+        PhotoTrace.Mark("decode:codec", FilePath,
+            $"{codec.CodecId} (decodePriority={codec.DecodePriority}, plugin={isPlugin}, frameIndex={ReadOptions.FrameIndex})");
+
         using var result = await codec.DecodeAsync(meta, ReadOptions, context, token).ConfigureAwait(false);
+
+        // describe before ApplyDecodeResult nulls out the result fields (moves them to Bitmap)
+        if (PhotoTrace.Enabled) PhotoTrace.Mark("decode:done", FilePath, $"kind={DescribeDecodeResult(result)}");
+
         ApplyDecodeResult(result);
+    }
+
+
+    /// <summary>
+    /// Formats a decode result for <see cref="PhotoTrace"/> (source kind + dimensions/color type).
+    /// </summary>
+    private static string DescribeDecodeResult(CodecDecodeResult result)
+    {
+        if (result.VectorSource is not null) return "vector";
+        if (result.Animator is not null) return $"animator frames={result.Animator.Frames.Length}";
+        if (result.SingleFrame is SKImage img)
+            return $"single-frame {img.Width}x{img.Height} colorType={img.ColorType}";
+        return "none";
+    }
+
+
+    /// <summary>
+    /// Formats key metadata for <see cref="PhotoTrace"/> (dimensions, frames, HDR, color profile).
+    /// </summary>
+    private static string DescribeMetadata(PhotoMetadata meta)
+    {
+        var hdr = meta.IsHdr ? $"HDR({meta.HdrTransferFn})" : "SDR";
+        var profile = string.IsNullOrEmpty(meta.ColorProfileName) ? "none" : meta.ColorProfileName;
+        return $"{meta.Width}x{meta.Height} frames={meta.FrameCount} ext={meta.FileExtension} "
+            + $"vector={meta.IsVector} {hdr} wideGamut={meta.IsWideGamut} bpc={meta.BitsPerChannel} profile={profile}";
     }
 
 
@@ -528,10 +562,15 @@ public partial class Photo : PhDisposable
         bool skipLoadingEvent = false)
     {
         // use cached data
-        if (useCache && State != PhotoState.None) return;
+        if (useCache && State != PhotoState.None)
+        {
+            PhotoTrace.Mark("load:cache-hit", FilePath, $"state={State}");
+            return;
+        }
         var token = CancelLoading();
         var myGeneration = Interlocked.Increment(ref _loadGeneration);
 
+        PhotoTrace.Begin(FilePath, $"useCache={useCache}, skipLoadingEvent={skipLoadingEvent}");
         try
         {
             // reset dispose status
@@ -546,11 +585,13 @@ public partial class Photo : PhDisposable
 
             // load metadata
             await LoadMetadataAsync(useCache);
+            PhotoTrace.Mark("metadata:loaded", FilePath, DescribeMetadata(Metadata));
 
             if (!skipLoadingEvent)
             {
                 if (handleProgressFn is not null)
                 {
+                    PhotoTrace.Mark("preview:dispatch", FilePath);
                     await handleProgressFn(new(PhotoState.Preview, this, token));
                 }
             }
@@ -575,12 +616,15 @@ public partial class Photo : PhDisposable
                 }
             }, token, TaskCreationOptions.LongRunning, TaskScheduler.Default).Unwrap();
 
+            if (Error is not null) PhotoTrace.Mark("decode:error", FilePath, Error.Message);
+
             // cancel if requested
             if (token.IsCancellationRequested) return;
 
 
             // done loading
             State = PhotoState.Loaded;
+            PhotoTrace.Mark("loaded:dispatch", FilePath, $"hasError={Error is not null}");
             if (handleProgressFn is not null)
             {
                 await handleProgressFn(new(PhotoState.Loaded, this, token));
@@ -590,6 +634,7 @@ public partial class Photo : PhDisposable
         {
             Error = ex;
             State = PhotoState.Loaded;
+            PhotoTrace.Mark("load:exception", FilePath, ex.Message);
             if (handleProgressFn is not null)
             {
                 await handleProgressFn(new(PhotoState.Loaded, this, token));
@@ -597,6 +642,8 @@ public partial class Photo : PhDisposable
         }
         finally
         {
+            PhotoTrace.End(FilePath, $"state={State}, cancelled={token.IsCancellationRequested}");
+
             // only unload if no newer load has started on this Photo;
             // a newer LoadAsync increments _loadGeneration, so if ours
             // is stale, calling Unload would cancel the newer load
@@ -651,6 +698,8 @@ public partial class Photo : PhDisposable
             if (hasOutdatedCache)
             {
                 var metadataCodec = Core.CodecRegistry.SelectMetadataCodec(FilePath);
+                PhotoTrace.Mark("metadata:codec", FilePath,
+                    metadataCodec is null ? "none (fallback)" : $"{metadataCodec.CodecId} (metaPriority={metadataCodec.MetadataPriority})");
 
                 // load metadata off-thread
                 if (metadataCodec is not null)
@@ -873,6 +922,7 @@ public partial class Photo : PhDisposable
 
                 if (diskThumb is not null)
                 {
+                    PhotoTrace.Mark("thumb:disk-hit", null, $"{FilePath} @ {(int)thumbSize}px");
                     var avBitmapCached = await Task.Run(
                         () => SkiaCodec.ToWritableBitmap(diskThumb), token)
                         .ConfigureAwait(false);
@@ -891,6 +941,7 @@ public partial class Photo : PhDisposable
 
 
                 // 5. get thumbnail from platform provider
+                PhotoTrace.Mark("thumb:provider", null, $"{FilePath} @ {(int)thumbSize}px");
                 using var skThumb = await Task.Run(
                     () => Core.PreviewProvider.GetThumbnailAsync(Metadata, thumbSize, token), token)
                     .ConfigureAwait(false);

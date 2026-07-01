@@ -31,6 +31,11 @@ public static class ExeParams
     /// </summary>
     public static string STARTUP_TRACE => "--ig-startup-trace";
 
+    /// <summary>
+    /// Opt-in photo-loading profiler (see PhotoTrace); writes ig_photo_trace.log to the config dir
+    /// </summary>
+    public static string PHOTO_TRACE => "--ig-photo-trace";
+
 
 
 

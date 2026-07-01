@@ -610,6 +610,9 @@ public partial class ViewerControl : PhControl
     /// </summary>
     public async Task SetPhotoAsync(Photo? inputPhoto, PhotoLoadingOptions? options = null)
     {
+        PhotoTrace.Mark("viewer:set-photo", inputPhoto?.FilePath,
+            $"cache={options?.UseCache ?? true}, state={inputPhoto?.State}, shouldLoadFull={ShouldLoadFullResolution}");
+
         lock (_lock)
         {
             // save pan position for LockZoom before unloading
@@ -689,6 +692,9 @@ public partial class ViewerControl : PhControl
         // 1. skip the preview if it's not enable or in zoom lock mode
         if (!EnableImagePreview || ZoomMode == ZoomMode.LockZoom)
         {
+            PhotoTrace.Mark("viewer:preview-skip", e.Photo.FilePath,
+                $"enablePreview={EnableImagePreview}, zoomMode={ZoomMode}");
+
             // raise event
             _isPreviewing.SetFalse();
             OnPhotoLoading(e);
@@ -707,11 +713,13 @@ public partial class ViewerControl : PhControl
             // try to get photo preview
             if (e.Photo.GalleryThumbnail is not null)
             {
+                PhotoTrace.Mark("viewer:preview-source", e.Photo.FilePath, "gallery-thumbnail");
                 using var skBmp = SkiaCodec.FromBitmap(e.Photo.GalleryThumbnail);
                 imgPreview = SkiaCodec.ToSKImage(skBmp);
             }
             else
             {
+                PhotoTrace.Mark("viewer:preview-source", e.Photo.FilePath, "preview-provider");
                 var previewHeight = Math.Min(Math.Min(DrawingArea.Height, e.Metadata.Height), 700);
                 imgPreview = await Core.PreviewProvider.GetPreviewAsync(e.Metadata, previewHeight, token);
             }
@@ -780,6 +788,9 @@ public partial class ViewerControl : PhControl
         }
 
 
+        PhotoTrace.Mark("viewer:preview-done", e.Photo.FilePath,
+            hasPreview ? $"{BitmapSize.Width}x{BitmapSize.Height}" : "no-preview");
+
         // raise event
         _isPreviewing.Set(hasPreview);
         OnPhotoLoading(e);
@@ -834,11 +845,15 @@ public partial class ViewerControl : PhControl
                 // vector (SVG) source
                 if (e.Photo.Bitmap is SkiaVectorSource)
                 {
+                    PhotoTrace.Mark("viewer:loaded-source", e.Photo.FilePath, "vector");
                     hasSource = true;
                 }
                 // native bitmap is an animated bitmap
                 else if (e.Photo.Bitmap is AnimatorImpl skAnimator)
                 {
+                    PhotoTrace.Mark("viewer:loaded-source", e.Photo.FilePath,
+                        $"animator ({skAnimator.GetType().Name})");
+
                     // update bitmap size
                     BitmapSize = e.Photo.Size;
 
@@ -848,6 +863,8 @@ public partial class ViewerControl : PhControl
                 // native bitmap is a single-frame bitmap
                 else
                 {
+                    PhotoTrace.Mark("viewer:loaded-source", e.Photo.FilePath, "single-frame");
+
                     // update bitmap size
                     BitmapSize = e.Photo.Size;
 
@@ -857,6 +874,9 @@ public partial class ViewerControl : PhControl
                     // apply color space
                     if (TryApplySkiaColorSpace(imgFrame, out var imgFrameColored))
                     {
+                        PhotoTrace.Mark("viewer:color-managed", e.Photo.FilePath,
+                            $"applied (hdrToneMap={Core.Config.EnableHdrToneMapping && e.Photo.Metadata.IsHdr}, srcProfile={(string.IsNullOrEmpty(e.Photo.Metadata.ColorProfileName) ? "none" : e.Photo.Metadata.ColorProfileName)})");
+
                         // don't dispose the clipboard photo
                         if (!e.Photo.IsClipboard)
                         {
@@ -864,6 +884,10 @@ public partial class ViewerControl : PhControl
                         }
 
                         imgFrame = imgFrameColored;
+                    }
+                    else
+                    {
+                        PhotoTrace.Mark("viewer:color-managed", e.Photo.FilePath, "skipped");
                     }
 
                     hasSource = imgFrame != null;
