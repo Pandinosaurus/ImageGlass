@@ -92,6 +92,10 @@ public partial class PhotoMetadata : PhDisposable
     /// </summary>
     public uint Height { get; set; } = 0;
 
+    // DPI
+    public double DpiX { get; set; } = 0;
+    public double DpiY { get; set; } = 0;
+
     public uint FrameCount { get; set; } = 0;
     public string FrameCountFormatted => FrameCount > 1 ? FrameCount.ToString() : string.Empty;
     public uint AnimationLoop { get; set; } = 0;

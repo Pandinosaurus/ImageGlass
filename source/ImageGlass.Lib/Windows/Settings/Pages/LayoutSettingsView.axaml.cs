@@ -33,10 +33,6 @@ using System.Linq;
 
 namespace ImageGlass.Common.Windows;
 
-/// <summary>
-/// The "Layout" settings page: window options (app icon, center-on-window-fit, image-info tags) and the placement of
-/// the toolbar and gallery ar.
-/// </summary>
 public partial class LayoutSettingsView : SettingsPageView
 {
     /// <summary>
@@ -57,6 +53,7 @@ public partial class LayoutSettingsView : SettingsPageView
         nameof(AppStatusInfo.ListCount),
         nameof(AppStatusInfo.Zoom),
         nameof(AppStatusInfo.ColorSpace),
+        nameof(AppStatusInfo.DPI),
         nameof(AppStatusInfo.HdrInfo),
         nameof(AppStatusInfo.ExifRating),
         nameof(AppStatusInfo.ExifDateTime),
@@ -87,9 +84,6 @@ public partial class LayoutSettingsView : SettingsPageView
     private bool _isDragging;
 
 
-    /// <summary>
-    /// Parameterless constructor for the XAML loader / designer.
-    /// </summary>
     public LayoutSettingsView()
     {
         InitializeComponent();

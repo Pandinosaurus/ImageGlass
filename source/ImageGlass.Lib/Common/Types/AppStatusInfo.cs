@@ -364,6 +364,26 @@ public partial class AppStatusInfo : PhDisposable
         }
     }
 
+
+    internal string? DPI
+    {
+        get
+        {
+            // skip for clipboard image
+            if (Core.ClipboardImage is not null) return null;
+
+            if (Core.Config.ImageInfoTags.Contains(nameof(DPI))
+                && Core.Photos.CurrentMetadata != null
+                && Core.Photos.CurrentMetadata.DpiX > 0
+                && Core.Photos.CurrentMetadata.DpiY > 0)
+            {
+                return $"{Core.Photos.CurrentMetadata.DpiX:n0}×{Core.Photos.CurrentMetadata.DpiY:n0} DPI";
+            }
+
+            return null;
+        }
+    }
+
     #endregion // Image Info Tags
 
 
@@ -403,8 +423,9 @@ public partial class AppStatusInfo : PhDisposable
                     nameof(ExifDateTime) => ExifDateTime,
                     nameof(ExifDateTimeOriginal) => ExifDateTimeOriginal,
                     nameof(DateTimeAuto) => DateTimeAuto,
-                    nameof(ColorSpace) => ColorSpace,
                     nameof(HdrInfo) => HdrInfo,
+                    nameof(ColorSpace) => ColorSpace,
+                    nameof(DPI) => DPI,
                     _ => null,
                 };
 
