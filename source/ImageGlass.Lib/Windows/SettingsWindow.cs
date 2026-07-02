@@ -23,6 +23,7 @@ using Avalonia.Layout;
 using ImageGlass.Common.Localization;
 using ImageGlass.UI;
 using ImageGlass.UI.Windowing;
+using ImageGlass.Windows;
 
 namespace ImageGlass.Common.Windows;
 
@@ -193,13 +194,9 @@ public partial class SettingsWindow : DialogWindow
 
         _btnResetSettings = CreateLinkButton(Core.Lang[LangId.Settings_ResetSettings], async () =>
         {
-            // TODO: perform the actual reset-to-defaults.
-            // For now, confirm the action so the UX/wiring is in place.
-            _ = await ModalWindow.ShowWarningAsync(this, new ModalWindowOptions
-            {
-                Title = Core.Lang[LangId.Settings_ResetSettings],
-                Heading = Core.Lang[LangId.Settings_ResetSettings],
-            }, ModalWindowButton.Yes_No);
+            // reset-to-defaults is handled by the Quick Setup wizard
+            var quickSetup = new QuickSetupWindow();
+            await quickSetup.ShowAsync(this);
         });
 
         var footerLeftPanel = new StackPanel

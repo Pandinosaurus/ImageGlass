@@ -151,6 +151,7 @@ public partial class AppAPIProvider
         { API.IG_OpenAboutWindow,           PhCommands.Create(IG_OpenAboutWindowAsync) },
         { API.IG_CheckForUpdate,            PhCommands.Create(IG_CheckForUpdateAsync) },
         { API.IG_ReportIssue,               PhCommands.Create(IG_ReportIssue) },
+        { API.IG_QuickSetup,                PhCommands.Create(IG_QuickSetupAsync) },
         { API.IG_SetDefaultPhotoViewer,     PhCommands.Create(IG_SetDefaultPhotoViewerAsync) },
         { API.IG_RemoveDefaultPhotoViewer,  PhCommands.Create(IG_RemoveDefaultPhotoViewerAsync) },
 

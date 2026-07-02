@@ -1,0 +1,204 @@
+<ui:PhControl
+    x:Class="ImageGlass.Windows.QuickSetupView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:loc="using:ImageGlass.Common.Localization"
+    xmlns:types="using:ImageGlass.Common.Types"
+    xmlns:ui="using:ImageGlass.UI"
+    mc:Ignorable="d"
+    d:DesignWidth="490">
+
+    <!--  All text is localized in code from a local preview language (see code-behind),  -->
+    <!--  so language changes here don't touch the running app until Save.  -->
+    <StackPanel VerticalAlignment="Center" Spacing="18">
+
+        <!--  Header: app logo + step progress  -->
+        <StackPanel
+            Margin="0,24,0,0"
+            HorizontalAlignment="Center"
+            Spacing="14">
+            <Image
+                x:Name="PART_Logo"
+                Width="128"
+                Height="128"
+                HorizontalAlignment="Center" />
+
+            <StackPanel
+                x:Name="PART_StepDots"
+                HorizontalAlignment="Center"
+                Orientation="Horizontal"
+                Spacing="7" />
+
+            <ui:PhTextBlock
+                x:Name="PART_StepInfo"
+                HorizontalAlignment="Center"
+                FontSize="{x:Static types:Const.FONT_SIZE_TITLE}" />
+        </StackPanel>
+
+
+        <!--  Steps (one visible at a time, vertically centered)  -->
+        <Panel MinHeight="230">
+
+            <!--  Step 1: Language  -->
+            <StackPanel
+                x:Name="PART_Step1"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Spacing="12">
+                <ui:PhTextBlock x:Name="PART_LblLanguage" HorizontalAlignment="Center" />
+
+                <ComboBox
+                    x:Name="PART_LanguageList"
+                    Width="220"
+                    HorizontalAlignment="Center"
+                    MaxDropDownHeight="320">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate x:DataType="loc:Lang">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <TextBlock
+                                    FontWeight="SemiBold"
+                                    Text="{CompiledBinding Metadata.LocalName}"
+                                    TextTrimming="CharacterEllipsis" />
+                                <TextBlock
+                                    Opacity="0.6"
+                                    Text="{CompiledBinding Metadata.EnglishName}"
+                                    TextTrimming="CharacterEllipsis" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+
+                <ui:PhButton
+                    x:Name="PART_SeeWhatNew"
+                    Padding="0"
+                    HorizontalAlignment="Center"
+                    Variant="Link" />
+            </StackPanel>
+
+
+            <!--  Step 2: Profile  -->
+            <StackPanel
+                x:Name="PART_Step2"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                IsVisible="False"
+                Spacing="16">
+                <ui:PhTextBlock x:Name="PART_LblSelectProfile" HorizontalAlignment="Center" />
+
+                <StackPanel
+                    HorizontalAlignment="Center"
+                    Orientation="Horizontal"
+                    Spacing="14">
+                    <ui:PhToolButton x:Name="PART_BtnStandard" Width="130">
+                        <StackPanel
+                            Margin="8"
+                            HorizontalAlignment="Center"
+                            Spacing="4">
+                            <TextBlock
+                                HorizontalAlignment="Center"
+                                FontSize="40"
+                                Text="🧑‍💼" />
+                            <ui:PhTextBlock
+                                x:Name="PART_LblStandard"
+                                HorizontalAlignment="Center"
+                                FontWeight="SemiBold"
+                                TextAlignment="Center"
+                                TextWrapping="Wrap" />
+                        </StackPanel>
+                    </ui:PhToolButton>
+
+                    <ui:PhToolButton x:Name="PART_BtnProfessional" Width="130">
+                        <StackPanel
+                            Margin="8"
+                            HorizontalAlignment="Center"
+                            Spacing="4">
+                            <TextBlock
+                                HorizontalAlignment="Center"
+                                FontSize="40"
+                                Text="👨‍🎨" />
+                            <ui:PhTextBlock
+                                x:Name="PART_LblProfessional"
+                                HorizontalAlignment="Center"
+                                FontWeight="SemiBold"
+                                TextAlignment="Center"
+                                TextWrapping="Wrap" />
+                        </StackPanel>
+                    </ui:PhToolButton>
+                </StackPanel>
+
+                <!--  What the chosen profile applies  -->
+                <Border
+                    Padding="14,12"
+                    Background="{DynamicResource IG_BackgroundNeutralBrush}"
+                    CornerRadius="{DynamicResource ControlCornerRadius}">
+                    <StackPanel Spacing="10">
+                        <ui:PhTextBlock x:Name="PART_LblApplied" FontWeight="SemiBold" />
+
+                        <StackPanel>
+                            <CheckBox
+                                x:Name="PART_ChkColorManagement"
+                                Focusable="False"
+                                IsEnabled="False"
+                                IsHitTestVisible="False">
+                                <ui:PhTextBlock x:Name="PART_LblColorManagement" />
+                            </CheckBox>
+                            <CheckBox
+                                x:Name="PART_ChkExplorerSortOrder"
+                                Focusable="False"
+                                IsEnabled="False"
+                                IsHitTestVisible="False">
+                                <ui:PhTextBlock x:Name="PART_LblExplorerSort" />
+                            </CheckBox>
+                            <CheckBox
+                                x:Name="PART_ChkRawThumbnail"
+                                Focusable="False"
+                                IsEnabled="False"
+                                IsHitTestVisible="False">
+                                <ui:PhTextBlock x:Name="PART_LblRawThumbnail" TextWrapping="Wrap" />
+                            </CheckBox>
+                        </StackPanel>
+
+                        <ui:PhTextBlock
+                            x:Name="PART_LblProfileNote"
+                            FontStyle="Italic"
+                            Opacity="0.65"
+                            TextWrapping="Wrap" />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+
+
+            <!--  Step 3: Default photo viewer (Windows only)  -->
+            <StackPanel
+                x:Name="PART_Step3"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                IsVisible="False"
+                Spacing="16">
+                <StackPanel Spacing="6">
+                    <ui:PhTextBlock
+                        x:Name="PART_LblSetViewer"
+                        HorizontalAlignment="Center"
+                        FontWeight="SemiBold"
+                        TextAlignment="Center"
+                        TextWrapping="Wrap" />
+                    <ui:PhTextBlock
+                        x:Name="PART_LblSetViewerDesc"
+                        HorizontalAlignment="Center"
+                        Opacity="0.65"
+                        TextAlignment="Center"
+                        TextWrapping="Wrap" />
+                </StackPanel>
+
+                <ui:PhButton
+                    x:Name="PART_BtnSetDefaultViewer"
+                    MinWidth="150"
+                    HorizontalAlignment="Center" />
+            </StackPanel>
+
+        </Panel>
+    </StackPanel>
+
+</ui:PhControl>

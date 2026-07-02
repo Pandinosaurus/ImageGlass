@@ -971,6 +971,16 @@ public partial class Config : PhReactive
     #region Public Methods
 
     /// <summary>
+    /// Resets all settings to their built-in defaults by clearing the stored values
+    /// (getters then fall back to their hardcoded defaults).
+    /// </summary>
+    public void ResetToDefault()
+    {
+        _values.Clear();
+    }
+
+
+    /// <summary>
     /// Sets setting value.
     /// </summary>
     public void Set(ConfigId configName, object value)

@@ -489,10 +489,7 @@
                                 <ui:PhMenuItem Click="MainMenuItem_Click" LangKey="Menu_MnuAbout" />
                                 <ui:PhMenuItem Click="MainMenuItem_Click" LangKey="_CheckForUpdate" />
                                 <ui:PhMenuItem Click="MainMenuItem_Click" LangKey="Menu_MnuReportIssue" />
-                                <ui:PhMenuItem
-                                    Click="MainMenuItem_Click"
-                                    IsVisible="False"
-                                    LangKey="Menu_MnuQuickSetup" />
+                                <ui:PhMenuItem Click="MainMenuItem_Click" LangKey="Menu_MnuQuickSetup" />
                                 <ui:PhMenuItem Header="-" IsVisible="{OnPlatform False, Windows=True, x:TypeArguments=x:Boolean}" />
 
                                 <ui:PhMenuItem

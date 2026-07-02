@@ -389,9 +389,9 @@ public class Lang
         new(LangId._LearnMore, "Learn more…"), // v9.0
         new(LangId._Continue, "Continue"), // v9.0
         new(LangId._Quit, "Quit"), // v9.0
-//        new(LangId._Back, "Back"), // v9.0
-//        new(LangId._Next, "Next"), // v9.0
-//        new(LangId._Save, "Save"), // v9.0
+        new(LangId._Back, "Back"), // v9.0
+        new(LangId._Next, "Next"), // v9.0
+        new(LangId._Save, "Save"), // v9.0
 //        new(LangId._Error, "Error"), // v9.0
         new(LangId._Warning, "Warning"), // v9.0
         new(LangId._Copy, "Copy"), //v9.0
@@ -1193,25 +1193,27 @@ public class Lang
         #endregion // Export frames (general)
 
 
-        #region Quick setup (unused)
+        #region Quick setup
 
-//        new(LangId.FrmQuickSetup_Text, "ImageGlass Quick Setup" ), //v9.0
-//        new(LangId.FrmQuickSetup_StepInfo, "Step {0}" ), //v9.0
-//        new(LangId.FrmQuickSetup_SkipQuickSetup, "Skip this and launch ImageGlass" ), //v9.0
+        new(LangId.QuickSetup_Title, "ImageGlass Quick Setup" ), //v10.0
+        new(LangId.QuickSetup_StepInfo, "Step {0} of {1}" ), //v10.0
+        new(LangId.QuickSetup_SkipAndLaunch, "Skip this and launch ImageGlass" ), //v10.0
 
-//        new(LangId.FrmQuickSetup_SeeWhatNew, "See what's new in this version…" ), // v9.0
-//        new(LangId.FrmQuickSetup_SelectProfile, "Select a profile" ), //v9.0
-//        new(LangId.FrmQuickSetup_StandardUser, "Standard user" ), //v9.0
-//        new(LangId.FrmQuickSetup_ProfessionalUser, "Professional user" ), //v9.0
-//        new(LangId.FrmQuickSetup_SettingProfileDescription, "To modify these settings, simply access app settings." ), // v9.0
+        new(LangId.QuickSetup_SelectLanguage, "Display language" ), //v10.0
+        new(LangId.QuickSetup_SeeWhatNew, "See what's new in this version…" ), //v10.0
+        new(LangId.QuickSetup_SelectProfile, "Select a profile" ), //v10.0
+        new(LangId.QuickSetup_StandardUser, "Standard user" ), //v10.0
+        new(LangId.QuickSetup_ProfessionalUser, "Professional user" ), //v10.0
+        new(LangId.QuickSetup_SettingsWillBeApplied, "Settings will be applied:" ), //v10.0
+        new(LangId.QuickSetup_SettingProfileDescription, "To modify these settings later, simply open the app Settings." ), //v10.0
 
-//        new(LangId.FrmQuickSetup_SettingsWillBeApplied, "Settings will be applied:" ), //v9.0
-//        new(LangId.FrmQuickSetup_SetDefaultViewer, "Do you want to set ImageGlass as the default photo viewer?" ), //v9.0
-//        new(LangId.FrmQuickSetup_SetDefaultViewer_Description, "You can reset it in the app settings > File type associations tab." ), //v9.0
+        new(LangId.QuickSetup_SetDefaultViewer, "Do you want to set ImageGlass as the default photo viewer?" ), //v10.0
+        new(LangId.QuickSetup_SetDefaultViewer_Description, "You can reset it later in Settings > File type associations." ), //v10.0
 
-//        new(LangId.FrmQuickSetup_ConfirmCloseProcess, "Before applying new settings, it's essential to close all ImageGlass processes. Are you ready to proceed?" ), //v7.5
+        new(LangId.QuickSetup_ConfirmCloseProcess, "Are you ready to apply the settings?" ), //v10.0
+        new(LangId.QuickSetup_ConfirmCloseProcess_Description, "All other running instances of ImageGlass will be closed before the settings are saved." ), //v10.0
 
-        #endregion // Quick setup (unused)
+        #endregion // Quick setup
 
         #endregion // igcmd.exe
 

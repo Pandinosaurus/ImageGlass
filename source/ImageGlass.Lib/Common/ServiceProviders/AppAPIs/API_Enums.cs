@@ -126,6 +126,7 @@ public enum API
     IG_OpenAboutWindow,
     IG_CheckForUpdate,
     IG_ReportIssue,
+    IG_QuickSetup,
     IG_SetDefaultPhotoViewer,
     IG_RemoveDefaultPhotoViewer,
 

@@ -176,6 +176,7 @@ public partial class AppAPIProvider
         new(LangId.Menu_MnuAbout,                        API.IG_OpenAboutWindow, Key.F1),
         new(LangId._CheckForUpdate,                         API.IG_CheckForUpdate),
         new(LangId.Menu_MnuReportIssue,                  API.IG_ReportIssue),
+        new(LangId.Menu_MnuQuickSetup,                   API.IG_QuickSetup),
         new(LangId.Menu_MnuSetDefaultPhotoViewer,        API.IG_SetDefaultPhotoViewer),
         new(LangId.Menu_MnuRemoveDefaultPhotoViewer,     API.IG_RemoveDefaultPhotoViewer),
 

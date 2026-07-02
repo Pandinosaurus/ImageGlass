@@ -30,9 +30,9 @@ public enum LangId
     _LearnMore,
     _Continue,
     _Quit,
-//    _Back,
-//    _Next,
-//    _Save,
+    _Back,
+    _Next,
+    _Save,
 //    _Error,
     _Warning,
     _Copy,
@@ -824,23 +824,25 @@ public enum LangId
     #endregion // Export frames (general)
 
 
-    #region Quick setup (unused)
-//    FrmQuickSetup_Text,
-//    FrmQuickSetup_StepInfo,
-//    FrmQuickSetup_SkipQuickSetup,
+    #region Quick setup
+    QuickSetup_Title,
+    QuickSetup_StepInfo,
+    QuickSetup_SkipAndLaunch,
 
-//    FrmQuickSetup_SeeWhatNew,
-//    FrmQuickSetup_SelectProfile,
-//    FrmQuickSetup_StandardUser,
-//    FrmQuickSetup_ProfessionalUser,
-//    FrmQuickSetup_SettingProfileDescription,
+    QuickSetup_SelectLanguage,
+    QuickSetup_SeeWhatNew,
+    QuickSetup_SelectProfile,
+    QuickSetup_StandardUser,
+    QuickSetup_ProfessionalUser,
+    QuickSetup_SettingsWillBeApplied,
+    QuickSetup_SettingProfileDescription,
 
-//    FrmQuickSetup_SettingsWillBeApplied,
-//    FrmQuickSetup_SetDefaultViewer,
-//    FrmQuickSetup_SetDefaultViewer_Description,
+    QuickSetup_SetDefaultViewer,
+    QuickSetup_SetDefaultViewer_Description,
 
-//    FrmQuickSetup_ConfirmCloseProcess,
-    #endregion // Quick setup (unused)
+    QuickSetup_ConfirmCloseProcess,
+    QuickSetup_ConfirmCloseProcess_Description,
+    #endregion // Quick setup
 
     #endregion // igcmd.exe
 

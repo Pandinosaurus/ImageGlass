@@ -215,6 +215,66 @@ public partial class BHelper
 
 
     /// <summary>
+    /// Returns <c>true</c> if another instance of this app (besides the current process) is running.
+    /// </summary>
+    public static bool HasOtherInstances()
+    {
+        try
+        {
+            using var current = Process.GetCurrentProcess();
+            var procs = Process.GetProcessesByName(current.ProcessName);
+
+            var hasOther = false;
+            foreach (var proc in procs)
+            {
+                if (proc.Id != current.Id) hasOther = true;
+                proc.Dispose();
+            }
+
+            return hasOther;
+        }
+        catch { return false; }
+    }
+
+
+    /// <summary>
+    /// Terminates all other running instances of this app, keeping the current process alive.
+    /// </summary>
+    public static void CloseOtherInstances()
+    {
+        try
+        {
+            using var current = Process.GetCurrentProcess();
+            foreach (var proc in Process.GetProcessesByName(current.ProcessName))
+            {
+                try
+                {
+                    if (proc.Id != current.Id) proc.Kill();
+                }
+                catch { }
+                finally { proc.Dispose(); }
+            }
+        }
+        catch { }
+    }
+
+
+    /// <summary>
+    /// Restarts the app: releases the single-instance mutex so a fresh instance can take ownership,
+    /// launches it, then exits the current process.
+    /// </summary>
+    public static void RestartApp()
+    {
+        // release the single-instance lock; otherwise the new instance would just forward to this
+        // (exiting) one and quit, leaving no window
+        Core.AppInstance.Dispose();
+
+        _ = RunExeAsync(AppExePath, string.Empty);
+        ExitApp(false);
+    }
+
+
+    /// <summary>
     /// Exits the app.
     /// </summary>
     public static void ExitApp(bool forced, int exitCode = 0)

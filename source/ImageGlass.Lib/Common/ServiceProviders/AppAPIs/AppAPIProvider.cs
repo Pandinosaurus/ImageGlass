@@ -3026,6 +3026,16 @@ public partial class AppAPIProvider
 
 
     /// <summary>
+    /// Opens the "ImageGlass Quick Setup" wizard window.
+    /// </summary>
+    public static async Task IG_QuickSetupAsync()
+    {
+        var dialog = new QuickSetupWindow();
+        _ = await dialog.ShowAsync(App.MainWindow);
+    }
+
+
+    /// <summary>
     /// Opens website to report issue.
     /// </summary>
     public static void IG_ReportIssue()
