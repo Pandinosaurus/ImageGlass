@@ -56,7 +56,6 @@ public class Lang
     #endregion // JSON Serializable Properties
 
 
-
     #region Non-Serializable Properties
 
     /// <summary>
@@ -108,7 +107,6 @@ public class Lang
     #endregion // Non-Serializable Properties
 
 
-
     #region Instance Initialization
 
     /// <summary>
@@ -127,7 +125,6 @@ public class Lang
     }
 
     #endregion // Instance Initialization
-
 
 
     #region Public Methods
@@ -346,7 +343,6 @@ public class Lang
     #endregion // Public Methods
 
 
-
     /// <summary>
     /// Map of <see cref="LangId"/> and language key. Built once (these never change at runtime);
     /// previously a computed property that rebuilt the whole frozen dictionary on every access.
@@ -392,19 +388,14 @@ public class Lang
         new(LangId._Back, "Back"), // v9.0
         new(LangId._Next, "Next"), // v9.0
         new(LangId._Save, "Save"), // v9.0
-//        new(LangId._Error, "Error"), // v9.0
         new(LangId._Warning, "Warning"), // v9.0
         new(LangId._Copy, "Copy"), //v9.0
         new(LangId._Browse, "Browse…"), //v9.0
         new(LangId._Reset, "Reset"), //v9.0
         new(LangId._ResetToDefault, "Reset to default"), //v9.0
         new(LangId._CheckForUpdate, "Check for update…"), //v5.0
-//        new(LangId._Download, "Download"), //v9.0
         new(LangId._Update, "Update"), //v9.0
         new(LangId._Website, "Website"), //v9.0
-//        new(LangId._Email, "Email"), //v9.0
-//        new(LangId._Install, "Install…"),
-//        new(LangId._Refresh, "Refresh"),
         new(LangId._TypeToFilter, "Type to filter…"),
         new(LangId._Delete, "Delete"),
         new(LangId._Add, "Add"),
@@ -412,17 +403,12 @@ public class Lang
         new(LangId._ID, "ID"),
         new(LangId._Name, "Name"),
         new(LangId._Hotkeys, "Hotkeys"),
-//        new(LangId._AddHotkey, "Add hotkey…"),
         new(LangId._Executable, "Executable"),
         new(LangId._Argument, "Argument"),
         new(LangId._CommandPreview, "Command preview"),
         new(LangId._FileExtension, "File extension"),
         new(LangId._Codec, "Codec"),
         new(LangId._Empty, "(empty)"),
-//        new(LangId._MoveUp, "Move up"),
-//        new(LangId._MoveDown, "Move down"),
-//        new(LangId._MoveLeft, "Move left"),
-//        new(LangId._MoveRight, "Move right"),
         new(LangId._Separator, "Separator"),
         new(LangId._Icon, "Icon"),
         new(LangId._Description, "Description"),
@@ -443,15 +429,10 @@ public class Lang
         new(LangId._InvalidAction, "Invalid action"), //v9.0
         new(LangId._InvalidAction_Transformation, "ImageGlass does not support rotation, flipping for this image."), //v9.0
 
-//        new(LangId._UserAction_MenuNotFound, "Cannot find menu '{0}' to invoke the action"), // v9.0
-//        new(LangId._UserAction_MethodNotFound, "Cannot find method '{0}' to invoke the action"), // v9.0
-//        new(LangId._UserAction_MethodArgumentNotSupported, "The argument type of method '{0}' is not supported"), // v9.0
         new(LangId._UserAction_Win32ExeError, "Cannot execute command '{0}'. Make sure the name is correct."), // v9.0
 
         // Gallery tooltip
         new(LangId._Metadata_FileSize, "File size"), //v9.0
-//        new(LangId._Metadata_FileCreationTime, "Date created"), //v9.0
-//        new(LangId._Metadata_FileLastAccessTime, "Date accessed"), //v9.0
         new(LangId._Metadata_FileLastWriteTime, "Date modified"), //v9.0
         new(LangId._Metadata_FrameCount, "Frames"), //v9.0
         new(LangId._Metadata_ExifRatingPercent, "Rating"), //v9.0
@@ -481,6 +462,39 @@ public class Lang
         new(LangId._Validation_FilePathValueOnly, "Invalid file path"),
         new(LangId._Validation_FileExtensionValueOnly, "Must be a single file extension (e.g. .psd)"),
         new(LangId._Validation_FileExtensionsValueOnly, "Must be file extensions separated by ';' (e.g. .jpg;.png)"),
+
+
+        // main window
+        new(LangId._PicMain_ErrorText, "Could not load this image"), // v2.0 beta, updated 4.0, 9.0, 10.0
+        new(LangId._OpenFileDialog, "All supported files"),
+        new(LangId._Loading, "Loading…"), // v3.0
+        new(LangId._ReachedFirstImage, "Reached the first image"), // v4.0
+        new(LangId._ReachedLastImage, "Reached the last image"), // v4.0
+        new(LangId._ClipboardImage, "Clipboard image"), //v9.0
+        new(LangId._FolderAccessPrompt, "Allow ImageGlass to access this folder to browse other images"), //v10.0
+
+        // about
+        new(LangId._Slogan, "A Fast, Seamless Photo Viewer"),
+        new(LangId._AboutVersion, "Version:"),
+        new(LangId._License, "Software license"),
+        new(LangId._Privacy, "Privacy policy"),
+        new(LangId._Homepage, "Homepage"),
+        new(LangId._Credits, "Credits"),
+        new(LangId._Donate, "Donate"),
+
+        // slideshow
+        new(LangId._PauseSlideshow, "Slideshow is paused." ), // v9.0
+        new(LangId._ResumeSlideshow, "Slideshow is resumed." ), // v9.0
+        new(LangId._MnuPauseResumeSlideshow, "Pause/resume slideshow" ), // v9.0
+        new(LangId._MnuToggleCountdown, "Show slideshow countdown" ), // v9.0
+        new(LangId._MnuExitSlideshow, "Exit slideshow" ), // v9.0
+
+        // export frames
+        new(LangId._Title, "Export image frames" ), //v9.0
+        new(LangId._FolderPickerTitle, "Select output folder for exporting image frames" ), //v9.0
+        new(LangId._Exporting, "Exporting {0}/{1} frames \r\n{2}…" ), //v9.0
+        new(LangId._ExportDone, "Exported {0} frames successfully to \r\n{1}" ), //v9.0
+        new(LangId._OpenOutputFolder, "Open output folder" ), //v9.0
 
         #endregion // General
     
@@ -546,21 +560,8 @@ public class Lang
 
 
         #region Main Window
-
-        #region Main Window > General
-        new(LangId._PicMain_ErrorText, "Could not load this image"), // v2.0 beta, updated 4.0, 9.0, 10.0
         new(LangId.Menu_MnuMain, "Main menu"), // v3.0
         new(LangId.Menu_MnuToolbarOverflow, "View more buttons"), // v10.0
-
-        new(LangId._OpenFileDialog, "All supported files"),
-        new(LangId._Loading, "Loading…"), // v3.0
-//        new(LangId.FrmMain_OpenWith, "Open with {0}"), //v9.0
-        new(LangId._ReachedFirstImage, "Reached the first image"), // v4.0
-        new(LangId._ReachedLastImage, "Reached the last image"), // v4.0
-        new(LangId._ClipboardImage, "Clipboard image"), //v9.0
-        new(LangId._FolderAccessPrompt, "Allow ImageGlass to access this folder to browse other images"), //v10.0
-
-        #endregion // Main Window > General
 
 
         #region Main Window > Main Menu
@@ -681,7 +682,6 @@ public class Lang
         new(LangId.Menu_MnuCopyPath, "Copy image path"), //v3.0
         new(LangId.Menu_MnuCopyPath_Success, "Copied image path"), // v9.0
         new(LangId.Menu_MnuPasteImage, "Paste image"), //v3.0
-//        new(LangId.FrmMain_MnuPasteImage_Error, "Could not find image data in Clipboard"), // v8.0
         new(LangId.Menu_MnuClearClipboard, "Clear clipboard"), //v3.0
         new(LangId.Menu_MnuClearClipboard_Success, "Cleared clipboard"), // v2.0 final
         #endregion // Main Menu > Clipboard
@@ -751,22 +751,6 @@ public class Lang
         #endregion // Main Window
 
         
-        #region About (general)
-        new(LangId._Slogan, "A Fast, Seamless Photo Viewer"),
-        new(LangId._AboutVersion, "Version:"),
-        new(LangId._License, "Software license"),
-        new(LangId._Privacy, "Privacy policy"),
-//        new(LangId.FrmAbout_Thanks, "Special thanks to"),
-//        new(LangId.FrmAbout_LogoDesigner, "Logo designer:"),
-//        new(LangId.FrmAbout_Collaborator, "Collaborator:"),
-//        new(LangId.FrmAbout_Contact, "Contact"),
-        new(LangId._Homepage, "Homepage"),
-//        new(LangId.FrmAbout_Email, "Email:"),
-        new(LangId._Credits, "Credits"),
-        new(LangId._Donate, "Donate"),
-        #endregion // About (general)
-
-        
         #region Settings
 
         new(LangId.Settings_ResetSettings, "Reset settings"), // v9.1
@@ -804,17 +788,8 @@ public class Lang
         new(LangId.Settings_EnableWelcomeImage, "Show welcome image"),
         new(LangId.Settings_EnableLastSeenImage, "Open the last seen image"),
 
-//        new(LangId.FrmSettings_StartupBoost, "Startup Boost"), // v9.1
-//        new(LangId.FrmSettings_StartupBoost_Description, "Preload and run ImageGlass in the background for a few seconds during Windows startup to accelerate the first launch."), // v9.1
-//        new(LangId.FrmSettings_StartupBoost_Enabled, "Startup Boost is enabled"), // v9.1
-//        new(LangId.FrmSettings_StartupBoost_Disabled, "Startup Boost is disabled"), // v9.1
-//        new(LangId.FrmSettings_StartupBoost_Error, "Could not change Startup Boost setting"), // v9.1
-//        new(LangId.FrmSettings_EnableStartupBoost, "Enable Startup Boost"), // v9.1
-//        new(LangId.FrmSettings_DisableStartupBoost, "Disable Startup Boost"), // v9.1
-//        new(LangId.FrmSettings_OpenStartupAppsSetting, "Open Startup apps setting"), // v9.1
 
         // General > Real-time update
-//        new(LangId.FrmSettings_RealTimeFileUpdate, "Real-time file update"),
         new(LangId.Settings_EnableFileWatcher, "Monitor file changes in the viewing folder and update in realtime"),
         new(LangId.Settings_EnableAutoOpenNewAddedImage, "Open the new added image automatically"),
 
@@ -844,7 +819,6 @@ public class Lang
         new(LangId.Settings_EnableImagePreview, "Display image preview while it's being loaded"),
 
         new(LangId.Settings_ImagePreview, "Image preview"),
-//        new(LangId.FrmSettings_EmbeddedThumbnail, "Embedded thumbnail"),
         new(LangId.Settings_EnableOnlyLoadRawPreview, "Load only the embedded thumbnail for RAW formats"),
         new(LangId.Settings_EnableOnlyLoadNonRawPreview, "Load only the embedded thumbnail for other formats"),
         new(LangId.Settings_MinEmbeddedThumbnailSize, "Minimum size of the embedded thumbnail to be loaded"),
@@ -856,7 +830,6 @@ public class Lang
 
         // Image > Caching
         new(LangId.Settings_Caching, "Caching"),
-//        new(LangId.FrmSettings_ImageBoosterCacheCount, "Number of images cached by Image Booster (one direction)"),
         new(LangId.Settings_ImageBoosterCacheMaxMemoryInMb, "Maximum memory used for caching images (in megabytes)"),
         new(LangId.Settings_ImageBoosterCacheMaxDimension, "Maximum image dimension to be cached (in pixels)"),
         new(LangId.Settings_ImageBoosterCacheMaxFileSizeInMb, "Maximum image file size to be cached (in megabytes)"),
@@ -922,12 +895,9 @@ public class Lang
         new(LangId.Settings_Layout_Viewer, "Viewer"),
 
         // Layout > Layout
-//        new(LangId.FrmSettings_Layout_Order, "Order"),
         new(LangId.Settings_Layout_Toolbar, "Toolbar"),
-//        new(LangId.FrmSettings_Layout_ToolbarContext, "Contextual toolbar"),
         new(LangId.Settings_Layout_Gallery, "Gallery"),
         new(LangId.Settings_Layout_ToolbarPosition, "Toolbar position"),
-//        new(LangId.FrmSettings_Layout_ToolbarContextPosition, "Contextual toolbar position"),
         new(LangId.Settings_Layout_GalleryPosition, "Gallery position"),
         #endregion // Settings > Tab Layout
 
@@ -935,7 +905,6 @@ public class Lang
         #region Settings > Tab Viewer
         // Viewer > Appearance
         new(LangId.Settings_Appearance, "Appearance"),
-//        new(LangId.FrmSettings_ShowCheckerboardOnlyImageRegion, "Show checkerboard only within the image region"),
         new(LangId.Settings_EnableNavigationButtons, "Show navigation arrow buttons"),
         new(LangId.Settings_EnableCenterWindowFit, "Automatically center the window in Window Fit mode"),
         new(LangId.Settings_EnableVectorRenderer, "Use the vector renderer for SVG images"),
@@ -966,16 +935,13 @@ public class Lang
 
         new(LangId.Settings_Toolbar_AddNewButton, "Add a custom toolbar button"),
         new(LangId.Settings_Toolbar_EditButton, "Edit toolbar button"),
-//        new(LangId.FrmSettings_Toolbar_ButtonJson, "Button JSON"),
 
 
         new(LangId.Settings_Toolbar_ToolbarButtons, "Toolbar buttons"),
         new(LangId.Settings_Toolbar_AddCustomButton, "Add a custom button…"),
         new(LangId.Settings_Toolbar_AvailableButtons, "Available buttons"),
         new(LangId.Settings_Toolbar_CurrentButtons, "Current buttons"),
-//        new(LangId.FrmSettings_Toolbar_Errors_ButtonIdRequired, "Button ID required."),
         new(LangId.Settings_Toolbar_Errors_ButtonIdDuplicated, "A button with the ID '{0}' has already been defined. Please choose a different and unique ID for your button to avoid conflicts."),
-//        new(LangId.FrmSettings_Toolbar_Errors_ButtonExecutableRequired, "Button executable required."),
 
         new(LangId.Settings_Toolbar_ButtonText, "Button text"),
         new(LangId.Settings_Toolbar_ShowButtonText, "Show text beside the icon"),
@@ -984,7 +950,6 @@ public class Lang
         new(LangId.Settings_Toolbar_ConfigBinding, "Enable toggle binding"),
         new(LangId.Settings_Toolbar_ConfigBindingName, "Config name"),
         new(LangId.Settings_Toolbar_ConfigBindingValue, "Config value"),
-//        new(LangId.FrmSettings_Toolbar_ClickAction, "Click action"),
         new(LangId.Settings_Toolbar_RecordHotkeyHint, "Click here, then press a hotkey"),
         new(LangId.Settings_Toolbar_BuiltInReadonly, "This is a built-in button, so its properties can't be changed."),
 
@@ -1009,7 +974,6 @@ public class Lang
         new(LangId.Settings_MouseWheelAction, "Mouse wheel action"),
         // Mouse > Mouse click action
         new(LangId.Settings_MouseClickAction, "Mouse click action"),
-//        new(LangId.FrmSettings_MouseClickAction_Hint, "Leave the executable empty to do nothing."),
         #endregion // Settings > Tab Mouse
 
 
@@ -1085,7 +1049,6 @@ public class Lang
         new(LangId.Settings_Theme, "Theme"),
         new(LangId.Settings_DarkTheme, "Dark"),
         new(LangId.Settings_LightTheme, "Light"),
-//        new(LangId.FrmSettings_Author, "Author"),
         new(LangId.Settings_Theme_OpenThemeFolder, "Open theme folder"),
         new(LangId.Settings_Theme_GetMoreThemes, "Get more theme packs…"),
         new(LangId.Settings_Theme_InstallTheme, "Install theme packs"),
@@ -1129,7 +1092,6 @@ public class Lang
 
         #region Tool: Color picker
 
-//        new(LangId.FrmColorPicker_BtnSettings_Tooltip, "Open Color picker settings…"), //v9.0
 
         // Color picker settings
         new(LangId.Tool_ColorPicker_Title, "Color picker settings"), //v9.0
@@ -1143,20 +1105,6 @@ public class Lang
         #endregion // Tool: Color picker
 
 
-        #region Tool not found (unused)
-//        new(LangId.FrmToolNotFound_Title, "Tool not found" ), // v9.0
-//        new(LangId.FrmToolNotFound_BtnSelectExecutable, "Select…" ), // v9.0
-//        new(LangId.FrmToolNotFound_LblHeading, "'{0}' is not found!" ), // v9.0
-//        new(LangId.FrmToolNotFound_LblDescription, "ImageGlass was unable to locate the path to the '{0}' executable. To resolve this issue, please update the path to the '{0}' as necessary." ), // v9.0
-//        new(LangId.FrmToolNotFound_LblDownloadToolText, "You can download more tools for ImageGlass at:" ), // v9.0
-        #endregion // Tool not found (unused)
-
-
-        #region Hotkey picker (unused)
-//        new(LangId.FrmHotkeyPicker_LblHotkey, "Press hotkeys" ), // v9.0
-        #endregion // Hotkey picker (unused)
-
-
         #region Tool: Resizer
         new(LangId.Tool_Resizer_RadResizeByPixels, "Pixels" ), // v9.2
         new(LangId.Tool_Resizer_RadResizeByPercentage, "Percentage" ), // v9.2
@@ -1167,32 +1115,6 @@ public class Lang
         #endregion // Tool: Resizer
 
         
-        #region igcmd.exe
-
-//        new(LangId._IgCommandExe_DefaultError_Heading, "Invalid commands" ), //v9.0
-//        new(LangId._IgCommandExe_DefaultError_Description, "Make sure you pass correct commands!\r\nThis executable file contains command-line functions for ImageGlass software.\r\n\r\nTo explore all command lines, please visit:\r\n{0}" ), //v9.0
-
-
-        #region Slideshow (general)
-
-        new(LangId._PauseSlideshow, "Slideshow is paused." ), // v9.0
-        new(LangId._ResumeSlideshow, "Slideshow is resumed." ), // v9.0
-        new(LangId._MnuPauseResumeSlideshow, "Pause/resume slideshow" ), // v9.0
-        new(LangId._MnuToggleCountdown, "Show slideshow countdown" ), // v9.0
-        new(LangId._MnuExitSlideshow, "Exit slideshow" ), // v9.0
-
-        #endregion // Slideshow (general)
-
-
-        #region Export frames (general)
-        new(LangId._Title, "Export image frames" ), //v9.0
-        new(LangId._FolderPickerTitle, "Select output folder for exporting image frames" ), //v9.0
-        new(LangId._Exporting, "Exporting {0}/{1} frames \r\n{2}…" ), //v9.0
-        new(LangId._ExportDone, "Exported {0} frames successfully to \r\n{1}" ), //v9.0
-        new(LangId._OpenOutputFolder, "Open output folder" ), //v9.0
-        #endregion // Export frames (general)
-
-
         #region Quick setup
 
         new(LangId.QuickSetup_Title, "ImageGlass Quick Setup" ), //v10.0
@@ -1215,11 +1137,9 @@ public class Lang
 
         #endregion // Quick setup
 
-        #endregion // igcmd.exe
 
     ];
 
 }
-
 
 

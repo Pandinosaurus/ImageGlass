@@ -33,19 +33,14 @@ public enum LangId
     _Back,
     _Next,
     _Save,
-//    _Error,
     _Warning,
     _Copy,
     _Browse,
     _Reset,
     _ResetToDefault,
     _CheckForUpdate,
-//    _Download,
     _Update,
     _Website,
-//    _Email,
-//    _Install,
-//    _Refresh,
     _TypeToFilter,
     _Delete,
     _Add,
@@ -53,17 +48,12 @@ public enum LangId
     _ID,
     _Name,
     _Hotkeys,
-//    _AddHotkey,
     _Executable,
     _Argument,
     _CommandPreview,
     _FileExtension,
     _Codec,
     _Empty,
-//    _MoveUp,
-//    _MoveDown,
-//    _MoveLeft,
-//    _MoveRight,
     _Separator,
     _Icon,
     _Description,
@@ -84,15 +74,10 @@ public enum LangId
     _InvalidAction,
     _InvalidAction_Transformation,
 
-//    _UserAction_MenuNotFound,
-//    _UserAction_MethodNotFound,
-//    _UserAction_MethodArgumentNotSupported,
     _UserAction_Win32ExeError,
 
     // Gallery tooltip
     _Metadata_FileSize,
-//    _Metadata_FileCreationTime,
-//    _Metadata_FileLastAccessTime,
     _Metadata_FileLastWriteTime,
     _Metadata_FrameCount,
     _Metadata_ExifRatingPercent,
@@ -121,6 +106,39 @@ public enum LangId
     _Validation_FilePathValueOnly,
     _Validation_FileExtensionValueOnly,
     _Validation_FileExtensionsValueOnly,
+
+
+    // main window
+    _PicMain_ErrorText,
+    _OpenFileDialog,
+    _Loading,
+    _ReachedFirstImage,
+    _ReachedLastImage,
+    _ClipboardImage,
+    _FolderAccessPrompt,
+
+    // about
+    _Slogan,
+    _AboutVersion,
+    _License,
+    _Privacy,
+    _Homepage,
+    _Credits,
+    _Donate,
+
+    // slideshow
+    _PauseSlideshow,
+    _ResumeSlideshow,
+    _MnuPauseResumeSlideshow,
+    _MnuToggleCountdown,
+    _MnuExitSlideshow,
+
+    // export frames
+    _Title,
+    _FolderPickerTitle,
+    _Exporting,
+    _ExportDone,
+    _OpenOutputFolder,
 
     #endregion // General
 
@@ -177,20 +195,8 @@ public enum LangId
 
 
     #region Main Window
-
-    #region Main Window > General
     Menu_MnuMain,
     Menu_MnuToolbarOverflow,
-    _PicMain_ErrorText,
-
-    _OpenFileDialog,
-    _Loading,
-//    FrmMain_OpenWith,
-    _ReachedFirstImage,
-    _ReachedLastImage,
-    _ClipboardImage,
-    _FolderAccessPrompt,
-    #endregion // Main Window > General
 
 
     #region Main Window > Main Menu
@@ -319,7 +325,6 @@ public enum LangId
     Menu_MnuCopyPath,
     Menu_MnuCopyPath_Success,
     Menu_MnuPasteImage,
-//    FrmMain_MnuPasteImage_Error,
     Menu_MnuClearClipboard,
     Menu_MnuClearClipboard_Success,
     #endregion // Main Menu > Clipboard
@@ -391,22 +396,6 @@ public enum LangId
     #endregion // Main Window
 
 
-    #region About (general)
-    _Slogan,
-    _AboutVersion,
-    _License,
-    _Privacy,
-//    FrmAbout_Thanks,
-//    FrmAbout_LogoDesigner,
-//    FrmAbout_Collaborator,
-//    FrmAbout_Contact,
-    _Homepage,
-//    FrmAbout_Email,
-    _Credits,
-    _Donate,
-    #endregion // About (general)
-
-
     #region Settings
 
     Settings_ResetSettings,
@@ -443,17 +432,8 @@ public enum LangId
     Settings_EnableWelcomeImage,
     Settings_EnableLastSeenImage,
 
-//    FrmSettings_StartupBoost,
-//    FrmSettings_StartupBoost_Description,
-//    FrmSettings_StartupBoost_Enabled,
-//    FrmSettings_StartupBoost_Disabled,
-//    FrmSettings_StartupBoost_Error,
-//    FrmSettings_EnableStartupBoost,
-//    FrmSettings_DisableStartupBoost,
-//    FrmSettings_OpenStartupAppsSetting,
 
     // General > Real-time update
-//    FrmSettings_RealTimeFileUpdate,
     Settings_EnableFileWatcher,
     Settings_EnableAutoOpenNewAddedImage,
 
@@ -483,7 +463,6 @@ public enum LangId
     Settings_EnableImagePreview,
 
     Settings_ImagePreview,
-//    FrmSettings_EmbeddedThumbnail,
     Settings_EnableOnlyLoadRawPreview,
     Settings_EnableOnlyLoadNonRawPreview,
     Settings_MinEmbeddedThumbnailSize,
@@ -495,7 +474,6 @@ public enum LangId
 
     // Image > Caching
     Settings_Caching,
-//    FrmSettings_ImageBoosterCacheCount,
     Settings_ImageBoosterCacheMaxMemoryInMb,
     Settings_ImageBoosterCacheMaxDimension,
     Settings_ImageBoosterCacheMaxFileSizeInMb,
@@ -560,12 +538,9 @@ public enum LangId
     Settings_Layout_Viewer,
 
     // Layout > Layout
-//    FrmSettings_Layout_Order,
     Settings_Layout_Toolbar,
-//    FrmSettings_Layout_ToolbarContext,
     Settings_Layout_Gallery,
     Settings_Layout_ToolbarPosition,
-//    FrmSettings_Layout_ToolbarContextPosition,
     Settings_Layout_GalleryPosition,
     #endregion // Settings > Tab Layout
 
@@ -573,7 +548,6 @@ public enum LangId
     #region Settings > Tab Viewer
     // Viewer > Appearance
     Settings_Appearance,
-//    FrmSettings_ShowCheckerboardOnlyImageRegion,
     Settings_EnableNavigationButtons,
     Settings_EnableCenterWindowFit,
     Settings_EnableVectorRenderer,
@@ -604,15 +578,12 @@ public enum LangId
 
     Settings_Toolbar_AddNewButton,
     Settings_Toolbar_EditButton,
-//    FrmSettings_Toolbar_ButtonJson,
 
     Settings_Toolbar_ToolbarButtons,
     Settings_Toolbar_AddCustomButton,
     Settings_Toolbar_AvailableButtons,
     Settings_Toolbar_CurrentButtons,
-//    FrmSettings_Toolbar_Errors_ButtonIdRequired,
     Settings_Toolbar_Errors_ButtonIdDuplicated,
-//    FrmSettings_Toolbar_Errors_ButtonExecutableRequired,
 
     Settings_Toolbar_ButtonText,
     Settings_Toolbar_ShowButtonText,
@@ -621,7 +592,6 @@ public enum LangId
     Settings_Toolbar_ConfigBinding,
     Settings_Toolbar_ConfigBindingName,
     Settings_Toolbar_ConfigBindingValue,
-//    FrmSettings_Toolbar_ClickAction,
     Settings_Toolbar_RecordHotkeyHint,
     Settings_Toolbar_BuiltInReadonly,
 
@@ -645,7 +615,6 @@ public enum LangId
     Settings_MouseWheelAction,
     // Mouse > Mouse click action
     Settings_MouseClickAction,
-//    FrmSettings_MouseClickAction_Hint,
     #endregion // Settings > Tab Mouse
 
 
@@ -721,7 +690,6 @@ public enum LangId
     Settings_Theme,
     Settings_DarkTheme,
     Settings_LightTheme,
-//    FrmSettings_Author,
     Settings_Theme_OpenThemeFolder,
     Settings_Theme_GetMoreThemes,
     Settings_Theme_InstallTheme,
@@ -764,7 +732,6 @@ public enum LangId
 
 
     #region Tool: Color picker
-//    FrmColorPicker_BtnSettings_Tooltip,
 
     // Color picker settings
     Tool_ColorPicker_Title,
@@ -777,20 +744,6 @@ public enum LangId
     #endregion // Tool: Color picker
 
 
-    #region Tool not found (unused)
-//    FrmToolNotFound_Title,
-//    FrmToolNotFound_BtnSelectExecutable,
-//    FrmToolNotFound_LblHeading,
-//    FrmToolNotFound_LblDescription,
-//    FrmToolNotFound_LblDownloadToolText,
-    #endregion // Tool not found (unused)
-
-
-    #region Hotkey picker (unused)
-//    FrmHotkeyPicker_LblHotkey,
-    #endregion // Hotkey picker (unused)
-
-
     #region Tool: Resizer
     Tool_Resizer_RadResizeByPixels,
     Tool_Resizer_RadResizeByPercentage,
@@ -799,29 +752,6 @@ public enum LangId
     Tool_Resizer_LblCurrentSize,
     Tool_Resizer_LblNewSize,
     #endregion // Tool: Resizer
-
-
-    #region igcmd.exe
-
-//    _IgCommandExe_DefaultError_Heading,
-//    _IgCommandExe_DefaultError_Description,
-
-    #region Slideshow (general)
-    _PauseSlideshow,
-    _ResumeSlideshow,
-    _MnuPauseResumeSlideshow,
-    _MnuToggleCountdown,
-    _MnuExitSlideshow,
-    #endregion // Slideshow (general)
-
-
-    #region Export frames (general)
-    _Title,
-    _FolderPickerTitle,
-    _Exporting,
-    _ExportDone,
-    _OpenOutputFolder,
-    #endregion // Export frames (general)
 
 
     #region Quick setup
@@ -844,7 +774,6 @@ public enum LangId
     QuickSetup_ConfirmCloseProcess_Description,
     #endregion // Quick setup
 
-    #endregion // igcmd.exe
 
 }
 
