@@ -81,7 +81,7 @@ public enum ConfigId
 
     #region Number settings
 
-    // QuickSetupVersion,
+    QuickSetupVersion,
     PanMargin,
     PanSpeed,
     ZoomSpeed,

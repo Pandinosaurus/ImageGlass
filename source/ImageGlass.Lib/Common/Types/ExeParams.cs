@@ -36,6 +36,13 @@ public static class ExeParams
     /// </summary>
     public static string PHOTO_TRACE => "--ig-photo-trace";
 
+    /// <summary>
+    /// Suppresses the forced startup Quick Setup for this launch. Passed by the app when it
+    /// restarts out of the wizard, so the fresh instance goes straight to the main window (and so
+    /// an admin-locked <c>QuickSetupVersion</c> can't cause an infinite wizard loop).
+    /// </summary>
+    public static string NO_QUICK_SETUP => "--ig-no-quick-setup";
+
 
 
 

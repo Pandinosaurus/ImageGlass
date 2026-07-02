@@ -20,6 +20,7 @@ using Avalonia.Layout;
 using ImageGlass.Common;
 using ImageGlass.Common.Localization;
 using ImageGlass.Common.Photoing;
+using ImageGlass.Common.Types;
 using ImageGlass.UI;
 using ImageGlass.UI.Windowing;
 using System.Threading.Tasks;
@@ -35,8 +36,27 @@ public partial class QuickSetupWindow : DialogWindow
     private PhButton _btnSkip = null!;
 
 
+    /// <summary>
+    /// Whether the wizard should be forced on startup: the saved <see cref="Config.QuickSetupVersion"/>
+    /// is behind the current <see cref="Const.QUICK_SETUP_VERSION"/> (new install, missing key, or a
+    /// major-change bump). Set the config value >= that constant to bypass.
+    /// </summary>
+    public static bool ShouldShowAtStartup => Core.Config.QuickSetupVersion < Const.QUICK_SETUP_VERSION;
+
+
+    /// <summary>
+    /// Whether Save was confirmed and the app is restarting. The startup gate checks this to avoid
+    /// showing the main window (which would flash before the process exits to relaunch).
+    /// </summary>
+    public bool IsRestarting { get; private set; }
+
+
     public QuickSetupWindow()
     {
+        // may be shown before the main window on startup, so make it discoverable and centered
+        ShowInTaskbar = true;
+        WindowStartupLocation = Avalonia.Controls.WindowStartupLocation.CenterScreen;
+
         IsButton1Visible = false; // "Back" (hidden on the first step)
         IsButton2Visible = true;  // "Next" / "Save"
         IsButton3Visible = false;
@@ -122,19 +142,18 @@ public partial class QuickSetupWindow : DialogWindow
             Variant = PhButtonVariant.Link,
             VerticalAlignment = VerticalAlignment.Center,
         };
-        btn.Click += (_, _) => SkipAndLaunch();
+        btn.Click += (_, _) => SkipSetup();
 
         return btn;
     }
 
 
     /// <summary>
-    /// Closes the wizard without saving and launches a new ImageGlass instance.
+    /// Closes the wizard without saving. At startup the app then shows the main window; the
+    /// startup gate persists the version so the wizard isn't shown again.
     /// </summary>
-    private void SkipAndLaunch()
+    private void SkipSetup()
     {
-        _ = BHelper.RunExeAsync(BHelper.AppExePath, string.Empty);
-
         DialogResult = DialogExitCode.Cancel;
         Close(DialogResult);
     }
@@ -173,8 +192,10 @@ public partial class QuickSetupWindow : DialogWindow
         ApplySettings();
         await Core.Config.SaveAsync();
 
-        // restart so the fresh instance loads the reset config (all settings applied)
-        BHelper.RestartApp();
+        // restart so the fresh instance loads the reset config (all settings applied);
+        // suppress the wizard on relaunch so an admin-locked version can't loop
+        IsRestarting = true;
+        BHelper.RestartApp(suppressQuickSetup: true);
     }
 
 
@@ -183,6 +204,9 @@ public partial class QuickSetupWindow : DialogWindow
     /// </summary>
     private void ApplySettings()
     {
+        // mark this Quick Setup version as done so it isn't forced again on startup
+        Core.Config.QuickSetupVersion = Const.QUICK_SETUP_VERSION;
+
         Core.Config.Language = _view.SelectedLanguageValue;
 
         Core.Config.ColorProfile = _view.IsProfessional

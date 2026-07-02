@@ -454,10 +454,14 @@ public partial class Config : PhReactive
 
     #region Number items
 
-    ///// <summary>
-    ///// Gets, sets the version that requires to open Quick setup ImageGlass dialog.
-    ///// </summary>
-    //public double QuickSetupVersion { get; set; } = 0;
+    /// <summary>
+    /// Gets, sets the version that requires to open Quick setup ImageGlass dialog.
+    /// </summary>
+    public double QuickSetupVersion 
+    {
+        get => Get(ConfigId.QuickSetupVersion, 0d);
+        set => Set(ConfigId.QuickSetupVersion, value);
+    }
 
     /// <summary>
     /// Gets, sets the maximum panning margin in screen pixels beyond the image edge.

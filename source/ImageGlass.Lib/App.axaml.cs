@@ -34,6 +34,7 @@ using ImageGlass.Common.Types;
 using ImageGlass.Common.Windows;
 using ImageGlass.UI.Windowing;
 using ImageGlass.ViewModels;
+using ImageGlass.Windows;
 using System;
 using System.Diagnostics;
 using System.Globalization;
@@ -141,8 +142,12 @@ public partial class App : Application
             await _taskUi.Task;
             StartupTrace.Mark("Theme:ready");
 
-            // show main window
             desktop.MainWindow = MainWindow;
+
+            // force Quick Setup on first run; false = app is exiting/restarting
+            if (!await RunStartupQuickSetupAsync()) return;
+
+            // show main window
             MainWindow.Show();
             StartupTrace.Mark("MainWindow:show");
         }
@@ -373,6 +378,37 @@ public partial class App : Application
             return true;
         }
 
+        return false;
+    }
+
+
+    /// <summary>
+    /// Shows the forced startup Quick Setup when required. Returns <c>false</c> if the app is
+    /// exiting or restarting, so the caller must not show the main window.
+    /// </summary>
+    private static async Task<bool> RunStartupQuickSetupAsync()
+    {
+        // skip when already satisfied, or when relaunched with the suppress flag
+        if (!QuickSetupWindow.ShouldShowAtStartup || Core.Args.Contains(ExeParams.NO_QUICK_SETUP))
+            return true;
+
+        var wizard = new QuickSetupWindow();
+        await wizard.ShowAsync(null);
+
+        // Save already restarted the app
+        if (wizard.IsRestarting) return false;
+
+        // Skip: mark done, then restart into a clean process
+        if (wizard.DialogResult == DialogExitCode.Cancel)
+        {
+            Core.Config.QuickSetupVersion = Const.QUICK_SETUP_VERSION;
+            await Core.Config.SaveAsync();
+            BHelper.RestartApp(suppressQuickSetup: true);
+            return false;
+        }
+
+        // Close / Alt+F4 / Esc: quit (forced; no main window to close for a graceful shutdown)
+        BHelper.ExitApp(true);
         return false;
     }
 
