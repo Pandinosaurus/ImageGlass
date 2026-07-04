@@ -37,7 +37,6 @@ namespace ImageGlass.Common.Windows;
 public partial class FileTypeAssociationsSettingsView : SettingsPageView
 {
     private const string EXT_ICON_PACKS_URL = "https://imageglass.org/extension-icons";
-    private const string DEFAULT_APPS_URI = "ms-settings:defaultapps?registeredAppUser=ImageGlass";
 
     // floor + bottom inset for fitting the formats table to the page viewport height
     private const double MIN_TABLE_HEIGHT = 220;
@@ -168,6 +167,15 @@ public partial class FileTypeAssociationsSettingsView : SettingsPageView
     /// </summary>
     private void BuildDefaultPhotoViewer()
     {
+        // per-user vs per-machine registration, derived from the install location
+        var scope = Core.ShellProvider?.GetDefaultViewerScope() ?? DefaultAppScope.CurrentUser;
+
+        // the Windows "Default apps" deep link key differs per registration scope
+        var appQueryKey = scope == DefaultAppScope.LocalMachine
+            ? "registeredAppMachine"
+            : "registeredAppUser";
+        var defaultAppsUri = $"ms-settings:defaultapps?{appQueryKey}={BHelper.AppName}";
+
         SetLocalizedText(PART_MakeDefault, LangId.Settings_MakeDefault);
         AddLangRefresher(() => ToolTip.SetTip(PART_MakeDefault, Core.Lang[LangId.Settings_UnmanagedSettingReminder]));
         PART_MakeDefault.Click += async (_, _) => await AppAPIProvider.IG_SetDefaultPhotoViewerAsync();
@@ -175,8 +183,13 @@ public partial class FileTypeAssociationsSettingsView : SettingsPageView
         SetLocalizedText(PART_RemoveDefault, LangId.Settings_RemoveDefault);
         PART_RemoveDefault.Click += async (_, _) => await AppAPIProvider.IG_RemoveDefaultPhotoViewerAsync();
 
+        // show the registration scope (all users vs current user)
+        AddLangRefresher(() => PART_ScopeInfo.Text = Core.Lang[scope == DefaultAppScope.LocalMachine
+            ? LangId.Settings_DefaultPhotoViewer_ScopePerMachine
+            : LangId.Settings_DefaultPhotoViewer_ScopePerUser]);
+
         SetLocalizedText(PART_OpenDefaultApps, LangId.Settings_OpenDefaultAppsSetting);
-        PART_OpenDefaultApps.Click += async (_, _) => await BHelper.OpenUrlAsync(this, DEFAULT_APPS_URI, "from_default_apps");
+        PART_OpenDefaultApps.Click += async (_, _) => await BHelper.OpenUrlAsync(this, defaultAppsUri, "from_default_apps");
 
         RegisterSearchKey(PART_MakeDefault, LangId.Settings_DefaultPhotoViewer, null, LangId.Settings_DefaultPhotoViewer);
     }

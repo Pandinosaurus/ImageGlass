@@ -169,7 +169,7 @@ internal partial class MacShellProvider : PhDisposable, IShellProvider
     /// <inheritdoc/>
     /// </summary>
     /// <exception cref="NotSupportedException"></exception>
-    public Task SetDefaultPhotoViewerAsync(string[] extensions, bool enable)
+    public Task<DefaultAppScope> SetDefaultPhotoViewerAsync(string[] extensions, bool enable)
     {
         throw new NotSupportedException("IGE: This feature is not supported on macOS.");
     }

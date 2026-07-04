@@ -33,52 +33,90 @@ public static class Win32DefaultAppApi
 {
     /// <summary>
     /// Registers or unregisters the app as the default photo viewer for the specified file extensions.
+    /// Returns the registry scope (per-user vs per-machine) that was used.
     /// </summary>
-    public static async Task SetDefaultPhotoViewerAsync(string[] extensions, bool enable)
+    public static async Task<DefaultAppScope> SetDefaultPhotoViewerAsync(string[] extensions, bool enable)
     {
+        var scope = GetScope();
+        var root = scope == DefaultAppScope.LocalMachine
+            ? Registry.LocalMachine
+            : Registry.CurrentUser;
+
         try
         {
             if (enable)
             {
-                RegisterAppAndExtensions(extensions);
+                RegisterAppAndExtensions(root, extensions);
             }
             else
             {
-                UnregisterAppAndExtensions(extensions);
+                UnregisterAppAndExtensions(root, extensions);
             }
 
             NotifyShellAssocChanged();
         }
         catch (UnauthorizedAccessException)
         {
+            // per-machine (HKLM) writes need admin; relaunch elevated to finish the job
             await RelaunchElevatedAsync(extensions, enable);
         }
         catch (SecurityException)
         {
             await RelaunchElevatedAsync(extensions, enable);
         }
+
+        return scope;
     }
 
 
     /// <summary>
-    /// Registers file type associations and app capabilities to the registry.
+    /// Determines the registry scope from the install location: per-machine when the app runs
+    /// from a system location (e.g. Program Files), otherwise per-user (portable install).
     /// </summary>
-    private static void RegisterAppAndExtensions(string[] extensions)
+    public static DefaultAppScope GetScope()
+    {
+        var exeDir = Path.GetDirectoryName(BHelper.AppExePath);
+        if (string.IsNullOrEmpty(exeDir)) return DefaultAppScope.CurrentUser;
+
+        string[] machineRoots =
+        [
+            Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
+            Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86),
+        ];
+
+        foreach (var machineRoot in machineRoots)
+        {
+            if (!string.IsNullOrEmpty(machineRoot)
+                && exeDir.StartsWith(machineRoot, StringComparison.OrdinalIgnoreCase))
+            {
+                return DefaultAppScope.LocalMachine;
+            }
+        }
+
+        return DefaultAppScope.CurrentUser;
+    }
+
+
+    /// <summary>
+    /// Registers file type associations and app capabilities to the registry
+    /// under the given <paramref name="root"/> hive (HKCU or HKLM).
+    /// </summary>
+    private static void RegisterAppAndExtensions(RegistryKey root, string[] extensions)
     {
         var capabilitiesPath = $@"Software\{BHelper.AppName}\Capabilities";
-        var classesKey = Registry.CurrentUser.OpenSubKey(@"Software\Classes", writable: true);
+        var classesKey = root.OpenSubKey(@"Software\Classes", writable: true);
 
         // 1. register the application:
-        // HKCU\Software\RegisteredApplications
-        using (var key = Registry.CurrentUser.OpenSubKey(@"Software\RegisteredApplications", writable: true))
+        // <root>\Software\RegisteredApplications
+        using (var key = root.OpenSubKey(@"Software\RegisteredApplications", writable: true))
         {
             key?.SetValue(BHelper.AppName, capabilitiesPath);
         }
 
 
         // 2. register application information:
-        // HKCU\Software\ImageGlass\Capabilities
-        using (var key = Registry.CurrentUser.CreateSubKey(capabilitiesPath, writable: true))
+        // <root>\Software\ImageGlass\Capabilities
+        using (var key = root.CreateSubKey(capabilitiesPath, writable: true))
         {
             key.SetValue("ApplicationName", BHelper.AppName);
             key.SetValue("ApplicationIcon", $"\"{BHelper.AppExePath}\", 0");
@@ -104,13 +142,13 @@ public static class Win32DefaultAppApi
 
 
     /// <summary>
-    /// Registers a ProgId under <c>HKCU\Software\Classes</c>.
+    /// Registers a ProgId under the <c>Software\Classes</c> subkey of the active hive.
     /// </summary>
     private static void RegisterProgId(RegistryKey? classesKey, string progId, string extNoDot)
     {
         if (classesKey is null) return;
 
-        // HKCU\Software\Classes\ImageGlass.AssocFile.<EXT>
+        // <root>\Software\Classes\ImageGlass.AssocFile.<EXT>
         using var progIdKey = classesKey.CreateSubKey(progId, writable: true);
         progIdKey.SetValue("", BHelper.AppName);
 
@@ -156,7 +194,7 @@ public static class Win32DefaultAppApi
     {
         if (classesKey is null) return;
 
-        // HKCU\Software\Classes\.<EXT>\OpenWithProgids
+        // <root>\Software\Classes\.<EXT>\OpenWithProgids
         using var extKey = classesKey.CreateSubKey(ext, writable: true);
         using var openWith = extKey.CreateSubKey("OpenWithProgids", writable: true);
         openWith.SetValue(progId, string.Empty);
@@ -164,27 +202,28 @@ public static class Win32DefaultAppApi
 
 
     /// <summary>
-    /// Unregisters file type associations and app information from the registry.
+    /// Unregisters file type associations and app information from the registry
+    /// under the given <paramref name="root"/> hive (HKCU or HKLM).
     /// </summary>
-    private static void UnregisterAppAndExtensions(string[] extensions)
+    private static void UnregisterAppAndExtensions(RegistryKey root, string[] extensions)
     {
         // 1. unregister the application:
-        // HKCU\Software\RegisteredApplications\ImageGlass
-        using (var key = Registry.CurrentUser.OpenSubKey(@"Software\RegisteredApplications", writable: true))
+        // <root>\Software\RegisteredApplications\ImageGlass
+        using (var key = root.OpenSubKey(@"Software\RegisteredApplications", writable: true))
         {
             key?.DeleteValue(BHelper.AppName, throwOnMissingValue: false);
         }
 
         // 2. delete application information:
-        // HKCU\Software\ImageGlass\*
-        using (var key = Registry.CurrentUser.OpenSubKey("Software", writable: true))
+        // <root>\Software\ImageGlass\*
+        using (var key = root.OpenSubKey("Software", writable: true))
         {
             key?.DeleteSubKeyTree(BHelper.AppName, throwOnMissingSubKey: false);
         }
 
         // 3. delete ProgIds and OpenWithProgids entries:
-        // HKCU\Software\Classes\...
-        using var classesKey = Registry.CurrentUser.OpenSubKey(@"Software\Classes", writable: true);
+        // <root>\Software\Classes\...
+        using var classesKey = root.OpenSubKey(@"Software\Classes", writable: true);
         if (classesKey is null) return;
 
         foreach (var ext in extensions)

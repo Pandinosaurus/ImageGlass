@@ -995,7 +995,9 @@ public class Lang
 
         // File type associations > Default photo viewer
         new(LangId.Settings_DefaultPhotoViewer, "Default photo viewer"),
-        new(LangId.Settings_DefaultPhotoViewer_Description, "Register the supported formats of ImageGlass with Windows. You might need to open the Default apps settings and manually select ImageGlass from the list for it to take effect."),
+        new(LangId.Settings_DefaultPhotoViewer_Description, "Register the supported formats of ImageGlass with Windows. You might need to open the Default apps settings and manually select ImageGlass from the list for it to take effect. This also registers the file extension icons."),
+        new(LangId.Settings_DefaultPhotoViewer_ScopePerMachine, "Scope: all user accounts on this computer (per-machine)."),
+        new(LangId.Settings_DefaultPhotoViewer_ScopePerUser, "Scope: your user account only (per-user)."),
         new(LangId.Settings_MakeDefault, "Make default"),
         new(LangId.Settings_RemoveDefault, "Remove default"),
         new(LangId.Settings_OpenDefaultAppsSetting, "Open Default apps setting"),

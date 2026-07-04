@@ -53,6 +53,7 @@
                                    x:TypeArguments=x:Boolean}"
             Spacing="10">
             <ui:PhTextBlock LangKey="Settings_DefaultPhotoViewer_Description" TextWrapping="Wrap" />
+            <ui:PhTextBlock x:Name="PART_ScopeInfo" TextWrapping="Wrap" />
             <StackPanel Orientation="Horizontal" Spacing="8">
                 <ui:PhButton
                     x:Name="PART_MakeDefault"

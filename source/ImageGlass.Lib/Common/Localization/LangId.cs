@@ -637,6 +637,8 @@ public enum LangId
     // File type associations > Default photo viewer
     Settings_DefaultPhotoViewer,
     Settings_DefaultPhotoViewer_Description,
+    Settings_DefaultPhotoViewer_ScopePerMachine,
+    Settings_DefaultPhotoViewer_ScopePerUser,
     Settings_MakeDefault,
     Settings_RemoveDefault,
     Settings_OpenDefaultAppsSetting,

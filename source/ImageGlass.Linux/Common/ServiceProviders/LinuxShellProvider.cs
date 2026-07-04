@@ -177,7 +177,7 @@ internal class LinuxShellProvider : PhDisposable, IShellProvider
     /// <summary>
     /// <inheritdoc/>
     /// </summary>
-    public Task SetDefaultPhotoViewerAsync(string[] extensions, bool enable)
+    public Task<DefaultAppScope> SetDefaultPhotoViewerAsync(string[] extensions, bool enable)
     {
         throw new NotSupportedException("IGE: This feature is not supported on Linux.");
     }

@@ -16,6 +16,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
+using ImageGlass.Common.Types;
 using System;
 using System.Threading.Tasks;
 
@@ -97,8 +98,16 @@ public interface IShellProvider : IDisposable
 
     /// <summary>
     /// Sets or removes this app as the default photo viewer for the specified file extensions.
+    /// Returns the registry scope (per-user vs per-machine) that was used.
     /// </summary>
-    Task SetDefaultPhotoViewerAsync(string[] extensions, bool enable);
+    Task<DefaultAppScope> SetDefaultPhotoViewerAsync(string[] extensions, bool enable);
+
+
+    /// <summary>
+    /// Gets the registry scope (per-user vs per-machine) that would be used to register
+    /// the app as the default photo viewer, based on where the app is installed.
+    /// </summary>
+    DefaultAppScope GetDefaultViewerScope() => DefaultAppScope.CurrentUser;
 
 
     /// <summary>

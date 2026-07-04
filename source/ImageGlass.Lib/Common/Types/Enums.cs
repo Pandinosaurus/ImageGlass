@@ -34,6 +34,23 @@ public enum PathType
 
 
 /// <summary>
+/// Registry scope used to register the app as the default photo viewer.
+/// </summary>
+public enum DefaultAppScope
+{
+    /// <summary>
+    /// Per-user registration under <c>HKEY_CURRENT_USER</c> (portable / user-profile install).
+    /// </summary>
+    CurrentUser,
+
+    /// <summary>
+    /// Per-machine registration under <c>HKEY_LOCAL_MACHINE</c> (all-users / Program Files install).
+    /// </summary>
+    LocalMachine,
+}
+
+
+/// <summary>
 /// Window backdrop effect.
 /// </summary>
 public enum BackdropStyle

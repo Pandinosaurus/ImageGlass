@@ -3075,7 +3075,12 @@ public partial class AppAPIProvider
 
         try
         {
-            await Core.ShellProvider.SetDefaultPhotoViewerAsync(extensions, enable);
+            var scope = await Core.ShellProvider.SetDefaultPhotoViewerAsync(extensions, enable);
+
+            // let the user know whether the change is per-machine (all users) or per-user
+            var scopeText = Core.Lang[scope == DefaultAppScope.LocalMachine
+                ? LangId.Settings_DefaultPhotoViewer_ScopePerMachine
+                : LangId.Settings_DefaultPhotoViewer_ScopePerUser];
 
             await ModalWindow.ShowInfoAsync(App.MainWindow, new ModalWindowOptions
             {
@@ -3085,6 +3090,7 @@ public partial class AppAPIProvider
                 Heading = Core.Lang[enable
                     ? LangId.Menu_MnuSetDefaultPhotoViewer_Success
                     : LangId.Menu_MnuRemoveDefaultPhotoViewer_Success],
+                Description = scopeText,
                 Note = enable ? Core.Lang[LangId.Settings_UnmanagedSettingReminder] : null,
                 NoteStyle = InfoBarSeverity.Warning,
             });
