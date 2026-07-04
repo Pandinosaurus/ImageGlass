@@ -16,7 +16,7 @@
             <ui:PhTextBox
                 x:Name="PART_Id"
                 IsRequired="True"
-                PlaceholderText="ext.vendor.name" />
+                PlaceholderText="Tool_MyTool" />
         </StackPanel>
 
         <!--  Tool name  -->

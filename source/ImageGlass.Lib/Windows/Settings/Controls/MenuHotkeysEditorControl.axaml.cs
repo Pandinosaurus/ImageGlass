@@ -18,8 +18,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Input;
-using Avalonia.Interactivity;
+using Avalonia.Layout;
+using Avalonia.Markup.Xaml.MarkupExtensions;
+using Avalonia.Media;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using ImageGlass.Common.Localization;
@@ -39,14 +40,14 @@ namespace ImageGlass.Common.Windows;
 /// </summary>
 public partial class MenuHotkeysEditorControl : PhControl
 {
-    private const double MinListHeight = 220;
+    private const double MinTableHeight = 220;
     private const double BottomGap = 40;
     private ScrollViewer? _pageScroll;
 
     // user overrides (clone of the staged config): absent key = default, empty array = no hotkey
     private Dictionary<LangId, Hotkey[]> _working = [];
 
-    // every row in menu order; the ListBox shows a (possibly search-filtered) subset
+    // every row in menu order; the table shows a (possibly search-filtered) subset
     private readonly List<MenuHotkeyRowModel> _allRows = [];
 
 
@@ -60,11 +61,10 @@ public partial class MenuHotkeysEditorControl : PhControl
     {
         InitializeComponent();
 
-        PART_Search.TextChanged += (_, _) => ApplyFilter();
-        PART_Reset.Click += (_, _) => ResetAll();
+        PART_Table.MinHeight = MinTableHeight;
 
-        PART_List.DoubleTapped += PART_List_DoubleTapped;
-        PART_List.AddHandler(KeyDownEvent, PART_List_KeyDown, RoutingStrategies.Tunnel, handledEventsToo: true);
+        PART_Search.TextChanged += (_, _) => RebuildTable();
+        PART_Reset.Click += (_, _) => ResetAll();
     }
 
 
@@ -77,7 +77,7 @@ public partial class MenuHotkeysEditorControl : PhControl
     {
         _working = new Dictionary<LangId, Hotkey[]>(current);
         BuildRows();
-        ApplyFilter();
+        RebuildTable();
     }
 
 
@@ -99,7 +99,7 @@ public partial class MenuHotkeysEditorControl : PhControl
         if (_pageScroll is not null) _pageScroll.PropertyChanged += PageScroll_PropertyChanged;
 
         // bounds are usually 0 at attach; size once layout settles
-        Dispatcher.UIThread.Post(UpdateListMaxHeight, DispatcherPriority.Background);
+        Dispatcher.UIThread.Post(UpdateTableMaxHeight, DispatcherPriority.Background);
     }
 
 
@@ -113,23 +113,23 @@ public partial class MenuHotkeysEditorControl : PhControl
 
     private void PageScroll_PropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
     {
-        if (e.Property == BoundsProperty) UpdateListMaxHeight();
+        if (e.Property == BoundsProperty) UpdateTableMaxHeight();
     }
 
 
-    // Cap the list at the page viewport's remaining height (below the search/header chrome),
+    // Cap the table at the page viewport's remaining height (below the search chrome),
     // never below the floor; so it grows/shrinks with the window instead of a fixed height.
-    private void UpdateListMaxHeight()
+    private void UpdateTableMaxHeight()
     {
         if (_pageScroll is null) return;
 
         var viewport = _pageScroll.Bounds.Height;
         if (viewport <= 0) return;
 
-        if (PART_List.TranslatePoint(new Point(0, 0), _pageScroll) is not { } pt) return;
+        if (PART_Table.TranslatePoint(new Point(0, 0), _pageScroll) is not { } pt) return;
 
-        var listTop = pt.Y + _pageScroll.Offset.Y;
-        PART_List.MaxHeight = Math.Max(MinListHeight, viewport - listTop - BottomGap);
+        var tableTop = pt.Y + _pageScroll.Offset.Y;
+        PART_Table.MaxHeight = Math.Max(MinTableHeight, viewport - tableTop - BottomGap);
     }
 
 
@@ -140,8 +140,9 @@ public partial class MenuHotkeysEditorControl : PhControl
         PART_Reset.Text = Core.Lang[LangId._ResetToDefault];
         PART_Search.PlaceholderText = Core.Lang[LangId._TypeToFilter];
 
-        // re-localize paths in place (no rebuild) so reopening the page stays fast
+        // re-localize paths in place, then rebuild so the table reflects the new language
         RelocalizeRows();
+        RebuildTable();
     }
 
     #endregion // Control events
@@ -178,7 +179,7 @@ public partial class MenuHotkeysEditorControl : PhControl
 
 
     /// <summary>
-    /// Re-localizes the action paths of the existing rows in place (no row/container rebuild).
+    /// Re-localizes the action paths of the existing rows in place.
     /// </summary>
     private void RelocalizeRows()
     {
@@ -217,22 +218,86 @@ public partial class MenuHotkeysEditorControl : PhControl
 
 
     /// <summary>
-    /// Repopulates the ListBox with rows matching the search query (action path or hotkey text).
+    /// Rebuilds the table (action path + hotkeys + an Edit action) with the rows matching the
+    /// search query (action path or hotkey text).
     /// </summary>
-    private void ApplyFilter()
+    private void RebuildTable()
     {
+        // Action auto-fits its text; Hotkeys is the star column so it sits left-aligned right
+        // after the action name (not pushed to the far right) while Edit stays at the right edge.
+        PhTableColumn[] columns =
+        [
+            new() { Header = Core.Lang[LangId.Settings_Keyboard_Action], MinWidth = 200 },
+            new() { Header = Core.Lang[LangId._Hotkeys], Star = true, MinWidth = 140 },
+        ];
+
         var query = PART_Search.Text?.Trim();
-        var rows = string.IsNullOrEmpty(query)
-            ? [.. _allRows]
+        var filtered = string.IsNullOrEmpty(query)
+            ? _allRows
             : _allRows.Where(r =>
                 r.ActionPath.Contains(query, StringComparison.OrdinalIgnoreCase)
-                || r.HotkeysText.Contains(query, StringComparison.OrdinalIgnoreCase)).ToList();
+                || r.HotkeysText.Contains(query, StringComparison.OrdinalIgnoreCase));
 
-        var selected = PART_List.SelectedItem;
-        PART_List.ItemsSource = rows;
-        PART_List.SelectedItem = selected;
-        PART_Empty.IsVisible = rows.Count == 0;
-        PART_TableBorder.IsVisible = rows.Count > 0;
+        var rows = filtered.Select(row =>
+        {
+            var model = row; // capture for the action closure
+            return new PhTableRow
+            {
+                Key = row.MenuKey.ToString(),
+                Cells =
+                [
+                    PhTableControl.TextCell(row.ActionPath),
+                    BuildHotkeysCell(row),
+                ],
+                Actions =
+                [
+                    new()
+                    {
+                        Icon = ResxIconId.IconEdit,
+                        Tooltip = row.EditTooltip,
+                        Click = () => _ = EditRowAsync(model),
+                    },
+                ],
+            };
+        }).ToList();
+
+        PART_Table.EmptyText = Core.Lang[LangId.Settings_Keyboard_NoResults];
+        PART_Table.Build(columns, rows);
+    }
+
+
+    /// <summary>
+    /// Builds the hotkeys cell: danger color when duplicated, accent when customized, normal otherwise.
+    /// </summary>
+    private static Control BuildHotkeysCell(MenuHotkeyRowModel row)
+    {
+        var tb = new TextBlock
+        {
+            Text = row.HotkeysText,
+            VerticalAlignment = VerticalAlignment.Top,
+            TextTrimming = TextTrimming.CharacterEllipsis,
+            IsTabStop = false,
+        };
+
+        if (row.HotkeysShowDanger)
+        {
+            tb.FontWeight = FontWeight.SemiBold;
+            tb[!TextBlock.ForegroundProperty] = Resx.CreateBinding(ResxId.IG_TextDangerBrush);
+        }
+        else if (row.HotkeysShowAccent)
+        {
+            tb.FontWeight = FontWeight.SemiBold;
+            tb[!TextBlock.ForegroundProperty] = new DynamicResourceExtension("PhAccentFill");
+        }
+        else
+        {
+            tb.Opacity = 0.85;
+            tb[!TextBlock.ForegroundProperty] = Resx.CreateBinding(ResxId.TextControlForeground);
+        }
+
+        var cell = PhTableControl.WrapCell(tb);
+        if (row.HotkeysTooltip is { } tip) ToolTip.SetTip(cell, tip);
+        return cell;
     }
 
     #endregion // Rows
@@ -240,35 +305,9 @@ public partial class MenuHotkeysEditorControl : PhControl
 
     #region Edit operations
 
-    private void PART_List_DoubleTapped(object? sender, TappedEventArgs e)
-    {
-        if ((e.Source as Control)?.DataContext is MenuHotkeyRowModel row) _ = EditRowAsync(row);
-    }
-
-
-    // Enter edits the selected (or keyboard-focused) row; the edit button isn't a tab stop
-    private void PART_List_KeyDown(object? sender, KeyEventArgs e)
-    {
-        if (e.Key != Key.Enter) return;
-
-        var row = PART_List.SelectedItem as MenuHotkeyRowModel
-            ?? (TopLevel.GetTopLevel(this)?.FocusManager?.GetFocusedElement() as Control)?.DataContext as MenuHotkeyRowModel;
-        if (row is null) return;
-
-        e.Handled = true;
-        Dispatcher.UIThread.Post(() => _ = EditRowAsync(row));
-    }
-
-
-    private void EditBtn_Click(object? sender, RoutedEventArgs e)
-    {
-        if ((sender as Control)?.DataContext is MenuHotkeyRowModel row) _ = EditRowAsync(row);
-    }
-
-
     /// <summary>
     /// Opens the editor for a row; on success records the override (or removes it when the result
-    /// matches the default), refreshes the row and notifies the host.
+    /// matches the default), refreshes the table and notifies the host.
     /// </summary>
     private async Task EditRowAsync(MenuHotkeyRowModel row)
     {
@@ -287,6 +326,8 @@ public partial class MenuHotkeysEditorControl : PhControl
 
         row.Hotkeys = result;
         UpdateConflicts();
+        RebuildTable();
+        PART_Table.FlashRow(row.MenuKey.ToString());
         HotkeysChanged?.Invoke(this, EventArgs.Empty);
     }
 
@@ -299,6 +340,7 @@ public partial class MenuHotkeysEditorControl : PhControl
         _working.Clear();
         foreach (var row in _allRows) row.Hotkeys = row.DefaultHotkeys;
         UpdateConflicts();
+        RebuildTable();
         HotkeysChanged?.Invoke(this, EventArgs.Empty);
     }
 

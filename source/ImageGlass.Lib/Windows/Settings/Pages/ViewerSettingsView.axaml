@@ -37,12 +37,12 @@
         <!--  Panning  -->
         <ui:PhTextBlock Classes="group" LangKey="Settings_Panning" />
         <StackPanel Margin="{DynamicResource SettingsGroupIndent}" Spacing="10">
-            <CheckBox x:Name="PART_FreePan">
+            <CheckBox x:Name="PART_FreePan" IsVisible="False">
                 <ui:PhTextBlock LangKey="Settings_EnableFreePan" TextWrapping="Wrap" />
             </CheckBox>
 
             <!--  Panning margin  -->
-            <StackPanel Spacing="{DynamicResource SettingsLabelInputGap}">
+            <StackPanel IsVisible="False" Spacing="{DynamicResource SettingsLabelInputGap}">
                 <ui:PhTextBlock LangKey="Settings_PanMargin" />
                 <ui:PhTextBox
                     x:Name="PART_PanMargin"

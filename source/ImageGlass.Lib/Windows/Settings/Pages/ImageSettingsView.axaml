@@ -93,8 +93,11 @@
 
 
         <!--  File watcher  -->
-        <ui:PhTextBlock Classes="group" LangKey="Settings_FileWatcher" />
-        <StackPanel Margin="{DynamicResource SettingsGroupIndent}">
+        <ui:PhTextBlock
+            Classes="group"
+            IsVisible="False"
+            LangKey="Settings_FileWatcher" />
+        <StackPanel Margin="{DynamicResource SettingsGroupIndent}" IsVisible="False">
             <CheckBox x:Name="PART_FileWatcher">
                 <ui:PhTextBlock LangKey="Settings_EnableFileWatcher" TextWrapping="Wrap" />
             </CheckBox>

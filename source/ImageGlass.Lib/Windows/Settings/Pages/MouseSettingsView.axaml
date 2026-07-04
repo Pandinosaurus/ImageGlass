@@ -25,8 +25,14 @@
 
 
         <!--  Mouse click action  -->
-        <ui:PhTextBlock Classes="group" LangKey="Settings_MouseClickAction" />
-        <StackPanel Margin="{DynamicResource SettingsGroupIndent}" Spacing="14">
+        <ui:PhTextBlock
+            Classes="group"
+            IsVisible="False"
+            LangKey="Settings_MouseClickAction" />
+        <StackPanel
+            Margin="{DynamicResource SettingsGroupIndent}"
+            IsVisible="False"
+            Spacing="14">
             <StackPanel x:Name="PART_ClickTable" Spacing="14" />
 
             <ui:PhButton

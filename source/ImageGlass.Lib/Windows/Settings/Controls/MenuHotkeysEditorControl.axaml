@@ -4,161 +4,28 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:conv="clr-namespace:Avalonia.Data.Converters;assembly=Avalonia.Base"
-    xmlns:types="using:ImageGlass.Common.Types"
     xmlns:ui="using:ImageGlass.UI"
-    xmlns:windows="using:ImageGlass.Common.Windows"
     mc:Ignorable="d"
     d:DesignWidth="800"
     HorizontalAlignment="Stretch">
 
     <Grid HorizontalAlignment="Stretch">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*" MaxWidth="800" />
+            <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
 
         <StackPanel Orientation="Vertical" Spacing="10">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <ui:PhSearchBoxControl x:Name="PART_Search" Width="250" />
 
-            <!--  Reset (left) + search (right)  -->
-            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
                 <ui:PhButton
                     x:Name="PART_Reset"
-                    Grid.Column="0"
                     VerticalAlignment="Center"
                     Variant="Link" />
+            </StackPanel>
 
-                <ui:PhSearchBoxControl
-                    x:Name="PART_Search"
-                    Grid.Column="2"
-                    Width="250" />
-            </Grid>
-
-
-            <!--  Table  -->
-            <Border
-                x:Name="PART_TableBorder"
-                Background="{DynamicResource IG_BackgroundNeutralBrush}"
-                BorderBrush="{DynamicResource IG_BorderControlBrush}"
-                BorderThickness="1"
-                ClipToBounds="True"
-                CornerRadius="{DynamicResource ControlCornerRadius}">
-                <StackPanel Orientation="Vertical">
-
-                    <!--  Header row (left/right padding matches the row content inset so columns line up)  -->
-                    <Border
-                        Padding="16,8"
-                        BorderBrush="{DynamicResource IG_BorderControlBrush}"
-                        BorderThickness="0,0,0,1">
-                        <Grid ColumnDefinitions="*,140,44" ColumnSpacing="16">
-                            <ui:PhTextBlock
-                                Grid.Column="0"
-                                FontWeight="SemiBold"
-                                LangKey="Settings_Keyboard_Action" />
-                            <ui:PhTextBlock
-                                Grid.Column="1"
-                                FontWeight="SemiBold"
-                                LangKey="_Hotkeys" />
-                        </Grid>
-                    </Border>
-
-                    <!--  Rows (non-virtualizing: the list is short and this avoids scroll-jump on select)  -->
-                    <ListBox
-                        x:Name="PART_List"
-                        Padding="0,4"
-                        Background="Transparent"
-                        BorderThickness="0"
-                        KeyboardNavigation.TabNavigation="Once"
-                        ScrollViewer.AllowAutoHide="True"
-                        ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-                        <ListBox.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <StackPanel />
-                            </ItemsPanelTemplate>
-                        </ListBox.ItemsPanel>
-                        <ListBox.Styles>
-                            <Style Selector="ListBoxItem">
-                                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-                                <Setter Property="Padding" Value="12,4" />
-                                <Setter Property="MinHeight" Value="35" />
-                            </Style>
-                        </ListBox.Styles>
-                        <ListBox.ItemTemplate>
-                            <DataTemplate x:DataType="windows:MenuHotkeyRowModel">
-                                <Grid ColumnDefinitions="*,140,44" ColumnSpacing="16">
-                                    <!--  action name  -->
-                                    <ui:PhTextBlock
-                                        Grid.Column="0"
-                                        VerticalAlignment="Center"
-                                        Foreground="{DynamicResource TextControlForeground}"
-                                        Text="{CompiledBinding ActionPath}"
-                                        TextTrimming="CharacterEllipsis" />
-
-                                    <!--  hotkeys: danger when duplicated, accent when customized, normal otherwise  -->
-                                    <Panel
-                                        Grid.Column="1"
-                                        VerticalAlignment="Center"
-                                        ToolTip.Tip="{CompiledBinding HotkeysTooltip}">
-                                        <ui:PhTextBlock
-                                            VerticalAlignment="Center"
-                                            Foreground="{DynamicResource TextControlForeground}"
-                                            IsVisible="{CompiledBinding HotkeysShowNormal}"
-                                            Opacity="0.85"
-                                            Text="{CompiledBinding HotkeysText}"
-                                            TextTrimming="CharacterEllipsis" />
-                                        <ui:PhTextBlock
-                                            VerticalAlignment="Center"
-                                            FontWeight="SemiBold"
-                                            Foreground="{DynamicResource PhAccentFill}"
-                                            IsVisible="{CompiledBinding HotkeysShowAccent}"
-                                            Text="{CompiledBinding HotkeysText}"
-                                            TextTrimming="CharacterEllipsis" />
-                                        <ui:PhTextBlock
-                                            VerticalAlignment="Center"
-                                            FontWeight="SemiBold"
-                                            Foreground="{DynamicResource IG_TextDangerBrush}"
-                                            IsVisible="{CompiledBinding HotkeysShowDanger}"
-                                            Text="{CompiledBinding HotkeysText}"
-                                            TextTrimming="CharacterEllipsis" />
-                                    </Panel>
-
-                                    <!--  edit button: visible only on row hover/selection; not a tab stop  -->
-                                    <ui:PhToolButton
-                                        Grid.Column="2"
-                                        Padding="7"
-                                        HorizontalAlignment="Right"
-                                        VerticalAlignment="Center"
-                                        Click="EditBtn_Click"
-                                        Focusable="False"
-                                        IsTabStop="False"
-                                        ToolTip.Tip="{CompiledBinding EditTooltip}">
-                                        <ui:PhToolButton.IsVisible>
-                                            <MultiBinding Converter="{x:Static conv:BoolConverters.Or}">
-                                                <Binding Path="IsPointerOver" RelativeSource="{RelativeSource AncestorType=ListBoxItem}" />
-                                                <Binding Path="IsSelected" RelativeSource="{RelativeSource AncestorType=ListBoxItem}" />
-                                            </MultiBinding>
-                                        </ui:PhToolButton.IsVisible>
-                                        <Path
-                                            Width="{x:Static types:Const.FONT_SIZE_BODY}"
-                                            Height="{x:Static types:Const.FONT_SIZE_BODY}"
-                                            Data="{StaticResource IconEdit}"
-                                            Fill="{DynamicResource TextControlForeground}"
-                                            Stretch="Uniform" />
-                                    </ui:PhToolButton>
-                                </Grid>
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                    </ListBox>
-                </StackPanel>
-            </Border>
-
-            <!--  Empty state (no search results)  -->
-            <ui:PhTextBlock
-                x:Name="PART_Empty"
-                Margin="2,4,0,0"
-                FontStyle="Italic"
-                IsVisible="False"
-                LangKey="Settings_Keyboard_NoResults"
-                Opacity="0.6" />
+            <!--  Hotkeys table (rows built in code-behind)  -->
+            <ui:PhTableControl x:Name="PART_Table" HorizontalAlignment="Stretch" />
 
         </StackPanel>
     </Grid>
