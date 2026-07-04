@@ -18,6 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Media;
 using ImageGlass.Common;
 using ImageGlass.Common.Localization;
@@ -31,6 +32,9 @@ namespace ImageGlass.Windows;
 public partial class UpdateWindow : ModalWindow
 {
     private UpdateCheckResult? _result;
+
+    protected override int MIN_WIDTH => 500;
+    protected override int MAX_WIDTH => 500;
 
 
     /// <summary>
@@ -47,13 +51,17 @@ public partial class UpdateWindow : ModalWindow
     }
 
 
+
     #region Override Methods
 
     protected override void OnDialogSubmitted(DialogEventArgs e)
     {
-        // "Get Update" button opens changelog URL
-        var url = _result?.Release?.ChangelogUrl;
-        if (!string.IsNullOrEmpty(url))
+        // "Update" button opens the update URL, falling back to the changelog URL
+        var release = _result?.Release;
+        var url = !string.IsNullOrWhiteSpace(release?.UpdateUrl)
+            ? release.UpdateUrl
+            : release?.ChangelogUrl;
+        if (!string.IsNullOrWhiteSpace(url))
         {
             _ = BHelper.OpenUrlAsync(this, url, "from_update_dialog");
         }
@@ -72,17 +80,13 @@ public partial class UpdateWindow : ModalWindow
     {
         var btnSkip = new PhButton
         {
-            Content = Core.Lang[LangId.Menu_MnuCheckForUpdate_SkipVersion],
-            Padding = new Thickness(6, 2),
-            Background = Brushes.Transparent,
-            BorderThickness = new Thickness(0),
-            Cursor = new Avalonia.Input.Cursor(Avalonia.Input.StandardCursorType.Hand),
-            [!PhButton.ForegroundProperty] = Resx.CreateBinding(ResxId.IG_TextAccentColor),
+            Text = Core.Lang[LangId.Menu_MnuCheckForUpdate_SkipVersion],
+            Variant = PhButtonVariant.Link,
         };
         btnSkip.Click += (_, _) =>
         {
             var version = _result?.Release?.Version;
-            if (!string.IsNullOrEmpty(version))
+            if (!string.IsNullOrWhiteSpace(version))
             {
                 Core.Config.UpdateSkippedVersion = version;
                 IsSkipped = true;
@@ -97,65 +101,106 @@ public partial class UpdateWindow : ModalWindow
 
 
     /// <summary>
-    /// Creates the <see cref="ModalExtraContent"/> panel for displaying update details.
+    /// Creates the footer left content with a "Learn more" link that opens the changelog.
     /// </summary>
-    private static Border CreateUpdateAvailableContent(UpdateReleaseInfo release)
+    private PhButton CreateChangelogButton()
     {
-        // header: version + date
-        var lblVersion = new TextBlock
+        var btn = new PhButton
         {
-            Text = Core.Lang[LangId.Menu_MnuCheckForUpdate_LatestVersion, release.Version],
+            Text = Core.Lang[LangId._LearnMore],
+            Variant = PhButtonVariant.Link,
+        };
+        btn.Click += (_, _) => OpenChangeLog();
+
+        return btn;
+    }
+
+
+    /// <summary>
+    /// Opens release changelog url.
+    /// </summary>
+    private void OpenChangeLog()
+    {
+        var url = _result?.Release?.ChangelogUrl;
+        if (!string.IsNullOrWhiteSpace(url))
+        {
+            _ = BHelper.OpenUrlAsync(this, url, "from_update_dialog");
+        }
+    }
+
+
+    /// <summary>
+    /// Creates the latest-release info card: title, version, published date, and release notes.
+    /// </summary>
+    private Border CreateReleaseCard(UpdateReleaseInfo release)
+    {
+        // primary title (fall back to the version label when the release has no title)
+        var lnkTitle = new PhButton
+        {
+            Variant = PhButtonVariant.Link,
+            Text = !string.IsNullOrWhiteSpace(release.Title)
+                ? release.Title
+                : Core.Lang[LangId.Menu_MnuCheckForUpdate_LatestVersion, release.Version],
+            FontSize = Const.FONT_SIZE_SUBTITLE,
             FontWeight = FontWeight.SemiBold,
         };
-        var lblDate = new TextBlock
-        {
-            Text = Core.Lang[LangId.Menu_MnuCheckForUpdate_PublishedDate, release.PublishedDate],
-            FontSize = Const.FONT_SIZE_SMALL,
-            Opacity = 0.55,
-        };
+        lnkTitle.Click += (_, _) => OpenChangeLog();
 
-        var separator = new Border
+        // muted metadata: version, then published date
+        var metaPanel = new StackPanel
         {
-            Height = 1,
-            Margin = new Thickness(0, 8),
-            [!Border.BackgroundProperty] = Resx.CreateBinding(ResxId.IG_BorderNeutralBrush),
+            Spacing = 2,
+            Margin = new Thickness(0, 5, 0, 0),
         };
-
-        // release title
-        var lblTitle = new TextBlock
+        metaPanel.Children.Add(new SelectableTextBlock
         {
-            Text = release.Title,
-            FontSize = Const.FONT_SIZE_SUBTITLE,
-            FontWeight = FontWeight.Bold,
-            TextWrapping = TextWrapping.Wrap,
-            Margin = new Thickness(0, 0, 0, 6),
-        };
-
-        // release description — scrollable
-        var releaseNotes = new ScrollViewer
+            Text = Core.Lang[LangId.Menu_MnuCheckForUpdate_LatestVersion, release.Version],
+            Opacity = 0.75,
+        });
+        if (!string.IsNullOrWhiteSpace(release.PublishedDate))
         {
-            MaxHeight = 200,
-            HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled,
-            VerticalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto,
-            Content = new TextBlock
+            metaPanel.Children.Add(new SelectableTextBlock
             {
-                Text = release.Description,
-                TextWrapping = TextWrapping.Wrap,
-                LineHeight = 20,
-                Opacity = 0.8,
-            },
-        };
+                Text = Core.Lang[LangId.Menu_MnuCheckForUpdate_PublishedDate, release.PublishedDate],
+                Opacity = 0.75,
+            });
+        }
 
-        var content = new StackPanel { Spacing = 2 };
-        content.Children.AddRange([lblVersion, lblDate, separator, lblTitle, releaseNotes]);
+        var content = new StackPanel();
+        content.Children.Add(lnkTitle);
+        content.Children.Add(metaPanel);
+
+        // release notes: selectable + scrollable, separated from the header
+        if (!string.IsNullOrWhiteSpace(release.Description))
+        {
+            content.Children.Add(new Border
+            {
+                Height = 1,
+                Margin = new Thickness(0, 14),
+                [!Border.BackgroundProperty] = Resx.CreateBinding(ResxId.TextControlBorderBrush),
+
+            });
+            content.Children.Add(new ScrollViewer
+            {
+                MaxHeight = 200,
+                HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
+                VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+                Content = new SelectableTextBlock
+                {
+                    Text = release.Description,
+                    TextWrapping = TextWrapping.Wrap,
+                },
+            });
+        }
 
         return new Border
         {
-            Padding = new Thickness(12),
+            Padding = new Thickness(14, 8),
             ClipToBounds = true,
             BorderThickness = new Thickness(1),
             [!Border.CornerRadiusProperty] = Resx.CreateBinding(ResxId.ControlCornerRadius),
             [!Border.BorderBrushProperty] = Resx.CreateBinding(ResxId.IG_BorderNeutralBrush),
+            [!Border.BackgroundProperty] = Resx.CreateBinding(ResxId.IG_BackgroundNeutralBrush),
             Child = content,
         };
     }
@@ -163,6 +208,8 @@ public partial class UpdateWindow : ModalWindow
     #endregion // Private Methods
 
 
+
+    #region Public Methods
 
     /// <summary>
     /// Configures the window to show "Checking for update..." with an indeterminate progress bar.
@@ -196,24 +243,29 @@ public partial class UpdateWindow : ModalWindow
         IsProgressVisible = false;
         IsProgressIndeterminate = false;
 
-        if (result.Status == UpdateCheckStatus.UpdateAvailable)
+        // shared defaults: a single [Close] button, no extra content
+        Note = null;
+        ModalExtraContent = null!;
+        DialogFooterLeftContent = null!;
+        IsButton1Visible = false;
+        IsButton3Visible = false;
+        IsButton2Visible = true;
+        Button2Text = Core.Lang[LangId._Close];
+        DefaultButton = DialogButton.Button2;
+        DefaultFocus = DialogFocus.Button2;
+
+        var release = result.Release;
+
+        if (result.Status == UpdateCheckStatus.UpdateAvailable && release is not null)
         {
-            var release = result.Release!;
-
             Heading = Core.Lang[LangId.Menu_MnuCheckForUpdate_NewVersion];
-            Note = null;
-            ModalExtraContent = CreateUpdateAvailableContent(release);
+            Description = Core.Lang[LangId.Menu_MnuCheckForUpdate_CurrentVersion, Core.BuildInfo.AppVersion];
+            ModalExtraContent = CreateReleaseCard(release);
 
-            // Footer left: "Skip this version"
+            // "Skip this version" link + [Update] [Close]
             DialogFooterLeftContent = CreateSkipButton();
-
-            // Button1 = Get Update, Button2 = Close
             Button1Text = Core.Lang[LangId._Update];
             IsButton1Visible = true;
-            Button2Text = Core.Lang[LangId._Close];
-            IsButton2Visible = true;
-            IsButton3Visible = false;
-
             DefaultButton = DialogButton.Button1;
             DefaultFocus = DialogFocus.Button1;
         }
@@ -221,31 +273,27 @@ public partial class UpdateWindow : ModalWindow
         {
             Heading = Core.Lang[LangId.Menu_MnuCheckForUpdate_Failed];
             Description = result.ErrorMessage;
-            Note = null;
-
-            IsButton1Visible = false;
-            IsButton2Visible = true;
-            IsButton3Visible = false;
-            Button2Text = Core.Lang[LangId._Close];
-
-            DialogFooterLeftContent = null!;
-            ModalExtraContent = null!;
         }
         else
         {
-            // NoUpdate
+            // NoUpdate: always show the latest release info when we have it
             Heading = Core.Lang[LangId.Menu_MnuCheckForUpdate_NoUpdate];
-            Note = null;
+            Description = Core.Lang[LangId.Menu_MnuCheckForUpdate_CurrentVersion, Core.BuildInfo.AppVersion];
 
-            IsButton1Visible = false;
-            IsButton2Visible = true;
-            IsButton3Visible = false;
-            Button2Text = Core.Lang[LangId._Close];
+            if (release is not null)
+            {
+                ModalExtraContent = CreateReleaseCard(release);
 
-            DialogFooterLeftContent = null!;
-            ModalExtraContent = null!;
+                // offer the changelog even when already up-to-date
+                if (!string.IsNullOrWhiteSpace(release.ChangelogUrl))
+                {
+                    DialogFooterLeftContent = CreateChangelogButton();
+                }
+            }
         }
     }
+
+    #endregion // Public Methods
 
 
 }

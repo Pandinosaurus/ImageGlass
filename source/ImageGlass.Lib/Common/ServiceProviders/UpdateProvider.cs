@@ -113,13 +113,13 @@ public sealed class UpdateProvider
             return UpdateCheckResult.NoUpdate();
         }
 
-        // version comparison
+        // version comparison - already up-to-date, but keep the release so UI can show its info
         if (CompareVersions(Core.BuildInfo.AppVersion, release.Version) <= 0)
         {
-            return UpdateCheckResult.NoUpdate();
+            return UpdateCheckResult.NoUpdate(release);
         }
 
-        // skip if user chose to skip this version
+        // user chose to skip this version (an update does exist, so don't surface it as the latest)
         if (string.Equals(release.Version, Core.Config.UpdateSkippedVersion, StringComparison.OrdinalIgnoreCase))
         {
             return UpdateCheckResult.NoUpdate();
