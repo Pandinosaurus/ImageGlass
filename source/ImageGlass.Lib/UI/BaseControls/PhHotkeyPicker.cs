@@ -18,14 +18,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Controls.Shapes;
 using Avalonia.Input;
 using Avalonia.Interactivity;
-using Avalonia.Layout;
-using Avalonia.Markup.Xaml.MarkupExtensions;
-using Avalonia.Media;
-using ImageGlass.Common;
-using ImageGlass.Common.Localization;
 using ImageGlass.Common.Types;
 using System.Collections.Generic;
 using System.Linq;
@@ -141,59 +135,17 @@ public class PhHotkeyPicker : PhControl
     }
 
 
-    private Border BuildChip(Hotkey hk)
+    private PhHotkeyChip BuildChip(Hotkey hk)
     {
-        var label = new TextBlock
+        var chip = new PhHotkeyChip(hk.KeyString, showDelete: true)
         {
-            Text = hk.KeyString,
-            VerticalAlignment = VerticalAlignment.Center,
+            Margin = new Thickness(0, 0, 6, 6),
         };
-
-        var icon = new Path
-        {
-            Width = 11,
-            Height = 11,
-            Data = Resx.GetIcon(ResxIconId.IconClose),
-            Stretch = Stretch.Uniform,
-        };
-        icon[!Shape.FillProperty] = Resx.CreateBinding(ResxId.TextControlForeground);
-
-        // a PhToolButton gives the square tool-button shape with the app's hover + press feedback
-        var remove = new PhToolButton
-        {
-            Padding = new Thickness(6),
-            Content = icon,
-            Cursor = new Cursor(StandardCursorType.Hand),
-            VerticalAlignment = VerticalAlignment.Center,
-        };
-        ToolTip.SetTip(remove, Core.Lang[LangId._Delete]);
-        remove.Click += (_, _) =>
+        chip.Deleted += (_, _) =>
         {
             _hotkeys.Remove(hk);
             RenderChips();
         };
-
-        // a small gap keeps the close button off the hotkey text
-        var panel = new StackPanel
-        {
-            Orientation = Orientation.Horizontal,
-            Spacing = 6,
-            VerticalAlignment = VerticalAlignment.Center,
-        };
-        panel.Children.Add(label);
-        panel.Children.Add(remove);
-
-        var chip = new Border
-        {
-            Margin = new Thickness(0, 0, 6, 6),
-            Padding = new Thickness(8, 3, 4, 3),
-            BorderThickness = new Thickness(1),
-            Child = panel,
-        };
-        // match the Default PhButton fill
-        chip[!Border.BackgroundProperty] = new DynamicResourceExtension("PhButtonBackground");
-        chip[!Border.BorderBrushProperty] = Resx.CreateBinding(ResxId.IG_BorderControlBrush);
-        chip[!Border.CornerRadiusProperty] = Resx.CreateBinding(ResxId.ControlCornerRadius);
         return chip;
     }
 

@@ -103,7 +103,6 @@
                             <ui:PhTextBlock
                                 x:Name="PART_LblStandard"
                                 HorizontalAlignment="Center"
-                                FontWeight="SemiBold"
                                 TextAlignment="Center"
                                 TextWrapping="Wrap" />
                         </StackPanel>
@@ -121,7 +120,6 @@
                             <ui:PhTextBlock
                                 x:Name="PART_LblProfessional"
                                 HorizontalAlignment="Center"
-                                FontWeight="SemiBold"
                                 TextAlignment="Center"
                                 TextWrapping="Wrap" />
                         </StackPanel>

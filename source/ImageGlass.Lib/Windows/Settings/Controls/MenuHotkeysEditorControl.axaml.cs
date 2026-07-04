@@ -18,9 +18,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Layout;
-using Avalonia.Markup.Xaml.MarkupExtensions;
-using Avalonia.Media;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using ImageGlass.Common.Localization;
@@ -267,35 +264,26 @@ public partial class MenuHotkeysEditorControl : PhControl
 
 
     /// <summary>
-    /// Builds the hotkeys cell: danger color when duplicated, accent when customized, normal otherwise.
+    /// Builds the hotkeys cell: one keycap chip per hotkey, tinted danger when duplicated,
+    /// accent when customized, normal otherwise.
     /// </summary>
-    private static Control BuildHotkeysCell(MenuHotkeyRowModel row)
+    private static Border BuildHotkeysCell(MenuHotkeyRowModel row)
     {
-        var tb = new TextBlock
-        {
-            Text = row.HotkeysText,
-            VerticalAlignment = VerticalAlignment.Top,
-            TextTrimming = TextTrimming.CharacterEllipsis,
-            IsTabStop = false,
-        };
+        var tone = row.HotkeysShowDanger ? PhHotkeyChipTone.Danger
+            : row.HotkeysShowAccent ? PhHotkeyChipTone.Accent
+            : PhHotkeyChipTone.Normal;
 
-        if (row.HotkeysShowDanger)
+        var panel = new WrapPanel();
+        foreach (var hk in row.Hotkeys)
         {
-            tb.FontWeight = FontWeight.SemiBold;
-            tb[!TextBlock.ForegroundProperty] = Resx.CreateBinding(ResxId.IG_TextDangerBrush);
-        }
-        else if (row.HotkeysShowAccent)
-        {
-            tb.FontWeight = FontWeight.SemiBold;
-            tb[!TextBlock.ForegroundProperty] = new DynamicResourceExtension("PhAccentFill");
-        }
-        else
-        {
-            tb.Opacity = 0.85;
-            tb[!TextBlock.ForegroundProperty] = Resx.CreateBinding(ResxId.TextControlForeground);
+            panel.Children.Add(new PhHotkeyChip(hk.KeyString)
+            {
+                Tone = tone,
+                Margin = new Thickness(0, 0, 6, 0),
+            });
         }
 
-        var cell = PhTableControl.WrapCell(tb);
+        var cell = PhTableControl.WrapCell(panel);
         if (row.HotkeysTooltip is { } tip) ToolTip.SetTip(cell, tip);
         return cell;
     }

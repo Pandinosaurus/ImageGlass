@@ -203,7 +203,7 @@ public partial class SettingsWindow : DialogWindow
         {
             Orientation = Orientation.Horizontal,
             VerticalAlignment = VerticalAlignment.Center,
-            Spacing = 8,
+            Spacing = 12,
         };
         footerLeftPanel.Children.AddRange([_btnGetHelp, _btnResetSettings]);
 

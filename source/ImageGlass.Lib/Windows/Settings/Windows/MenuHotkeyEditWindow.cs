@@ -16,6 +16,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
@@ -24,7 +25,6 @@ using ImageGlass.Common.Types;
 using ImageGlass.UI;
 using ImageGlass.UI.Windowing;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace ImageGlass.Common.Windows;
 
@@ -38,7 +38,8 @@ internal sealed class MenuHotkeyEditWindow : DialogWindow
     private readonly PhHotkeyPicker _picker;
     private readonly PhButton _restoreBtn;
     private readonly PhTextBlock _pathLabel;
-    private readonly PhTextBlock _defaultLabel;
+    private readonly WrapPanel _defaultChips;
+    private readonly PhTextBlock? _defaultEmptyLabel;
 
 
     protected override int MIN_WIDTH => 460;
@@ -78,18 +79,30 @@ internal sealed class MenuHotkeyEditWindow : DialogWindow
         _restoreBtn = new PhButton { Variant = PhButtonVariant.Link };
         _restoreBtn.Click += (_, _) => _picker.Hotkeys = [.. _defaultHotkeys];
 
-        _defaultLabel = new PhTextBlock
+        // read-only keycaps of the default hotkeys (or an "empty" hint when there are none)
+        _defaultChips = new WrapPanel { Opacity = 0.85 };
+        if (_defaultHotkeys.Length > 0)
         {
-            Opacity = 0.7,
-            TextWrapping = TextWrapping.Wrap
-        };
+            foreach (var hk in _defaultHotkeys)
+            {
+                _defaultChips.Children.Add(new PhHotkeyChip(hk.KeyString)
+                {
+                    Margin = new Thickness(0, 0, 6, 6),
+                });
+            }
+        }
+        else
+        {
+            _defaultEmptyLabel = new PhTextBlock { Opacity = 0.7 };
+            _defaultChips.Children.Add(_defaultEmptyLabel);
+        }
 
         // reset link with the default-hotkey hint directly below it
         var footer = new StackPanel
         {
             Orientation = Orientation.Vertical,
             Spacing = 4,
-            Children = { _restoreBtn, _defaultLabel },
+            Children = { _restoreBtn, _defaultChips },
         };
 
         DialogContent = new StackPanel
@@ -112,9 +125,8 @@ internal sealed class MenuHotkeyEditWindow : DialogWindow
         _restoreBtn.Text = Core.Lang[LangId._ResetToDefault];
         _picker.PlaceholderText = Core.Lang[LangId.Settings_Toolbar_RecordHotkeyHint];
 
-        var defaultText = string.Join(", ", _defaultHotkeys.Select(h => h.KeyString));
-        if (string.IsNullOrEmpty(defaultText)) defaultText = Core.Lang[LangId._Empty];
-        _defaultLabel.Text = defaultText;
+        // only the "empty" hint is localized; the keycaps show non-localized key names
+        if (_defaultEmptyLabel is not null) _defaultEmptyLabel.Text = Core.Lang[LangId._Empty];
     }
 
 
