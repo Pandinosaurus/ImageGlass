@@ -127,6 +127,21 @@ public sealed class CodecRegistry : PhDisposable
 
 
     /// <summary>
+    /// Clears the per-extension codec-selection caches so the next lookup re-scans by
+    /// priority. Call when selection context changes (e.g. color-profile support toggles),
+    /// else a codec chosen while a higher-priority one was ineligible stays stuck.
+    /// </summary>
+    public void InvalidateSelectionCaches()
+    {
+        lock (_lock)
+        {
+            _metadataCodecByExt.Clear();
+            _decodeCodecByExt.Clear();
+        }
+    }
+
+
+    /// <summary>
     /// Returns a read-only snapshot of the registered codecs, ordered by decode priority
     /// (highest first). Informational only (for diagnostics / settings UI).
     /// </summary>

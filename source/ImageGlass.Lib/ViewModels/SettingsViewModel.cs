@@ -122,10 +122,10 @@ public sealed class SettingsViewModel : PhReactive
             is ConfigId.EnableOnlyLoadRawPreview
             or ConfigId.EnableOnlyLoadNonRawPreview
             or ConfigId.EnableAlwaysApplyColorProfile
-            or ConfigId.ColorProfile
             or ConfigId.EnableVectorRenderer);
 
-        // the new color profile must reach Core.DestColorProfile before the photo re-decodes
+        // ColorProfile isn't in reloadPhoto: UpdateDestColorProfile re-applies it via the
+        // ColorProfileChanged event, which re-decodes keeping zoom (a full reload resets it).
         if (changedIds.Contains(ConfigId.ColorProfile))
         {
             Core.UpdateDestColorProfile();

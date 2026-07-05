@@ -135,43 +135,41 @@ public partial class ViewerControl : PhControl
 
     private void Core_ColorProfileChanged(object? sender, EventArgs e)
     {
+        Photo? photo;
         lock (_lock)
         {
-            // 1. check if we can apply color profile
-            // skip animated images
-            if (_animator is not null) return;
-
-            // Always re-process HDR photos on monitor change (HDR↔SDR transition).
-            // For SDR photos, gate on the normal color profile check.
-            var isHdrPhoto = Photo?.Metadata?.IsHdr == true;
-            if (!isHdrPhoto && !CanApplySkiaColorSpace()) return;
-
-            // 2. dispose tile cache (will be rebuilt after next first draw)
-            _mipmapCache?.Dispose();
-            _mipmapCache = null;
-
-            SKImageRef.ImageLease? srcLease = null;
-
-            try
-            {
-                srcLease = _imgSource?.Acquire();
-                var srcImage = srcLease?.Image;
-
-                // 3. apply new color space for source image
-                if (TryApplySkiaColorSpace(srcImage, out var imgFrameColored))
-                {
-                    SKImageRef.Set(ref _imgSource, imgFrameColored);
-                }
-            }
-            finally
-            {
-                srcLease?.Dispose();
-            }
-
-            // 4. clear the render image
-            SKImageRef.Set(ref _imgRender, null);
-            InvalidateVisual();
+            // skip animated/vector; skip an in-progress load (its own load applies the current
+            // profile); skip when there's no color management to re-apply
+            if (_animator is not null || IsVectorSource()) return;
+            if (Photo is not { State: PhotoState.Loaded } || !HasColorManagement()) return;
+            photo = Photo;
         }
+
+        // Re-decode from source, keeping zoom + pan (ResetZoom: false). A fresh decode
+        // re-applies color management cleanly and re-selects the right codec, instead of
+        // compounding the conversion on the already color-managed _imgSource.
+        _ = SetPhotoAsync(photo, new PhotoLoadingOptions
+        {
+            ResetZoom = false,
+            UseCache = false,
+            Channels = Core.ColorChannels,
+        });
+    }
+
+
+    /// <summary>
+    /// Whether the current photo has color management to re-apply (HDR, always-apply, or an
+    /// embedded profile), used to skip redundant re-decodes on color-profile changes.
+    /// </summary>
+    private bool HasColorManagement()
+    {
+        var meta = Photo?.Metadata;
+        if (meta is null) return false;
+
+        return meta.IsHdr
+            || Core.Config.EnableAlwaysApplyColorProfile
+            || meta.SkiaColorSpace is not null
+            || meta.MagickColorProfile is not null;
     }
 
 

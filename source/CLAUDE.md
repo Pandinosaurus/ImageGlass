@@ -362,6 +362,14 @@ Occurs in `Program.cs` before Avalonia app setup (Linux/Mac have equivalent regi
 - **Tier 3**: LRU eviction when memory budget exhausted
 - Spiral pattern: right-1, left-1, right-2, left-2, ... to balance browsing directions
 
+### 6. Color Management (`Config.ColorProfile`)
+- The display profile is applied at **two** points; never let both hit the same pixels:
+  - **Decode-time (Magick only)**: `MagickCodec.ProcessMagickImage__()` bakes it via `TransformColorSpace`; runs only when `MagickCodecAdapter` decodes (Skia decode applies no profile).
+  - **Viewer-time (Skia)**: `ViewerControl.TryApplySkiaColorSpace()` (HDR tone-map + SDR ICC), applied in `HandlePhotoLoadedAsync()`.
+- **CMYK profiles**: `SKColorSpace.CreateIcc()` returns `null` for CMYK → `Core.IsDestColorProfileSupported=false` → `SkiaCodecAdapter.CanDecode` refuses → Magick decodes. `ProcessMagickImage__` must never output CMYK pixels (they render inverted): cast `refImgM.ColorSpace = ColorSpace.sRGB` (keeps the print-like tint; do not ICC round-trip, it over-brightens).
+- **Codec-selection cache**: `Core.UpdateDestColorProfile()` calls `CodecRegistry.InvalidateSelectionCaches()` and always fires `ColorProfileChanged`. Without the invalidation, a CMYK choice leaves `.jpg` stuck on Magick ("sticky downgrade") and every later profile double-applies (brighter/over-saturated until restart).
+- **On change**: `Core_ColorProfileChanged()` re-decodes the current photo via `SetPhotoAsync(photo, { ResetZoom = false, UseCache = false })` — re-applies cleanly while keeping zoom/pan; never transforms `_imgSource` in place. `ColorProfile` is intentionally NOT in `SettingsViewModel.reloadPhoto` (a generic reload would reset zoom).
+
 ---
 
 ## Code Style & Best Practices
@@ -458,6 +466,7 @@ Occurs in `Program.cs` before Avalonia app setup (Linux/Mac have equivalent regi
 - **Theme not updating?** Ensure `Core.ThemeChanged` is invoked and subscribers listen
 - **Gesture not working?** Check `PhPanGestureRecognizer`, `PhPinchGestureRecognizer` in `ZoomAndPan/`; verify point accumulation
 - **Nav buttons not showing?** Check `Config.EnableNavigationButtons` binding, `NavButtonsOverlay.Background` must be `Brushes.Transparent` for hit-testing, and `EnableSelection` disables nav buttons
+- **Color wrong after switching profiles (brighter/over-saturated, persists until restart)?** The codec-selection cache is stuck on Magick (double profile application); ensure `Core.UpdateDestColorProfile()` calls `CodecRegistry.InvalidateSelectionCaches()`. CMYK profile showing inverted/negative? `ProcessMagickImage__` must cast a CMYK result to `ColorSpace.sRGB`.
 - **Serialization fails?** Validate JSON converter exists in `Common/Types/JsonTypeConverters/`
 - **Cache not evicting?** Check `MipmapTileCache.MAX_CACHED_TILES` (100) and LRU promotion logic
 - **AOT trimming errors?** Review trimmer warnings; add `[DynamicallyAccessedMembers]` annotations or custom converters

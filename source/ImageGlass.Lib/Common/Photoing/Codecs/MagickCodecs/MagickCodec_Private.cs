@@ -91,10 +91,12 @@ public static partial class MagickCodec
             }
 
 
-            // make sure the output color space is not CMYK
-            if (meta.ColorSpace == ColorSpace.CMYK && meta.MagickColorProfile is not null)
+            // Make sure the output isn't CMYK. A CMYK dest profile (soft-proof) or a CMYK
+            // source would otherwise render as an inverted image when read back as RGBA.
+            // The built-in (non-ICC) cast keeps the expected print-like tint.
+            if (refImgM.ColorSpace == ColorSpace.CMYK)
             {
-                refImgM.TransformColorSpace(meta.MagickColorProfile, ColorProfiles.SRGB);
+                refImgM.ColorSpace = ColorSpace.sRGB;
             }
         }
 

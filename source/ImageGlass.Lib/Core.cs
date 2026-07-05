@@ -748,13 +748,13 @@ public static class Core
     public static void UpdateDestColorProfile()
     {
         var results = SkiaCodec.GetColorProfileByName(Core.Config.ColorProfile);
-
         Core.IsDestColorProfileSupported = results.IsSupported;
 
-        // no change
-        if (Core.DestColorProfile == results.ColorSpace) return;
+        // Codec selection depends on IsDestColorProfileSupported, so drop the cached winners
+        // (a codec chosen while Skia was ineligible must not stay stuck decoding).
+        Core.CodecRegistry.InvalidateSelectionCaches();
 
-        // color profile change
+        // apply the new profile and notify (the viewer re-decodes the current photo)
         Core.DestColorProfile?.Dispose();
         Core.DestColorProfile = results.ColorSpace;
         Core.OnColorProfileChanged();
