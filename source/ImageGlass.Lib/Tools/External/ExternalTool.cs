@@ -17,6 +17,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 using ImageGlass.Common.Types;
+using System.Collections.Generic;
+using System.Text;
 using System.Text.Json.Serialization;
 
 namespace ImageGlass.Tools;
@@ -70,4 +72,55 @@ public sealed class ExternalTool
     /// Optional global hotkeys for launching the tool.
     /// </summary>
     public Hotkey[] Hotkeys { get; init; } = [];
+
+
+    /// <summary>
+    /// Expands an arguments template into individual command-line arguments for
+    /// <see cref="System.Diagnostics.ProcessStartInfo.ArgumentList"/>. The template is
+    /// tokenized on whitespace (respecting double-quoted spans), then the
+    /// <see cref="Const.FILE_MACRO"/> placeholder is substituted per-token with
+    /// <paramref name="filePath"/>. Substituting after tokenization means a file path
+    /// containing spaces, quotes, or shell metacharacters cannot split into extra
+    /// arguments or inject a command.
+    /// </summary>
+    public static List<string> BuildArgumentList(string? argsTemplate, string filePath)
+    {
+        var result = new List<string>();
+        if (string.IsNullOrEmpty(argsTemplate)) return result;
+
+        var token = new StringBuilder();
+        var inQuotes = false;
+        var hasToken = false;
+
+        foreach (var ch in argsTemplate)
+        {
+            if (ch == '"')
+            {
+                inQuotes = !inQuotes;
+                hasToken = true; // an explicit "" is a real (empty) token
+                continue;
+            }
+
+            if (!inQuotes && char.IsWhiteSpace(ch))
+            {
+                if (hasToken)
+                {
+                    result.Add(token.ToString().Replace(Const.FILE_MACRO, filePath));
+                    token.Clear();
+                    hasToken = false;
+                }
+                continue;
+            }
+
+            token.Append(ch);
+            hasToken = true;
+        }
+
+        if (hasToken)
+        {
+            result.Add(token.ToString().Replace(Const.FILE_MACRO, filePath));
+        }
+
+        return result;
+    }
 }

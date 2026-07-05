@@ -104,7 +104,7 @@ internal sealed class ExternalToolProxy : ITool
             info.PipeHandler.SendEvent(MessageTypes.INIT, new ToolInitPayload
             {
                 ToolId = ToolId,
-                DataDirectory = Path.GetDirectoryName(_tool.Executable) ?? string.Empty,
+                DataDirectory = Path.GetDirectoryName(BHelper.ResolvePath(_tool.Executable)) ?? string.Empty,
                 PipeName = info.PipeName,
                 ThemeInfo = new ThemeInfo
                 {
@@ -130,18 +130,35 @@ internal sealed class ExternalToolProxy : ITool
     {
         if (string.IsNullOrEmpty(_tool.Executable)) return;
 
+        // Resolve %VAR% tokens, quotes, and .lnk targets so a portable/relative path works.
+        var exe = BHelper.ResolvePath(_tool.Executable).Trim();
         var filePath = Core.Photos?.Current?.FilePath ?? string.Empty;
-        var args = (_tool.Arguments ?? string.Empty).Replace(Const.FILE_MACRO, filePath);
 
         try
         {
-            _ = Process.Start(new ProcessStartInfo
+            // App protocol (e.g. "ms-settings:"): the OS shell must resolve the scheme, so it
+            // can't use ArgumentList. Reuse the canonical launcher, which builds the URI as
+            // Executable + arguments and shell-executes it.
+            if (exe.EndsWith(':'))
             {
-                FileName = _tool.Executable,
-                Arguments = args,
-                UseShellExecute = true,
-                WorkingDirectory = Path.GetDirectoryName(_tool.Executable) ?? string.Empty,
-            });
+                var built = BHelper.BuildExeArgs(exe, _tool.Arguments ?? string.Empty, filePath);
+                _ = BHelper.RunExeAsync(built.Executable, built.Args);
+                return;
+            }
+
+            // Regular executable: no shell, each argument passed as its own element so a
+            // crafted filename cannot inject extra arguments or shell syntax.
+            var psi = new ProcessStartInfo
+            {
+                FileName = exe,
+                UseShellExecute = false,
+                WorkingDirectory = Path.GetDirectoryName(exe) ?? string.Empty,
+            };
+            foreach (var arg in ExternalTool.BuildArgumentList(_tool.Arguments, filePath))
+            {
+                psi.ArgumentList.Add(arg);
+            }
+            _ = Process.Start(psi);
         }
         catch
         {

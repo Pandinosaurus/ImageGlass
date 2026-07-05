@@ -177,6 +177,40 @@ public partial class BHelper
 
 
     /// <summary>
+    /// Checks whether <paramref name="path"/> resolves to a location inside
+    /// <paramref name="root"/> (or equals it). Both are resolved with
+    /// <see cref="System.IO.Path.GetFullPath(string)"/> first, so <c>..</c>
+    /// segments and absolute paths cannot escape the root.
+    /// </summary>
+    public static bool IsPathContainedIn(string? path, string? root)
+    {
+        if (string.IsNullOrEmpty(path) || string.IsNullOrEmpty(root)) return false;
+
+        string fullPath, fullRoot;
+        try
+        {
+            fullPath = Path.GetFullPath(path);
+            fullRoot = Path.GetFullPath(root);
+        }
+        catch
+        {
+            return false;
+        }
+
+        // Trailing separator on root so a sibling like "_pluginsEvil" can't prefix-match "_plugins".
+        var sep = Path.DirectorySeparatorChar;
+        if (!fullRoot.EndsWith(sep)) fullRoot += sep;
+
+        // Windows and macOS default to case-insensitive filesystems; Linux is case-sensitive.
+        var comparison = OperatingSystem.IsLinux()
+            ? StringComparison.Ordinal
+            : StringComparison.OrdinalIgnoreCase;
+
+        return (fullPath + sep).StartsWith(fullRoot, comparison);
+    }
+
+
+    /// <summary>
     /// Get distinct directories list from paths list.
     /// </summary>
     public static (List<string> DirPaths, List<string> FilePaths) GetDistinctDirsFromPaths(IEnumerable<string> pathList)

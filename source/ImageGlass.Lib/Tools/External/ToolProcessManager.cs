@@ -16,6 +16,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
+using ImageGlass.Common;
 using ImageGlass.Common.Types;
 using ImageGlass.SDK.Tools;
 using System;
@@ -80,31 +81,42 @@ public sealed class ToolProcessManager : PhDisposable
         if (string.IsNullOrEmpty(tool.Executable)) return null;
 
         // Create the IPC endpoint first so the child process can connect immediately.
-        // macOS limits Unix domain socket paths to ~104 chars — keep pipe names short
-        var pipeName = $"ig_{Guid.NewGuid().ToString("N")[..8]}";
+        // Full GUID for unpredictability; "ig_" + 32 hex = 35 chars, safely under the
+        // macOS ~104-char Unix-domain-socket path limit.
+        var pipeName = $"ig_{Guid.NewGuid():N}";
 
+        // CurrentUserOnly restricts the pipe to this user (Windows SID / Unix UID) so a
+        // process from another user cannot connect or squat the name. The SDK client
+        // (ToolClient) sets the same flag; both ends must agree.
         var pipeServer = new NamedPipeServerStream(
             pipeName, PipeDirection.InOut, 1,
-            PipeTransmissionMode.Byte, PipeOptions.Asynchronous);
+            PipeTransmissionMode.Byte, PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly);
 
-        var workingDir = Path.GetDirectoryName(tool.Executable) ?? string.Empty;
-        var args = $"--pipe {pipeName}";
-        if (!string.IsNullOrEmpty(tool.Arguments))
-        {
-            args = $"{tool.Arguments} {args}";
-        }
+        // Expand %VAR% tokens so a portable/relative executable path works cross-platform.
+        var exe = BHelper.ResolvePath(tool.Executable);
+        var workingDir = Path.GetDirectoryName(exe) ?? string.Empty;
 
         // Launch the tool process with the generated pipe name in its arguments.
         Process? process;
         try
         {
-            process = Process.Start(new ProcessStartInfo
+            var filePath = Core.Photos?.Current?.FilePath ?? string.Empty;
+            var psi = new ProcessStartInfo
             {
-                FileName = tool.Executable,
-                Arguments = args,
+                FileName = exe,
                 UseShellExecute = false,
                 WorkingDirectory = workingDir,
-            });
+            };
+
+            // Configured args first (each as its own element), then the pipe handshake.
+            foreach (var arg in ExternalTool.BuildArgumentList(tool.Arguments, filePath))
+            {
+                psi.ArgumentList.Add(arg);
+            }
+            psi.ArgumentList.Add("--pipe");
+            psi.ArgumentList.Add(pipeName);
+
+            process = Process.Start(psi);
         }
         catch
         {

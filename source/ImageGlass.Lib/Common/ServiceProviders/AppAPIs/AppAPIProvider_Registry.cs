@@ -194,6 +194,44 @@ public partial class AppAPIProvider
 
 
     /// <summary>
+    /// APIs an external tool must NOT invoke over the IPC pipe: destructive,
+    /// process-spawning, or system-modifying. The trusted hotkey/menu path is
+    /// unaffected; this gate applies only to <c>ToolPipeServer</c>'s RUN_API handler.
+    /// </summary>
+    private static readonly FrozenSet<API> _toolBlockedApis = new[]
+    {
+        API.IG_Delete,
+        API.IG_Rename,
+        API.IG_Save,
+        API.IG_SaveAs,
+        API.IG_NewWindow,
+        API.IG_OpenWith,
+        API.IG_OpenEditingApp,
+        API.IG_SetDesktopBackground,
+        API.IG_SetLockScreenImage,
+        API.IG_SetDefaultPhotoViewer,
+        API.IG_RemoveDefaultPhotoViewer,
+        API.IG_Exit,
+    }.ToFrozenSet();
+
+
+    /// <summary>
+    /// Returns <c>false</c> for APIs an external tool is not permitted to run over the
+    /// IPC pipe. Unknown names are allowed through here and fall to the normal
+    /// <c>ApiNotFound</c> handling in <see cref="RunApiAsync(string?, string?)"/>.
+    /// </summary>
+    public bool IsApiAllowedForTool(string? apiName)
+    {
+        if (Enum.TryParse<API>(apiName, out var api))
+        {
+            return !_toolBlockedApis.Contains(api);
+        }
+
+        return true;
+    }
+
+
+    /// <summary>
     /// Executes the given built-in API command.
     /// </summary>
     public async Task<ActionResult> RunApiAsync(API api, string? args = null)

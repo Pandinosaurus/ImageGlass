@@ -277,6 +277,13 @@ internal sealed class ToolPipeServer : IDisposable
             return;
         }
 
+        // Security: a tool may only invoke non-destructive host APIs over IPC.
+        if (!Core.API.IsApiAllowedForTool(req.ApiName))
+        {
+            SendResponse(msg.RequestId, new RunApiResponse { Success = false, Error = $"API '{req.ApiName}' is not permitted for tools." });
+            return;
+        }
+
         try
         {
             // Marshal the request to the UI thread because host APIs may touch UI state.

@@ -16,6 +16,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
+using ImageGlass.Common;
 using ImageGlass.Common.Types;
 using ImageGlass.SDK.Plugins;
 using System;
@@ -38,6 +39,38 @@ public sealed unsafe class PluginRegistry : PhDisposable
     private readonly Dictionary<string, NativePlugin> _plugins = new(StringComparer.Ordinal);
 
     private static int DecodeMajor(int abiVersion) => abiVersion / 1_000_000;
+
+
+    /// <summary>
+    /// Validates a manifest <c>Executable</c> and resolves it to a full path inside
+    /// <paramref name="pluginDir"/>. Rejects absolute paths, directory separators,
+    /// <c>..</c> traversal, escapes outside the plugin folder, and any file whose
+    /// extension is not the platform's native shared-library extension.
+    /// </summary>
+    private static bool TryResolvePluginLibraryPath(string executable, string pluginDir, out string libraryPath)
+    {
+        libraryPath = string.Empty;
+
+        // Must be a bare filename: no rooting, no directory separators, no traversal.
+        if (Path.IsPathRooted(executable)) return false;
+        if (executable.Contains('/') || executable.Contains('\\')) return false;
+        if (executable.Contains("..")) return false;
+
+        // Must carry the platform's native shared-library extension.
+        var expectedExt = OperatingSystem.IsWindows() ? ".dll"
+            : OperatingSystem.IsMacOS() ? ".dylib"
+            : ".so";
+        if (!Path.GetExtension(executable).Equals(expectedExt, StringComparison.OrdinalIgnoreCase))
+            return false;
+
+        var candidate = Path.Combine(pluginDir, executable);
+
+        // Belt-and-suspenders: the resolved path must stay inside the plugin folder.
+        if (!BHelper.IsPathContainedIn(candidate, pluginDir)) return false;
+
+        libraryPath = candidate;
+        return true;
+    }
 
 
     /// <summary>
@@ -66,7 +99,13 @@ public sealed unsafe class PluginRegistry : PhDisposable
             return null;
         }
 
-        var libraryPath = Path.Combine(pluginDir, manifest.Executable);
+        // Executable must be a plain relative filename inside the plugin folder
+        // with the platform's native-library extension; reject absolute paths and traversal.
+        if (!TryResolvePluginLibraryPath(manifest.Executable, pluginDir, out var libraryPath))
+        {
+            Debug.WriteLine($"[PluginRegistry] '{manifest.Id}' has an unsafe or invalid Executable '{manifest.Executable}'; skipping.");
+            return null;
+        }
         if (!File.Exists(libraryPath))
         {
             Debug.WriteLine($"[PluginRegistry] '{manifest.Id}' library not found: {libraryPath}");
