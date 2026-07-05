@@ -149,6 +149,7 @@ public enum ConfigId
     MouseWheelActions,
     LockedFeatures,
     Layout,
+    PluginTrust,
     Tools,
     ToolSettings,
     ToolbarButtons,

@@ -4,6 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:types="using:ImageGlass.Common.Types"
     xmlns:ui="using:ImageGlass.UI"
     mc:Ignorable="d"
     d:DesignWidth="480">
@@ -17,95 +18,132 @@
         </Style>
     </ui:PhControl.Styles>
 
-    <StackPanel Orientation="Vertical" Spacing="14">
 
-        <!--  ID  -->
-        <StackPanel x:Name="PART_IdRow" Spacing="5">
-            <ui:PhTextBlock LangKey="_ID" />
-            <Border Classes="valueBox">
-                <SelectableTextBlock x:Name="PART_Id" />
-            </Border>
-        </StackPanel>
+    <!--  Banner is docked to the top (pinned); the ScrollViewer fills the rest. A DockPanel hands
+          the fill child its MaxHeight-capped desired height, unlike a Grid *-row which over-
+          allocates under the window's SizeToContent and makes the bottom unreachable.  -->
+    <DockPanel>
 
-        <!--  Name  -->
-        <StackPanel x:Name="PART_NameRow" Spacing="5">
-            <ui:PhTextBlock LangKey="_Name" />
-            <Border Classes="valueBox">
-                <SelectableTextBlock x:Name="PART_Name" />
-            </Border>
-        </StackPanel>
-
-        <!--  Version & Type (side by side)  -->
-        <StackPanel Orientation="Horizontal" Spacing="40">
-            <StackPanel x:Name="PART_VersionRow" Spacing="5">
-                <ui:PhTextBlock LangKey="_Version" />
-                <Border Classes="valueBox">
-                    <SelectableTextBlock x:Name="PART_Version" />
-                </Border>
+        <!--  Consent warning: pinned at top, edge-to-edge (shown only when enabling a plugin)  -->
+        <Border
+            x:Name="PART_ConsentRow"
+            Padding="24,14,24,20"
+            Background="{DynamicResource IG_BackgroundWarningBrush}"
+            DockPanel.Dock="Top"
+            IsVisible="False">
+            <StackPanel Spacing="8">
+                <TextBlock
+                    x:Name="PART_ConsentTitle"
+                    FontSize="{x:Static types:Const.FONT_SIZE_TITLE}"
+                    Foreground="{DynamicResource IG_TextWarningColor}"
+                    TextWrapping="Wrap" />
+                <TextBlock
+                    x:Name="PART_ConsentMessage"
+                    Foreground="{DynamicResource IG_TextWarningColor}"
+                    TextWrapping="Wrap" />
             </StackPanel>
-            <StackPanel x:Name="PART_TypeRow" Spacing="5">
-                <ui:PhTextBlock LangKey="_Type" />
-                <Border Classes="valueBox">
-                    <SelectableTextBlock x:Name="PART_Type" />
-                </Border>
-            </StackPanel>
-        </StackPanel>
+        </Border>
 
-        <!--  Description  -->
-        <StackPanel x:Name="PART_DescriptionRow" Spacing="5">
-            <ui:PhTextBlock LangKey="_Description" />
-            <Border Classes="valueBox">
-                <SelectableTextBlock x:Name="PART_Description" TextWrapping="Wrap" />
-            </Border>
-        </StackPanel>
+        <!--  Scrollable metadata (fills the remaining space)  -->
+        <ScrollViewer
+            MaxHeight="400"
+            HorizontalContentAlignment="Stretch"
+            HorizontalScrollBarVisibility="Disabled"
+            VerticalScrollBarVisibility="Auto">
+            <StackPanel
+                Margin="24,14,24,20"
+                Orientation="Vertical"
+                Spacing="14">
 
-        <!--  Executable  -->
-        <StackPanel x:Name="PART_ExecutableRow" Spacing="5">
-            <ui:PhTextBlock LangKey="_Executable" />
-            <Border Classes="valueBox">
-                <SelectableTextBlock x:Name="PART_Executable" />
-            </Border>
-        </StackPanel>
+                <!--  ID  -->
+                <StackPanel x:Name="PART_IdRow" Spacing="5">
+                    <ui:PhTextBlock LangKey="_ID" />
+                    <Border Classes="valueBox">
+                        <SelectableTextBlock x:Name="PART_Id" />
+                    </Border>
+                </StackPanel>
 
-        <!--  Supported extensions  -->
-        <StackPanel x:Name="PART_ExtensionsRow" Spacing="5">
-            <ui:PhTextBlock LangKey="Settings_Plugins_SupportedExtensions" />
-            <Border Classes="valueBox">
-                <SelectableTextBlock x:Name="PART_Extensions" TextWrapping="Wrap" />
-            </Border>
-        </StackPanel>
+                <!--  Name  -->
+                <StackPanel x:Name="PART_NameRow" Spacing="5">
+                    <ui:PhTextBlock LangKey="_Name" />
+                    <Border Classes="valueBox">
+                        <SelectableTextBlock x:Name="PART_Name" />
+                    </Border>
+                </StackPanel>
 
-        <!--  Author & Website (side by side)  -->
-        <StackPanel Orientation="Horizontal" Spacing="40">
-            <StackPanel x:Name="PART_AuthorRow" Spacing="5">
-                <ui:PhTextBlock LangKey="_Author" />
-                <Border Classes="valueBox">
-                    <SelectableTextBlock x:Name="PART_Author" />
-                </Border>
-            </StackPanel>
-            <StackPanel x:Name="PART_WebsiteRow" Spacing="5">
-                <ui:PhTextBlock LangKey="_Website" />
-                <Border Classes="valueBox">
+                <!--  Version & Type (side by side)  -->
+                <StackPanel Orientation="Horizontal" Spacing="40">
+                    <StackPanel x:Name="PART_VersionRow" Spacing="5">
+                        <ui:PhTextBlock LangKey="_Version" />
+                        <Border Classes="valueBox">
+                            <SelectableTextBlock x:Name="PART_Version" />
+                        </Border>
+                    </StackPanel>
+                    <StackPanel x:Name="PART_TypeRow" Spacing="5">
+                        <ui:PhTextBlock LangKey="_Type" />
+                        <Border Classes="valueBox">
+                            <SelectableTextBlock x:Name="PART_Type" />
+                        </Border>
+                    </StackPanel>
+                </StackPanel>
+
+                <!--  Description  -->
+                <StackPanel x:Name="PART_DescriptionRow" Spacing="5">
+                    <ui:PhTextBlock LangKey="_Description" />
+                    <Border Classes="valueBox">
+                        <SelectableTextBlock x:Name="PART_Description" TextWrapping="Wrap" />
+                    </Border>
+                </StackPanel>
+
+                <!--  Executable  -->
+                <StackPanel x:Name="PART_ExecutableRow" Spacing="5">
+                    <ui:PhTextBlock LangKey="_Executable" />
+                    <Border Classes="valueBox">
+                        <SelectableTextBlock x:Name="PART_Executable" />
+                    </Border>
+                </StackPanel>
+
+                <!--  Supported extensions  -->
+                <StackPanel x:Name="PART_ExtensionsRow" Spacing="5">
+                    <ui:PhTextBlock LangKey="Settings_Plugins_SupportedExtensions" />
+                    <Border Classes="valueBox">
+                        <SelectableTextBlock x:Name="PART_Extensions" TextWrapping="Wrap" />
+                    </Border>
+                </StackPanel>
+
+                <!--  Author & Website (side by side)  -->
+                <StackPanel Orientation="Horizontal" Spacing="40">
+                    <StackPanel x:Name="PART_AuthorRow" Spacing="5">
+                        <ui:PhTextBlock LangKey="_Author" />
+                        <Border Classes="valueBox">
+                            <SelectableTextBlock x:Name="PART_Author" />
+                        </Border>
+                    </StackPanel>
+                    <StackPanel x:Name="PART_WebsiteRow" Spacing="5">
+                        <ui:PhTextBlock LangKey="_Website" />
+                        <Border Classes="valueBox">
+                            <ui:PhButton
+                                x:Name="PART_Website"
+                                Padding="0"
+                                HorizontalAlignment="Left"
+                                Variant="Link" />
+                        </Border>
+                    </StackPanel>
+                </StackPanel>
+
+                <!--  Folder (1 line, truncated + tooltip) + open-folder link  -->
+                <StackPanel x:Name="PART_FolderRow" Spacing="5">
+                    <ui:PhTextBlock LangKey="Settings_Plugins_FolderPath" />
+                    <Border Classes="valueBox">
+                        <SelectableTextBlock x:Name="PART_Folder" TextTrimming="CharacterEllipsis" />
+                    </Border>
                     <ui:PhButton
-                        x:Name="PART_Website"
-                        Padding="0"
+                        x:Name="PART_OpenFolder"
                         HorizontalAlignment="Left"
                         Variant="Link" />
-                </Border>
+                </StackPanel>
+
             </StackPanel>
-        </StackPanel>
-
-        <!--  Folder (1 line, truncated + tooltip) + open-folder link  -->
-        <StackPanel x:Name="PART_FolderRow" Spacing="5">
-            <ui:PhTextBlock LangKey="Settings_Plugins_FolderPath" />
-            <Border Classes="valueBox">
-                <SelectableTextBlock x:Name="PART_Folder" TextTrimming="CharacterEllipsis" />
-            </Border>
-            <ui:PhButton
-                x:Name="PART_OpenFolder"
-                HorizontalAlignment="Left"
-                Variant="Link" />
-        </StackPanel>
-
-    </StackPanel>
+        </ScrollViewer>
+    </DockPanel>
 </ui:PhControl>

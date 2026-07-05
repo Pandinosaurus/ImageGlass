@@ -457,7 +457,7 @@ public partial class Config : PhReactive
     /// <summary>
     /// Gets, sets the version that requires to open Quick setup ImageGlass dialog.
     /// </summary>
-    public double QuickSetupVersion 
+    public double QuickSetupVersion
     {
         get => Get(ConfigId.QuickSetupVersion, 0d);
         set => Set(ConfigId.QuickSetupVersion, value);
@@ -935,6 +935,17 @@ public partial class Config : PhReactive
     {
         get => Get(ConfigId.Layout, new Dictionary<LayoutControl, LayoutPosition>());
         set => Set(ConfigId.Layout, value);
+    }
+
+    /// <summary>
+    /// Gets, sets per-plugin trust decisions (enabled state + pinned library hash), keyed by
+    /// plugin id. A native plugin loads only when its entry is enabled and its pinned SHA-256
+    /// still matches the on-disk library. See <see cref="PluginTrustInfo"/>.
+    /// </summary>
+    public Dictionary<string, PluginTrustInfo> PluginTrust
+    {
+        get => Get(ConfigId.PluginTrust, new Dictionary<string, PluginTrustInfo>(StringComparer.Ordinal));
+        set => Set(ConfigId.PluginTrust, value);
     }
 
     /// <summary>

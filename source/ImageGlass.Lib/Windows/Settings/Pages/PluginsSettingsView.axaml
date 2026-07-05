@@ -25,13 +25,17 @@
                 Variant="Link" />
         </StackPanel>
 
-        <!--  Post-install hint (hidden until a plugin is installed)  -->
-        <ui:PhTextBlock
-            x:Name="PART_InstallHint"
-            FontStyle="Italic"
-            IsVisible="False"
-            Opacity="0.7"
-            TextWrapping="Wrap" />
+        <!--  Hint  -->
+        <Border
+            x:Name="PART_HintContainer"
+            Padding="12,8"
+            Background="{DynamicResource IG_BackgroundInfoBrush}"
+            CornerRadius="{DynamicResource ControlCornerRadius}"
+            DockPanel.Dock="Top"
+            IsVisible="False">
+            <ui:PhTextBlock x:Name="PART_InstallHint" TextWrapping="Wrap" />
+        </Border>
+
 
         <!--  Plugins table (rows built in code-behind)  -->
         <ui:PhTableControl x:Name="PART_Table" HorizontalAlignment="Stretch" />

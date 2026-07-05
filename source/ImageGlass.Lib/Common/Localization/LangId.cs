@@ -669,6 +669,18 @@ public enum LangId
     Settings_Plugins_FolderPath,
     Settings_Plugins_RestartRequired,
     Settings_Plugins_InstallSuccess,
+    Settings_Plugins_Status,
+    Settings_Plugins_Enable,
+    Settings_Plugins_TrustAndEnable,
+    Settings_Plugins_Disable,
+    Settings_Plugins_StatusEnabled,
+    Settings_Plugins_StatusDisabled,
+    Settings_Plugins_StatusUntrusted,
+    Settings_Plugins_StatusChanged,
+    Settings_Plugins_TrustTitle,
+    Settings_Plugins_TrustPrompt,
+    Settings_Plugins_TrustChangedWarning,
+    Settings_Plugins_EnableToLoad,
     #endregion // Settings > Tab Plugins
 
 

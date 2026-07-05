@@ -17,7 +17,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 using Avalonia.Controls;
-using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Platform.Storage;
 using ImageGlass.Common.Localization;
@@ -26,10 +25,12 @@ using ImageGlass.Plugins;
 using ImageGlass.SDK.Plugins;
 using ImageGlass.UI;
 using ImageGlass.UI.Windowing;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace ImageGlass.Common.Windows;
@@ -41,7 +42,6 @@ namespace ImageGlass.Common.Windows;
 public partial class PluginsSettingsView : SettingsPageView
 {
     private const double NAME_MAX_WIDTH = 220;
-    private const int MAX_DESC_CHARS = 250;
 
     // file picker filter pattern for installable plugin packages
     private const string PLUGIN_PACKAGE_PATTERN = "*.igplugin.zip";
@@ -134,12 +134,7 @@ public partial class PluginsSettingsView : SettingsPageView
             foreach (var file in paths)
             {
                 if (!File.Exists(file)) continue;
-                try
-                {
-                    ZipFile.ExtractToDirectory(file, pluginsDir, overwriteFiles: true);
-                    count++;
-                }
-                catch { }
+                if (InstallPackage(file, pluginsDir)) count++;
             }
             return count;
         });
@@ -147,13 +142,128 @@ public partial class PluginsSettingsView : SettingsPageView
         ReloadPlugins();
         RebuildTable();
 
-        // installed plugins are only loaded at startup -> hint the user to restart
+        // Newly installed plugins land untrusted (disabled); the user must review and enable
+        // them, then restart. Loading only happens at startup.
         if (installed > 0)
         {
             PART_InstallHint.Text = Core.Lang[LangId.Settings_Plugins_InstallSuccess]
-                + ". " + Core.Lang[LangId.Settings_Plugins_RestartRequired];
-            PART_InstallHint.IsVisible = true;
+                + ". " + Core.Lang[LangId.Settings_Plugins_EnableToLoad];
+            PART_HintContainer.IsVisible = true;
         }
+    }
+
+
+    /// <summary>
+    /// Safely installs one <c>*.igplugin.zip</c>: extracts to a temp staging folder, validates the
+    /// manifest, then moves the plugin into its own <c>_plugins/&lt;id&gt;/</c> folder. Extracting to
+    /// staging first prevents a malformed or hostile archive from scattering files across the
+    /// <c>_plugins</c> root or overwriting sibling plugins.
+    /// </summary>
+    private static bool InstallPackage(string packageFile, string pluginsDir)
+    {
+        var staging = Path.Combine(Path.GetTempPath(), "ig_plugin_" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            Directory.CreateDirectory(staging);
+            ZipFile.ExtractToDirectory(packageFile, staging, overwriteFiles: true);
+
+            // locate + validate the manifest (archive root, or one directory below)
+            var manifestPath = FindManifest(staging);
+            if (manifestPath is null) return false;
+
+            var manifest = ReadManifest(manifestPath);
+            if (manifest is null || string.IsNullOrWhiteSpace(manifest.Id)) return false;
+
+            var srcDir = Path.GetDirectoryName(manifestPath)!;
+            var destDir = Path.Combine(pluginsDir, MakeSafeFolderName(manifest.Id));
+
+            // replace any previous install of the same id
+            if (Directory.Exists(destDir)) Directory.Delete(destDir, recursive: true);
+            MoveDirectory(srcDir, destDir);
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+        finally
+        {
+            try { if (Directory.Exists(staging)) Directory.Delete(staging, recursive: true); } catch { }
+        }
+    }
+
+
+    /// <summary>
+    /// Finds <c>igplugin.json</c> at the archive root or one directory below it.
+    /// </summary>
+    private static string? FindManifest(string root)
+    {
+        var direct = Path.Combine(root, PluginManifest.FILE_NAME);
+        if (File.Exists(direct)) return direct;
+
+        foreach (var sub in Directory.EnumerateDirectories(root))
+        {
+            var candidate = Path.Combine(sub, PluginManifest.FILE_NAME);
+            if (File.Exists(candidate)) return candidate;
+        }
+        return null;
+    }
+
+
+    /// <summary>
+    /// Deserializes a plugin manifest, returning null on any error.
+    /// </summary>
+    private static PluginManifest? ReadManifest(string manifestPath)
+    {
+        try
+        {
+            var json = File.ReadAllText(manifestPath);
+            return JsonSerializer.Deserialize(json, PluginJsonContext.Default.PluginManifest);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+
+    /// <summary>
+    /// Moves a directory, falling back to a recursive copy when source and destination live on
+    /// different volumes (temp vs. config).
+    /// </summary>
+    private static void MoveDirectory(string src, string dest)
+    {
+        try
+        {
+            Directory.Move(src, dest);
+            return;
+        }
+        catch { }
+
+        Directory.CreateDirectory(dest);
+        foreach (var dir in Directory.GetDirectories(src, "*", SearchOption.AllDirectories))
+        {
+            Directory.CreateDirectory(Path.Combine(dest, Path.GetRelativePath(src, dir)));
+        }
+        foreach (var f in Directory.GetFiles(src, "*", SearchOption.AllDirectories))
+        {
+            File.Copy(f, Path.Combine(dest, Path.GetRelativePath(src, f)), overwrite: true);
+        }
+    }
+
+
+    /// <summary>
+    /// Replaces characters invalid in a file name with underscores.
+    /// </summary>
+    private static string MakeSafeFolderName(string id)
+    {
+        var invalid = Path.GetInvalidFileNameChars();
+        var chars = id.ToCharArray();
+        for (var i = 0; i < chars.Length; i++)
+        {
+            if (Array.IndexOf(invalid, chars[i]) >= 0) chars[i] = '_';
+        }
+        return new string(chars);
     }
 
 
@@ -176,12 +286,14 @@ public partial class PluginsSettingsView : SettingsPageView
         [
             new() { Header = Core.Lang[LangId._Type] },
             new() { Header = Core.Lang[LangId._Name] },
-            new() { Header = Core.Lang[LangId._Description], Star = true },
+            new() { Header = Core.Lang[LangId.Settings_Plugins_Status], Star = true },
         ];
 
         var rows = _plugins.Select(plugin =>
         {
             var m = plugin.Manifest;
+            var state = PluginTrustPolicy.GetState(m, plugin.Dir);
+
             return new PhTableRow
             {
                 Key = m.Id,
@@ -189,17 +301,125 @@ public partial class PluginsSettingsView : SettingsPageView
                 [
                     PhTableControl.TextCell(m.Kind.ToString()),
                     NameCell(m),
-                    DescriptionCell(m.Description),
+                    StatusCell(state),
                 ],
-                Actions =
-                [
-                    new() { Icon = ResxIconId.IconInfo, Tooltip = Core.Lang[LangId._View], Click = () => _ = ViewPluginAsync(plugin) },
-                ],
+                Actions = BuildActions(plugin, state),
             };
         }).ToList();
 
         PART_Table.EmptyText = Core.Lang[LangId._Empty];
         PART_Table.Build(columns, rows);
+    }
+
+
+    /// <summary>
+    /// Builds the per-row hover actions: always "View", plus "Enable" or "Disable" depending on
+    /// the plugin's current trust state. A missing/broken plugin gets no enable/disable action.
+    /// </summary>
+    private List<PhTableAction> BuildActions((PluginManifest Manifest, string Dir) plugin, PluginTrustPolicy.TrustState state)
+    {
+        var actions = new List<PhTableAction>
+        {
+            new()
+            {
+                Icon = ResxIconId.IconInfo,
+                Tooltip = Core.Lang[LangId._View],
+                Click = () => _ = ViewPluginAsync(plugin),
+            },
+        };
+
+        switch (state)
+        {
+            case PluginTrustPolicy.TrustState.Trusted:
+                actions.Add(new() { Icon = ResxIconId.IconPause, Tooltip = Core.Lang[LangId.Settings_Plugins_Disable], Click = () => _ = DisablePluginAsync(plugin) });
+                break;
+
+            case PluginTrustPolicy.TrustState.Untrusted:
+            case PluginTrustPolicy.TrustState.Disabled:
+                actions.Add(new() { Icon = ResxIconId.IconPlay, Tooltip = Core.Lang[LangId.Settings_Plugins_Enable], Click = () => _ = EnablePluginAsync(plugin, hashChanged: false) });
+                break;
+
+            case PluginTrustPolicy.TrustState.Changed:
+                actions.Add(new() { Icon = ResxIconId.IconPlay, Tooltip = Core.Lang[LangId.Settings_Plugins_Enable], Click = () => _ = EnablePluginAsync(plugin, hashChanged: true) });
+                break;
+        }
+
+        return actions;
+    }
+
+
+    /// <summary>
+    /// Shows the trust-consent prompt for the plugin; on approval, enables it (pinning the current
+    /// library hash) and hints that a restart is required.
+    /// </summary>
+    private async Task EnablePluginAsync((PluginManifest Manifest, string Dir) plugin, bool hashChanged)
+    {
+        var win = new PluginInfoWindow(plugin.Manifest, plugin.Dir, consentMode: true, hashChanged: hashChanged);
+        var result = await win.ShowAsync(TopLevel.GetTopLevel(this) as PhWindow);
+        if (result != DialogExitCode.OK) return;
+
+        if (await PluginTrustPolicy.TrustAsync(plugin.Manifest, plugin.Dir))
+        {
+            RebuildTable();
+            ShowRestartHint();
+        }
+    }
+
+
+    /// <summary>
+    /// Disables the plugin and hints that a restart is required.
+    /// </summary>
+    private async Task DisablePluginAsync((PluginManifest Manifest, string Dir) plugin)
+    {
+        await PluginTrustPolicy.DisableAsync(plugin.Manifest.Id);
+        RebuildTable();
+        ShowRestartHint();
+    }
+
+
+    /// <summary>
+    /// Shows the "restart required" hint below the table.
+    /// </summary>
+    private void ShowRestartHint()
+    {
+        PART_InstallHint.Text = Core.Lang[LangId.Settings_Plugins_RestartRequired];
+        PART_HintContainer.IsVisible = true;
+    }
+
+
+    /// <summary>
+    /// Builds the trust-status chip, colored by state via <see cref="PhChip"/>
+    /// Returns <c>null</c> when there is nothing to show (missing/broken plugin).
+    /// </summary>
+    private static PhChip? StatusChip(PluginTrustPolicy.TrustState state)
+    {
+        var (key, variant) = state switch
+        {
+            PluginTrustPolicy.TrustState.Trusted => (LangId.Settings_Plugins_StatusEnabled, PhChipVariant.Success),
+            PluginTrustPolicy.TrustState.Changed => (LangId.Settings_Plugins_StatusChanged, PhChipVariant.Warning),
+            PluginTrustPolicy.TrustState.Disabled => (LangId.Settings_Plugins_StatusDisabled, PhChipVariant.Neutral),
+            PluginTrustPolicy.TrustState.Untrusted => (LangId.Settings_Plugins_StatusUntrusted, PhChipVariant.Neutral),
+            _ => ((LangId?)null, PhChipVariant.Neutral), // Missing -> nothing
+        };
+
+        if (key is null) return null;
+
+        return new PhChip
+        {
+            Text = Core.Lang[key.Value],
+            Variant = variant,
+        };
+    }
+
+
+    /// <summary>
+    /// The status cell: the trust-status chip (left-aligned), or an empty cell for a missing plugin.
+    /// </summary>
+    private static Control StatusCell(PluginTrustPolicy.TrustState state)
+    {
+        return StatusChip(state) is { } chip
+            ? PhTableControl.WrapCell(chip)
+            : PhTableControl.TextCell(string.Empty);
     }
 
 
@@ -232,31 +452,6 @@ public partial class PluginsSettingsView : SettingsPageView
         }
 
         return PhTableControl.WrapCell(stack);
-    }
-
-
-    /// <summary>
-    /// The description cell: wraps to at most 2 lines, truncated with an ellipsis, full text in a tooltip.
-    /// </summary>
-    private static Control DescriptionCell(string? text)
-    {
-        if (string.IsNullOrWhiteSpace(text)) return PhTableControl.TextCell(string.Empty);
-
-        var full = text.Trim();
-        var display = full.Length > MAX_DESC_CHARS ? full[..MAX_DESC_CHARS] + "…" : full;
-
-        var tb = new TextBlock
-        {
-            Text = display,
-            TextWrapping = TextWrapping.Wrap,
-            TextAlignment = TextAlignment.Left,
-            HorizontalAlignment = HorizontalAlignment.Left,
-            VerticalAlignment = VerticalAlignment.Top,
-            IsTabStop = false,
-        };
-        ToolTip.SetTip(tb, full);
-
-        return PhTableControl.WrapCell(tb);
     }
 
     #endregion // Table cell builders

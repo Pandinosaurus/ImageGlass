@@ -38,6 +38,7 @@ namespace ImageGlass.Plugins;
 public sealed class PluginFailureManager
 {
     private const string QUARANTINE_DIR = "_quarantine";
+    private const string LOADING_MARKER_EXT = ".loading";
     private const int SOFT_FAILURE_THRESHOLD = 3;
 
     private readonly string _quarantineDir;
@@ -116,6 +117,7 @@ public sealed class PluginFailureManager
     {
         _sessionDisabled.TryRemove(pluginId, out _);
         _softFailureCounts.TryRemove(pluginId, out _);
+        ClearLoadingBreadcrumb(pluginId);
         try
         {
             var path = GetMarkerPath(pluginId);
@@ -130,6 +132,57 @@ public sealed class PluginFailureManager
             Debug.WriteLine($"[PluginFailureManager] Failed to clear marker for '{pluginId}': {ex.Message}");
         }
         return false;
+    }
+
+
+    /// <summary>
+    /// Returns true if a "loading" breadcrumb is present, indicating a previous load attempt
+    /// did not complete gracefully (i.e. it hard-crashed the process).
+    /// </summary>
+    public bool HasLoadingBreadcrumb(string pluginId)
+    {
+        return File.Exists(GetLoadingMarkerPath(pluginId));
+    }
+
+
+    /// <summary>
+    /// Writes a "loading" breadcrumb just before invoking risky native plugin code.
+    /// Must be cleared once the load completes (gracefully or with a managed error).
+    /// </summary>
+    public void SetLoadingBreadcrumb(string pluginId)
+    {
+        try
+        {
+            Directory.CreateDirectory(_quarantineDir);
+            File.WriteAllText(GetLoadingMarkerPath(pluginId), DateTimeOffset.UtcNow.ToString("O"));
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[PluginFailureManager] Failed to write loading breadcrumb for '{pluginId}': {ex.Message}");
+        }
+    }
+
+
+    /// <summary>
+    /// Removes the "loading" breadcrumb for the plugin if present.
+    /// </summary>
+    public void ClearLoadingBreadcrumb(string pluginId)
+    {
+        try
+        {
+            var path = GetLoadingMarkerPath(pluginId);
+            if (File.Exists(path)) File.Delete(path);
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[PluginFailureManager] Failed to clear loading breadcrumb for '{pluginId}': {ex.Message}");
+        }
+    }
+
+
+    private string GetLoadingMarkerPath(string pluginId)
+    {
+        return Path.Combine(_quarantineDir, MakeFilenameSafe(pluginId) + LOADING_MARKER_EXT);
     }
 
 

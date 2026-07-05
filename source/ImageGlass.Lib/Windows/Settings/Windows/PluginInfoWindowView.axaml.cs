@@ -82,6 +82,25 @@ public partial class PluginInfoWindowView : PhControl
 
 
     /// <summary>
+    /// Reveals the consent warning banner shown when the user is about to enable (trust) a plugin.
+    /// When <paramref name="hashChanged"/> is <c>true</c>, prepends a stronger "file changed" warning.
+    /// </summary>
+    public void ShowConsentWarning(PluginManifest manifest, bool hashChanged)
+    {
+        var name = string.IsNullOrWhiteSpace(manifest.Name) ? manifest.Id : manifest.Name;
+        var msg = Core.Lang[LangId.Settings_Plugins_TrustPrompt, name];
+        if (hashChanged)
+        {
+            msg = Core.Lang[LangId.Settings_Plugins_TrustChangedWarning] + "\n\n" + msg;
+        }
+
+        PART_ConsentTitle.Text = Core.Lang[LangId.Settings_Plugins_TrustTitle];
+        PART_ConsentMessage.Text = msg;
+        PART_ConsentRow.IsVisible = true;
+    }
+
+
+    /// <summary>
     /// Sets a field's value text and hides the whole row when the value is empty.
     /// </summary>
     private static void SetField(Control row, SelectableTextBlock value, string? text)

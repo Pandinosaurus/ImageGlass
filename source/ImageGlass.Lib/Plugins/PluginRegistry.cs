@@ -47,7 +47,7 @@ public sealed unsafe class PluginRegistry : PhDisposable
     /// <c>..</c> traversal, escapes outside the plugin folder, and any file whose
     /// extension is not the platform's native shared-library extension.
     /// </summary>
-    private static bool TryResolvePluginLibraryPath(string executable, string pluginDir, out string libraryPath)
+    internal static bool TryResolvePluginLibraryPath(string executable, string pluginDir, out string libraryPath)
     {
         libraryPath = string.Empty;
 
@@ -112,8 +112,31 @@ public sealed unsafe class PluginRegistry : PhDisposable
             return null;
         }
 
+        // Crash-loop guard: a leftover "loading" breadcrumb means a previous attempt to load
+        // this plugin hard-crashed the process (uncatchable native fault). Quarantine it instead
+        // of trying again and crashing on every launch.
+        if (FailureManager.HasLoadingBreadcrumb(manifest.Id))
+        {
+            FailureManager.ClearLoadingBreadcrumb(manifest.Id);
+            FailureManager.Quarantine(manifest.Id, "hard crash during a previous load");
+            Debug.WriteLine($"[PluginRegistry] '{manifest.Id}' crashed on a previous load; quarantined.");
+            return null;
+        }
+
+        // Trust gate: never execute a plugin the user has not explicitly enabled and whose pinned
+        // SHA-256 still matches the on-disk library (defends against a swapped binary).
+        if (!PluginTrustPolicy.IsTrusted(manifest.Id, libraryPath))
+        {
+            Debug.WriteLine($"[PluginRegistry] '{manifest.Id}' is not enabled/trusted (or its file changed); skipping.");
+            return null;
+        }
+
         nint libHandle = 0;
         IGPluginApi* pluginApi = null;
+
+        // Write a breadcrumb before touching native code; it is cleared in the finally on any
+        // managed return/exception. Only a hard native crash leaves it behind for the guard above.
+        FailureManager.SetLoadingBreadcrumb(manifest.Id);
         try
         {
             // 1. Load the library
@@ -272,6 +295,12 @@ public sealed unsafe class PluginRegistry : PhDisposable
             catch { }
 
             return null;
+        }
+        finally
+        {
+            // Cleared on any graceful return/exception; a hard native crash skips this, leaving
+            // the breadcrumb so the guard above quarantines the plugin on the next launch.
+            FailureManager.ClearLoadingBreadcrumb(manifest.Id);
         }
     }
 
