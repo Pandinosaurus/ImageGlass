@@ -541,10 +541,9 @@ public partial class Config
                 // 3. parse CLI -p: args
                 var cliOverrides = ParseCliConfigArgs(cliArgs);
 
-                // 4. read igconfig.admin.json (Startup Dir, then Config Dir fallback)
-                using var adminDoc = ReadConfigJsonDocument(
-                    BHelper.BaseDir(CONFIG_ADMIN),
-                    BHelper.ConfigDir(CONFIG_ADMIN));
+                // 4. read igconfig.admin.json (install BaseDir ONLY; a ConfigDir fallback would let
+                // a user drop an admin config in AppData and seize top precedence)
+                using var adminDoc = ReadConfigJsonDocument(BHelper.BaseDir(CONFIG_ADMIN));
 
                 // 5. merge all layers into a single JSON byte array
                 var mergedJson = MergeJsonLayers(defaultDoc, userDoc, cliOverrides, adminDoc);
@@ -915,13 +914,23 @@ public partial class Config
     #region Private static methods (config merge)
 
     /// <summary>
-    /// Reads a JSON config file using dual-path fallback (primary first, then fallback).
-    /// Returns <c>null</c> if neither path exists.
+    /// Security-sensitive keys blocked from the CLI <c>-p:</c> layer (file-only).
     /// </summary>
-    private static JsonDocument? ReadConfigJsonDocument(string primaryPath, string fallbackPath)
+    private static readonly HashSet<string> _cliBlockedKeys = new(StringComparer.OrdinalIgnoreCase)
+    {
+        nameof(Tools),
+        nameof(PluginTrust),
+    };
+
+
+    /// <summary>
+    /// Reads a JSON config file: primary path first, then an optional fallback path.
+    /// Returns <c>null</c> if neither exists.
+    /// </summary>
+    private static JsonDocument? ReadConfigJsonDocument(string primaryPath, string? fallbackPath = null)
     {
         var path = File.Exists(primaryPath) ? primaryPath
-            : File.Exists(fallbackPath) ? fallbackPath
+            : (!string.IsNullOrEmpty(fallbackPath) && File.Exists(fallbackPath)) ? fallbackPath
             : null;
 
         if (string.IsNullOrEmpty(path)) return null;
@@ -953,6 +962,13 @@ public partial class Config
             var key = kvPart[..eqIdx].Trim();
             var value = kvPart[(eqIdx + 1)..].Trim();
             if (key.Length == 0) continue;
+
+            // Security: never accept security-sensitive keys from the command line.
+            if (_cliBlockedKeys.Contains(key))
+            {
+                System.Diagnostics.Debug.WriteLine($"[Config] CLI override for '{key}' ignored (not allowed from the command line).");
+                continue;
+            }
 
             result[key] = value;
         }

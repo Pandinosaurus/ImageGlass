@@ -80,14 +80,10 @@ public sealed class ToolProcessManager : PhDisposable
     {
         if (string.IsNullOrEmpty(tool.Executable)) return null;
 
-        // Create the IPC endpoint first so the child process can connect immediately.
-        // Full GUID for unpredictability; "ig_" + 32 hex = 35 chars, safely under the
-        // macOS ~104-char Unix-domain-socket path limit.
+        // Full GUID so the name isn't guessable (35 chars, under macOS's ~104 socket-path limit).
         var pipeName = $"ig_{Guid.NewGuid():N}";
 
-        // CurrentUserOnly restricts the pipe to this user (Windows SID / Unix UID) so a
-        // process from another user cannot connect or squat the name. The SDK client
-        // (ToolClient) sets the same flag; both ends must agree.
+        // CurrentUserOnly restricts the pipe to this user (SID/UID); the SDK client sets the same flag.
         var pipeServer = new NamedPipeServerStream(
             pipeName, PipeDirection.InOut, 1,
             PipeTransmissionMode.Byte, PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly);
@@ -140,6 +136,16 @@ public sealed class ToolProcessManager : PhDisposable
         catch (OperationCanceledException)
         {
             // Tool didn't connect in time
+            try { process.Kill(); } catch { }
+            await pipeServer.DisposeAsync();
+            return null;
+        }
+
+        // Windows only: reject if the connected client isn't the child we spawned (pipe squatting).
+        // Provider is null on Linux/macOS, so this is skipped there.
+        if (Core.PipeSecurityProvider is { } pipeSec
+            && !pipeSec.VerifyClientProcess(pipeServer.SafePipeHandle, process.Id))
+        {
             try { process.Kill(); } catch { }
             await pipeServer.DisposeAsync();
             return null;

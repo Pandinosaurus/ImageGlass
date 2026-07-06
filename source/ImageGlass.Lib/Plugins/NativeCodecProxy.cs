@@ -122,8 +122,20 @@ internal sealed unsafe class NativeCodecProxy : PhDisposable, ICodec
         CodecId = capability.CodecId;
         CodecName = string.IsNullOrEmpty(capability.CodecName)
             ? $"{plugin.PluginId}/{capability.CodecId}" : capability.CodecName;
-        MetadataPriority = capability.MetadataPriority;
-        DecodePriority = capability.DecodePriority;
+
+        // Clamp priority so a plugin can't outrank a built-in for a built-in format (unless trusted to).
+        if (PluginCodecPolicy.ClaimsCoreFormat(capability.SupportedExtensions)
+            && !PluginTrustPolicy.AllowsBuiltinOverride(plugin.PluginId))
+        {
+            MetadataPriority = PluginCodecPolicy.ClampToBuiltinCeiling(capability.MetadataPriority);
+            DecodePriority = PluginCodecPolicy.ClampToBuiltinCeiling(capability.DecodePriority);
+        }
+        else
+        {
+            MetadataPriority = capability.MetadataPriority;
+            DecodePriority = capability.DecodePriority;
+        }
+
         SupportsMetadata = capability.SupportsMetadata;
         SupportsStaticRaster = capability.SupportsStaticRaster;
         SupportsColorProfiles = capability.SupportsColorProfiles;

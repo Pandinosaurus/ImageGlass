@@ -35,4 +35,9 @@ public sealed class PluginTrustInfo
     /// Lowercase hex SHA-256 of the plugin's native library, pinned at the moment of consent.
     /// </summary>
     public string Hash { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Whether this plugin may outrank built-in codecs for built-in formats (default <c>false</c>).
+    /// </summary>
+    public bool AllowOverrideBuiltins { get; set; }
 }

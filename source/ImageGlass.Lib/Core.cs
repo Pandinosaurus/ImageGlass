@@ -103,6 +103,14 @@ public static class Core
 
 
     /// <summary>
+    /// Provides an optional OS-level verifier for the identity of a tool process connecting
+    /// to the host IPC pipe. Windows-only; <c>null</c> elsewhere (the pipe's
+    /// <c>CurrentUserOnly</c> restriction is the cross-platform baseline).
+    /// </summary>
+    public static IPipeSecurityProvider? PipeSecurityProvider { get; set; } = null;
+
+
+    /// <summary>
     /// Provides a singleton instance to access app APIs.
     /// </summary>
     public static AppAPIProvider API { get; set; } = null!;

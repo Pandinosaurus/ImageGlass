@@ -46,6 +46,7 @@ sealed class Program
             Core.ShellProvider = new Win32ShellProvider();
             Core.ShareProvider = new Win32ShareProvider();
             Core.PrintProvider = new Win32PrintProvider();
+            Core.PipeSecurityProvider = new Win32PipeSecurityProvider();
         });
 
         if (isHandled) return 0;

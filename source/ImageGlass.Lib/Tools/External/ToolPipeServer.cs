@@ -19,6 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 using Avalonia.Threading;
 using ImageGlass.Common;
 using ImageGlass.Common.ServiceProviders;
+using ImageGlass.Common.Types;
 using ImageGlass.SDK.Tools;
 using System;
 using System.Collections.Generic;
@@ -215,11 +216,13 @@ internal sealed class ToolPipeServer : IDisposable
 
         try
         {
-            // Materialize the bitmap into a temp file so the tool can map it read-only.
-            var tempPath = Path.Combine(Path.GetTempPath(), $"ig_pixels_{Guid.NewGuid():N}.bin");
+            // Write the bitmap to a scoped, exclusively-created temp file the tool maps read-only;
+            // deleted on release/Dispose.
+            var pixelsDir = BHelper.ConfigDir(Dir.Temporary);
+            var tempPath = Path.Combine(pixelsDir, $"ig_pixels_{Guid.NewGuid():N}.bin");
             var byteCount = bitmap.ByteCount;
 
-            using (var fs = File.Create(tempPath))
+            using (var fs = new FileStream(tempPath, FileMode.CreateNew, FileAccess.Write, FileShare.None))
             {
                 unsafe
                 {

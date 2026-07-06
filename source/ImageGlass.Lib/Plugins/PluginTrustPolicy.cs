@@ -100,6 +100,17 @@ public static class PluginTrustPolicy
 
 
     /// <summary>
+    /// Returns <c>true</c> if the plugin is explicitly trusted to outrank built-in codecs
+    /// for core formats (via <see cref="PluginTrustInfo.AllowOverrideBuiltins"/>).
+    /// </summary>
+    public static bool AllowsBuiltinOverride(string pluginId)
+    {
+        return Core.Config.PluginTrust.TryGetValue(pluginId, out var info)
+            && info is not null && info.AllowOverrideBuiltins;
+    }
+
+
+    /// <summary>
     /// Computes the current <see cref="TrustState"/> of a plugin for UI display.
     /// </summary>
     public static TrustState GetState(PluginManifest manifest, string pluginDir)
