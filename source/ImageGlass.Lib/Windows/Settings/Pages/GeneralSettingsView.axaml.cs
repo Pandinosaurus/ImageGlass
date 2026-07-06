@@ -23,14 +23,8 @@ using System.IO;
 
 namespace ImageGlass.Common.Windows;
 
-/// <summary>
-/// The "General" settings page.
-/// </summary>
 public partial class GeneralSettingsView : SettingsPageView
 {
-    /// <summary>
-    /// Parameterless constructor for the XAML loader / designer.
-    /// </summary>
     public GeneralSettingsView()
     {
         InitializeComponent();

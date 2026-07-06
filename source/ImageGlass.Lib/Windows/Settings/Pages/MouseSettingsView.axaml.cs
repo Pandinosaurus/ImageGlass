@@ -30,9 +30,6 @@ using System.Threading.Tasks;
 
 namespace ImageGlass.Common.Windows;
 
-/// <summary>
-/// The "Mouse" settings page.
-/// </summary>
 public partial class MouseSettingsView : SettingsPageView
 {
     // shared width for the wheel dropdowns and click buttons
@@ -42,9 +39,6 @@ public partial class MouseSettingsView : SettingsPageView
     private readonly Dictionary<MouseClickEvent, SingleAction> _clickActions = [];
 
 
-    /// <summary>
-    /// Parameterless constructor for the XAML loader / designer.
-    /// </summary>
     public MouseSettingsView()
     {
         InitializeComponent();

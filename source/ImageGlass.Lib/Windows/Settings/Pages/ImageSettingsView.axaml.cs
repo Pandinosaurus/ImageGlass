@@ -26,18 +26,12 @@ using System.Threading.Tasks;
 
 namespace ImageGlass.Common.Windows;
 
-/// <summary>
-/// The "Image" settings page.
-/// </summary>
 public partial class ImageSettingsView : SettingsPageView
 {
     // current custom .icc/.icm profile path (used when the dropdown is on "Custom")
     private string _customProfilePath = string.Empty;
 
 
-    /// <summary>
-    /// Parameterless constructor for the XAML loader / designer.
-    /// </summary>
     public ImageSettingsView()
     {
         InitializeComponent();

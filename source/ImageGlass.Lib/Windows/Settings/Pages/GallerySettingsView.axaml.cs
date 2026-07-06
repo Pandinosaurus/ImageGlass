@@ -20,14 +20,8 @@ using ImageGlass.Common.Localization;
 
 namespace ImageGlass.Common.Windows;
 
-/// <summary>
-/// The "Gallery" settings page.
-/// </summary>
 public partial class GallerySettingsView : SettingsPageView
 {
-    /// <summary>
-    /// Parameterless constructor for the XAML loader / designer.
-    /// </summary>
     public GallerySettingsView()
     {
         InitializeComponent();

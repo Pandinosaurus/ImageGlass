@@ -25,9 +25,6 @@ using System.Linq;
 
 namespace ImageGlass.Common.Windows;
 
-/// <summary>
-/// The "Viewer" settings page.
-/// </summary>
 public partial class ViewerSettingsView : SettingsPageView
 {
     // canonical in-text separator for the zoom-levels list
@@ -39,9 +36,6 @@ public partial class ViewerSettingsView : SettingsPageView
         + "2100; 2500; 3000; 3500; 4500; 6000; 8000; 10000";
 
 
-    /// <summary>
-    /// Parameterless constructor for the XAML loader / designer.
-    /// </summary>
     public ViewerSettingsView()
     {
         InitializeComponent();

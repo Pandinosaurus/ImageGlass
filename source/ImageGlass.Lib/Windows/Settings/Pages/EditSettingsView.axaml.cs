@@ -16,7 +16,6 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
 using ImageGlass.Common.Localization;
@@ -30,9 +29,6 @@ using System.Threading.Tasks;
 
 namespace ImageGlass.Common.Windows;
 
-/// <summary>
-/// The "Edit" settings page.
-/// </summary>
 public partial class EditSettingsView : SettingsPageView
 {
     private static readonly FontFamily _codeFont = new(Const.FONT_CODE);
@@ -41,9 +37,6 @@ public partial class EditSettingsView : SettingsPageView
     private readonly Dictionary<string, EditingApp> _apps = [];
 
 
-    /// <summary>
-    /// Parameterless constructor for the XAML loader / designer.
-    /// </summary>
     public EditSettingsView()
     {
         InitializeComponent();

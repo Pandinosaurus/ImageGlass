@@ -22,14 +22,8 @@ using System.Globalization;
 
 namespace ImageGlass.Common.Windows;
 
-/// <summary>
-/// The "Slideshow" settings page.
-/// </summary>
 public partial class SlideshowSettingsView : SettingsPageView
 {
-    /// <summary>
-    /// Parameterless constructor for the XAML loader / designer.
-    /// </summary>
     public SlideshowSettingsView()
     {
         InitializeComponent();

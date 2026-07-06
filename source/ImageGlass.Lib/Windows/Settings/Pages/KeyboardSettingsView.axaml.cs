@@ -22,15 +22,8 @@ using System.Collections.Generic;
 
 namespace ImageGlass.Common.Windows;
 
-/// <summary>
-/// The "Keyboard" settings page: lets the user change, add, remove or restore the hotkeys of the
-/// main menu and its items via a searchable table.
-/// </summary>
 public partial class KeyboardSettingsView : SettingsPageView
 {
-    /// <summary>
-    /// Parameterless constructor for the XAML loader / designer.
-    /// </summary>
     public KeyboardSettingsView()
     {
         InitializeComponent();

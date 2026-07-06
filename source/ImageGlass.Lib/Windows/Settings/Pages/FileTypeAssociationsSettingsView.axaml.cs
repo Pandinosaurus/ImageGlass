@@ -60,9 +60,6 @@ public partial class FileTypeAssociationsSettingsView : SettingsPageView
     private string _filter = string.Empty;
 
 
-    /// <summary>
-    /// Parameterless constructor for the XAML loader / designer.
-    /// </summary>
     public FileTypeAssociationsSettingsView()
     {
         InitializeComponent();

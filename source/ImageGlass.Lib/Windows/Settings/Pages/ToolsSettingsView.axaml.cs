@@ -16,7 +16,6 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml.MarkupExtensions;
 using Avalonia.Media;
@@ -34,9 +33,6 @@ using System.Threading.Tasks;
 
 namespace ImageGlass.Common.Windows;
 
-/// <summary>
-/// The "Tools" settings page.
-/// </summary>
 public partial class ToolsSettingsView : SettingsPageView
 {
     private const double NAME_MAX_WIDTH = 220;
@@ -46,9 +42,6 @@ public partial class ToolsSettingsView : SettingsPageView
     private readonly List<ExternalTool> _tools = [];
 
 
-    /// <summary>
-    /// Parameterless constructor for the XAML loader / designer.
-    /// </summary>
     public ToolsSettingsView()
     {
         InitializeComponent();

@@ -42,9 +42,6 @@ using System.Threading.Tasks;
 
 namespace ImageGlass.Common.Windows;
 
-/// <summary>
-/// The "Appearance" settings page.
-/// </summary>
 public partial class AppearanceSettingsView : SettingsPageView
 {
     private const string THEMES_URL = "https://imageglass.org/themes";
@@ -70,9 +67,6 @@ public partial class AppearanceSettingsView : SettingsPageView
     private int _themeListGeneration;
 
 
-    /// <summary>
-    /// Parameterless constructor for the XAML loader / designer.
-    /// </summary>
     public AppearanceSettingsView()
     {
         InitializeComponent();

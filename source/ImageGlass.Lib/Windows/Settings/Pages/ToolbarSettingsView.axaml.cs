@@ -23,14 +23,8 @@ using System.Collections.ObjectModel;
 
 namespace ImageGlass.Common.Windows;
 
-/// <summary>
-/// The "Toolbar" settings page.
-/// </summary>
 public partial class ToolbarSettingsView : SettingsPageView
 {
-    /// <summary>
-    /// Parameterless constructor for the XAML loader / designer.
-    /// </summary>
     public ToolbarSettingsView()
     {
         InitializeComponent();

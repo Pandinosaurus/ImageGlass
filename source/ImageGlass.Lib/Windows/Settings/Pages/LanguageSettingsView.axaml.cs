@@ -26,9 +26,6 @@ using System.Threading.Tasks;
 
 namespace ImageGlass.Common.Windows;
 
-/// <summary>
-/// The "Language" settings page.
-/// </summary>
 public partial class LanguageSettingsView : SettingsPageView
 {
     private const string LANGUAGES_URL = "https://imageglass.org/languages";
@@ -40,7 +37,6 @@ public partial class LanguageSettingsView : SettingsPageView
     {
         Patterns = ["*.iglang.json"],
     };
-
 
 
     public LanguageSettingsView()

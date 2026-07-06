@@ -35,10 +35,6 @@ using System.Threading.Tasks;
 
 namespace ImageGlass.Common.Windows;
 
-/// <summary>
-/// The "Plugins" settings page. Lists the native plugins installed in the <c>_plugins</c> folder
-/// (read from each plugin's manifest) and lets the user add or inspect them.
-/// </summary>
 public partial class PluginsSettingsView : SettingsPageView
 {
     private const double NAME_MAX_WIDTH = 220;
@@ -50,9 +46,6 @@ public partial class PluginsSettingsView : SettingsPageView
     private readonly List<(PluginManifest Manifest, string Dir)> _plugins = [];
 
 
-    /// <summary>
-    /// Parameterless constructor for the XAML loader / designer.
-    /// </summary>
     public PluginsSettingsView()
     {
         InitializeComponent();
