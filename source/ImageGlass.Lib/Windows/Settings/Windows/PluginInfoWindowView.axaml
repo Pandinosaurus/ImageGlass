@@ -46,7 +46,7 @@
 
         <!--  Scrollable metadata (fills the remaining space)  -->
         <ScrollViewer
-            MaxHeight="400"
+            MaxHeight="500"
             HorizontalContentAlignment="Stretch"
             HorizontalScrollBarVisibility="Disabled"
             VerticalScrollBarVisibility="Auto">

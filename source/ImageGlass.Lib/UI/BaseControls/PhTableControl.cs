@@ -464,6 +464,7 @@ public class PhTableControl : PhControl
         {
             Padding = new Thickness(7),
             VerticalAlignment = VerticalAlignment.Center,
+            IsVisible = action.IsVisible,
             Content = glyph,
         };
         if (!string.IsNullOrEmpty(action.Tooltip)) ToolTip.SetTip(btn, action.Tooltip);
@@ -545,6 +546,11 @@ public sealed class PhTableAction
     /// Gets, sets the (already localized) tooltip text.
     /// </summary>
     public string Tooltip { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets, sets whether the button is shown (still built when hidden, for future reveal).
+    /// </summary>
+    public bool IsVisible { get; set; } = true;
 
     /// <summary>
     /// Gets, sets the click handler.

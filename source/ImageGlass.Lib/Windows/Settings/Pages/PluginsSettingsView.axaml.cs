@@ -261,12 +261,65 @@ public partial class PluginsSettingsView : SettingsPageView
 
 
     /// <summary>
-    /// Opens a read-only window showing the full manifest metadata of the given plugin.
+    /// The enable/disable toggle cell: on for a trusted plugin. Toggling off disables the plugin
+    /// directly; toggling on (or any non-trusted state) opens the edit window to run the trust flow.
+    /// Disabled for a missing/broken plugin.
     /// </summary>
-    private async Task ViewPluginAsync((PluginManifest Manifest, string Dir) plugin)
+    private Border ToggleCell((PluginManifest Manifest, string Dir) plugin, PluginTrustPolicy.TrustState state)
     {
-        var win = new PluginInfoWindow(plugin.Manifest, plugin.Dir);
-        await win.ShowAsync(TopLevel.GetTopLevel(this) as PhWindow);
+        var toggle = new ToggleSwitch
+        {
+            IsChecked = state == PluginTrustPolicy.TrustState.Trusted,
+            IsEnabled = state != PluginTrustPolicy.TrustState.Missing,
+            VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
+            // no on/off label; Width = the 40px switch so the template's 12px content spacer isn't reserved
+            OnContent = null,
+            OffContent = null,
+            Width = 40,
+        };
+
+        // Click (not IsCheckedChanged) so the initial IsChecked assignment doesn't fire it
+        toggle.Click += async (_, _) =>
+        {
+            var changed = state == PluginTrustPolicy.TrustState.Trusted
+                ? await DisablePluginAsync(plugin)
+                : await EditPluginAsync(plugin);
+
+            // rebuild to reflect the real state (also reverts the toggle if the user cancelled)
+            RebuildTable();
+            if (changed) ShowRestartHint();
+        };
+
+        return PhTableControl.WrapCell(toggle);
+    }
+
+
+    /// <summary>
+    /// Opens the plugin info window; for a trusted plugin it offers [Disable], otherwise the
+    /// trust-and-enable consent prompt (a missing plugin is view-only). Applies the chosen action
+    /// and returns <c>true</c> if the trust state changed (restart required).
+    /// </summary>
+    private async Task<bool> EditPluginAsync((PluginManifest Manifest, string Dir) plugin)
+    {
+        var state = PluginTrustPolicy.GetState(plugin.Manifest, plugin.Dir);
+        var mode = state switch
+        {
+            PluginTrustPolicy.TrustState.Missing => PluginInfoWindowMode.View,
+            PluginTrustPolicy.TrustState.Trusted => PluginInfoWindowMode.Disable,
+            _ => PluginInfoWindowMode.Enable,
+        };
+
+        var win = new PluginInfoWindow(plugin.Manifest, plugin.Dir, mode,
+            hashChanged: state == PluginTrustPolicy.TrustState.Changed);
+        var result = await win.ShowAsync(TopLevel.GetTopLevel(this) as PhWindow);
+        if (result != DialogExitCode.OK) return false;
+
+        return mode switch
+        {
+            PluginInfoWindowMode.Enable => await PluginTrustPolicy.TrustAsync(plugin.Manifest, plugin.Dir),
+            PluginInfoWindowMode.Disable => await DisablePluginAsync(plugin),
+            _ => false,
+        };
     }
 
 
@@ -277,8 +330,9 @@ public partial class PluginsSettingsView : SettingsPageView
     {
         PhTableColumn[] columns =
         [
-            new() { Header = Core.Lang[LangId._Type] },
+            new() { Header = string.Empty }, // enable/disable toggle
             new() { Header = Core.Lang[LangId._Name] },
+            new() { Header = Core.Lang[LangId._Type] },
             new() { Header = Core.Lang[LangId.Settings_Plugins_Status], Star = true },
         ];
 
@@ -292,11 +346,12 @@ public partial class PluginsSettingsView : SettingsPageView
                 Key = m.Id,
                 Cells =
                 [
+                    ToggleCell(plugin, state),
+                    NameCell(plugin),
                     PhTableControl.TextCell(m.Kind.ToString()),
-                    NameCell(m),
                     StatusCell(state),
                 ],
-                Actions = BuildActions(plugin, state),
+                Actions = BuildActions(plugin),
             };
         }).ToList();
 
@@ -306,67 +361,48 @@ public partial class PluginsSettingsView : SettingsPageView
 
 
     /// <summary>
-    /// Builds the per-row hover actions: always "View", plus "Enable" or "Disable" depending on
-    /// the plugin's current trust state. A missing/broken plugin gets no enable/disable action.
+    /// Builds the per-row hover actions: "Setting" (hidden for now) and "Edit" (opens the plugin
+    /// info window to enable/disable or view the plugin).
     /// </summary>
-    private List<PhTableAction> BuildActions((PluginManifest Manifest, string Dir) plugin, PluginTrustPolicy.TrustState state)
+    private List<PhTableAction> BuildActions((PluginManifest Manifest, string Dir) plugin)
     {
-        var actions = new List<PhTableAction>
-        {
+        return
+        [
             new()
             {
-                Icon = ResxIconId.IconInfo,
-                Tooltip = Core.Lang[LangId._View],
-                Click = () => _ = ViewPluginAsync(plugin),
+                Icon = ResxIconId.IconSettings,
+                Tooltip = Core.Lang[LangId.Menu_MnuSettings],
+                IsVisible = false,
             },
-        };
-
-        switch (state)
-        {
-            case PluginTrustPolicy.TrustState.Trusted:
-                actions.Add(new() { Icon = ResxIconId.IconPause, Tooltip = Core.Lang[LangId.Settings_Plugins_Disable], Click = () => _ = DisablePluginAsync(plugin) });
-                break;
-
-            case PluginTrustPolicy.TrustState.Untrusted:
-            case PluginTrustPolicy.TrustState.Disabled:
-                actions.Add(new() { Icon = ResxIconId.IconPlay, Tooltip = Core.Lang[LangId.Settings_Plugins_Enable], Click = () => _ = EnablePluginAsync(plugin, hashChanged: false) });
-                break;
-
-            case PluginTrustPolicy.TrustState.Changed:
-                actions.Add(new() { Icon = ResxIconId.IconPlay, Tooltip = Core.Lang[LangId.Settings_Plugins_Enable], Click = () => _ = EnablePluginAsync(plugin, hashChanged: true) });
-                break;
-        }
-
-        return actions;
+            new()
+            {
+                Icon = ResxIconId.IconEdit,
+                Tooltip = Core.Lang[LangId._Edit],
+                Click = () => _ = EditAndRefreshAsync(plugin),
+            },
+        ];
     }
 
 
     /// <summary>
-    /// Shows the trust-consent prompt for the plugin; on approval, enables it (pinning the current
-    /// library hash) and hints that a restart is required.
+    /// Runs the edit flow for the plugin (from the Edit action or the name link), then rebuilds the
+    /// table and hints that a restart is required when the trust state changed.
     /// </summary>
-    private async Task EnablePluginAsync((PluginManifest Manifest, string Dir) plugin, bool hashChanged)
+    private async Task EditAndRefreshAsync((PluginManifest Manifest, string Dir) plugin)
     {
-        var win = new PluginInfoWindow(plugin.Manifest, plugin.Dir, consentMode: true, hashChanged: hashChanged);
-        var result = await win.ShowAsync(TopLevel.GetTopLevel(this) as PhWindow);
-        if (result != DialogExitCode.OK) return;
-
-        if (await PluginTrustPolicy.TrustAsync(plugin.Manifest, plugin.Dir))
-        {
-            RebuildTable();
-            ShowRestartHint();
-        }
+        var changed = await EditPluginAsync(plugin);
+        RebuildTable();
+        if (changed) ShowRestartHint();
     }
 
 
     /// <summary>
-    /// Disables the plugin and hints that a restart is required.
+    /// Disables the plugin and returns <c>true</c> (the trust state changed, so a restart is required).
     /// </summary>
-    private async Task DisablePluginAsync((PluginManifest Manifest, string Dir) plugin)
+    private static async Task<bool> DisablePluginAsync((PluginManifest Manifest, string Dir) plugin)
     {
         await PluginTrustPolicy.DisableAsync(plugin.Manifest.Id);
-        RebuildTable();
-        ShowRestartHint();
+        return true;
     }
 
 
@@ -419,17 +455,24 @@ public partial class PluginsSettingsView : SettingsPageView
     #region Table cell builders
 
     /// <summary>
-    /// The name cell: the plugin name (capped + truncated), with the version below it when set.
+    /// The name cell: the plugin name as a link button (opens the edit window), with the version
+    /// below it when set.
     /// </summary>
-    private static Border NameCell(PluginManifest m)
+    private Border NameCell((PluginManifest Manifest, string Dir) plugin)
     {
-        var name = new SelectableTextBlock
+        var m = plugin.Manifest;
+        var nameText = string.IsNullOrWhiteSpace(m.Name) ? m.Id : m.Name;
+
+        var name = new PhButton
         {
-            Text = string.IsNullOrWhiteSpace(m.Name) ? m.Id : m.Name,
+            Text = nameText,
+            Variant = PhButtonVariant.Link,
             MaxWidth = NAME_MAX_WIDTH,
-            TextTrimming = TextTrimming.CharacterEllipsis,
-            IsTabStop = false,
+            HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Left,
+            HorizontalContentAlignment = Avalonia.Layout.HorizontalAlignment.Left,
         };
+        ToolTip.SetTip(name, nameText);
+        name.Click += (_, _) => _ = EditAndRefreshAsync(plugin);
 
         var stack = new StackPanel { Spacing = 2 };
         stack.Children.Add(name);
