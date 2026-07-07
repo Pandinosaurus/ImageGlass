@@ -44,32 +44,26 @@ public static class ExeParams
     public static string NO_QUICK_SETUP => "--ig-no-quick-setup";
 
 
+    public static string SET_DEFAULT_PHOTO_VIEWER => "set-default-viewer";
+
+    public static string REMOVE_DEFAULT_PHOTO_VIEWER => "remove-default-viewer";
+
+
 
 
     // UI result options
-    public static string SHOW_UI => "--ui";
     public static string HIDE_ADMIN_REQUIRED_ERROR_UI => "--hide-admin-error-ui";
-    public static string PER_MACHINE => "--per-machine";
-    public static string STARTUP_BOOST => "--startup-boost";
 
 
+    //public static string SET_WALLPAPER => "set-wallpaper";
+    //public static string SET_LOCK_SCREEN => "set-lock-screen";
+    //public static string START_SLIDESHOW => "start-slideshow";
+    //public static string EXPORT_FRAMES => "export-frames";
+    //public static string LOSSLESS_COMPRESS => "lossless-compress";
 
-    // igcmd.exe
-    public static string SET_WALLPAPER => "set-wallpaper";
-    public static string SET_LOCK_SCREEN => "set-lock-screen";
-    public static string SET_DEFAULT_PHOTO_VIEWER => "set-default-viewer";
-    public static string REMOVE_DEFAULT_PHOTO_VIEWER => "remove-default-viewer";
-    public static string START_SLIDESHOW => "start-slideshow";
-    public static string EXPORT_FRAMES => "export-frames";
-    public static string LOSSLESS_COMPRESS => "lossless-compress";
-    public static string SET_STARTUP_BOOST => "set-startup-boost";
-    public static string REMOVE_STARTUP_BOOST => "remove-startup-boost";
-
-
-    public static string QUICK_SETUP => "quick-setup";
-    public static string CHECK_FOR_UPDATE => "check-for-update";
-    public static string INSTALL_LANGUAGES => "install-languages";
-    public static string INSTALL_THEMES => "install-themes";
-    public static string UNINSTALL_THEME => "uninstall-theme";
+    //public static string CHECK_FOR_UPDATE => "check-for-update";
+    //public static string INSTALL_LANGUAGES => "install-languages";
+    //public static string INSTALL_THEMES => "install-themes";
+    //public static string UNINSTALL_THEME => "uninstall-theme";
 
 }
