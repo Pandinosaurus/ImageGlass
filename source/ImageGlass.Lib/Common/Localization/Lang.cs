@@ -836,6 +836,7 @@ public class Lang
 
         // Image > Color management
         new(LangId.Settings_ColorManagement, "Color management"),
+        new(LangId.Settings_EnableHdrToneMapping, "Apply HDR tone mapping to HDR images"),
         new(LangId.Settings_EnableAlwaysApplyColorProfile, "Always apply for image without embedded color profile"),
         new(LangId.Settings_ColorProfile, "Color profile"),
         new(LangId.Settings_CurrentMonitorProfile_Description, "ImageGlass does not auto-update the color when moving its window between monitors"),

@@ -877,7 +877,7 @@ public partial class MainWindowView : PhControl
     }
 
 
-    public async Task ViewPhotoAsync(Photo? photo, bool useCache = true, bool scrollToThumbnail = true)
+    public async Task ViewPhotoAsync(Photo? photo, bool useCache = true, bool scrollToThumbnail = true, bool resetZoom = true)
     {
         // clear the current in-app message
         _ = PART_Message.ClearAsync();
@@ -912,6 +912,7 @@ public partial class MainWindowView : PhControl
             await PART_Viewer.SetPhotoAsync(photo, new PhotoLoadingOptions
             {
                 UseCache = useCache,
+                ResetZoom = resetZoom,
                 Channels = Core.ColorChannels,
             });
 

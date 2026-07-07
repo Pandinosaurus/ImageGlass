@@ -117,15 +117,16 @@ public sealed class SettingsViewModel : PhReactive
             or ConfigId.EnableImageFolderGrouping
             or ConfigId.EnableHiddenImagesLoading);
 
-        // changes require reloading current photo
+        // changes require reloading current photo (IG_Reload keeps the current zoom + pan)
         var reloadPhoto = changedIds.Any(static id => id
             is ConfigId.EnableOnlyLoadRawPreview
             or ConfigId.EnableOnlyLoadNonRawPreview
+            or ConfigId.EnableHdrToneMapping
             or ConfigId.EnableAlwaysApplyColorProfile
             or ConfigId.EnableVectorRenderer);
 
-        // ColorProfile isn't in reloadPhoto: UpdateDestColorProfile re-applies it via the
-        // ColorProfileChanged event, which re-decodes keeping zoom (a full reload resets it).
+        // ColorProfile isn't in reloadPhoto: UpdateDestColorProfile also invalidates the codec
+        // selection cache, then re-applies via the ColorProfileChanged event (also keeping zoom).
         if (changedIds.Contains(ConfigId.ColorProfile))
         {
             Core.UpdateDestColorProfile();
@@ -162,6 +163,6 @@ public sealed class SettingsViewModel : PhReactive
 
 
         if (reloadList) AppAPIProvider.IG_ReloadList();
-        if (reloadPhoto) AppAPIProvider.IG_Reload();
+        if (reloadPhoto) AppAPIProvider.IG_Reload(false);
     }
 }

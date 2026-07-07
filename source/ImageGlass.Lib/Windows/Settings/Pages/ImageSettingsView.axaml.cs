@@ -91,6 +91,8 @@ public partial class ImageSettingsView : SettingsPageView
             LangId.Settings_EnableAutoOpenNewAddedImage, LangId.Settings_FileWatcher);
 
         // Color management
+        BindToggle(PART_HdrToneMapping, ConfigId.EnableHdrToneMapping,
+            LangId.Settings_EnableHdrToneMapping, LangId.Settings_ColorManagement, true);
         BindToggle(PART_AlwaysApplyColorProfile, ConfigId.EnableAlwaysApplyColorProfile,
             LangId.Settings_EnableAlwaysApplyColorProfile, LangId.Settings_ColorManagement);
         BuildColorProfile();

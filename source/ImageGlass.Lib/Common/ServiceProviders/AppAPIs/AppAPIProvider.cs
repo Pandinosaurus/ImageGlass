@@ -1359,9 +1359,20 @@ public partial class AppAPIProvider
     /// <summary>
     /// Reloads image file.
     /// </summary>
-    public static void IG_Reload()
+    /// <param name="resetZoomBoolStr">Values: <c>"true"</c>, <c>"false"</c> or empty.</param>
+    public static void IG_Reload(string? resetZoomBoolStr)
     {
-        _ = App.MainWindow.PART_MainView.ViewPhotoAsync(Core.Photos.Current, useCache: false);
+        var resetZoom = BHelper.ConvertStringToBool(resetZoomBoolStr) ?? true;
+        IG_Reload(resetZoom);
+    }
+
+
+    /// <summary>
+    /// Reloads image file.
+    /// </summary>
+    public static void IG_Reload(bool resetZoom = true)
+    {
+        _ = App.MainWindow.PART_MainView.ViewPhotoAsync(Core.Photos.Current, useCache: false, resetZoom: resetZoom);
 
         // reload thumbnail
         Gallery.LoadThumbnail(Core.Photos.CurrentIndex, false);

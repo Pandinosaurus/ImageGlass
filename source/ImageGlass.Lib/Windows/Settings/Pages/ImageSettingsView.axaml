@@ -110,6 +110,9 @@
         <!--  Color management  -->
         <ui:PhTextBlock Classes="group" LangKey="Settings_ColorManagement" />
         <StackPanel Margin="{DynamicResource SettingsGroupIndent}">
+            <CheckBox x:Name="PART_HdrToneMapping">
+                <ui:PhTextBlock LangKey="Settings_EnableHdrToneMapping" TextWrapping="Wrap" />
+            </CheckBox>
             <CheckBox x:Name="PART_AlwaysApplyColorProfile">
                 <ui:PhTextBlock LangKey="Settings_EnableAlwaysApplyColorProfile" TextWrapping="Wrap" />
             </CheckBox>

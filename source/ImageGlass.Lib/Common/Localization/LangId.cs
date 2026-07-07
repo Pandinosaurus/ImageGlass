@@ -480,6 +480,7 @@ public enum LangId
 
     // Image > Color management
     Settings_ColorManagement,
+    Settings_EnableHdrToneMapping,
     Settings_EnableAlwaysApplyColorProfile,
     Settings_ColorProfile,
     Settings_CurrentMonitorProfile_Description,
