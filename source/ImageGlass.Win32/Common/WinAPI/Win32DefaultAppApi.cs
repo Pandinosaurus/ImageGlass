@@ -118,7 +118,7 @@ public static class Win32DefaultAppApi
         // <root>\Software\ImageGlass\Capabilities
         using (var key = root.CreateSubKey(capabilitiesPath, writable: true))
         {
-            key.SetValue("ApplicationName", BHelper.AppName);
+            key.SetValue("ApplicationName", BHelper.AppDisplayName);
             key.SetValue("ApplicationIcon", $"\"{BHelper.AppExePath}\", 0");
             key.SetValue("ApplicationDescription", "A Fast, Seamless Photo Viewer");
 
@@ -150,7 +150,7 @@ public static class Win32DefaultAppApi
 
         // <root>\Software\Classes\ImageGlass.AssocFile.<EXT>
         using var progIdKey = classesKey.CreateSubKey(progId, writable: true);
-        progIdKey.SetValue("", BHelper.AppName);
+        progIdKey.SetValue("", BHelper.AppDisplayName);
 
         // 1. DefaultIcon
         // get extension icon
@@ -177,7 +177,7 @@ public static class Win32DefaultAppApi
         // 2. HKCU\Software\Classes\ImageGlass.AssocFile.<EXT>\shell\open
         using var shellKey = progIdKey.CreateSubKey("shell", writable: true);
         using var openKey = shellKey.CreateSubKey("open", writable: true);
-        openKey.SetValue("FriendlyAppName", BHelper.AppName);
+        openKey.SetValue("FriendlyAppName", BHelper.AppDisplayName);
 
 
         // 3. HKCU\Software\Classes\ImageGlass.AssocFile.<EXT>\shell\open\command

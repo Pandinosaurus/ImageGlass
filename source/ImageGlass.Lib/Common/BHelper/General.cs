@@ -30,7 +30,12 @@ public partial class BHelper
     /// <summary>
     /// Gets app name.
     /// </summary>
-    public static string AppName => "ImageGlass_10";
+    public static string AppName { get; } = "ImageGlass";
+
+    /// <summary>
+    /// Gets app display name.
+    /// </summary>
+    public static string AppDisplayName { get; } = "ImageGlass 10";
 
 
     /// <summary>
@@ -189,7 +194,7 @@ public partial class BHelper
         var osArch = Environment.Is64BitOperatingSystem ? "64-bit" : "32-bit";
 
         var details = $"""
-            Version: {BHelper.AppName} v{Core.BuildInfo.AppVersion}
+            Version: {BHelper.AppDisplayName} v{Core.BuildInfo.AppVersion}
             Magick.NET: {MagickNET.Version}
             Runtime: .NET {Environment.Version}
             OS: {OS} {Environment.OSVersion.VersionString} {osArch}
@@ -215,7 +220,7 @@ public partial class BHelper
         var osArch = Environment.Is64BitOperatingSystem ? "64-bit" : "32-bit";
 
         var debugInfo = $"""
-            {BHelper.AppName} {Core.BuildInfo.AppVersion}
+            {BHelper.AppDisplayName} {Core.BuildInfo.AppVersion}
             {MagickNET.Version}
             {OS} {osArch} {Environment.OSVersion.Version}, .NET {Environment.Version}
             """;

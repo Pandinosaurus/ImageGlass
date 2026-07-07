@@ -65,7 +65,7 @@ public static class Win32ShareApi
 
 
         // Set properties of shareUI
-        dp.Properties.Title = BHelper.AppName;
+        dp.Properties.Title = BHelper.AppDisplayName;
 
         try
         {

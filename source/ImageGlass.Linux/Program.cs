@@ -64,7 +64,7 @@ sealed class Program
         .LogToTrace()
         .WithDeveloperTools(o =>
         {
-            o.ApplicationName = BHelper.AppName;
+            o.ApplicationName = BHelper.AppDisplayName;
             o.Gesture = new KeyGesture(Key.I, KeyModifiers.Control | KeyModifiers.Shift);
         })
         .UsePlatformDetect()

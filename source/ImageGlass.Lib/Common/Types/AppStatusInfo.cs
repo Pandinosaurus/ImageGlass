@@ -45,7 +45,7 @@ public partial class AppStatusInfo : PhDisposable
         {
             if (Core.Config.ImageInfoTags.Contains(nameof(AppName)))
             {
-                return BHelper.AppName;
+                return BHelper.AppDisplayName;
             }
 
             return null;

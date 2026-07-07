@@ -835,7 +835,7 @@ public partial class ModalWindow : DialogWindow
         // show error modal dialog
         var result = await ShowErrorAsync(owner, new ModalWindowOptions
         {
-            Title = $"{Core.Lang[LangId._UnhandledException]} – {BHelper.AppName}",
+            Title = $"{Core.Lang[LangId._UnhandledException]} – {BHelper.AppDisplayName}",
             Heading = heading ?? ex.Message,
             Description = descriptionText,
             Details = details,
