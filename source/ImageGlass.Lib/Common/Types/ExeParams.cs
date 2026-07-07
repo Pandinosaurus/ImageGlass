@@ -43,16 +43,15 @@ public static class ExeParams
     /// </summary>
     public static string NO_QUICK_SETUP => "--ig-no-quick-setup";
 
+    /// <summary>
+    /// Registers the app as the default photo viewer for the given extensions.
+    /// </summary>
+    public static string SET_DEFAULT_PHOTO_VIEWER => "--ig-set-default-viewer";
 
-    public static string SET_DEFAULT_PHOTO_VIEWER => "set-default-viewer";
-
-    public static string REMOVE_DEFAULT_PHOTO_VIEWER => "remove-default-viewer";
-
-
-
-
-    // UI result options
-    public static string HIDE_ADMIN_REQUIRED_ERROR_UI => "--hide-admin-error-ui";
+    /// <summary>
+    /// Unregisters the app as the default photo viewer for the given extensions.
+    /// </summary>
+    public static string REMOVE_DEFAULT_PHOTO_VIEWER => "--ig-remove-default-viewer";
 
 
     //public static string SET_WALLPAPER => "set-wallpaper";

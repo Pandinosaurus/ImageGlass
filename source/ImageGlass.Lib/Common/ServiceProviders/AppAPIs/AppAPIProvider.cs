@@ -260,7 +260,7 @@ public partial class AppAPIProvider
         var boundStr = newBounds.ToStringDelimiter();
         var boundCmd = BHelper.BuildConfigCmdLine(nameof(Config.MainWindowBounds), boundStr);
 
-        _ = BHelper.RunExeAsync(BHelper.AppExePath, $"{boundCmd} \"{filePath}\"");
+        _ = BHelper.RunExeAsync(BHelper.AppExePath, [boundCmd, filePath]);
     }
 
 
@@ -1587,9 +1587,9 @@ public partial class AppAPIProvider
         {
             try
             {
-                var args = BHelper.BuildExeArgs(app.Executable, app.Argument, filePath);
+                var args = BHelper.BuildExeArgList(app.Executable, app.Argument, filePath);
 
-                var result = await BHelper.RunExeCmd(args.Executable, args.Args, false, false, true);
+                var result = await BHelper.RunExeCmd(args.Executable, args.Args, false, true);
                 if (result == IgExitCode.Done)
                 {
                     RunActionAfterEditing__();

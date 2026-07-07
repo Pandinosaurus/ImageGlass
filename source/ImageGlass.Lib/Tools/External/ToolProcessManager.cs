@@ -105,7 +105,7 @@ public sealed class ToolProcessManager : PhDisposable
             };
 
             // Configured args first (each as its own element), then the pipe handshake.
-            foreach (var arg in ExternalTool.BuildArgumentList(tool.Arguments, filePath))
+            foreach (var arg in BHelper.BuildArgumentList(tool.Arguments, filePath))
             {
                 psi.ArgumentList.Add(arg);
             }

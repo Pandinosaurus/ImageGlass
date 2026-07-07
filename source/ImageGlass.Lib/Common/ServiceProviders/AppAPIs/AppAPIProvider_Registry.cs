@@ -345,9 +345,9 @@ public partial class AppAPIProvider
         else if (acResults.ExitCode == ActionExitCode.ApiNotFound)
         {
             var args = string.Join(string.Empty, acArgs) ?? string.Empty;
-            var exeInfo = BHelper.BuildExeArgs(ac.Executable, args, Core.Photos.CurrentFilePath);
+            var exeInfo = BHelper.BuildExeArgList(ac.Executable, args, Core.Photos.CurrentFilePath);
 
-            var exeCode = await BHelper.RunExeCmd(exeInfo.Executable, exeInfo.Args, false, false);
+            var exeCode = await BHelper.RunExeCmd(exeInfo.Executable, exeInfo.Args, false);
             if (exeCode != IgExitCode.Done)
             {
                 var errorMsg = Core.Lang[LangId._UserAction_Win32ExeError, ac.Executable];

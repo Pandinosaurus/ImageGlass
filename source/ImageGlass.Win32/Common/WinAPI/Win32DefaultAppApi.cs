@@ -20,7 +20,6 @@ using ImageGlass.Common;
 using ImageGlass.Common.Types;
 using Microsoft.Win32;
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.Security;
 using System.Threading.Tasks;
@@ -265,21 +264,8 @@ public static class Win32DefaultAppApi
             : ExeParams.REMOVE_DEFAULT_PHOTO_VIEWER;
         var extArg = string.Join(";", extensions);
 
-        using var proc = new Process();
-        proc.StartInfo.FileName = BHelper.AppExePath;
-        proc.StartInfo.Arguments = $"{cmd} \"{extArg}\"";
-        proc.StartInfo.Verb = "runas";
-        proc.StartInfo.UseShellExecute = true;
-
-        try
-        {
-            proc.Start();
-            await proc.WaitForExitAsync();
-        }
-        catch (System.ComponentModel.Win32Exception)
-        {
-            // user cancelled the UAC prompt
-        }
+        // reuse the shared elevating launcher (UAC prompt + cancellation handled there)
+        await BHelper.RunExeAsync(BHelper.AppExePath, [cmd, extArg], asAdmin: true, waitForExit: true);
     }
 
 }

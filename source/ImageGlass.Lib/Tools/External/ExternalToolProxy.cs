@@ -141,7 +141,7 @@ internal sealed class ExternalToolProxy : ITool
             // Executable + arguments and shell-executes it.
             if (exe.EndsWith(':'))
             {
-                var built = BHelper.BuildExeArgs(exe, _tool.Arguments ?? string.Empty, filePath);
+                var built = BHelper.BuildExeArgList(exe, _tool.Arguments, filePath);
                 _ = BHelper.RunExeAsync(built.Executable, built.Args);
                 return;
             }
@@ -154,7 +154,7 @@ internal sealed class ExternalToolProxy : ITool
                 UseShellExecute = false,
                 WorkingDirectory = Path.GetDirectoryName(exe) ?? string.Empty,
             };
-            foreach (var arg in ExternalTool.BuildArgumentList(_tool.Arguments, filePath))
+            foreach (var arg in BHelper.BuildArgumentList(_tool.Arguments, filePath))
             {
                 psi.ArgumentList.Add(arg);
             }

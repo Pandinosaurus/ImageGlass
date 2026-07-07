@@ -20,8 +20,12 @@ using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using ImageGlass.Common.Types;
 using System;
+using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
+using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -94,64 +98,110 @@ public partial class BHelper
 
 
     /// <summary>
-    /// Run a command, supports auto-elevating process privilege
-    /// if admin permission is required.
+    /// Builds the executable and its argument list (tokenized, macro-substituted per-token);
+    /// for an app protocol the args are the single URI tail appended to the scheme.
     /// </summary>
-    public static async Task<IgExitCode> RunExeCmd(string exePath, string args, bool waitForExit = true, bool appendIgArgs = true, bool showError = false)
+    public static (string Executable, List<string> Args) BuildExeArgList(string executable, string? arguments, string currentFilePath = "")
     {
-        IgExitCode code;
+        var exe = executable.Trim();
 
-        try
+        // app protocol: the tail is an opaque URI remainder, not argv
+        if (exe.EndsWith(':'))
         {
-            if (appendIgArgs)
-            {
-                args += $" {ExeParams.HIDE_ADMIN_REQUIRED_ERROR_UI}";
-            }
-
-            code = (IgExitCode)await RunExeAsync(exePath, args, false, waitForExit, showError);
-
-
-            // If that fails due to privs error, re-attempt with admin privs.
-            if (code == IgExitCode.AdminRequired)
-            {
-                code = (IgExitCode)await RunExeAsync(
-                    exePath,
-                    args,
-                    asAdmin: true,
-                    waitForExit: waitForExit);
-            }
-        }
-        catch
-        {
-            code = IgExitCode.Error;
+            var tail = (arguments ?? string.Empty).Replace(Const.FILE_MACRO, currentFilePath);
+            var protocolArgs = new List<string>();
+            if (tail.Length > 0) protocolArgs.Add(tail);
+            return (exe, protocolArgs);
         }
 
-        return code;
+        return (exe, BuildArgumentList(arguments, currentFilePath));
     }
 
 
     /// <summary>
-    /// Runs executable.
+    /// Tokenizes an args template (respecting double quotes) into individual arguments, then
+    /// substitutes <see cref="Const.FILE_MACRO"/> per-token so a file path can't inject arguments.
     /// </summary>
-    public static async Task<int> RunExeAsync(string path, string args, bool asAdmin = false, bool waitForExit = false, bool showError = false)
+    public static List<string> BuildArgumentList(string? argsTemplate, string filePath)
     {
-        var proc = new Process();
+        var result = new List<string>();
+        if (string.IsNullOrEmpty(argsTemplate)) return result;
 
-        // path is a protocal
-        if (path.EndsWith(':'))
+        var token = new StringBuilder();
+        var inQuotes = false;
+        var hasToken = false;
+
+        foreach (var ch in argsTemplate)
         {
-            var url = $"{path}{args}";
-            proc.StartInfo.FileName = url;
-        }
-        else
-        {
-            proc.StartInfo.FileName = path;
-            proc.StartInfo.Arguments = args;
+            if (ch == '"')
+            {
+                inQuotes = !inQuotes;
+                hasToken = true; // an explicit "" is a real (empty) token
+                continue;
+            }
+
+            if (!inQuotes && char.IsWhiteSpace(ch))
+            {
+                if (hasToken)
+                {
+                    result.Add(token.ToString().Replace(Const.FILE_MACRO, filePath));
+                    token.Clear();
+                    hasToken = false;
+                }
+                continue;
+            }
+
+            token.Append(ch);
+            hasToken = true;
         }
 
-        proc.StartInfo.Verb = asAdmin ? "runas" : "";
-        proc.StartInfo.UseShellExecute = true;
-        proc.StartInfo.ErrorDialog = showError;
+        if (hasToken)
+        {
+            result.Add(token.ToString().Replace(Const.FILE_MACRO, filePath));
+        }
+
+        return result;
+    }
+
+
+    /// <summary>
+    /// Runs an executable, auto-relaunching it elevated if it reports admin is required.
+    /// </summary>
+    public static async Task<IgExitCode> RunExeCmd(string exePath, IReadOnlyList<string>? args = null, bool waitForExit = true, bool showError = false)
+    {
+        try
+        {
+            var code = (IgExitCode)await RunExeAsync(exePath, args, asAdmin: false, waitForExit, showError);
+
+            // elevation required -> retry as admin
+            if (code == IgExitCode.AdminRequired)
+            {
+                code = (IgExitCode)await RunExeAsync(exePath, args, asAdmin: true, waitForExit);
+            }
+
+            return code;
+        }
+        catch
+        {
+            return IgExitCode.Error;
+        }
+    }
+
+
+    /// <summary>
+    /// Runs an executable or app protocol, with optional cross-platform elevation. Args go through
+    /// <see cref="ProcessStartInfo.ArgumentList"/> so a crafted argument can't inject tokens.
+    /// </summary>
+    /// <param name="path">Executable path, or app protocol ending with <c>:</c>.</param>
+    /// <param name="args">Individual arguments; for a protocol, concatenated onto the scheme.</param>
+    /// <param name="asAdmin">Run elevated: UAC / osascript / pkexec.</param>
+    /// <param name="waitForExit">Wait for exit and return the exit code.</param>
+    /// <param name="showError">Show the OS error dialog on launch failure (shell-execute only).</param>
+    public static async Task<int> RunExeAsync(string path, IReadOnlyList<string>? args = null, bool asAdmin = false, bool waitForExit = false, bool showError = false)
+    {
+        using var proc = new Process();
+        ConfigureExeStart(proc.StartInfo, path.Trim(), args ?? [], asAdmin);
+        proc.StartInfo.ErrorDialog = showError && proc.StartInfo.UseShellExecute;
 
         try
         {
@@ -160,22 +210,98 @@ public partial class BHelper
             if (waitForExit)
             {
                 await proc.WaitForExitAsync();
-
                 return proc.ExitCode;
             }
 
             return (int)IgExitCode.Done;
         }
-        catch (Exception ex)
+        catch (Win32Exception ex)
         {
-            if (ex.Message.Contains("system cannot find the file", StringComparison.OrdinalIgnoreCase))
+            return (int)(ex.NativeErrorCode switch
             {
-                return (int)IgExitCode.Error_FileNotFound;
-            }
-
+                2 => IgExitCode.Error_FileNotFound,     // ERROR_FILE_NOT_FOUND
+                740 => IgExitCode.AdminRequired,        // ERROR_ELEVATION_REQUIRED
+                _ => IgExitCode.Error,
+            });
+        }
+        catch
+        {
             return (int)IgExitCode.Error;
         }
     }
+
+
+    /// <summary>
+    /// Configures <paramref name="psi"/> for a protocol, normal, or elevated launch per platform.
+    /// </summary>
+    private static void ConfigureExeStart(ProcessStartInfo psi, string path, IReadOnlyList<string> args, bool asAdmin)
+    {
+        // app protocol: the whole URI is the FileName; never elevated
+        if (path.EndsWith(':'))
+        {
+            psi.FileName = $"{path}{string.Concat(args)}";
+            psi.UseShellExecute = true;
+            return;
+        }
+
+        // non-elevated: shell-execute so associated apps and file verbs resolve
+        if (!asAdmin)
+        {
+            psi.FileName = path;
+            psi.UseShellExecute = true;
+            AddArgs(psi, args);
+            return;
+        }
+
+        // elevated launch via each platform's native admin prompt
+        switch (BHelper.OS)
+        {
+            case OSType.Mac:
+                // `do shell script` runs one /bin/sh string; single-quote each token
+                var macCmd = string.Join(" ", args.Prepend(path).Select(ShellQuote));
+                psi.FileName = "osascript";
+                psi.UseShellExecute = false;
+                psi.ArgumentList.Add("-e");
+                psi.ArgumentList.Add($"do shell script \"{EscapeAppleScript(macCmd)}\" with administrator privileges");
+                break;
+
+            case OSType.Linux:
+                // PolicyKit runs the program directly (no shell); each arg is its own token
+                psi.FileName = "pkexec";
+                psi.UseShellExecute = false;
+                psi.ArgumentList.Add(path);
+                AddArgs(psi, args);
+                break;
+
+            default: // Windows
+                psi.FileName = path;
+                psi.UseShellExecute = true;
+                psi.Verb = "runas"; // triggers the UAC prompt
+                AddArgs(psi, args);
+                break;
+        }
+    }
+
+
+    /// <summary>
+    /// Appends each argument to the process <see cref="ProcessStartInfo.ArgumentList"/>.
+    /// </summary>
+    private static void AddArgs(ProcessStartInfo psi, IReadOnlyList<string> args)
+    {
+        foreach (var arg in args) psi.ArgumentList.Add(arg);
+    }
+
+
+    /// <summary>
+    /// Wraps <paramref name="s"/> in POSIX single quotes for /bin/sh.
+    /// </summary>
+    private static string ShellQuote(string s) => $"'{s.Replace("'", "'\\''")}'";
+
+
+    /// <summary>
+    /// Escapes <paramref name="s"/> for embedding inside an AppleScript double-quoted literal.
+    /// </summary>
+    private static string EscapeAppleScript(string s) => s.Replace("\\", "\\\\").Replace("\"", "\\\"");
 
 
     /// <summary>
@@ -273,7 +399,7 @@ public partial class BHelper
         // (exiting) one and quit, leaving no window
         Core.AppInstance.Dispose();
 
-        var args = suppressQuickSetup ? ExeParams.NO_QUICK_SETUP : string.Empty;
+        IReadOnlyList<string> args = suppressQuickSetup ? [ExeParams.NO_QUICK_SETUP] : [];
         _ = RunExeAsync(AppExePath, args);
         ExitApp(false);
     }

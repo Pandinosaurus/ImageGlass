@@ -101,7 +101,7 @@ public partial class GeneralSettingsView : SettingsPageView
         try
         {
             // open the JSON file in the app associated with its file type (shell-execute)
-            var exitCode = await BHelper.RunExeAsync(filePath, "");
+            var exitCode = await BHelper.RunExeAsync(filePath);
             if (exitCode == 0) return;
         }
         catch { }
