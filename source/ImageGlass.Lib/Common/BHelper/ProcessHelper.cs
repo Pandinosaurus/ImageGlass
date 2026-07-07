@@ -399,7 +399,7 @@ public partial class BHelper
         // (exiting) one and quit, leaving no window
         Core.AppInstance.Dispose();
 
-        IReadOnlyList<string> args = suppressQuickSetup ? [ExeParams.NO_QUICK_SETUP] : [];
+        IReadOnlyList<string> args = suppressQuickSetup ? [AppCmds.NO_QUICK_SETUP] : [];
         _ = RunExeAsync(AppExePath, args);
         ExitApp(false);
     }

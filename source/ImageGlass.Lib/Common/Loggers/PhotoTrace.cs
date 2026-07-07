@@ -33,7 +33,7 @@ namespace ImageGlass.Common.Loggers;
 /// </summary>
 /// <remarks>
 /// <para>
-/// Enable it by launching with the <see cref="ExeParams.PHOTO_TRACE"/> command-line flag;
+/// Enable it by launching with the <see cref="AppCmds.PHOTO_TRACE"/> command-line flag;
 /// <see cref="EnableFromArgs"/> is called during app-instance initialization. A normal
 /// launch is completely silent (every entry point returns early when disabled).
 /// </para>
@@ -74,7 +74,7 @@ public static class PhotoTrace
 
     /// <summary>
     /// Enables trace output if the given command-line args contain
-    /// <see cref="ExeParams.PHOTO_TRACE"/>.
+    /// <see cref="AppCmds.PHOTO_TRACE"/>.
     /// </summary>
     public static void EnableFromArgs(string[]? args)
     {
@@ -82,7 +82,7 @@ public static class PhotoTrace
 
         foreach (var arg in args)
         {
-            if (string.Equals(arg, ExeParams.PHOTO_TRACE, StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(arg, AppCmds.PHOTO_TRACE, StringComparison.OrdinalIgnoreCase))
             {
                 Enabled = true;
                 return;

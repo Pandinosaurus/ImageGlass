@@ -344,7 +344,7 @@ public partial class App : Application
         {
             if (!Core.AppInstance.IsFirstInstance)
             {
-                Core.AppInstance.SendArgsToExistingInstances(ExeParams.SINGLE_INSTANCE, args);
+                Core.AppInstance.SendArgsToExistingInstances(AppCmds.SINGLE_INSTANCE, args);
                 return true;
             }
         }
@@ -371,10 +371,10 @@ public partial class App : Application
         var topCmd = args[0];
 
         // set / remove default photo viewer
-        if (topCmd == ExeParams.SET_DEFAULT_PHOTO_VIEWER
-            || topCmd == ExeParams.REMOVE_DEFAULT_PHOTO_VIEWER)
+        if (topCmd == AppCmds.SET_DEFAULT_PHOTO_VIEWER
+            || topCmd == AppCmds.REMOVE_DEFAULT_PHOTO_VIEWER)
         {
-            var enable = topCmd == ExeParams.SET_DEFAULT_PHOTO_VIEWER;
+            var enable = topCmd == AppCmds.SET_DEFAULT_PHOTO_VIEWER;
 
             // extensions from arg (";"-joined), or all supported formats when omitted
             var extensions = args.Length >= 2
@@ -400,7 +400,7 @@ public partial class App : Application
     private static async Task<bool> RunStartupQuickSetupAsync()
     {
         // skip when already satisfied, or when relaunched with the suppress flag
-        if (!QuickSetupWindow.ShouldShowAtStartup || Core.Args.Contains(ExeParams.NO_QUICK_SETUP))
+        if (!QuickSetupWindow.ShouldShowAtStartup || Core.Args.Contains(AppCmds.NO_QUICK_SETUP))
             return true;
 
         var wizard = new QuickSetupWindow();

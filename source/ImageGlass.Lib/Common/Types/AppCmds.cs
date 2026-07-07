@@ -19,50 +19,75 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 namespace ImageGlass.Common.Types;
 
-public static class ExeParams
+public static class AppCmds
 {
     /// <summary>
     /// Single instance message
     /// </summary>
+    /// <remarks>
+    /// Example:
+    /// <code>ImageGlass.exe --ig-single-instance</code>
+    /// </remarks>
     public static string SINGLE_INSTANCE => "--ig-single-instance";
 
     /// <summary>
     /// Opt-in startup profiler (see StartupTrace); writes ig_startup_trace.log to the config dir
     /// </summary>
+    /// <remarks>
+    /// Example:
+    /// <code>ImageGlass.exe --ig-startup-trace</code>
+    /// </remarks>
     public static string STARTUP_TRACE => "--ig-startup-trace";
 
     /// <summary>
     /// Opt-in photo-loading profiler (see PhotoTrace); writes ig_photo_trace.log to the config dir
     /// </summary>
+    /// <remarks>
+    /// Example:
+    /// <code>ImageGlass.exe --ig-photo-trace</code>
+    /// </remarks>
     public static string PHOTO_TRACE => "--ig-photo-trace";
 
     /// <summary>
-    /// Suppresses the forced startup Quick Setup for this launch. Passed by the app when it
-    /// restarts out of the wizard, so the fresh instance goes straight to the main window (and so
-    /// an admin-locked <c>QuickSetupVersion</c> can't cause an infinite wizard loop).
+    /// Suppresses the forced startup Quick Setup for this launch.
     /// </summary>
+    /// <remarks>
+    /// Example:
+    /// <code>ImageGlass.exe --ig-no-quick-setup</code>
+    /// </remarks>
     public static string NO_QUICK_SETUP => "--ig-no-quick-setup";
 
     /// <summary>
     /// Registers the app as the default photo viewer for the given extensions.
     /// </summary>
+    /// <remarks>
+    /// Examples:
+    /// <code>
+    /// ImageGlass.exe --ig-set-default-viewer
+    /// ImageGlass.exe --ig-set-default-viewer .jpg;.png;.webp
+    /// </code>
+    /// </remarks>
     public static string SET_DEFAULT_PHOTO_VIEWER => "--ig-set-default-viewer";
 
     /// <summary>
     /// Unregisters the app as the default photo viewer for the given extensions.
     /// </summary>
+    /// <remarks>
+    /// Example:
+    /// <code>ImageGlass.exe --ig-remove-default-viewer</code>
+    /// </remarks>
     public static string REMOVE_DEFAULT_PHOTO_VIEWER => "--ig-remove-default-viewer";
 
 
-    //public static string SET_WALLPAPER => "set-wallpaper";
-    //public static string SET_LOCK_SCREEN => "set-lock-screen";
-    //public static string START_SLIDESHOW => "start-slideshow";
-    //public static string EXPORT_FRAMES => "export-frames";
-    //public static string LOSSLESS_COMPRESS => "lossless-compress";
+    //public static string SET_WALLPAPER => "--ig-set-wallpaper";
+    //public static string SET_LOCK_SCREEN => "--ig-set-lock-screen";
+    //public static string START_SLIDESHOW => "--ig-start-slideshow";
+    //public static string EXPORT_FRAMES => "--ig-export-frames";
+    //public static string LOSSLESS_COMPRESS => "--ig-lossless-compress";
 
-    //public static string CHECK_FOR_UPDATE => "check-for-update";
-    //public static string INSTALL_LANGUAGES => "install-languages";
-    //public static string INSTALL_THEMES => "install-themes";
-    //public static string UNINSTALL_THEME => "uninstall-theme";
+    //public static string CHECK_FOR_UPDATE => "--ig-check-for-update";
+    //public static string INSTALL_LANGUAGES => "--ig-install-languages";
+    //public static string INSTALL_THEMES => "--ig-install-themes";
+    //public static string UNINSTALL_THEME => "--ig-uninstall-theme";
 
 }

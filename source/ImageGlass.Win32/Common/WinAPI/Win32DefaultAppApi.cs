@@ -298,8 +298,8 @@ public static class Win32DefaultAppApi
     private static async Task RelaunchElevatedAsync(string[] extensions, bool enable)
     {
         var cmd = enable
-            ? ExeParams.SET_DEFAULT_PHOTO_VIEWER
-            : ExeParams.REMOVE_DEFAULT_PHOTO_VIEWER;
+            ? AppCmds.SET_DEFAULT_PHOTO_VIEWER
+            : AppCmds.REMOVE_DEFAULT_PHOTO_VIEWER;
         var extArg = string.Join(";", extensions);
 
         // reuse the shared elevating launcher (UAC prompt + cancellation handled there)

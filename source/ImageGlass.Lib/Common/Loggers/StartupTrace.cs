@@ -32,7 +32,7 @@ namespace ImageGlass.Common.Loggers;
 /// </summary>
 /// <remarks>
 /// <para>
-/// Enable it by launching with the <see cref="ExeParams.STARTUP_TRACE"/> 
+/// Enable it by launching with the <see cref="AppCmds.STARTUP_TRACE"/> 
 /// command-line flag; <see cref="EnableFromArgs"/> is called during app-instance initialization.
 /// </para>
 /// <para>
@@ -57,7 +57,7 @@ public static class StartupTrace
 
     /// <summary>
     /// Enables trace output if the given command-line args contain
-    /// <see cref="ExeParams.STARTUP_TRACE"/>. Safe to call after marks have been recorded.
+    /// <see cref="AppCmds.STARTUP_TRACE"/>. Safe to call after marks have been recorded.
     /// </summary>
     public static void EnableFromArgs(string[]? args)
     {
@@ -65,7 +65,7 @@ public static class StartupTrace
 
         foreach (var arg in args)
         {
-            if (string.Equals(arg, ExeParams.STARTUP_TRACE, StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(arg, AppCmds.STARTUP_TRACE, StringComparison.OrdinalIgnoreCase))
             {
                 Enabled = true;
                 return;

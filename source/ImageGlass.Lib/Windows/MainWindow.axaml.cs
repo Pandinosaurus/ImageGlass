@@ -213,7 +213,7 @@ public partial class MainWindow : PhWindow
     private async void AppInstance_InstanceInvoked(AppInstance sender, InstanceInvokedEventArgs e)
     {
         // handle single instance command
-        if (e.Command.Equals(ExeParams.SINGLE_INSTANCE))
+        if (e.Command.Equals(AppCmds.SINGLE_INSTANCE))
         {
             if (WindowState == Avalonia.Controls.WindowState.Minimized)
             {
