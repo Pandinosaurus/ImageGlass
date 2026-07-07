@@ -144,6 +144,16 @@ public partial class App : Application
 
             desktop.MainWindow = MainWindow;
 
+            // if user settings failed to load, report it first; on Quit the modal exits the app,
+            // on Continue we fall through to Quick Setup (which the reset/default config triggers)
+            if (Config.LoadingException is not null)
+            {
+                var isContinue = await ModalWindow.ShowUnhandledErrorAsync(
+                    Config.LoadingException, null,
+                    "IGE: There was an error while loading user settings");
+                if (!isContinue) return;
+            }
+
             // force Quick Setup on first run; false = app is exiting/restarting
             if (!await RunStartupQuickSetupAsync()) return;
 

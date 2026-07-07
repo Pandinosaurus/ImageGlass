@@ -100,17 +100,8 @@ public partial class MainWindow : PhWindow
     }
 
 
-    protected override async void OnLoaded(RoutedEventArgs e)
+    protected override void OnLoaded(RoutedEventArgs e)
     {
-        // check if the config loading was failed
-        if (Config.LoadingException is not null)
-        {
-            var isContinue = await ModalWindow.ShowUnhandledErrorAsync(
-                Config.LoadingException, this,
-                "IGE: There was an error while loading user settings");
-            if (!isContinue) return;
-        }
-
         base.OnLoaded(e);
 
         // register app hotkeys
