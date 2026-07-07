@@ -132,7 +132,8 @@ public static class Win32DefaultAppApi
 
                 // HKCU\Software\Classes\...
                 RegisterProgId(classesKey, progId, extNoDot);
-                RegisterOpenWithProgId(classesKey, ext, progId);
+                AssociateExtensionDefault(classesKey, ext, progId);
+                ClearUserChoice(ext);
             }
         }
 
@@ -186,17 +187,43 @@ public static class Win32DefaultAppApi
 
 
     /// <summary>
-    /// Adds the ProgId to the extension's <c>OpenWithProgids</c> list
-    /// so the app appears in the "Open with" context menu.
+    /// Sets our ProgId as the extension's classic default and adds it to <c>OpenWithProgids</c>.
     /// </summary>
-    private static void RegisterOpenWithProgId(RegistryKey? classesKey, string ext, string progId)
+    private static void AssociateExtensionDefault(RegistryKey? classesKey, string ext, string progId)
     {
         if (classesKey is null) return;
 
-        // <root>\Software\Classes\.<EXT>\OpenWithProgids
+        // <root>\Software\Classes\.<EXT>  (default + OpenWithProgids)
         using var extKey = classesKey.CreateSubKey(ext, writable: true);
+        extKey.SetValue("", progId);
+
         using var openWith = extKey.CreateSubKey("OpenWithProgids", writable: true);
         openWith.SetValue(progId, string.Empty);
+    }
+
+
+    /// <summary>
+    /// Removes the current user's hash-protected UserChoice (always HKCU, both scopes) so the
+    /// classic default applies; optionally only when it points to <paramref name="onlyIfProgId"/>.
+    /// </summary>
+    private static void ClearUserChoice(string ext, string? onlyIfProgId = null)
+    {
+        try
+        {
+            using var fileExts = Registry.CurrentUser.OpenSubKey(
+                $@"Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\{ext}", writable: true);
+            if (fileExts is null) return;
+
+            if (onlyIfProgId is not null)
+            {
+                using var uc = fileExts.OpenSubKey("UserChoice");
+                if (uc?.GetValue("ProgId") as string != onlyIfProgId) return;
+            }
+
+            // reg.exe / Remove-Item are denied on UserChoice; DeleteSubKey via the parent is allowed
+            fileExts.DeleteSubKey("UserChoice", throwOnMissingSubKey: false);
+        }
+        catch { }
     }
 
 
@@ -233,10 +260,21 @@ public static class Win32DefaultAppApi
             // remove HKCU\Software\Classes\ImageGlass.AssocFile.<EXT>\*
             classesKey.DeleteSubKeyTree(progId, throwOnMissingSubKey: false);
 
-            // remove HKCU\Software\Classes\ImageGlass.AssocFile.<EXT>\OpenWithProgids
             using var extKey = classesKey.OpenSubKey(ext, writable: true);
-            using var openWith = extKey?.OpenSubKey("OpenWithProgids", writable: true);
-            openWith?.DeleteValue(progId, throwOnMissingValue: false);
+            if (extKey is not null)
+            {
+                // clear the default if it points to us
+                if (extKey.GetValue("") as string == progId)
+                {
+                    extKey.DeleteValue("", throwOnMissingValue: false);
+                }
+
+                using var openWith = extKey.OpenSubKey("OpenWithProgids", writable: true);
+                openWith?.DeleteValue(progId, throwOnMissingValue: false);
+            }
+
+            // drop our UserChoice so Explorer re-picks a default
+            ClearUserChoice(ext, progId);
         }
     }
 

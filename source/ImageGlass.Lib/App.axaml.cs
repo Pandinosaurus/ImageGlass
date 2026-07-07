@@ -374,11 +374,12 @@ public partial class App : Application
         if (topCmd == ExeParams.SET_DEFAULT_PHOTO_VIEWER
             || topCmd == ExeParams.REMOVE_DEFAULT_PHOTO_VIEWER)
         {
-            if (args.Length < 2) return false;
-
             var enable = topCmd == ExeParams.SET_DEFAULT_PHOTO_VIEWER;
-            var extensions = args[1]
-                .Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+            // extensions from arg (";"-joined), or all supported formats when omitted
+            var extensions = args.Length >= 2
+                ? args[1].Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                : Core.Config.FileFormats.ToArray();
 
             if (Core.ShellProvider is not null)
             {
