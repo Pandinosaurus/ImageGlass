@@ -168,59 +168,51 @@ public partial class Config
         ToolbarItemModel.Separator,
 
 
-        // auto zoom
+        // rotate left
         new() {
-            Id = $"Btn_{nameof(IgThemeIcon.AutoZoom)}",
-            Image = nameof(IgThemeIcon.AutoZoom),
-            Text = Lang.KeysMap[LangId.Menu_MnuAutoZoom],
-            ConfigBinding = nameof(Config.ZoomMode),
-            ConfigBindingValue = ZoomMode.AutoZoom.ToString(),
-            OnClick = new(LangId.Menu_MnuAutoZoom, API.IG_SetZoomMode, nameof(ZoomMode.AutoZoom)),
+            Id = $"Btn_{nameof(IgThemeIcon.RotateLeft)}",
+            Image = nameof(IgThemeIcon.RotateLeft),
+            Text = Lang.KeysMap[LangId.Menu_MnuRotateLeft],
+            OnClick = new(LangId.Menu_MnuRotateLeft, API.IG_Rotate, nameof(RotateOption.Left)),
         },
-        // lock zoom
+        // rotate right
         new() {
-            Id = $"Btn_{nameof(IgThemeIcon.LockZoom)}",
-            Image = nameof(IgThemeIcon.LockZoom),
-            Text = Lang.KeysMap[LangId.Menu_MnuLockZoom],
-            ConfigBinding = nameof(Config.ZoomMode),
-            ConfigBindingValue = ZoomMode.LockZoom.ToString(),
-            OnClick = new(LangId.Menu_MnuLockZoom, API.IG_SetZoomMode, nameof(ZoomMode.LockZoom)),
+            Id = $"Btn_{nameof(IgThemeIcon.RotateRight)}",
+            Image = nameof(IgThemeIcon.RotateRight),
+            Text = Lang.KeysMap[LangId.Menu_MnuRotateRight],
+            OnClick = new(LangId.Menu_MnuRotateRight, API.IG_Rotate, nameof(RotateOption.Right)),
         },
-        // scale to width
+        // flip horz
         new() {
-            Id = $"Btn_{nameof(IgThemeIcon.ScaleToWidth)}",
-            Image = nameof(IgThemeIcon.ScaleToWidth),
-            Text = Lang.KeysMap[LangId.Menu_MnuScaleToWidth],
-            ConfigBinding = nameof(Config.ZoomMode),
-            ConfigBindingValue = ZoomMode.ScaleToWidth.ToString(),
-            OnClick = new(LangId.Menu_MnuScaleToWidth, API.IG_SetZoomMode, nameof(ZoomMode.ScaleToWidth)),
+            Id = $"Btn_{nameof(IgThemeIcon.FlipHorz)}",
+            Image = nameof(IgThemeIcon.FlipHorz),
+            Text = Lang.KeysMap[LangId.Menu_MnuFlipHorizontal],
+            OnClick = new(LangId.Menu_MnuFlipHorizontal, API.IG_FlipImage, nameof(FlipOptions.Horizontal)),
         },
-        // scale to height
+        // flip vert
         new() {
-            Id = $"Btn_{nameof(IgThemeIcon.ScaleToHeight)}",
-            Image = nameof(IgThemeIcon.ScaleToHeight),
-            Text = Lang.KeysMap[LangId.Menu_MnuScaleToHeight],
-            ConfigBinding = nameof(Config.ZoomMode),
-            ConfigBindingValue = ZoomMode.ScaleToHeight.ToString(),
-            OnClick = new(LangId.Menu_MnuScaleToHeight, API.IG_SetZoomMode, nameof(ZoomMode.ScaleToHeight)),
+            Id = $"Btn_{nameof(IgThemeIcon.FlipVert)}",
+            Image = nameof(IgThemeIcon.FlipVert),
+            Text = Lang.KeysMap[LangId.Menu_MnuFlipVertical],
+            OnClick = new(LangId.Menu_MnuFlipVertical, API.IG_FlipImage, nameof(FlipOptions.Vertical)),
         },
-        // scale to fit
+        // crop
         new() {
-            Id = $"Btn_{nameof(IgThemeIcon.ScaleToFit)}",
-            Image = nameof(IgThemeIcon.ScaleToFit),
-            Text = Lang.KeysMap[LangId.Menu_MnuScaleToFit],
-            ConfigBinding = nameof(Config.ZoomMode),
-            ConfigBindingValue = ZoomMode.ScaleToFit.ToString(),
-            OnClick = new(LangId.Menu_MnuScaleToFit, API.IG_SetZoomMode, nameof(ZoomMode.ScaleToFit)),
+            Id = $"Btn_{nameof(IgThemeIcon.Crop)}",
+            Image = nameof(IgThemeIcon.Crop),
+            Text = Lang.KeysMap[LangId.Menu_MnuCropTool],
+            ConfigBinding = nameof(Config.LastOpenedTool),
+            ConfigBindingValue = CropImageToolControl.TOOL_ID,
+            OnClick = new(LangId.Menu_MnuCropTool, API.IG_ToggleTool, CropImageToolControl.TOOL_ID),
         },
-        // scale to fill
+        // color picker
         new() {
-            Id = $"Btn_{nameof(IgThemeIcon.ScaleToFill)}",
-            Image = nameof(IgThemeIcon.ScaleToFill),
-            Text = Lang.KeysMap[LangId.Menu_MnuScaleToFill],
-            ConfigBinding = nameof(Config.ZoomMode),
-            ConfigBindingValue = ZoomMode.ScaleToFill.ToString(),
-            OnClick = new(LangId.Menu_MnuScaleToFill, API.IG_SetZoomMode, nameof(ZoomMode.ScaleToFill)),
+            Id = $"Btn_{nameof(IgThemeIcon.ColorPicker)}",
+            Image = nameof(IgThemeIcon.ColorPicker),
+            Text = Lang.KeysMap[LangId.Menu_MnuColorPicker],
+            ConfigBinding = nameof(Config.LastOpenedTool),
+            ConfigBindingValue = ColorPickerToolControl.TOOL_ID,
+            OnClick = new(LangId.Menu_MnuColorPicker, API.IG_ToggleTool, ColorPickerToolControl.TOOL_ID),
         },
         ToolbarItemModel.Separator,
 
@@ -258,6 +250,15 @@ public partial class Config
             ConfigBinding = nameof(Config.EnableFullScreen),
             ConfigBindingValue = "True",
             OnClick = new(LangId.Menu_MnuFullScreen, API.IG_ToggleFullScreen),
+        },
+        // toggle slildeshow
+        new() {
+            Id = $"Btn_{nameof(IgThemeIcon.Slideshow)}",
+            Image = nameof(IgThemeIcon.Slideshow),
+            Text = Lang.KeysMap[LangId.Menu_MnuSlideshow],
+            ConfigBinding = nameof(Config.EnableSlideshow),
+            ConfigBindingValue = "True",
+            OnClick = new(LangId.Menu_MnuSlideshow, API.IG_ToggleSlideshow),
         },
         ToolbarItemModel.Separator,
 

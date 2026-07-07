@@ -2839,6 +2839,7 @@ public partial class AppAPIProvider
                 }
 
                 ToolHost.CloseCurrentTool();
+                Core.Config.LastOpenedTool = "";
             }
             else
             {
@@ -2850,6 +2851,9 @@ public partial class AppAPIProvider
                     var control = adapter.CreateToolControl(Viewer);
                     ToolRegistry.LoadToolSettings(control);
                     ToolHost.OpenTool(control);
+
+                    // save current tool setting if it's open
+                    Core.Config.LastOpenedTool = control.ToolId;
                 }
             }
         }
@@ -2884,6 +2888,9 @@ public partial class AppAPIProvider
                 var control = adapter.CreateToolControl(Viewer);
                 ToolRegistry.LoadToolSettings(control);
                 ToolHost.OpenTool(control);
+
+                // save current tool setting if it's open
+                Core.Config.LastOpenedTool = control.ToolId;
             }
         }
         else
@@ -2925,6 +2932,7 @@ public partial class AppAPIProvider
         }
 
         ToolHost.CloseTool(toolId);
+        Core.Config.LastOpenedTool = "";
     }
 
 

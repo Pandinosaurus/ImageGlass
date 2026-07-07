@@ -302,13 +302,6 @@ public partial class MainWindow : PhWindow
         Core.Config.LastSeenImagePath = Core.Photos.CurrentFilePath;
         Core.Config.ZoomLockValue = PART_MainView.PART_Viewer.ZoomFactor * 100f;
 
-        // save current tool setting if it's open
-        var currentToolId = PART_MainView.PART_ToolHost.Tool?.ToolId ?? string.Empty;
-        var currentTool = Core.ToolRegistry.Get(currentToolId);
-        Core.Config.LastOpenedTool = (currentTool is not null && !currentTool.IsHosted)
-            ? string.Empty
-            : currentToolId;
-
         // save settings for the current hosted tool
         if (PART_MainView.PART_ToolHost.Tool is ITool toolToSave)
         {
