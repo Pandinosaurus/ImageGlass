@@ -329,11 +329,9 @@ public partial class SettingsWindowView : PhControl
         PART_Sidebar.AddHandler(PointerReleasedEvent, Sidebar_PointerReleased, RoutingStrategies.Tunnel);
         PART_Sidebar.Tapped += Sidebar_Tapped;
 
-        // default selection: restore the last opened page, else the first item
-        var restoreId = _navItems.Any(i => i.NavId == Core.Config.LastOpenedSetting)
-            ? Core.Config.LastOpenedSetting
-            : _navItems[0].NavId;
-        NavigateTo(restoreId);
+        // baseline selection: the first item; a specific page/config is restored
+        // afterwards via NavigateToConfig (IG_OpenSettings supplies the target)
+        NavigateTo(_navItems[0].NavId);
     }
 
 
@@ -364,15 +362,21 @@ public partial class SettingsWindowView : PhControl
 
 
     /// <summary>
-    /// Navigates to the page hosting the given config id and scrolls to it.
-    /// No-op when the config id is unknown / not registered.
+    /// Navigates to the given target. A registered config id jumps to the setting on its
+    /// page; otherwise the value is treated as a page nav id (e.g. the restored last opened
+    /// page). No-op when the target matches neither.
     /// </summary>
     public void NavigateToConfig(string? configId)
     {
-        var item = _vm.Registry.FindByConfigId(configId);
-        if (item is null) return;
+        // a config id -> jump to the setting on its page
+        if (_vm.Registry.FindByConfigId(configId) is { } item)
+        {
+            JumpToSetting(item);
+            return;
+        }
 
-        JumpToSetting(item);
+        // otherwise a page nav id -> just show the page
+        if (_navItems.Any(i => i.NavId == configId)) NavigateTo(configId!);
     }
 
 
