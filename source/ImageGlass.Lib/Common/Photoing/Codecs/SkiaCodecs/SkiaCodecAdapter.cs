@@ -84,7 +84,10 @@ public sealed class SkiaCodecAdapter : PhDisposable, ICodec
     public bool CanDecode(PhotoMetadata metadata, CodecSelectionContext context)
     {
         if (metadata is null || metadata.IsVector) return false;
-        if (!context.IsDestColorProfileSupported) return false;
+        // An unsupported dest profile (e.g. CMYK) routes single-frame decode to Magick so it
+        // can bake the profile. But Magick decode is single-frame only, so animated images must
+        // stay on Skia (which builds the animator) or they lose animation.
+        if (!context.IsDestColorProfileSupported && metadata.FrameCount <= 1) return false;
         if (context.LoadRawThumbnailOnly || context.LoadOtherThumbnailOnly) return false;
         if (Array.IndexOf(_supportedExtensions, metadata.FileExtension) < 0) return false;
 
