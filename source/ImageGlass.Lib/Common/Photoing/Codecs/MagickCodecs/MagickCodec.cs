@@ -109,6 +109,7 @@ public static partial class MagickCodec
             settings.SetDefines(new HeicReadDefines()
             {
                 MaxChildrenPerBox = 500,
+                MaxItems = 2000, // Issue https://github.com/d2phap/ImageGlass/issues/2354
             });
         }
         else if (ext.Equals(".JP2", StringComparison.OrdinalIgnoreCase))
@@ -810,13 +811,18 @@ public static partial class MagickCodec
     /// </summary>
     /// <param name="srcFilePath">The full path of source file</param>
     /// <param name="destFolder">The destination folder to save to</param>
-    public static async IAsyncEnumerable<(int FrameNumber, int FrameCount, string FileName)> SaveFramesAsync(string srcFilePath,
-        string destFolder, [EnumeratorCancellation] CancellationToken token = default)
+    public static async IAsyncEnumerable<(int FrameNumber, int FrameCount, string FileName)> SaveFramesAsync(string srcFilePath, string destFolder, [EnumeratorCancellation] CancellationToken token = default)
     {
         // create dirs unless it does not exist
         Directory.CreateDirectory(destFolder);
 
-        using var imgColl = new MagickImageCollection(srcFilePath);
+        // create settings to decode all frames
+        var settings = ParseSettings(new PhotoReadOptions()
+        {
+            FrameIndex = -1,
+        }, false, srcFilePath);
+
+        using var imgColl = new MagickImageCollection(srcFilePath, settings);
         var frameCount = imgColl.Count;
         var index = 0;
 
