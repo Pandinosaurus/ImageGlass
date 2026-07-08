@@ -197,6 +197,17 @@ public partial class Config : PhReactive
     }
 
     /// <summary>
+    /// Gets or sets a value indicating whether navigation automatically switches to the next/previous
+    /// sibling directory (that contains images) when reaching the end/start of the current image list.
+    /// Takes precedence over <see cref="EnableLoopBackNavigation"/> at the list boundary.
+    /// </summary>
+    public bool EnableAutoSwitchSiblingDir
+    {
+        get => Get(ConfigId.EnableAutoSwitchSiblingDir, false);
+        set => Set(ConfigId.EnableAutoSwitchSiblingDir, value);
+    }
+
+    /// <summary>
     /// Gets, sets value indicating that multi instances is allowed.
     /// </summary>
     public bool EnableMultiInstances

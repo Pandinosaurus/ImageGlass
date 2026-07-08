@@ -47,6 +47,7 @@ public enum ConfigId
     EnableFrameless,
     EnableFullScreen,
     EnableLoopBackNavigation,
+    EnableAutoSwitchSiblingDir,
     EnableMultiInstances,
     EnableWindowTopMost,
     EnableFreePan,

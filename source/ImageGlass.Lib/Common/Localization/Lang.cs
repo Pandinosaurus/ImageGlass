@@ -470,6 +470,8 @@ public class Lang
         new(LangId._Loading, "Loading…"), // v3.0
         new(LangId._ReachedFirstImage, "Reached the first image"), // v4.0
         new(LangId._ReachedLastImage, "Reached the last image"), // v4.0
+        new(LangId._SwitchedToNextFolder, "Switched to next folder\r\n{0}"), // v10.0
+        new(LangId._SwitchedToPreviousFolder, "Switched to previous folder\r\n{0}"), // v10.0
         new(LangId._ClipboardImage, "Clipboard image"), //v9.0
         new(LangId._FolderAccessPrompt, "Allow ImageGlass to access this folder to browse other images"), //v10.0
 
@@ -816,6 +818,7 @@ public class Lang
         new(LangId.Settings_EnableImageFolderGrouping, "Group images by directory"),
         new(LangId.Settings_EnableHiddenImagesLoading, "Load hidden images"),
         new(LangId.Settings_EnableLoopBackNavigation, "Loop back to the first image when reaching the end of the image list"),
+        new(LangId.Settings_EnableAutoSwitchSiblingDir, "Switch to the sibling folder at the start/end of the list"),
         new(LangId.Settings_EnableImagePreview, "Display image preview while it's being loaded"),
 
         new(LangId.Settings_ImagePreview, "Image preview"),

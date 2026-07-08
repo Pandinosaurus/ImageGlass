@@ -914,7 +914,19 @@ public partial class AppAPIProvider
             ? Core.Config.EnableLoopSlideshow
             : Core.Config.EnableLoopBackNavigation;
 
-        if (!Core.Photos.GetByStep(step, canLoopBack, out var photo))
+        // jumping to a sibling folder at the boundary takes precedence over loop-back (not in slideshow),
+        // so detect the true boundary first by disabling loop-back for the probe
+        var autoSwitchDir = Core.Config.EnableAutoSwitchSiblingDir && !Core.Config.EnableSlideshow;
+
+        var reachedBoundary = !Core.Photos.GetByStep(step, autoSwitchDir ? false : canLoopBack, out var photo);
+        if (reachedBoundary && autoSwitchDir)
+        {
+            // try the sibling directory; if none found, fall back to normal loop-back handling
+            if (TryOpenSiblingDir(step)) return;
+            reachedBoundary = !Core.Photos.GetByStep(step, canLoopBack, out photo);
+        }
+
+        if (reachedBoundary)
         {
             var isFirst = Core.Photos.CurrentIndex == 0;
 
@@ -941,6 +953,46 @@ public partial class AppAPIProvider
                 slideshow.ResetInterval();
             }
         }
+    }
+
+
+    /// <summary>
+    /// At a navigation boundary, opens the next/previous sibling directory that contains images.
+    /// Forward navigation lands on the first image; backward navigation lands on the last image.
+    /// </summary>
+    /// <returns><c>false</c> if no suitable sibling directory is found.</returns>
+    private static bool TryOpenSiblingDir(int step)
+    {
+        var direction = step >= 0 ? 1 : -1;
+        var currentDir = Path.GetDirectoryName(Core.Photos.CurrentFilePath);
+
+        var siblingDir = BHelper.GetSiblingDir(currentDir, direction, Core.Config.FileFormats);
+        if (string.IsNullOrEmpty(siblingDir)) return false;
+
+        // forward -> first image (null lands on index 0); backward -> last image
+        var targetFile = direction < 0
+            ? BHelper.GetImageFilesInDir(siblingDir, Core.Config.FileFormats).LastOrDefault()
+            : null;
+
+        // announce the switch once the new photo has loaded; showing it earlier would be wiped
+        // by the load pipeline, which clears the in-app message on PhotoState.Loaded
+        void OnPhotoLoaded(ViewerControl s, PhotoLoadingEventArgs e)
+        {
+            if (e.State != PhotoState.Loaded && e.Photo.Error is null) return;
+
+            Viewer.PhotoLoading -= OnPhotoLoaded;
+            if (e.Photo.Error is not null) return;
+
+            _ = Message.ShowAsync(Core.Lang[direction < 0
+                ? LangId._SwitchedToPreviousFolder
+                : LangId._SwitchedToNextFolder, siblingDir]);
+        }
+        Viewer.PhotoLoading += OnPhotoLoaded;
+
+        App.MainWindow.PART_MainView.PrepareLoadPhotoList([siblingDir],
+            currentFilePath: targetFile, disposeForegroundShell: true, reloadInitPhoto: true);
+
+        return true;
     }
 
 

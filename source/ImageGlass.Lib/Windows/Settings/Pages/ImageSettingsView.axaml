@@ -46,6 +46,9 @@
             <CheckBox x:Name="PART_LoopBack">
                 <ui:PhTextBlock LangKey="Settings_EnableLoopBackNavigation" TextWrapping="Wrap" />
             </CheckBox>
+            <CheckBox x:Name="PART_AutoSwitchSiblingDir">
+                <ui:PhTextBlock LangKey="Settings_EnableAutoSwitchSiblingDir" TextWrapping="Wrap" />
+            </CheckBox>
 
 
             <!--  Sub-group: Image preview  -->

@@ -114,6 +114,8 @@ public enum LangId
     _Loading,
     _ReachedFirstImage,
     _ReachedLastImage,
+    _SwitchedToNextFolder,
+    _SwitchedToPreviousFolder,
     _ClipboardImage,
     _FolderAccessPrompt,
 
@@ -460,6 +462,7 @@ public enum LangId
     Settings_EnableImageFolderGrouping,
     Settings_EnableHiddenImagesLoading,
     Settings_EnableLoopBackNavigation,
+    Settings_EnableAutoSwitchSiblingDir,
     Settings_EnableImagePreview,
 
     Settings_ImagePreview,

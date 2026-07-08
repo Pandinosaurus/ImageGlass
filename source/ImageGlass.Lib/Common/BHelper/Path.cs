@@ -271,6 +271,92 @@ public partial class BHelper
 
 
     /// <summary>
+    /// Gets the next (<paramref name="direction"/> = <c>+1</c>) or previous (<c>-1</c>) sibling
+    /// directory relative to <paramref name="currentPath"/> that directly contains at least one
+    /// image with an allowed extension. Empty/unreadable siblings are skipped.
+    /// </summary>
+    /// <param name="currentPath">A directory path, or an image file path (its folder is used).</param>
+    /// <param name="direction"><c>+1</c> for next, <c>-1</c> for previous.</param>
+    /// <param name="allowedExtensions">Allowed extensions with a leading dot (e.g. <c>.jpg</c>).</param>
+    /// <returns>Full path of the sibling directory, or <c>null</c> if none is found.</returns>
+    public static string? GetSiblingDir(string? currentPath, int direction, ICollection<string> allowedExtensions)
+    {
+        if (string.IsNullOrEmpty(currentPath)) return null;
+
+        // accept a file path too: use its containing folder
+        var currentDir = CheckPath(currentPath) == PathType.File
+            ? Path.GetDirectoryName(currentPath)
+            : currentPath;
+        if (string.IsNullOrEmpty(currentDir)) return null;
+
+        currentDir = currentDir.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        var parentDir = Directory.GetParent(currentDir)?.FullName;
+        if (string.IsNullOrEmpty(parentDir)) return null;
+
+        try
+        {
+            var siblingDirs = Directory.GetDirectories(parentDir)
+                .OrderBy(d => d, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            var currentIndex = siblingDirs.FindIndex(d =>
+                string.Equals(d.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar),
+                    currentDir, StringComparison.OrdinalIgnoreCase));
+            if (currentIndex < 0) return null;
+
+            for (var i = currentIndex + direction; i >= 0 && i < siblingDirs.Count; i += direction)
+            {
+                if (DirContainsImage(siblingDirs[i], allowedExtensions)) return siblingDirs[i];
+            }
+        }
+        catch (UnauthorizedAccessException) { }
+        catch (IOException) { }
+
+        return null;
+    }
+
+
+    /// <summary>
+    /// Checks whether <paramref name="dir"/> directly contains a file whose extension is in
+    /// <paramref name="allowedExtensions"/> (extensions include the leading dot, e.g. <c>.jpg</c>).
+    /// </summary>
+    public static bool DirContainsImage(string? dir, ICollection<string> allowedExtensions)
+    {
+        if (string.IsNullOrEmpty(dir)) return false;
+
+        try
+        {
+            foreach (var file in Directory.EnumerateFiles(dir))
+            {
+                if (allowedExtensions.Contains(Path.GetExtension(file))) return true;
+            }
+        }
+        catch { }
+
+        return false;
+    }
+
+
+    /// <summary>
+    /// Returns the image file paths (matching <paramref name="allowedExtensions"/>) directly inside
+    /// <paramref name="dir"/>, ordered by name (case-insensitive). Empty on error.
+    /// </summary>
+    public static List<string> GetImageFilesInDir(string? dir, ICollection<string> allowedExtensions)
+    {
+        if (string.IsNullOrEmpty(dir)) return [];
+
+        try
+        {
+            return Directory.EnumerateFiles(dir)
+                .Where(f => allowedExtensions.Contains(Path.GetExtension(f)))
+                .OrderBy(f => f, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+        }
+        catch { return []; }
+    }
+
+
+    /// <summary>
     /// Resolves a relative/protocol/link path to absolute path.
     /// </summary>
     public static string ResolvePath(string? inputPath)
