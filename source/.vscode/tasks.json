@@ -76,28 +76,28 @@
     {
       "label": "publish-win-x64",
       "type": "shell",
-      "command": "dotnet publish '${workspaceFolder}/ImageGlass.Win32/ImageGlass.Win32.csproj' -c Release -r win-x64 -p:Platform=x64 -o '${workspaceFolder}/artifacts/publish/win-x64'; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; Copy-Item -Path '${workspaceFolder}/_assets/_app/*' -Destination '${workspaceFolder}/artifacts/publish/win-x64' -Recurse -Force",
+      "command": "dotnet publish '${workspaceFolder}/ImageGlass.Win32/ImageGlass.Win32.csproj' -c Release -r win-x64 -p:Platform=x64 -o '${workspaceFolder}/__artifacts/publish/win-x64'; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; Copy-Item -Path '${workspaceFolder}/__assets/__app/*' -Destination '${workspaceFolder}/__artifacts/publish/win-x64' -Recurse -Force",
       "problemMatcher": "$msCompile",
       "group": "build"
     },
     {
       "label": "publish-win-arm64",
       "type": "shell",
-      "command": "dotnet publish '${workspaceFolder}/ImageGlass.Win32/ImageGlass.Win32.csproj' -c Release -r win-arm64 -p:Platform=ARM64 -o '${workspaceFolder}/artifacts/publish/win-arm64'; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; Copy-Item -Path '${workspaceFolder}/_assets/_app/*' -Destination '${workspaceFolder}/artifacts/publish/win-arm64' -Recurse -Force",
+      "command": "dotnet publish '${workspaceFolder}/ImageGlass.Win32/ImageGlass.Win32.csproj' -c Release -r win-arm64 -p:Platform=ARM64 -o '${workspaceFolder}/__artifacts/publish/win-arm64'; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; Copy-Item -Path '${workspaceFolder}/__assets/__app/*' -Destination '${workspaceFolder}/__artifacts/publish/win-arm64' -Recurse -Force",
       "problemMatcher": "$msCompile",
       "group": "build"
     },
     {
       "label": "publish-linux-x64",
       "type": "shell",
-      "command": "dotnet publish '${workspaceFolder}/ImageGlass.Linux/ImageGlass.Linux.csproj' -c Release -r linux-x64 -p:Platform=x64 -p:PublishAot=true -p:PublishSingleFile=true -p:PublishTrimmed=true -o '${workspaceFolder}/artifacts/publish/linux-x64' --self-contained true && cp -r '${workspaceFolder}/_assets/_app/.' '${workspaceFolder}/artifacts/publish/linux-x64/'",
+      "command": "dotnet publish '${workspaceFolder}/ImageGlass.Linux/ImageGlass.Linux.csproj' -c Release -r linux-x64 -p:Platform=x64 -p:PublishAot=true -p:PublishSingleFile=true -p:PublishTrimmed=true -o '${workspaceFolder}/__artifacts/publish/linux-x64' --self-contained true && cp -r '${workspaceFolder}/__assets/__app/.' '${workspaceFolder}/__artifacts/publish/linux-x64/'",
       "problemMatcher": "$msCompile",
       "group": "build"
     },
     {
       "label": "publish-mac-arm64",
       "type": "shell",
-      "command": "dotnet publish '${workspaceFolder}/ImageGlass.Mac/ImageGlass.Mac.csproj' -c Release -r osx-arm64 -p:Platform=ARM64 -p:PublishAot=true -p:PublishSingleFile=true -p:PublishTrimmed=true -o '${workspaceFolder}/artifacts/publish/osx-arm64' --self-contained true && cp -r '${workspaceFolder}/_assets/_app/.' '${workspaceFolder}/artifacts/publish/osx-arm64/'",
+      "command": "dotnet publish '${workspaceFolder}/ImageGlass.Mac/ImageGlass.Mac.csproj' -c Release -r osx-arm64 -p:Platform=ARM64 -p:PublishAot=true -p:PublishSingleFile=true -p:PublishTrimmed=true -o '${workspaceFolder}/__artifacts/publish/osx-arm64' --self-contained true && cp -r '${workspaceFolder}/__assets/__app/.' '${workspaceFolder}/__artifacts/publish/osx-arm64/'",
       "problemMatcher": "$msCompile",
       "group": "build"
     },
@@ -109,7 +109,7 @@
       "type": "process",
       "command": "/bin/bash",
       "args": [
-        "${workspaceFolder}/_assets/mac/script-pack-mac-arm64-app.sh"
+        "${workspaceFolder}/__assets/mac/script-pack-mac-arm64-app.sh"
       ],
       "problemMatcher": [],
       "dependsOn": [
@@ -123,7 +123,7 @@
       "type": "process",
       "command": "/bin/bash",
       "args": [
-        "${workspaceFolder}/_assets/mac/script-pack-mac-arm64-dmg.sh"
+        "${workspaceFolder}/__assets/mac/script-pack-mac-arm64-dmg.sh"
       ],
       "problemMatcher": [],
       "dependsOn": [
@@ -137,7 +137,7 @@
       "type": "process",
       "command": "/bin/bash",
       "args": [
-        "${workspaceFolder}/_assets/mac/script-pack-mac-arm64-pkg-appstore.sh"
+        "${workspaceFolder}/__assets/mac/script-pack-mac-arm64-pkg-appstore.sh"
       ],
       "problemMatcher": [],
       "dependsOn": [
@@ -151,7 +151,7 @@
       "type": "process",
       "command": "/bin/bash",
       "args": [
-        "${workspaceFolder}/_assets/linux/script-pack-linux-x64-flatpak.sh"
+        "${workspaceFolder}/__assets/linux/script-pack-linux-x64-flatpak.sh"
       ],
       "options": {
         "env": {
@@ -178,7 +178,7 @@
         "-ExecutionPolicy",
         "Bypass",
         "-File",
-        "${workspaceFolder}/_assets/win/script-pack-win-msix.ps1",
+        "${workspaceFolder}/__assets/win/script-pack-win-msix.ps1",
         "-Platform",
         "x64",
         "-Sign"
@@ -195,7 +195,7 @@
         "-ExecutionPolicy",
         "Bypass",
         "-File",
-        "${workspaceFolder}/_assets/win/script-pack-win-msix.ps1",
+        "${workspaceFolder}/__assets/win/script-pack-win-msix.ps1",
         "-Platform",
         "arm64",
         "-Sign"
@@ -212,7 +212,7 @@
         "-ExecutionPolicy",
         "Bypass",
         "-File",
-        "${workspaceFolder}/_assets/win/script-pack-win-msix.ps1",
+        "${workspaceFolder}/__assets/win/script-pack-win-msix.ps1",
         "-Bundle"
       ],
       "problemMatcher": [],

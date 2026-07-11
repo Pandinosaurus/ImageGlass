@@ -15,7 +15,7 @@ every payload `.exe`/`.dll` *and* the package itself.
 
 - [`script-pack-win-msix.ps1`](script-pack-win-msix.ps1) — the packer (PowerShell 7+).
 - [`script-generate-msix-assets.ps1`](script-generate-msix-assets.ps1) — renders the
-  `Assets-signed` logo set from [`_assets/logo_c_512.png`](../logo_c_512.png).
+  `Assets-signed` logo set from [`__assets/logo_c_512.png`](../logo_c_512.png).
 - [`appxmanifest/AppxManifest.xml`](appxmanifest/AppxManifest.xml) — manifest template
   with `{{...}}` placeholders filled in at pack time.
 - [`appxmanifest/Assets-msstore/`](appxmanifest/Assets-msstore/) — Store artwork (used by the msstore build).
@@ -35,19 +35,19 @@ Run from VS Code (Terminal -> Run Task) or the CLI:
 
 ```powershell
 # Microsoft Store (unsigned)
-pwsh _assets/win/script-pack-win-msix.ps1 -Platform x64
-pwsh _assets/win/script-pack-win-msix.ps1 -Platform arm64
+pwsh __assets/win/script-pack-win-msix.ps1 -Platform x64
+pwsh __assets/win/script-pack-win-msix.ps1 -Platform arm64
 
 # GitHub Release (signed; cert selected by Subject substring)
-pwsh _assets/win/script-pack-win-msix.ps1 -Platform x64   -Sign
-pwsh _assets/win/script-pack-win-msix.ps1 -Platform arm64 -Sign
+pwsh __assets/win/script-pack-win-msix.ps1 -Platform x64   -Sign
+pwsh __assets/win/script-pack-win-msix.ps1 -Platform arm64 -Sign
 
 # One .msixbundle holding BOTH x64 + arm64
-pwsh _assets/win/script-pack-win-msix.ps1 -Bundle -Sign   # signed, for GitHub
-pwsh _assets/win/script-pack-win-msix.ps1 -Bundle         # unsigned, for the Store
+pwsh __assets/win/script-pack-win-msix.ps1 -Bundle -Sign   # signed, for GitHub
+pwsh __assets/win/script-pack-win-msix.ps1 -Bundle         # unsigned, for the Store
 
 # Sign with a PFX instead of a store certificate
-pwsh _assets/win/script-pack-win-msix.ps1 -Platform x64 -Sign -CertFile C:\ig.pfx -CertPassword <pw>
+pwsh __assets/win/script-pack-win-msix.ps1 -Platform x64 -Sign -CertFile C:\ig.pfx -CertPassword <pw>
 ```
 
 VS Code tasks:
@@ -56,7 +56,7 @@ VS Code tasks:
 - **Microsoft Store:** `pack-win-msstore-msixbundle` — one unsigned `.msixbundle` (x64 + arm64).
 - **Everything:** `pack-win-all` — builds all three.
 
-Output lands in `artifacts/dist/`:
+Output lands in `__artifacts/dist/`:
 
 - `ImageGlass_<version>_win-x64.msix` / `..._win-arm64.msix` — signed, for GitHub.
 - `ImageGlass_<version>_win-msstore.msixbundle` — unsigned bundle, for the Store.
@@ -79,7 +79,7 @@ a trust chain) but **not** package-signed — only the `.msixbundle` itself is s
   ([`ImageGlass.Lib/Common/Types/Const.cs`](../../ImageGlass.Lib/Common/Types/Const.cs)).
   If that list changes, update the `<uap:FileType>` entries in the manifest template.
 - **Signed artwork.** `Assets-signed` is generated from the app logo. Re-run
-  `script-generate-msix-assets.ps1` after changing `_assets/logo_c_512.png`; it mirrors
+  `script-generate-msix-assets.ps1` after changing `__assets/logo_c_512.png`; it mirrors
   the `Assets-msstore` filename set so the manifest resolves identically.
 - **Publisher must match the certificate.** For the signed build the script reads
   the certificate's exact Subject DN and writes it into the manifest `Publisher`;
@@ -88,4 +88,4 @@ a trust chain) but **not** package-signed — only the `.msixbundle` itself is s
 - **No certificate?** The signed build is still produced, just left UNSIGNED (with
   a warning). Sign it before publishing — an unsigned MSIX cannot be installed.
 - **Faster iteration.** Pass `-SkipPublish` to reuse an existing
-  `artifacts/publish/win-<arch>` instead of re-publishing.
+  `__artifacts/publish/win-<arch>` instead of re-publishing.

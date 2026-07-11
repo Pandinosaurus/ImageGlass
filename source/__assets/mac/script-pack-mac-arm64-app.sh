@@ -2,12 +2,12 @@
 set -euo pipefail
 
 WORKSPACE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-PUBLISH_DIR="$WORKSPACE_DIR/artifacts/publish/osx-arm64"
-APP_DIR="$WORKSPACE_DIR/artifacts/bundle/osx-arm64/ImageGlass.app"
+PUBLISH_DIR="$WORKSPACE_DIR/__artifacts/publish/osx-arm64"
+APP_DIR="$WORKSPACE_DIR/__artifacts/bundle/osx-arm64/ImageGlass.app"
 CONTENTS_DIR="$APP_DIR/Contents"
 INFO_PLIST="$CONTENTS_DIR/Info.plist"
 BUILD_PROPS_FILE="$WORKSPACE_DIR/Directory.Build.props"
-ICON_SOURCE_FILE="$WORKSPACE_DIR/_assets/mac/logo.icns"
+ICON_SOURCE_FILE="$WORKSPACE_DIR/__assets/mac/logo.icns"
 ICON_TARGET_FILE="$CONTENTS_DIR/Resources/logo.icns"
 
 IG_VERSION="$(sed -n 's:.*<IgVersion>\(.*\)</IgVersion>.*:\1:p' "$BUILD_PROPS_FILE" | head -n 1)"
@@ -52,7 +52,7 @@ mkdir -p "$CONTENTS_DIR/MacOS" "$CONTENTS_DIR/Resources"
 cp -R "$PUBLISH_DIR/." "$CONTENTS_DIR/MacOS/"
 cp "$ICON_SOURCE_FILE" "$ICON_TARGET_FILE"
 
-INFO_PLIST_TEMPLATE="$WORKSPACE_DIR/_assets/mac/Info.plist"
+INFO_PLIST_TEMPLATE="$WORKSPACE_DIR/__assets/mac/Info.plist"
 
 sed -e "s/\${IG_VERSION}/$IG_VERSION/g" \
     -e "s/\${IG_SHORT_VERSION}/$IG_SHORT_VERSION/g" \

@@ -11,7 +11,7 @@
             The Store re-signs the package itself, so it is built UNSIGNED and
             carries the Store-reserved Identity (Name + Publisher) and the
             Store-supplied artwork (appxmanifest/Assets-msstore).
-            Output: artifacts/dist/ImageGlass_<label>_win-<arch>-msstore.msix
+            Output: __artifacts/dist/ImageGlass_<label>_win-<arch>-msstore.msix
 
       * SIGNED    (-Sign)    -> for direct download / GitHub Releases (sideload).
             Every payload .exe / .dll is Authenticode-signed, then the whole .msix
@@ -21,7 +21,7 @@
             (appxmanifest/Assets-signed).
             If NO signing certificate is found, the package is still built (same
             identity/artwork) but left UNSIGNED — sign it later before publishing.
-            Output: artifacts/dist/ImageGlass_<label>_win-<arch>.msix
+            Output: __artifacts/dist/ImageGlass_<label>_win-<arch>.msix
 
     Both flavours share the same package version: Major.Minor (from
     <IgBundleShortVersion>) . <IgBundleBuild> . 0 — e.g. 10.0.535.0. The 4th
@@ -69,26 +69,26 @@
     <Major>.<Minor>.<IgBundleBuild>.0 derived from Directory.Build.props.
 
 .PARAMETER SkipPublish
-    Reuse the existing artifacts/publish/win-<arch> output instead of re-publishing
+    Reuse the existing __artifacts/publish/win-<arch> output instead of re-publishing
     (faster iteration; the package may not reflect uncommitted source changes).
 
 .EXAMPLE
-    pwsh _assets/win/script-pack-win-msix.ps1 -Platform x64
+    pwsh __assets/win/script-pack-win-msix.ps1 -Platform x64
     # Unsigned x64 package for the Microsoft Store (msstore).
 
 .EXAMPLE
-    pwsh _assets/win/script-pack-win-msix.ps1 -Platform arm64 -Sign
+    pwsh __assets/win/script-pack-win-msix.ps1 -Platform arm64 -Sign
     # Signed arm64 package for GitHub Releases (cert selected by Subject).
 
 .EXAMPLE
-    pwsh _assets/win/script-pack-win-msix.ps1 -Platform x64 -Sign -CertFile C:\ig.pfx -CertPassword hunter2
+    pwsh __assets/win/script-pack-win-msix.ps1 -Platform x64 -Sign -CertFile C:\ig.pfx -CertPassword hunter2
 
 .EXAMPLE
-    pwsh _assets/win/script-pack-win-msix.ps1 -Bundle -Sign
+    pwsh __assets/win/script-pack-win-msix.ps1 -Bundle -Sign
     # Signed x64+arm64 .msixbundle for GitHub Releases.
 
 .EXAMPLE
-    pwsh _assets/win/script-pack-win-msix.ps1 -Bundle
+    pwsh __assets/win/script-pack-win-msix.ps1 -Bundle
     # Unsigned x64+arm64 .msixbundle for the Microsoft Store.
 #>
 
@@ -132,8 +132,8 @@ $ManifestTpl  = Join-Path $PSScriptRoot 'appxmanifest\AppxManifest.xml'
 # Signed build uses logos rendered from the app logo; msstore uses the
 # Store-supplied artwork. (Regenerate the signed set with script-generate-msix-assets.ps1.)
 $AssetsDir    = Join-Path $PSScriptRoot ($Sign ? 'appxmanifest\Assets-signed' : 'appxmanifest\Assets-msstore')
-$AppExtras    = Join-Path $WorkspaceDir '_assets\_app'
-$DistDir      = Join-Path $WorkspaceDir 'artifacts\dist'
+$AppExtras    = Join-Path $WorkspaceDir '__assets\__app'
+$DistDir      = Join-Path $WorkspaceDir '__artifacts\dist'
 
 # --- Helpers -------------------------------------------------------------------
 
@@ -228,8 +228,8 @@ function Invoke-SignTool([string]$SignTool, [string[]]$Files) {
 function New-MsixPackage([string]$Platform, [string]$OutMsixPath) {
     $rid         = "win-$Platform"
     $msbuildPlat = if ($Platform -eq 'x64') { 'x64' } else { 'ARM64' }
-    $publishDir  = Join-Path $WorkspaceDir "artifacts\publish\$rid"
-    $stagingDir  = Join-Path $WorkspaceDir "artifacts\bundle\$rid-msix"
+    $publishDir  = Join-Path $WorkspaceDir "__artifacts\publish\$rid"
+    $stagingDir  = Join-Path $WorkspaceDir "__artifacts\bundle\$rid-msix"
     $payloadDir  = Join-Path $stagingDir 'ImageGlass'
 
     Write-Host ''
@@ -383,7 +383,7 @@ if (Test-Path $outArtifact) { Remove-Item $outArtifact -Force }
 if ($Bundle) {
     # Build each arch into a clean input dir (makeappx bundle /d requires a folder
     # holding ONLY the packages to bundle), then bundle them.
-    $bundleInput = Join-Path $WorkspaceDir 'artifacts\bundle\win-msixbundle-input'
+    $bundleInput = Join-Path $WorkspaceDir '__artifacts\bundle\win-msixbundle-input'
     if (Test-Path $bundleInput) { Remove-Item $bundleInput -Recurse -Force }
     New-Item -ItemType Directory -Path $bundleInput -Force | Out-Null
 

@@ -2,13 +2,13 @@
 #
 # Package the prebuilt Linux build of ImageGlass for Flatpak.
 #
-#   1. Tars the publish output (artifacts/publish/linux-x64) into a release
+#   1. Tars the publish output (__artifacts/publish/linux-x64) into a release
 #      archive, stripping debug symbols.
 #   2. Writes the download URL + sha256 into the Flatpak manifest.
 #   3. If flatpak-builder is available: builds a single-file .flatpak bundle
 #      (for direct download / GitHub Releases) and installs it locally to test.
 #
-# Run after the publish-linux-x64 task. Distribution steps: _assets/linux/flatpak/README.md
+# Run after the publish-linux-x64 task. Distribution steps: __assets/linux/flatpak/README.md
 #
 # Env overrides:
 #   RELEASE_TAG=10.0.2.66-beta-2   tag used to build the GitHub download URL
@@ -20,10 +20,10 @@
 set -euo pipefail
 
 WORKSPACE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-PUBLISH_DIR="$WORKSPACE_DIR/artifacts/publish/linux-x64"
-FLATPAK_DIR="$WORKSPACE_DIR/_assets/linux/flatpak"
-DIST_DIR="$WORKSPACE_DIR/artifacts/dist"
-BUILD_ROOT="$WORKSPACE_DIR/artifacts/bundle/linux-flatpak"
+PUBLISH_DIR="$WORKSPACE_DIR/__artifacts/publish/linux-x64"
+FLATPAK_DIR="$WORKSPACE_DIR/__assets/linux/flatpak"
+DIST_DIR="$WORKSPACE_DIR/__artifacts/dist"
+BUILD_ROOT="$WORKSPACE_DIR/__artifacts/bundle/linux-flatpak"
 STATE_DIR="$BUILD_ROOT/.flatpak-builder"
 BUILD_PROPS_FILE="$WORKSPACE_DIR/Directory.Build.props"
 MANIFEST="$FLATPAK_DIR/io.github.d2phap.imageglass.yaml"
@@ -64,7 +64,7 @@ dotnet publish "$WORKSPACE_DIR/ImageGlass.Linux/ImageGlass.Linux.csproj" \
 	-c Release -r linux-x64 -p:Platform=x64 \
 	-p:PublishAot=true -p:PublishSingleFile=true -p:PublishTrimmed=true \
 	-o "$PUBLISH_DIR" --self-contained true
-cp -r "$WORKSPACE_DIR/_assets/_app/." "$PUBLISH_DIR/"
+cp -r "$WORKSPACE_DIR/__assets/__app/." "$PUBLISH_DIR/"
 
 if [[ ! -x "$PUBLISH_DIR/ImageGlass" ]]; then
 	echo "Error: publish did not produce $PUBLISH_DIR/ImageGlass" >&2
@@ -72,11 +72,11 @@ if [[ ! -x "$PUBLISH_DIR/ImageGlass" ]]; then
 fi
 
 # --- Prepare app-id-named icons from the shared assets ---
-if [[ -f "$WORKSPACE_DIR/_assets/logo_c.svg" ]]; then
-	cp "$WORKSPACE_DIR/_assets/logo_c.svg" "$FLATPAK_DIR/$APP_ID.svg"
+if [[ -f "$WORKSPACE_DIR/__assets/logo_c.svg" ]]; then
+	cp "$WORKSPACE_DIR/__assets/logo_c.svg" "$FLATPAK_DIR/$APP_ID.svg"
 fi
-if [[ -f "$WORKSPACE_DIR/_assets/logo_c_512.png" ]]; then
-	cp "$WORKSPACE_DIR/_assets/logo_c_512.png" "$FLATPAK_DIR/$APP_ID.png"
+if [[ -f "$WORKSPACE_DIR/__assets/logo_c_512.png" ]]; then
+	cp "$WORKSPACE_DIR/__assets/logo_c_512.png" "$FLATPAK_DIR/$APP_ID.png"
 fi
 
 # --- Stage the payload and build the tarball ---
@@ -164,7 +164,7 @@ else
 	fi
 
 	# Build into a repo (for the bundle) and install for the current user (to test).
-	# --state-dir keeps the build cache under artifacts/ instead of the repo root.
+	# --state-dir keeps the build cache under __artifacts/ instead of the repo root.
 	# --disable-cache is REQUIRED: the single module is a local tarball whose name is
 	# constant (app.tar.gz) but whose contents change every release. Without it,
 	# flatpak-builder matches the cached module build and ships the OLD binary even
@@ -214,4 +214,4 @@ if [[ "$BUNDLE_BUILT" == "1" ]]; then
 fi
 echo ""
 echo "Next: upload both files to the '$RELEASE_TAG' GitHub release, then submit"
-echo "      the manifest to Flathub (see _assets/linux/flatpak/README.md)."
+echo "      the manifest to Flathub (see __assets/linux/flatpak/README.md)."

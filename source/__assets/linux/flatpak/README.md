@@ -7,7 +7,7 @@ Files used to build and distribute ImageGlass as a Flatpak.
 | `io.github.d2phap.imageglass.yaml` | Flatpak manifest (submitted to Flathub). |
 | `io.github.d2phap.imageglass.metainfo.xml` | AppStream metadata (required by Flathub). |
 | `io.github.d2phap.imageglass.desktop` | Desktop launcher entry. |
-| `io.github.d2phap.imageglass.svg` / `.png` | Icons, generated from `_assets/logo_c.*` by the pack script. |
+| `io.github.d2phap.imageglass.svg` / `.png` | Icons, generated from `__assets/logo_c.*` by the pack script. |
 
 Build script: [`../script-pack-linux-x64-flatpak.sh`](../script-pack-linux-x64-flatpak.sh) (VS Code task: `pack-linux-x64-flatpak`).
 
@@ -24,10 +24,10 @@ sudo apt install flatpak-builder
 flatpak install -y flathub org.freedesktop.Platform//25.08 org.freedesktop.Sdk//25.08
 
 # publish first (VS Code task: publish-linux-x64), then:
-bash _assets/linux/script-pack-linux-x64-flatpak.sh
+bash __assets/linux/script-pack-linux-x64-flatpak.sh
 ```
 
-Outputs to `artifacts/dist/`:
+Outputs to `__artifacts/dist/`:
 
 - `ImageGlass_<version>_linux-x64.tar.gz` — payload the Flathub manifest points at.
 - `ImageGlass_<version>_linux-x64.flatpak` — single-file bundle for direct install.
@@ -52,7 +52,7 @@ To sign the bundle, generate a key once and pass it via `GPG_KEY`:
 
 ```bash
 gpg --quick-generate-key "ImageGlass Release Signing" default default never
-GPG_KEY="<your-key-id-or-email>" bash _assets/linux/script-pack-linux-x64-flatpak.sh
+GPG_KEY="<your-key-id-or-email>" bash __assets/linux/script-pack-linux-x64-flatpak.sh
 ```
 
 Signing is optional for a single-file bundle; users can install it either way.

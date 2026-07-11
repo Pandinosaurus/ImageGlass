@@ -27,11 +27,11 @@ SIGN_IDENTITY="${SIGN_IDENTITY:-Developer ID Application: Phap Duong (7DV5HBKZ58
 NOTARY_PROFILE="${NOTARY_PROFILE:-imageglass-notary}"
 
 WORKSPACE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-APP_DIR="$WORKSPACE_DIR/artifacts/bundle/osx-arm64/ImageGlass.app"
-ENTITLEMENTS_FILE="$WORKSPACE_DIR/_assets/mac/ImageGlass.entitlements"
+APP_DIR="$WORKSPACE_DIR/__artifacts/bundle/osx-arm64/ImageGlass.app"
+ENTITLEMENTS_FILE="$WORKSPACE_DIR/__assets/mac/ImageGlass.entitlements"
 BUILD_PROPS_FILE="$WORKSPACE_DIR/Directory.Build.props"
-DMG_STAGING_DIR="$WORKSPACE_DIR/artifacts/bundle/osx-arm64/dmg-staging"
-OUTPUT_DIR="$WORKSPACE_DIR/artifacts/dist"
+DMG_STAGING_DIR="$WORKSPACE_DIR/__artifacts/bundle/osx-arm64/dmg-staging"
+OUTPUT_DIR="$WORKSPACE_DIR/__artifacts/dist"
 
 # ---------------------------------------------------------------------------
 # Sanity checks

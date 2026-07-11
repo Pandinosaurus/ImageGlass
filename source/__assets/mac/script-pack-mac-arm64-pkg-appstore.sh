@@ -16,14 +16,14 @@
 #          certificate at developer.apple.com and import it.
 #   3. A Mac App Store provisioning profile bound to the Apple Distribution cert
 #      and the App ID com.duongdieuphap.imageglass, saved to:
-#        _assets/mac/appstore/ImageGlass_AppStore.provisionprofile
+#        __assets/mac/appstore/ImageGlass_AppStore.provisionprofile
 #
 # Run AFTER the app bundle exists (task: pack-mac-arm64-app).
 #
 # To also upload to App Store Connect, set UPLOAD=1 and provide credentials:
 #   UPLOAD=1 APPLE_ID="you@example.com" APPLE_APP_PASSWORD="app-specific-pw" \
 #       ./script-pack-mac-arm64-pkg-appstore.sh
-# (Or omit UPLOAD and submit artifacts/dist/*.pkg via the Transporter app.)
+# (Or omit UPLOAD and submit __artifacts/dist/*.pkg via the Transporter app.)
 
 set -euo pipefail
 
@@ -34,11 +34,11 @@ APP_SIGN_IDENTITY="${APP_SIGN_IDENTITY:-Apple Distribution: Phap Duong (7DV5HBKZ
 INSTALLER_SIGN_IDENTITY="${INSTALLER_SIGN_IDENTITY:-3rd Party Mac Developer Installer: Phap Duong (7DV5HBKZ58)}"
 
 WORKSPACE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-APP_DIR="$WORKSPACE_DIR/artifacts/bundle/osx-arm64/ImageGlass.app"
-ENTITLEMENTS_FILE="$WORKSPACE_DIR/_assets/mac/appstore/ImageGlass.AppStore.entitlements"
-PROVISION_PROFILE="${PROVISION_PROFILE:-$WORKSPACE_DIR/_assets/mac/appstore/ImageGlass_AppStore.provisionprofile}"
+APP_DIR="$WORKSPACE_DIR/__artifacts/bundle/osx-arm64/ImageGlass.app"
+ENTITLEMENTS_FILE="$WORKSPACE_DIR/__assets/mac/appstore/ImageGlass.AppStore.entitlements"
+PROVISION_PROFILE="${PROVISION_PROFILE:-$WORKSPACE_DIR/__assets/mac/appstore/ImageGlass_AppStore.provisionprofile}"
 BUILD_PROPS_FILE="$WORKSPACE_DIR/Directory.Build.props"
-OUTPUT_DIR="$WORKSPACE_DIR/artifacts/dist"
+OUTPUT_DIR="$WORKSPACE_DIR/__artifacts/dist"
 
 UPLOAD="${UPLOAD:-0}"
 
