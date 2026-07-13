@@ -303,12 +303,19 @@ public static class Core
 
 
     /// <summary>
+    /// The background plugin-discovery task; completes once startup discovery finishes. Awaited
+    /// before opening a file whose type isn't yet supported, so a still-loading codec plugin can claim it.
+    /// </summary>
+    public static Task PluginDiscoveryTask { get; private set; } = Task.CompletedTask;
+
+
+    /// <summary>
     /// Discovers native plugins from the <c>_plugins</c> directory and registers their codecs.
     /// Runs on a background thread to avoid blocking app startup.
     /// </summary>
     public static void DiscoverPlugins()
     {
-        _ = Task.Run(() =>
+        PluginDiscoveryTask = Task.Run(() =>
         {
             var pluginsDir = BHelper.ConfigDir(Dir.Plugins);
 
@@ -334,15 +341,11 @@ public static class Core
             }
 
             // On the UI thread (discovery runs on a background thread): purge any plugin extensions
-            // older versions baked into the persisted config, then refresh the list so plugin-
-            // supported files in the current folder appear now that the codecs are registered.
+            // older versions baked into the persisted config. The list isn't reloaded here (it would
+            // race the initial open); the startup open awaits PluginDiscoveryTask instead.
             if (pluginExtensions.Count > 0)
             {
-                Dispatcher.UIThread.Post(() =>
-                {
-                    Config.PurgePluginFileFormats(pluginExtensions);
-                    AppAPIProvider.IG_ReloadList();
-                });
+                Dispatcher.UIThread.Post(() => Config.PurgePluginFileFormats(pluginExtensions));
             }
         });
     }

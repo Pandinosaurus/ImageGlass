@@ -763,7 +763,7 @@ public partial class MainWindowView : PhControl
 
     #region Control Methods
 
-    private void LoadImagesFromCmdArgs()
+    private async void LoadImagesFromCmdArgs()
     {
         var pathToLoad = Core.InputImagePathFromArgs;
 
@@ -788,6 +788,15 @@ public partial class MainWindowView : PhControl
             }
         }
 
+        // a non-built-in type may be handled by a codec plugin still loading in the background; wait
+        // for discovery so an explicitly-opened plugin-format file opens instead of being skipped
+        var ext = Path.GetExtension(pathToLoad);
+        if (!string.IsNullOrEmpty(ext)
+            && !Config.DefaultFileFormats.Contains(ext, StringComparer.OrdinalIgnoreCase))
+        {
+            try { await Core.PluginDiscoveryTask; } catch { }
+        }
+
         // start loading path with the foreground shell
         PrepareLoadPhotoList([pathToLoad],
             currentFilePath: null, disposeForegroundShell: false, reloadInitPhoto: true);
@@ -809,10 +818,16 @@ public partial class MainWindowView : PhControl
 
         Dispatcher.UIThread.Post(async () =>
         {
+            // always honor an explicitly-opened file's type, even if its codec plugin hasn't
+            // finished loading yet, so it is listed + selected instead of being filtered out
+            var allowedExts = Core.GetSupportedFileExtensions();
+            AddFileExtension(allowedExts, currentFilePath);
+            foreach (var p in inputPaths) AddFileExtension(allowedExts, p);
+
             // start loading files
             var searchOptions = new FileSearchOptions()
             {
-                AllowedExtensions = Core.GetSupportedFileExtensions(),
+                AllowedExtensions = allowedExts,
                 UseExplorerSortOrder = Core.Config.EnableExplorerSortOrder,
                 ForegroundShell = foregroundShell,
                 SearchSubDirectories = Core.Config.EnableSubfoldersLoading,
@@ -829,6 +844,18 @@ public partial class MainWindowView : PhControl
                 _ = ViewPhotoAsync(initPhoto);
             }
         });
+    }
+
+
+    /// <summary>
+    /// Adds a file path's extension to the allowed-extensions set (no-op for a directory or empty path).
+    /// </summary>
+    private static void AddFileExtension(HashSet<string> exts, string? path)
+    {
+        if (string.IsNullOrEmpty(path)) return;
+
+        var ext = Path.GetExtension(path);
+        if (!string.IsNullOrEmpty(ext)) exts.Add(ext);
     }
 
 
