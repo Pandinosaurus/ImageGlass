@@ -311,6 +311,35 @@ public sealed unsafe class PluginRegistry : PhDisposable
 
 
     /// <summary>
+    /// Returns <c>true</c> if a plugin with the given id is currently loaded.
+    /// </summary>
+    public bool IsLoaded(string pluginId)
+    {
+        lock (_lock)
+        {
+            return _plugins.ContainsKey(pluginId);
+        }
+    }
+
+
+    /// <summary>
+    /// Hot-unloads a loaded plugin (Shutdown + free library); returns <c>false</c> if not loaded.
+    /// Outstanding buffers are gated by <c>PluginLiveToken</c>, so late releases safely no-op.
+    /// </summary>
+    public bool UnloadPlugin(string pluginId)
+    {
+        NativePlugin? handle;
+        lock (_lock)
+        {
+            if (!_plugins.Remove(pluginId, out handle)) return false;
+        }
+
+        try { handle.Dispose(); } catch { }
+        return true;
+    }
+
+
+    /// <summary>
     /// Builds <see cref="NativeCodecProxy"/> instances for every codec advertised by the plugin.
     /// </summary>
     internal IEnumerable<NativeCodecProxy> CreateProxies(NativePlugin handle)

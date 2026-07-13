@@ -27,6 +27,7 @@ using ImageGlass.Common.Photoing;
 using ImageGlass.Common.ServiceProviders;
 using ImageGlass.Common.Types;
 using ImageGlass.Plugins;
+using ImageGlass.SDK.Plugins;
 using ImageGlass.SDK.Tools;
 using ImageGlass.Tools;
 using ImageGlass.UI.Viewer;
@@ -36,6 +37,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ImageGlass.Common;
@@ -322,26 +324,11 @@ public static class Core
             {
                 try
                 {
-                    // Loads a single plugin and registers all of its codecs into the registry.
-                    var handle = PluginRegistry.LoadAndProbe(manifest, dir);
-                    if (handle is null) continue;
-
-                    foreach (var proxy in PluginRegistry.CreateProxies(handle))
-                    {
-                        try
-                        {
-                            CodecRegistry.Register(proxy);
-                            pluginExtensions.AddRange(proxy.SupportedExtensions);
-                        }
-                        catch (Exception ex)
-                        {
-                            Debug.WriteLine($"[Core.DiscoverNativePlugins] register '{proxy.CodecId}' failed: {ex.Message}");
-                        }
-                    }
+                    RegisterPluginCodecs(manifest, dir, pluginExtensions);
                 }
                 catch (Exception ex)
                 {
-                    Debug.WriteLine($"[Core.DiscoverNativePlugins] '{manifest.Id}' failed: {ex.Message}");
+                    Debug.WriteLine($"[Core.DiscoverPlugins] '{manifest.Id}' failed: {ex.Message}");
                 }
             }
 
@@ -351,6 +338,113 @@ public static class Core
                 Dispatcher.UIThread.Post(() => Config.MergeFileFormats(pluginExtensions));
             }
         });
+    }
+
+
+    // Loaded plugin id -> its registered proxies, so a hot-disable can unregister exactly those.
+    private static readonly Dictionary<string, List<NativeCodecProxy>> _pluginProxies = new(StringComparer.Ordinal);
+    private static readonly Lock _pluginProxiesLock = new();
+
+
+    /// <summary>
+    /// Loads one plugin, registers its codecs, tracks the proxies for hot-unload, and collects their
+    /// extensions. Returns <c>true</c> if any codec registered. Thread-safe; may run off the UI thread.
+    /// </summary>
+    private static bool RegisterPluginCodecs(PluginManifest manifest, string dir, List<string> pluginExtensions)
+    {
+        var handle = PluginRegistry.LoadAndProbe(manifest, dir);
+        if (handle is null) return false;
+
+        var proxies = new List<NativeCodecProxy>();
+        foreach (var proxy in PluginRegistry.CreateProxies(handle))
+        {
+            try
+            {
+                CodecRegistry.Register(proxy);
+                proxies.Add(proxy);
+                pluginExtensions.AddRange(proxy.SupportedExtensions);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[Core.RegisterPluginCodecs] register '{proxy.CodecId}' failed: {ex.Message}");
+            }
+        }
+
+        if (proxies.Count == 0) return false;
+
+        lock (_pluginProxiesLock)
+        {
+            _pluginProxies[manifest.Id] = proxies;
+        }
+        return true;
+    }
+
+
+    /// <summary>
+    /// Hot-loads a plugin just enabled (after <c>PluginTrustPolicy.TrustAsync</c>) and reloads the
+    /// current photo. Returns <c>false</c> if it could not be loaded (quarantined, ABI mismatch, ...).
+    /// </summary>
+    public static async Task<bool> EnablePluginAsync(PluginManifest manifest, string pluginDir)
+    {
+        if (PluginRegistry.IsLoaded(manifest.Id)) return true;
+
+        var extensions = new List<string>();
+
+        // native load + SHA-256 hashing is I/O; keep it off the UI thread
+        var loaded = await Task.Run(() => RegisterPluginCodecs(manifest, pluginDir, extensions));
+        if (!loaded) return false;
+
+        var added = extensions.Count > 0 ? Config.MergeFileFormats(extensions) : [];
+
+        Photos.ClearCache();
+        InvalidateCodecsAndReload();
+
+        // a new format widens the browsable set -> rebuild the image list too
+        if (added.Count > 0) AppAPIProvider.IG_ReloadList();
+
+        return true;
+    }
+
+
+    /// <summary>
+    /// Hot-unloads a plugin the user just disabled (after <c>PluginTrustPolicy.DisableAsync</c>):
+    /// unregisters its codecs, frees the native library, and reloads the current photo.
+    /// </summary>
+    public static void DisablePlugin(string pluginId)
+    {
+        // free cached plugin buffers + cancel caching before the library is unloaded
+        Photos.ClearCache();
+
+        List<NativeCodecProxy>? proxies;
+        lock (_pluginProxiesLock)
+        {
+            _pluginProxies.Remove(pluginId, out proxies);
+        }
+
+        if (proxies is not null)
+        {
+            foreach (var proxy in proxies)
+            {
+                CodecRegistry.Unregister(proxy);
+                proxy.Dispose();
+            }
+        }
+
+        // frees the native library; late buffer releases are gated by PluginLiveToken
+        PluginRegistry.UnloadPlugin(pluginId);
+
+        InvalidateCodecsAndReload();
+    }
+
+
+    /// <summary>
+    /// Drops the codec-selection caches and reloads the current photo (keeping zoom + pan) so a
+    /// plugin enable/disable takes effect immediately.
+    /// </summary>
+    private static void InvalidateCodecsAndReload()
+    {
+        CodecRegistry.InvalidateSelectionCaches();
+        AppAPIProvider.IG_Reload(false);
     }
 
 

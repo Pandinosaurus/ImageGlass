@@ -94,6 +94,30 @@ public sealed class CodecRegistry : PhDisposable
 
 
     /// <summary>
+    /// Removes a codec from selection and clears the caches (does not dispose it); returns
+    /// <c>true</c> if present. Used to hot-unregister a disabled plugin's codec.
+    /// </summary>
+    public bool Unregister(ICodec codec)
+    {
+        ArgumentNullException.ThrowIfNull(codec);
+
+        lock (_lock)
+        {
+            var removed = _codecs.RemoveAll(c => ReferenceEquals(c, codec)) > 0;
+            if (!removed) return false;
+
+            _metadataCodecs.RemoveAll(c => ReferenceEquals(c, codec));
+            _decodeCodecs.RemoveAll(c => ReferenceEquals(c, codec));
+
+            // the removed codec may be a cached winner
+            _metadataCodecByExt.Clear();
+            _decodeCodecByExt.Clear();
+            return true;
+        }
+    }
+
+
+    /// <summary>
     /// Selects the first registered codec that can load metadata for the specified file.
     /// </summary>
     public ICodec? SelectMetadataCodec(string filePath)

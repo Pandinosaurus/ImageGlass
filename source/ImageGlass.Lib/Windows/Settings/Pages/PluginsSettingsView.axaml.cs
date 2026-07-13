@@ -135,8 +135,8 @@ public partial class PluginsSettingsView : SettingsPageView
         ReloadPlugins();
         RebuildTable();
 
-        // Newly installed plugins land untrusted (disabled); the user must review and enable
-        // them, then restart. Loading only happens at startup.
+        // Newly installed plugins land untrusted (disabled); the user must review and enable them.
+        // Enabling hot-loads the plugin (no restart needed).
         if (installed > 0)
         {
             PART_InstallHint.Text = Core.Lang[LangId.Settings_Plugins_InstallSuccess]
@@ -314,13 +314,12 @@ public partial class PluginsSettingsView : SettingsPageView
         // Click (not IsCheckedChanged) so the initial IsChecked assignment doesn't fire it
         toggle.Click += async (_, _) =>
         {
-            var changed = state == PluginTrustPolicy.TrustState.Trusted
+            _ = state == PluginTrustPolicy.TrustState.Trusted
                 ? await DisablePluginAsync(plugin)
                 : await EditPluginAsync(plugin);
 
-            // rebuild to reflect the real state (also reverts the toggle if the user cancelled)
+            // rebuild to reflect the real state (reverts the toggle if the user cancelled)
             RebuildTable();
-            if (changed) ShowRestartHint();
         };
 
         return PhTableControl.WrapCell(toggle);
@@ -330,7 +329,7 @@ public partial class PluginsSettingsView : SettingsPageView
     /// <summary>
     /// Opens the plugin info window; for a trusted plugin it offers [Disable], otherwise the
     /// trust-and-enable consent prompt (a missing plugin is view-only). Applies the chosen action
-    /// and returns <c>true</c> if the trust state changed (restart required).
+    /// live (hot load/unload) and returns <c>true</c> if the trust state changed.
     /// </summary>
     private async Task<bool> EditPluginAsync((PluginManifest Manifest, string Dir) plugin)
     {
@@ -349,10 +348,23 @@ public partial class PluginsSettingsView : SettingsPageView
 
         return mode switch
         {
-            PluginInfoWindowMode.Enable => await PluginTrustPolicy.TrustAsync(plugin.Manifest, plugin.Dir),
+            PluginInfoWindowMode.Enable => await EnablePluginAsync(plugin),
             PluginInfoWindowMode.Disable => await DisablePluginAsync(plugin),
             _ => false,
         };
+    }
+
+
+    /// <summary>
+    /// Trusts + enables the plugin, then hot-loads it so its codecs take effect without a restart.
+    /// Returns <c>true</c> if the trust state changed.
+    /// </summary>
+    private static async Task<bool> EnablePluginAsync((PluginManifest Manifest, string Dir) plugin)
+    {
+        if (!await PluginTrustPolicy.TrustAsync(plugin.Manifest, plugin.Dir)) return false;
+
+        await Core.EnablePluginAsync(plugin.Manifest, plugin.Dir);
+        return true;
     }
 
 
@@ -419,33 +431,24 @@ public partial class PluginsSettingsView : SettingsPageView
 
     /// <summary>
     /// Runs the edit flow for the plugin (from the Edit action or the name link), then rebuilds the
-    /// table and hints that a restart is required when the trust state changed.
+    /// table. The enable/disable takes effect live, so no restart hint is shown.
     /// </summary>
     private async Task EditAndRefreshAsync((PluginManifest Manifest, string Dir) plugin)
     {
-        var changed = await EditPluginAsync(plugin);
+        _ = await EditPluginAsync(plugin);
         RebuildTable();
-        if (changed) ShowRestartHint();
     }
 
 
     /// <summary>
-    /// Disables the plugin and returns <c>true</c> (the trust state changed, so a restart is required).
+    /// Disables the plugin and hot-unloads it so it stops taking effect without a restart.
+    /// Returns <c>true</c> (the trust state changed).
     /// </summary>
     private static async Task<bool> DisablePluginAsync((PluginManifest Manifest, string Dir) plugin)
     {
         await PluginTrustPolicy.DisableAsync(plugin.Manifest.Id);
+        Core.DisablePlugin(plugin.Manifest.Id);
         return true;
-    }
-
-
-    /// <summary>
-    /// Shows the "restart required" hint below the table.
-    /// </summary>
-    private void ShowRestartHint()
-    {
-        PART_InstallHint.Text = Core.Lang[LangId.Settings_Plugins_RestartRequired];
-        PART_HintContainer.IsVisible = true;
     }
 
 
