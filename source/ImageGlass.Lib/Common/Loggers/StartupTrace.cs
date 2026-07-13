@@ -46,7 +46,7 @@ public static class StartupTrace
     private static readonly Stopwatch _sw = Stopwatch.StartNew();
     private static readonly List<(long Ms, string Name, int Tid)> _marks = new(32);
     private static readonly Lock _lock = new();
-    private static bool _flushed;
+    private static int _flushedCount;
 
 
     /// <summary>
@@ -89,9 +89,7 @@ public static class StartupTrace
 
 
     /// <summary>
-    /// Writes the recorded marks (with per-step deltas) to the debug output and appends one block to file
-    /// in the config dir. Writes at most once per run (call it from the last  startup step).
-    /// No-op when tracing is disabled.
+    /// Writes marks recorded since the last flush; incremental so later calls capture new marks.
     /// </summary>
     public static void Flush()
     {
@@ -99,28 +97,31 @@ public static class StartupTrace
 
         lock (_lock)
         {
-            if (_flushed) return;
-            _flushed = true;
+            if (_flushedCount >= _marks.Count) return;
 
-            var lines = new List<string>(_marks.Count + 3)
-            {
-                $"===== ImageGlass startup trace @ PID {Environment.ProcessId} =====",
-            };
+            var lines = new List<string>(_marks.Count - _flushedCount + 2);
 
-            // OS-launch -> first mark estimate (meaningful for native single-file AOT: no extraction)
-            try
+            // header + process-start estimate on the first flush only
+            if (_flushedCount == 0)
             {
-                var startToNow = DateTime.Now - Process.GetCurrentProcess().StartTime;
-                lines.Add($"   (process start -> first mark ~ {startToNow.TotalMilliseconds,7:0.0} ms)");
+                lines.Add($"===== ImageGlass startup trace @ PID {Environment.ProcessId} =====");
+                try
+                {
+                    var startToNow = DateTime.Now - Process.GetCurrentProcess().StartTime;
+                    lines.Add($"   (process start -> first mark ~ {startToNow.TotalMilliseconds,7:0.0} ms)");
+                }
+                catch { }
             }
-            catch { }
 
-            long prev = 0;
-            foreach (var (ms, name, tid) in _marks)
+            // delta from the last already-flushed mark
+            var prev = _flushedCount > 0 ? _marks[_flushedCount - 1].Ms : 0;
+            for (var i = _flushedCount; i < _marks.Count; i++)
             {
+                var (ms, name, tid) = _marks[i];
                 lines.Add($"{ms,7} ms  (+{ms - prev,6} ms)  [t{tid}]  {name}");
                 prev = ms;
             }
+            _flushedCount = _marks.Count;
 
             foreach (var line in lines)
             {

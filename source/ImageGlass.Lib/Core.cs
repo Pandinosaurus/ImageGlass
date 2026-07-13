@@ -23,6 +23,7 @@ using Avalonia.Threading;
 using ImageGlass.Common.AppThemes;
 using ImageGlass.Common.Extensions;
 using ImageGlass.Common.Localization;
+using ImageGlass.Common.Loggers;
 using ImageGlass.Common.Photoing;
 using ImageGlass.Common.ServiceProviders;
 using ImageGlass.Common.Types;
@@ -317,6 +318,7 @@ public static class Core
     {
         PluginDiscoveryTask = Task.Run(() =>
         {
+            StartupTrace.Mark("plugins:discover:begin");
             var pluginsDir = BHelper.ConfigDir(Dir.Plugins);
 
             // reap stashed installs before any library loads
@@ -324,8 +326,7 @@ public static class Core
 
             var discovered = PluginRegistry.DiscoverManifests(pluginsDir);
 
-            // Extensions from registered codecs. NOT persisted into Config.FileFormats; they stay
-            // browsable only while the plugin is loaded (via GetSupportedFileExtensions).
+            // plugin codec exts; NOT persisted (browsable only while the plugin is loaded)
             var pluginExtensions = new List<string>();
 
             foreach (var (manifest, dir) in discovered)
@@ -340,13 +341,15 @@ public static class Core
                 }
             }
 
-            // On the UI thread (discovery runs on a background thread): purge any plugin extensions
-            // older versions baked into the persisted config. The list isn't reloaded here (it would
-            // race the initial open); the startup open awaits PluginDiscoveryTask instead.
+            StartupTrace.Mark("plugins:discover:end");
+
+            // purge legacy plugin exts from config; no list reload (races the initial open)
             if (pluginExtensions.Count > 0)
             {
                 Dispatcher.UIThread.Post(() => Config.PurgePluginFileFormats(pluginExtensions));
             }
+
+            StartupTrace.Flush();
         });
     }
 

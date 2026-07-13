@@ -788,13 +788,15 @@ public partial class MainWindowView : PhControl
             }
         }
 
-        // a non-built-in type may be handled by a codec plugin still loading in the background; wait
-        // for discovery so an explicitly-opened plugin-format file opens instead of being skipped
+        // a non-built-in type may need a codec plugin still loading; wait for discovery
         var ext = Path.GetExtension(pathToLoad);
         if (!string.IsNullOrEmpty(ext)
             && !Config.DefaultFileFormats.Contains(ext, StringComparer.OrdinalIgnoreCase))
         {
+            StartupTrace.Mark("plugins:await:begin");
             try { await Core.PluginDiscoveryTask; } catch { }
+            StartupTrace.Mark("plugins:await:end");
+            StartupTrace.Flush();
         }
 
         // start loading path with the foreground shell
@@ -818,8 +820,7 @@ public partial class MainWindowView : PhControl
 
         Dispatcher.UIThread.Post(async () =>
         {
-            // always honor an explicitly-opened file's type, even if its codec plugin hasn't
-            // finished loading yet, so it is listed + selected instead of being filtered out
+            // include the opened file's own type so it's listed even before its plugin loads
             var allowedExts = Core.GetSupportedFileExtensions();
             AddFileExtension(allowedExts, currentFilePath);
             foreach (var p in inputPaths) AddFileExtension(allowedExts, p);
