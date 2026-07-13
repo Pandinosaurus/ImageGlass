@@ -379,7 +379,7 @@ public partial class App : Application
             // extensions from arg (";"-joined), or all supported formats when omitted
             var extensions = args.Length >= 2
                 ? args[1].Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                : Core.Config.FileFormats.ToArray();
+                : Core.GetSupportedFileExtensions().ToArray();
 
             if (Core.ShellProvider is not null)
             {

@@ -18,6 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 using Avalonia.Controls;
 using Avalonia.Platform.Storage;
+using Avalonia.VisualTree;
 using ImageGlass.Common.Localization;
 using ImageGlass.Common.Types;
 using ImageGlass.Plugins;
@@ -326,6 +327,13 @@ public partial class PluginsSettingsView : SettingsPageView
 
 
     /// <summary>
+    /// Scrolls to and highlights the row of the plugin with the given id (from the File type
+    /// associations page's plugin-codec link).
+    /// </summary>
+    public void FocusPlugin(string pluginId) => PART_Table.FlashRow(pluginId);
+
+
+    /// <summary>
     /// Opens the plugin info window; for a trusted plugin it offers [Disable], otherwise the
     /// trust-and-enable consent prompt (a missing plugin is view-only). Applies the chosen action
     /// live (hot load/unload) and returns <c>true</c> if the trust state changed.
@@ -463,6 +471,9 @@ public partial class PluginsSettingsView : SettingsPageView
 
         PART_Table.EmptyText = Core.Lang[LangId._Empty];
         PART_Table.Build(columns, rows);
+
+        // keep the File type associations page's codec/plugin rows in sync with plugin changes
+        this.FindAncestorOfType<SettingsWindowView>()?.NotifyPluginsChanged();
     }
 
 

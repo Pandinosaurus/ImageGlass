@@ -317,7 +317,8 @@ public static class Core
 
             var discovered = PluginRegistry.DiscoverManifests(pluginsDir);
 
-            // Extensions from registered codecs, merged into Config.FileFormats after discovery.
+            // Extensions from registered codecs. NOT persisted into Config.FileFormats; they stay
+            // browsable only while the plugin is loaded (via GetSupportedFileExtensions).
             var pluginExtensions = new List<string>();
 
             foreach (var (manifest, dir) in discovered)
@@ -332,10 +333,16 @@ public static class Core
                 }
             }
 
-            // Merge on the UI thread; discovery runs on a background thread.
+            // On the UI thread (discovery runs on a background thread): purge any plugin extensions
+            // older versions baked into the persisted config, then refresh the list so plugin-
+            // supported files in the current folder appear now that the codecs are registered.
             if (pluginExtensions.Count > 0)
             {
-                Dispatcher.UIThread.Post(() => Config.MergeFileFormats(pluginExtensions));
+                Dispatcher.UIThread.Post(() =>
+                {
+                    Config.PurgePluginFileFormats(pluginExtensions);
+                    AppAPIProvider.IG_ReloadList();
+                });
             }
         });
     }
@@ -394,13 +401,14 @@ public static class Core
         var loaded = await Task.Run(() => RegisterPluginCodecs(manifest, pluginDir, extensions));
         if (!loaded) return false;
 
-        var added = extensions.Count > 0 ? Config.MergeFileFormats(extensions) : [];
+        // plugin formats are not persisted; purge any leftovers older versions baked in
+        if (extensions.Count > 0) Config.PurgePluginFileFormats(extensions);
 
         Photos.ClearCache();
         InvalidateCodecsAndReload();
 
-        // a new format widens the browsable set -> rebuild the image list too
-        if (added.Count > 0) AppAPIProvider.IG_ReloadList();
+        // the plugin's formats are now live -> rebuild the image list so they become browsable
+        if (extensions.Count > 0) AppAPIProvider.IG_ReloadList();
 
         return true;
     }
@@ -434,6 +442,32 @@ public static class Core
         PluginRegistry.UnloadPlugin(pluginId);
 
         InvalidateCodecsAndReload();
+    }
+
+
+    /// <summary>
+    /// Returns the effective set of supported image extensions: the persisted
+    /// <see cref="Config.FileFormats"/> unioned with the extensions contributed by all currently
+    /// loaded codec plugins. Plugin extensions are intentionally kept out of the persisted config
+    /// so they disappear when a plugin is disabled or removed; this is the set to use for file
+    /// listing, watching, picking, and default-viewer association.
+    /// </summary>
+    public static HashSet<string> GetSupportedFileExtensions()
+    {
+        var set = new HashSet<string>(Config.FileFormats, StringComparer.OrdinalIgnoreCase);
+
+        lock (_pluginProxiesLock)
+        {
+            foreach (var proxies in _pluginProxies.Values)
+            {
+                foreach (var proxy in proxies)
+                {
+                    foreach (var ext in proxy.SupportedExtensions) set.Add(ext);
+                }
+            }
+        }
+
+        return set;
     }
 
 

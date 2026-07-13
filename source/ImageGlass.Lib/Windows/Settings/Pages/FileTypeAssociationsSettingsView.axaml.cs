@@ -47,10 +47,12 @@ public partial class FileTypeAssociationsSettingsView : SettingsPageView
     // the hosting page's scroll viewer, used to size the table to the remaining viewport height
     private ScrollViewer? _pageScroll;
 
-    // working copy of supported formats (always includes plugin formats); staged into the VM on change
+    // working copy of the user/built-in formats (persisted to Config.FileFormats); staged on change.
+    // plugin formats are NOT included here, so they are never baked into the saved config.
     private readonly HashSet<string> _exts = new(StringComparer.OrdinalIgnoreCase);
 
-    // extensions claimed by codec plugins: always shown and not removable by the user
+    // extensions contributed by loaded codec plugins: shown as extra (non-removable) rows,
+    // never staged into Config.FileFormats
     private readonly HashSet<string> _pluginExts = new(StringComparer.OrdinalIgnoreCase);
 
     // codec snapshot (ordered by decode priority, highest first) for the "Codec" column
@@ -197,25 +199,19 @@ public partial class FileTypeAssociationsSettingsView : SettingsPageView
     #region File formats
 
     /// <summary>
-    /// Loads the working copy of supported formats (config + plugin formats) and wires
-    /// the Add / Reset buttons and the formats table.
+    /// Loads the working copy of the user/built-in formats (the plugin formats are tracked
+    /// separately for display) and wires the Add / Reset buttons and the formats table.
     /// </summary>
     private void BuildFileFormats()
     {
-        // codec snapshot + plugin-claimed extensions (always shown, not removable)
-        _codecs = Core.CodecRegistry.GetCodecInfos();
-        foreach (var codec in _codecs)
-        {
-            if (!codec.IsPlugin) continue;
-            foreach (var ext in codec.SupportedExtensions) _pluginExts.Add(ext);
-        }
+        SnapshotCodecs();
 
-        // copy the staged/config formats so edits don't mutate the live config before commit,
-        // then always merge in the plugin formats
+        // copy the staged/config formats (user/built-in set) so edits don't mutate the live config
+        // before commit. Plugin formats are deliberately NOT merged in here: they are shown from
+        // _pluginExts but never staged, so disabling/removing a plugin drops its formats.
         var stored = VM.GetValue(ConfigId.FileFormats,
             new HashSet<string>(Config.DefaultFileFormats, StringComparer.OrdinalIgnoreCase));
         foreach (var ext in stored) _exts.Add(ext);
-        foreach (var ext in _pluginExts) _exts.Add(ext);
 
         PART_Table.MinHeight = MIN_TABLE_HEIGHT;
 
@@ -280,11 +276,11 @@ public partial class FileTypeAssociationsSettingsView : SettingsPageView
 
 
     /// <summary>
-    /// Removes a (non-plugin) extension from the working copy and re-renders.
+    /// Removes a user/built-in extension from the working copy and re-renders. Plugin-provided
+    /// formats have no Delete action, so this is only ever called for a removable format.
     /// </summary>
     private void DeleteExtension(string ext)
     {
-        if (_pluginExts.Contains(ext)) return;
         if (!_exts.Remove(ext)) return;
 
         StageFormats();
@@ -293,13 +289,13 @@ public partial class FileTypeAssociationsSettingsView : SettingsPageView
 
 
     /// <summary>
-    /// Resets the formats to the built-in defaults, always keeping the plugin formats.
+    /// Resets the formats to the built-in defaults. Plugin formats are unaffected (they are shown
+    /// separately and never part of the persisted set).
     /// </summary>
     private void ResetFormats()
     {
         _exts.Clear();
         foreach (var ext in Config.DefaultFileFormats) _exts.Add(ext);
-        foreach (var ext in _pluginExts) _exts.Add(ext);
 
         StageFormats();
         RebuildTable();
@@ -307,8 +303,9 @@ public partial class FileTypeAssociationsSettingsView : SettingsPageView
 
 
     /// <summary>
-    /// Rebuilds the formats table (order number, extension, codec + a Delete action for non-plugin
-    /// formats), sorted by extension, and updates the total count.
+    /// Rebuilds the formats table (order number, extension, codec + a Delete action for user
+    /// formats), sorted by extension, and updates the total count. The rows are the user/built-in
+    /// formats plus the formats contributed by loaded plugins.
     /// </summary>
     private void RebuildTable()
     {
@@ -319,9 +316,13 @@ public partial class FileTypeAssociationsSettingsView : SettingsPageView
             new() { Header = Core.Lang[LangId._Codec], Star = true },
         ];
 
+        // full supported set = user/built-in formats + the formats contributed by loaded plugins
+        var all = new HashSet<string>(_exts, StringComparer.OrdinalIgnoreCase);
+        foreach (var ext in _pluginExts) all.Add(ext);
+
         // filtered (by extension or codec name) + sorted by extension ascending
         var q = _filter.Trim();
-        var sorted = _exts
+        var sorted = all
             .Where(e => q.Length == 0
                 || e.Contains(q, StringComparison.OrdinalIgnoreCase)
                 || CodecNameFor(e).Contains(q, StringComparison.OrdinalIgnoreCase))
@@ -334,14 +335,14 @@ public partial class FileTypeAssociationsSettingsView : SettingsPageView
             var ext = sorted[i];
             var key = ext; // capture for the action closure
 
-            // plugin-claimed formats can't be removed -> no Delete action
-            PhTableAction[] actions = _pluginExts.Contains(ext) ? [] : [
+            // only user/built-in formats are removable; a plugin-provided format has no Delete action
+            PhTableAction[] actions = _exts.Contains(ext) ? [
                 new() {
                     Icon = ResxIconId.IconClose,
                     Tooltip = Core.Lang[LangId._Delete],
                     Click = () => DeleteExtension(key),
                 }
-            ];
+            ] : [];
 
             rows.Add(new PhTableRow
             {
@@ -350,7 +351,7 @@ public partial class FileTypeAssociationsSettingsView : SettingsPageView
                 [
                     PhTableControl.TextCell((i + 1).ToString()),
                     PhTableControl.TextCell(ext, selectable: true, font: _codeFont),
-                    PhTableControl.TextCell(CodecNameFor(ext)),
+                    CodecCell(ext),
                 ],
                 Actions = actions,
             });
@@ -359,26 +360,92 @@ public partial class FileTypeAssociationsSettingsView : SettingsPageView
         PART_Table.EmptyText = Core.Lang[LangId._Empty];
         PART_Table.Build(columns, rows);
 
-        PART_TotalFormats.LangParams = _exts.Count;
+        PART_TotalFormats.LangParams = all.Count;
     }
 
 
     /// <summary>
-    /// Returns the friendly name of the codec that would decode the given extension: the
-    /// highest-priority codec that claims it, falling back to the catch-all codec (Magick.NET).
+    /// Builds the "Codec" cell for an extension: a link button (opens the owning plugin's info
+    /// window on the Plugins page) when a plugin codec decodes it, otherwise plain text.
     /// </summary>
-    private string CodecNameFor(string ext)
+    private Control CodecCell(string ext)
+    {
+        var codec = CodecFor(ext);
+        var name = codec?.CodecName ?? string.Empty;
+
+        // built-in codec (or none) -> plain text
+        var pluginId = codec?.PluginId;
+        if (string.IsNullOrEmpty(pluginId)) return PhTableControl.TextCell(name);
+
+        // plugin codec -> link that opens the plugin's info window on the Plugins page
+        var link = new PhButton
+        {
+            Text = name,
+            Variant = PhButtonVariant.Link,
+            HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Left,
+            HorizontalContentAlignment = Avalonia.Layout.HorizontalAlignment.Left,
+        };
+        ToolTip.SetTip(link, name);
+        link.Click += (_, _) => OpenPluginSettings(pluginId);
+
+        return PhTableControl.WrapCell(link);
+    }
+
+
+    /// <summary>
+    /// Navigates to the Plugins page and highlights the plugin that owns the codec for the extension.
+    /// </summary>
+    private void OpenPluginSettings(string pluginId)
+        => this.FindAncestorOfType<SettingsWindowView>()?.NavigateToPlugin(pluginId);
+
+
+    /// <summary>
+    /// Snapshots the current codecs + the extensions claimed by loaded plugins.
+    /// </summary>
+    private void SnapshotCodecs()
+    {
+        _codecs = Core.CodecRegistry.GetCodecInfos();
+        _pluginExts.Clear();
+        foreach (var codec in _codecs)
+        {
+            if (!codec.IsPlugin) continue;
+            foreach (var ext in codec.SupportedExtensions) _pluginExts.Add(ext);
+        }
+    }
+
+
+    /// <summary>
+    /// Re-snapshots codecs and rebuilds the table after a plugin is enabled/disabled/installed/removed.
+    /// </summary>
+    public void RefreshCodecFormats()
+    {
+        SnapshotCodecs();
+        RebuildTable();
+    }
+
+
+    /// <summary>
+    /// Returns the codec that would decode the given extension: the highest-priority codec that
+    /// claims it, falling back to the catch-all codec (Magick.NET). Returns <c>null</c> if none.
+    /// </summary>
+    private CodecInfo? CodecFor(string ext)
     {
         // _codecs is ordered by decode priority (highest first)
         foreach (var codec in _codecs)
         {
             if (codec.SupportedExtensions.Contains(ext, StringComparer.OrdinalIgnoreCase))
-                return codec.CodecName;
+                return codec;
         }
 
         // not explicitly claimed -> the catch-all codec (empty extension list)
-        return _codecs.FirstOrDefault(c => c.SupportedExtensions.Count == 0)?.CodecName ?? string.Empty;
+        return _codecs.FirstOrDefault(c => c.SupportedExtensions.Count == 0);
     }
+
+
+    /// <summary>
+    /// Returns the friendly name of the codec that would decode the given extension.
+    /// </summary>
+    private string CodecNameFor(string ext) => CodecFor(ext)?.CodecName ?? string.Empty;
 
     #endregion // File formats
 

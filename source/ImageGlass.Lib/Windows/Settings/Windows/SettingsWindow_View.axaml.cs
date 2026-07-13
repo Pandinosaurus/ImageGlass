@@ -362,6 +362,34 @@ public partial class SettingsWindowView : PhControl
 
 
     /// <summary>
+    /// Navigates to the Plugins page and highlights the plugin with the given id (used by the File
+    /// type associations page's plugin-codec link).
+    /// </summary>
+    public void NavigateToPlugin(string pluginId)
+    {
+        NavigateTo("plugins");
+
+        if (_pages.TryGetValue("plugins", out var page) && page.Content is PluginsSettingsView view)
+        {
+            view.FocusPlugin(pluginId);
+        }
+    }
+
+
+    /// <summary>
+    /// Refreshes the File type associations page's codec/plugin rows after a plugin change.
+    /// </summary>
+    public void NotifyPluginsChanged()
+    {
+        if (_pages.TryGetValue("file_assocs", out var page)
+            && page.Content is FileTypeAssociationsSettingsView view)
+        {
+            view.RefreshCodecFormats();
+        }
+    }
+
+
+    /// <summary>
     /// Navigates to the given target. A registered config id jumps to the setting on its
     /// page; otherwise the value is treated as a page nav id (e.g. the restored last opened
     /// page). No-op when the target matches neither.

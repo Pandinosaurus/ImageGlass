@@ -812,7 +812,7 @@ public partial class MainWindowView : PhControl
             // start loading files
             var searchOptions = new FileSearchOptions()
             {
-                AllowedExtensions = Core.Config.FileFormats,
+                AllowedExtensions = Core.GetSupportedFileExtensions(),
                 UseExplorerSortOrder = Core.Config.EnableExplorerSortOrder,
                 ForegroundShell = foregroundShell,
                 SearchSubDirectories = Core.Config.EnableSubfoldersLoading,

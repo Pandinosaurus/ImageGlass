@@ -186,7 +186,7 @@ public partial class PhotoManager
         var ext = Path.GetExtension(filePath);
         if (string.IsNullOrEmpty(ext)) return false;
 
-        return Core.Config.FileFormats.Contains(ext);
+        return Core.GetSupportedFileExtensions().Contains(ext);
     }
 
 
@@ -302,7 +302,7 @@ public partial class PhotoManager
         // determine sorted insertion index for each file
         var options = new FileSearchOptions()
         {
-            AllowedExtensions = Core.Config.FileFormats,
+            AllowedExtensions = Core.GetSupportedFileExtensions(),
             UseExplorerSortOrder = Core.Config.EnableExplorerSortOrder,
             SearchSubDirectories = Core.Config.EnableSubfoldersLoading,
             GroupByDir = Core.Config.EnableImageFolderGrouping,

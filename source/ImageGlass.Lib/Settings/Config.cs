@@ -1053,25 +1053,34 @@ public partial class Config : PhReactive
 
 
     /// <summary>
-    /// Merges extensions into <see cref="FileFormats"/> (normalized to a leading dot,
-    /// case-insensitive). Returns the newly added ones; no-op if all already exist.
+    /// Removes plugin-contributed <paramref name="extensions"/> from the persisted
+    /// <see cref="FileFormats"/> so a plugin's formats are not left behind after it is disabled or
+    /// removed. Built-in default formats are never removed (a plugin may also claim a format the app
+    /// supports natively). Plugin formats stay browsable while the plugin is loaded via
+    /// <see cref="Core.GetSupportedFileExtensions"/>. Returns the removed extensions; no-op if none
+    /// were present.
     /// </summary>
-    public IReadOnlyList<string> MergeFileFormats(IEnumerable<string> extensions)
+    public IReadOnlyList<string> PurgePluginFileFormats(IEnumerable<string> extensions)
     {
-        var merged = new HashSet<string>(FileFormats, StringComparer.OrdinalIgnoreCase);
-        var added = new List<string>();
+        var current = FileFormats;
+        var defaults = new HashSet<string>(DefaultFileFormats, StringComparer.OrdinalIgnoreCase);
+        var removed = new List<string>();
 
         foreach (var ext in extensions)
         {
             if (string.IsNullOrWhiteSpace(ext)) continue;
             var normalized = ext.StartsWith('.') ? ext : "." + ext;
-            if (merged.Add(normalized)) added.Add(normalized);
+            if (defaults.Contains(normalized)) continue; // keep built-in formats
+            if (current.Contains(normalized)) removed.Add(normalized);
         }
 
-        if (added.Count == 0) return [];
+        if (removed.Count == 0) return [];
 
-        FileFormats = merged;
-        return added;
+        var next = new HashSet<string>(current, StringComparer.OrdinalIgnoreCase);
+        foreach (var ext in removed) next.Remove(ext);
+
+        FileFormats = next;
+        return removed;
     }
 
     #endregion // Public Methods

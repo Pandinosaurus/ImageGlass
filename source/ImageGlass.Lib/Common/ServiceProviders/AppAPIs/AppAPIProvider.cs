@@ -165,7 +165,7 @@ public partial class AppAPIProvider
     /// </summary>
     public async Task IG_OpenFileAsync()
     {
-        var supportFileExtPatterns = Core.Config.FileFormats.Select(ext => $"*{ext}")
+        var supportFileExtPatterns = Core.GetSupportedFileExtensions().Select(ext => $"*{ext}")
             .ToImmutableList();
 
         var files = await App.MainWindow.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
@@ -965,13 +965,14 @@ public partial class AppAPIProvider
     {
         var direction = step >= 0 ? 1 : -1;
         var currentDir = Path.GetDirectoryName(Core.Photos.CurrentFilePath);
+        var supportedExts = Core.GetSupportedFileExtensions();
 
-        var siblingDir = BHelper.GetSiblingDir(currentDir, direction, Core.Config.FileFormats);
+        var siblingDir = BHelper.GetSiblingDir(currentDir, direction, supportedExts);
         if (string.IsNullOrEmpty(siblingDir)) return false;
 
         // forward -> first image (null lands on index 0); backward -> last image
         var targetFile = direction < 0
-            ? BHelper.GetImageFilesInDir(siblingDir, Core.Config.FileFormats).LastOrDefault()
+            ? BHelper.GetImageFilesInDir(siblingDir, supportedExts).LastOrDefault()
             : null;
 
         // announce the switch once the new photo has loaded; showing it earlier would be wiped
@@ -3145,7 +3146,7 @@ public partial class AppAPIProvider
     {
         if (Core.ShellProvider is null) return;
 
-        var extensions = Core.Config.FileFormats.ToArray();
+        var extensions = Core.GetSupportedFileExtensions().ToArray();
 
         try
         {

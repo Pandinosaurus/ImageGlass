@@ -17,6 +17,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 using ImageGlass.Common.Types;
+using ImageGlass.Plugins;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -29,9 +30,11 @@ namespace ImageGlass.Common.Photoing;
 
 /// <summary>
 /// A read-only snapshot of a registered codec (for diagnostics / settings UI).
+/// <paramref name="PluginId"/> is the owning plugin's id when the codec comes from a native
+/// plugin, or <c>null</c> for a built-in codec.
 /// </summary>
 public sealed record CodecInfo(string CodecId, string CodecName, int DecodePriority,
-    IReadOnlyList<string> SupportedExtensions, bool IsPlugin);
+    IReadOnlyList<string> SupportedExtensions, bool IsPlugin, string? PluginId = null);
 
 
 /// <summary>
@@ -177,8 +180,9 @@ public sealed class CodecRegistry : PhDisposable
             foreach (var c in _decodeCodecs)
             {
                 var isBuiltIn = c is SvgCodecAdapter or SkiaCodecAdapter or MagickCodecAdapter;
+                var pluginId = (c as NativeCodecProxy)?.Plugin.PluginId;
                 list.Add(new CodecInfo(c.CodecId, c.CodecName, c.DecodePriority,
-                    c.SupportedExtensions, !isBuiltIn));
+                    c.SupportedExtensions, !isBuiltIn, pluginId));
             }
             return list;
         }
