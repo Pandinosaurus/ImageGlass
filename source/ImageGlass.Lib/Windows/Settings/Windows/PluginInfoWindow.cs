@@ -17,8 +17,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 using Avalonia;
+using Avalonia.Layout;
 using ImageGlass.Common.Localization;
 using ImageGlass.SDK.Plugins;
+using ImageGlass.UI;
 using ImageGlass.UI.Windowing;
 
 namespace ImageGlass.Common.Windows;
@@ -53,12 +55,19 @@ internal sealed class PluginInfoWindow : DialogWindow
 {
     private readonly PluginInfoWindowView _view;
     private readonly PluginInfoWindowMode _mode;
+    private readonly PhButton _deleteButton;
 
 
     // fixed dialog width so it doesn't grow/shrink with the metadata text
     protected override int MIN_WIDTH => 500;
     protected override int MAX_WIDTH => 500;
     protected override Thickness ContentPadding => new(0);
+
+
+    /// <summary>
+    /// Whether the user clicked the footer "Delete" link (the caller runs the delete flow).
+    /// </summary>
+    public bool DeleteRequested { get; private set; }
 
 
     /// <summary>
@@ -95,6 +104,19 @@ internal sealed class PluginInfoWindow : DialogWindow
         _view.LoadData(manifest, pluginDir);
         if (mode == PluginInfoWindowMode.Enable) _view.ShowConsentWarning(manifest, hashChanged);
         DialogContent = _view;
+
+        // footer-left "Delete" link; closes the window signalling the caller to run the delete flow
+        _deleteButton = new PhButton
+        {
+            Variant = PhButtonVariant.Link,
+            HorizontalAlignment = HorizontalAlignment.Left,
+        };
+        _deleteButton.Click += (_, _) =>
+        {
+            DeleteRequested = true;
+            OnDialogCancelled(new DialogEventArgs(DialogAction.Cancel));
+        };
+        DialogFooterLeftContent = _deleteButton;
     }
 
 
@@ -105,6 +127,7 @@ internal sealed class PluginInfoWindow : DialogWindow
         // all modes keep the same window title; the enable prompt's heading lives in the banner,
         // and only the footer buttons differ per mode.
         Title = Core.Lang[LangId.Settings_Plugins_ViewMetadata];
+        _deleteButton.Text = Core.Lang[LangId._Delete];
 
         switch (_mode)
         {

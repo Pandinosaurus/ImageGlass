@@ -1030,8 +1030,8 @@ public class Lang
         new(LangId.Settings_Plugins_SupportedExtensions, "Supported extensions"),
         new(LangId.Settings_Plugins_ViewMetadata, "Plugin information"),
         new(LangId.Settings_Plugins_FolderPath, "Folder"),
-        new(LangId.Settings_Plugins_RestartRequired, "Restart ImageGlass to apply the changes."),
         new(LangId.Settings_Plugins_InstallSuccess, "Plugin installed successfully"),
+        new(LangId.Settings_Plugins_DeleteConfirm, "Delete this plugin? This permanently removes it from ImageGlass."),
         new(LangId.Settings_Plugins_Status, "Status"),
         new(LangId.Settings_Plugins_Enable, "Enable"),
         new(LangId.Settings_Plugins_TrustAndEnable, "Trust and enable"),
@@ -1043,7 +1043,7 @@ public class Lang
         new(LangId.Settings_Plugins_TrustTitle, "Enable this plugin?"),
         new(LangId.Settings_Plugins_TrustPrompt, "\"{0}\" is a native plugin that runs inside ImageGlass with full access to your files and system. Only enable plugins you obtained from a source you trust."),
         new(LangId.Settings_Plugins_TrustChangedWarning, "This plugin's file has changed since it was last enabled. Only re-enable it if you updated the plugin yourself."),
-        new(LangId.Settings_Plugins_EnableToLoad, "Enable the plugin below, then restart ImageGlass to load it."),
+        new(LangId.Settings_Plugins_EnableToLoad, "Enable the plugin below to load it."),
         #endregion // Settings > Tab Plugins
 
 

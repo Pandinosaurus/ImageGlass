@@ -17,7 +17,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 using Avalonia.Controls;
-using Avalonia.Media;
 using Avalonia.Platform.Storage;
 using ImageGlass.Common.Localization;
 using ImageGlass.Common.Types;
@@ -344,6 +343,14 @@ public partial class PluginsSettingsView : SettingsPageView
         var win = new PluginInfoWindow(plugin.Manifest, plugin.Dir, mode,
             hashChanged: state == PluginTrustPolicy.TrustState.Changed);
         var result = await win.ShowAsync(TopLevel.GetTopLevel(this) as PhWindow);
+
+        // the window's "Delete" link runs the delete flow instead of the trust action
+        if (win.DeleteRequested)
+        {
+            await DeletePluginAsync(plugin);
+            return false;
+        }
+
         if (result != DialogExitCode.OK) return false;
 
         return mode switch
@@ -352,6 +359,60 @@ public partial class PluginsSettingsView : SettingsPageView
             PluginInfoWindowMode.Disable => await DisablePluginAsync(plugin),
             _ => false,
         };
+    }
+
+
+    /// <summary>
+    /// Confirms, then deletes the plugin: hot-unloads it (releases the locked library), removes its
+    /// trust entry and folder, and re-renders the list.
+    /// </summary>
+    private async Task DeletePluginAsync((PluginManifest Manifest, string Dir) plugin)
+    {
+        var owner = TopLevel.GetTopLevel(this) as PhWindow;
+        var m = plugin.Manifest;
+        var name = string.IsNullOrWhiteSpace(m.Name) ? m.Id : m.Name;
+        var desc = new List<string> { name + Environment.NewLine, m.Description ?? string.Empty };
+
+        var confirm = await ModalWindow.ShowWarningAsync(owner, new ModalWindowOptions
+        {
+            Title = name,
+            Heading = Core.Lang[LangId.Settings_Plugins_DeleteConfirm],
+            Description = string.Join(Environment.NewLine, desc),
+            Note = plugin.Dir,
+            NoteStyle = InfoBarSeverity.Info,
+        }, ModalWindowButton.Yes_No);
+        if (confirm.ExitCode != DialogExitCode.OK) return;
+
+        Core.DisablePlugin(plugin.Manifest.Id);
+        await PluginTrustPolicy.RemoveAsync(plugin.Manifest.Id);
+        DeletePluginFolder(plugin.Dir);
+
+        ReloadPlugins();
+        RebuildTable();
+    }
+
+
+    /// <summary>
+    /// Deletes the plugin folder; if a file is still locked, stashes it in the trash for a later reap.
+    /// </summary>
+    private static void DeletePluginFolder(string pluginDir)
+    {
+        if (!Directory.Exists(pluginDir)) return;
+
+        try
+        {
+            Directory.Delete(pluginDir, recursive: true);
+            return;
+        }
+        catch { }
+
+        try
+        {
+            var trashRoot = Path.Combine(BHelper.ConfigDir(Dir.Plugins), PluginRegistry.TRASH_DIR_NAME);
+            Directory.CreateDirectory(trashRoot);
+            Directory.Move(pluginDir, Path.Combine(trashRoot, Guid.NewGuid().ToString("N")));
+        }
+        catch { }
     }
 
 
@@ -406,8 +467,8 @@ public partial class PluginsSettingsView : SettingsPageView
 
 
     /// <summary>
-    /// Builds the per-row hover actions: "Setting" (hidden for now) and "Edit" (opens the plugin
-    /// info window to enable/disable or view the plugin).
+    /// Builds the per-row hover actions: "Setting" (hidden for now), "Edit" (opens the plugin info
+    /// window) and "Delete" (removes the plugin after a confirm).
     /// </summary>
     private List<PhTableAction> BuildActions((PluginManifest Manifest, string Dir) plugin)
     {
@@ -424,6 +485,12 @@ public partial class PluginsSettingsView : SettingsPageView
                 Icon = ResxIconId.IconEdit,
                 Tooltip = Core.Lang[LangId._Edit],
                 Click = () => _ = EditAndRefreshAsync(plugin),
+            },
+            new()
+            {
+                Icon = ResxIconId.IconClose,
+                Tooltip = Core.Lang[LangId._Delete],
+                Click = () => _ = DeletePluginAsync(plugin),
             },
         ];
     }

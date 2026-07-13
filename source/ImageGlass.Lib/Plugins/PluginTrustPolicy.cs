@@ -169,4 +169,19 @@ public static class PluginTrustPolicy
 
         await Core.Config.SaveAsync();
     }
+
+
+    /// <summary>
+    /// Drops the plugin's trust entry (used when the plugin is deleted), then persists the config.
+    /// </summary>
+    public static async Task RemoveAsync(string pluginId)
+    {
+        if (!Core.Config.PluginTrust.ContainsKey(pluginId)) return;
+
+        var trust = new Dictionary<string, PluginTrustInfo>(Core.Config.PluginTrust, StringComparer.Ordinal);
+        trust.Remove(pluginId);
+        Core.Config.PluginTrust = trust;
+
+        await Core.Config.SaveAsync();
+    }
 }
