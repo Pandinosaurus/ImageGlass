@@ -20,12 +20,24 @@ using ImageGlass.Common;
 using ImageGlass.Common.Types;
 using ImageGlass.SDK.Tools;
 using ImageGlass.UI.Viewer;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace ImageGlass.Tools;
+
+
+/// <summary>
+/// Outcome of an attempt to launch an external tool. <see cref="Error"/> carries a
+/// human-readable reason (a launch exception message or a connect-timeout note) when available.
+/// </summary>
+internal readonly record struct ToolLaunchResult(bool Success, string? Error)
+{
+    public static ToolLaunchResult Ok { get; } = new(true, null);
+    public static ToolLaunchResult Fail(string? error) => new(false, error);
+}
 
 
 /// <summary>
@@ -82,15 +94,16 @@ internal sealed class ExternalToolProxy : ITool
 
 
     /// <summary>
-    /// Launches the external tool in either detached mode or integrated IPC mode.
+    /// Launches the external tool (detached or integrated). On a real launch failure the result
+    /// carries the reason (the launch exception message). A tool that starts but never connects
+    /// to the host pipe is treated as launched, not a failure.
     /// </summary>
-    public async Task ExecuteAsync(ToolExecutionContext context)
+    public async Task<ToolLaunchResult> TryLaunchAsync(ToolExecutionContext context)
     {
         // Detached mode: just spawn the executable with arguments and walk away.
         if (!_tool.IsIntegrated)
         {
-            LaunchDetached(context);
-            return;
+            return TryLaunchDetached(context);
         }
 
         // Integrated mode: reuse an existing process when possible.
@@ -98,8 +111,12 @@ internal sealed class ExternalToolProxy : ITool
         if (info is null)
         {
             // Start the process, establish the pipe, and send the one-time init payload.
-            info = await _processManager.StartToolAsync(_tool);
-            if (info is null) return;
+            var (started, error) = await _processManager.StartToolAsync(_tool);
+
+            // a hard start failure (e.g. exe not found) carries a reason; a tool that started but
+            // never connected returns no reason -> treat as launched rather than nag the user.
+            if (started is null) return error is null ? ToolLaunchResult.Ok : ToolLaunchResult.Fail(error);
+            info = started;
 
             info.PipeHandler.SendEvent(MessageTypes.INIT, new ToolInitPayload
             {
@@ -120,15 +137,17 @@ internal sealed class ExternalToolProxy : ITool
 
         // Trigger the tool's actual action once the process is ready.
         info.PipeHandler.SendEvent(MessageTypes.EXECUTE);
+        return ToolLaunchResult.Ok;
     }
 
 
     /// <summary>
-    /// Starts the external tool without IPC, expanding basic launch placeholders.
+    /// Starts the external tool without IPC. On failure the result carries the reason
+    /// (the launch exception message), or a null reason when no executable is configured.
     /// </summary>
-    private void LaunchDetached(ToolExecutionContext context)
+    private ToolLaunchResult TryLaunchDetached(ToolExecutionContext context)
     {
-        if (string.IsNullOrEmpty(_tool.Executable)) return;
+        if (string.IsNullOrEmpty(_tool.Executable)) return ToolLaunchResult.Fail(null);
 
         // Resolve %VAR% tokens, quotes, and .lnk targets so a portable/relative path works.
         var exe = BHelper.ResolvePath(_tool.Executable).Trim();
@@ -143,7 +162,7 @@ internal sealed class ExternalToolProxy : ITool
             {
                 var built = BHelper.BuildExeArgList(exe, _tool.Arguments, filePath);
                 _ = BHelper.RunExeAsync(built.Executable, built.Args);
-                return;
+                return ToolLaunchResult.Ok;
             }
 
             // Regular executable: no shell, each argument passed as its own element so a
@@ -158,11 +177,14 @@ internal sealed class ExternalToolProxy : ITool
             {
                 psi.ArgumentList.Add(arg);
             }
-            _ = Process.Start(psi);
+
+            // Process.Start throws Win32Exception when the executable/command can't be found.
+            return Process.Start(psi) is not null ? ToolLaunchResult.Ok : ToolLaunchResult.Fail(null);
         }
-        catch
+        catch (Exception ex)
         {
-            // best-effort launch
+            // launch failed (e.g. executable not found)
+            return ToolLaunchResult.Fail(ex.Message);
         }
     }
 }

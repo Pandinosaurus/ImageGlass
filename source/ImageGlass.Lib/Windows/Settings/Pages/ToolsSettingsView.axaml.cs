@@ -101,6 +101,19 @@ public partial class ToolsSettingsView : SettingsPageView
 
 
     /// <summary>
+    /// Opens the edit dialog for the tool with the given id; when no such tool exists in the
+    /// working copy, opens the add dialog pre-seeded with the id (to recreate a missing tool).
+    /// </summary>
+    public Task EditToolAsync(string toolId)
+    {
+        if (string.IsNullOrEmpty(toolId)) return Task.CompletedTask;
+
+        var existing = _tools.FirstOrDefault(t => string.Equals(t.ToolId, toolId, StringComparison.OrdinalIgnoreCase));
+        return AddOrEditToolAsync(existing ?? new ExternalTool { ToolId = toolId });
+    }
+
+
+    /// <summary>
     /// Removes a tool from the working copy and re-renders.
     /// </summary>
     private void DeleteTool(ExternalTool tool)

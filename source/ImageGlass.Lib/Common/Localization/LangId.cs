@@ -660,6 +660,8 @@ public enum LangId
     // Tools > Tools
     Settings_Tools_AddNewTool,
     Settings_Tools_EditTool,
+    Settings_Tools_ToolLaunchFailed,
+    Settings_Tools_ToolLaunchFailed_Description,
     Settings_Tools_Integrated,
     Settings_Tools_IntegratedWith,
     Settings_Tools_Errors_ToolIdDuplicated,

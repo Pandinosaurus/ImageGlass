@@ -75,10 +75,12 @@ public sealed class ToolProcessManager : PhDisposable
 
     /// <summary>
     /// Starts a tool process: creates named pipe, spawns process, and waits for connection.
+    /// A hard start failure returns null info plus the exception message; a start-but-no-connect
+    /// returns null info with no reason (the caller treats that as a launched tool).
     /// </summary>
-    internal async Task<ToolProcessInfo?> StartToolAsync(ExternalTool tool)
+    internal async Task<(ToolProcessInfo? Info, string? Error)> StartToolAsync(ExternalTool tool)
     {
-        if (string.IsNullOrEmpty(tool.Executable)) return null;
+        if (string.IsNullOrEmpty(tool.Executable)) return (null, null);
 
         // Full GUID so the name isn't guessable (35 chars, under macOS's ~104 socket-path limit).
         var pipeName = $"ig_{Guid.NewGuid():N}";
@@ -114,16 +116,17 @@ public sealed class ToolProcessManager : PhDisposable
 
             process = Process.Start(psi);
         }
-        catch
+        catch (Exception ex)
         {
+            // e.g. the executable/command was not found
             await pipeServer.DisposeAsync();
-            return null;
+            return (null, ex.Message);
         }
 
         if (process is null)
         {
             await pipeServer.DisposeAsync();
-            return null;
+            return (null, null);
         }
 
         // Wait for the integrated tool to attach to the pipe before exposing it.
@@ -135,10 +138,11 @@ public sealed class ToolProcessManager : PhDisposable
         }
         catch (OperationCanceledException)
         {
-            // Tool didn't connect in time
+            // Started but didn't connect in time (e.g. not an integrated tool). The process did
+            // start, so this isn't a launch failure: return null info with no reason (caller ignores).
             try { process.Kill(); } catch { }
             await pipeServer.DisposeAsync();
-            return null;
+            return (null, null);
         }
 
         // Windows only: reject if the connected client isn't the child we spawned (pipe squatting).
@@ -148,7 +152,7 @@ public sealed class ToolProcessManager : PhDisposable
         {
             try { process.Kill(); } catch { }
             await pipeServer.DisposeAsync();
-            return null;
+            return (null, null);
         }
 
         // Register the fully-connected process so later calls can reuse it.
@@ -171,7 +175,7 @@ public sealed class ToolProcessManager : PhDisposable
             _processes[tool.ToolId] = info;
         }
 
-        return info;
+        return (info, null);
     }
 
 

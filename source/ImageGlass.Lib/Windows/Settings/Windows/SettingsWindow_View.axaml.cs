@@ -377,6 +377,23 @@ public partial class SettingsWindowView : PhControl
 
 
     /// <summary>
+    /// Navigates to the Tools page and opens the add/edit dialog for the given tool id.
+    /// </summary>
+    public void NavigateToTool(string? toolId)
+    {
+        if (string.IsNullOrEmpty(toolId)) return;
+
+        NavigateTo(SettingsNavId.Tools);
+
+        if (_pages.TryGetValue(SettingsNavId.Tools, out var page) && page.Content is ToolsSettingsView view)
+        {
+            // defer so the freshly shown page is attached before opening the child edit dialog
+            Dispatcher.UIThread.Post(() => _ = view.EditToolAsync(toolId));
+        }
+    }
+
+
+    /// <summary>
     /// Refreshes the File type associations page's codec/plugin rows after a plugin change.
     /// </summary>
     public void NotifyPluginsChanged()

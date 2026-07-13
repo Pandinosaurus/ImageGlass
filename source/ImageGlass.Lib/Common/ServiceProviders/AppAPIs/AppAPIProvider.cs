@@ -2962,13 +2962,13 @@ public partial class AppAPIProvider
         }
         else
         {
-            if (tool is ExternalToolProxy)
+            if (tool is ExternalToolProxy extProxy)
             {
                 // Only allow one instance of a non-hosted external tool
                 if (Core.ToolRegistry.ExternalTools.IsRunning(toolId)) return;
 
-                // External non-hosted tool: start process and execute
-                _ = tool.ExecuteAsync(new ToolExecutionContext { Window = App.MainWindow });
+                // launch out-of-process; show a fix-it dialog if it can't be started
+                _ = LaunchExternalToolAsync(extProxy);
             }
             else
             {
@@ -3013,6 +3013,70 @@ public partial class AppAPIProvider
             ToolRegistry.SaveToolSettings(currentTool);
         }
         ToolHost.CloseCurrentTool();
+    }
+
+
+    /// <summary>
+    /// Launches an external tool; if it can't be started, offers to fix it in Settings > Tools.
+    /// </summary>
+    private static async Task LaunchExternalToolAsync(ExternalToolProxy proxy)
+    {
+        var context = new ToolExecutionContext { Window = App.MainWindow };
+        var result = await proxy.TryLaunchAsync(context);
+        if (!result.Success)
+        {
+            await ShowToolLaunchFailedAsync(proxy.Tool, result.Error);
+        }
+    }
+
+
+    /// <summary>
+    /// Shows a dialog when an external tool fails to launch, surfacing the failure reason
+    /// and offering to fix the tool in Settings > Tools.
+    /// </summary>
+    private static async Task ShowToolLaunchFailedAsync(ExternalTool tool, string? error)
+    {
+        var toolName = string.IsNullOrWhiteSpace(tool.ToolName) ? tool.ToolId : tool.ToolName;
+
+        var result = await ModalWindow.ShowAsync(App.MainWindow, new ModalWindowOptions
+        {
+            Title = toolName,
+            Heading = Core.Lang[LangId.Settings_Tools_ToolLaunchFailed, toolName],
+            Description = Core.Lang[LangId.Settings_Tools_ToolLaunchFailed_Description],
+            Details = error,
+            ThumbnailIcon = StockIconId.Warning,
+        }, ModalWindowButton.Yes_No);
+
+        // Yes: open Settings > Tools to edit the tool
+        if (result.ExitCode == DialogExitCode.OK)
+        {
+            await OpenToolSettingsAsync(tool.ToolId);
+        }
+    }
+
+
+    /// <summary>
+    /// Opens Settings > Tools and the edit dialog for the given tool id, reusing the open window if any.
+    /// </summary>
+    private static async Task OpenToolSettingsAsync(string toolId)
+    {
+        // reuse the already-open settings window
+        if (App.SettingsWindow is not null)
+        {
+            App.SettingsWindow.Activate();
+            App.SettingsWindow.NavigateToTool(toolId);
+            return;
+        }
+
+        App.SettingsWindow = new SettingsWindow(SettingsNavId.Tools.ToString(), toolId);
+        try
+        {
+            await App.SettingsWindow.ShowAsync(null);
+        }
+        finally
+        {
+            App.SettingsWindow = null;
+        }
     }
 
     #endregion // Tools APIs

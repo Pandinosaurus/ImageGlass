@@ -1019,6 +1019,8 @@ public class Lang
         // Tools > Tools
         new(LangId.Settings_Tools_AddNewTool, "Add an external tool"),
         new(LangId.Settings_Tools_EditTool, "Edit external tool"),
+        new(LangId.Settings_Tools_ToolLaunchFailed, "Could not launch \"{0}\""),
+        new(LangId.Settings_Tools_ToolLaunchFailed_Description, "Do you want to update the tool again?"),
         new(LangId.Settings_Tools_Integrated, "Integrated"),
         new(LangId.Settings_Tools_IntegratedWith, "Integrated with {0}"),
         new(LangId.Settings_Tools_Errors_ToolIdDuplicated, "The tool ID \"{0}\" is already in use."),

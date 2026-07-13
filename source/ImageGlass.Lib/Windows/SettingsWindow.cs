@@ -32,6 +32,8 @@ public partial class SettingsWindow : DialogWindow
     private readonly SettingsViewModel _vm = new();
     private readonly SettingsWindowView _viewEl;
     private readonly string? _targetConfigId;
+    private readonly string? _editToolId;
+    private bool _editToolShown;
 
     private PhButton _btnGetHelp = null!;
     private PhButton _btnResetSettings = null!;
@@ -43,9 +45,10 @@ public partial class SettingsWindow : DialogWindow
 
 
 
-    public SettingsWindow(string? targetConfigId = null)
+    public SettingsWindow(string? targetConfigId = null, string? editToolId = null)
     {
         _targetConfigId = targetConfigId;
+        _editToolId = editToolId;
 
         IsButton1Visible = true;
         IsButton2Visible = true;
@@ -90,6 +93,13 @@ public partial class SettingsWindow : DialogWindow
         if (!string.IsNullOrWhiteSpace(_targetConfigId))
         {
             _viewEl.NavigateToConfig(_targetConfigId);
+        }
+
+        // a tool edit was requested -> open it once (NavigateToTool defers the child dialog itself)
+        if (!_editToolShown && !string.IsNullOrWhiteSpace(_editToolId))
+        {
+            _editToolShown = true;
+            _viewEl.NavigateToTool(_editToolId);
         }
 
         // focus the search box on open
@@ -175,6 +185,12 @@ public partial class SettingsWindow : DialogWindow
     /// Navigates the settings window to the page hosting the given config id and scrolls to it.
     /// </summary>
     public void NavigateToConfig(string? configId) => _viewEl.NavigateToConfig(configId);
+
+
+    /// <summary>
+    /// Navigates to the Tools page and opens the add/edit dialog for the given tool id.
+    /// </summary>
+    public void NavigateToTool(string? toolId) => _viewEl.NavigateToTool(toolId);
 
     #endregion // Public Methods
 
