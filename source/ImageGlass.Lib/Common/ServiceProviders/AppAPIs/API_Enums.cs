@@ -118,7 +118,6 @@ public enum API
     IG_ToggleTool,
     IG_OpenTool,
     IG_CloseTool,
-    IG_GetMoreTools,
 
     // Menu > Settings
 

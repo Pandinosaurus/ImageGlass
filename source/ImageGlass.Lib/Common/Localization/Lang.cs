@@ -417,6 +417,7 @@ public class Lang
         new(LangId._Author, "Author"),
         new(LangId._View, "View"),
         new(LangId._GetHelp, "Get help"),
+        new(LangId._GetMoreTools, "Get more tools…"),
         new(LangId._Start, "Start"),
 
         new(LangId._UnhandledException, "Unhandled exception"), // v9.0
@@ -711,7 +712,7 @@ public class Lang
         new(LangId.Menu_MnuCropTool, "Crop image"), // v7.6
         new(LangId.Menu_MnuResizeTool, "Resize image"), // v9.2
         new(LangId.Menu_MnuFrameNav, "Frame navigation"), // v7.5
-        new(LangId.Menu_MnuGetMoreTools, "Get more tools…"), // v9.0
+        new(LangId.Menu_MnuToolsSettings, "Tools settings…"),
 
         new(LangId.Menu_MnuLosslessCompression, "Magick.NET Lossless Compression"), // v9.1
         new(LangId.Menu_MnuLosslessCompression_Confirm, "Are you sure you want to proceed?"), // v9.1

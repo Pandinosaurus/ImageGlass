@@ -22,6 +22,7 @@ using ImageGlass.Common.AppThemes;
 using ImageGlass.Common.Localization;
 using ImageGlass.Common.Photoing;
 using ImageGlass.Common.Types;
+using ImageGlass.Common.Windows;
 using ImageGlass.Tools;
 using ImageGlass.UI;
 using ImageGlass.UI.Viewer;
@@ -165,7 +166,7 @@ public partial class AppAPIProvider
         new(LangId.Menu_MnuFrameNav,             API.IG_ToggleTool, FrameNavToolControl.TOOL_ID,       [new(MKeys.Alt, Key.P)]),
         new(LangId.Menu_MnuResizeTool,           API.IG_OpenTool, ImageResizerTool.TOOL_ID,            [new(MKeys.Alt, Key.R)]),
         new(LangId.Menu_MnuLosslessCompression,  API.IG_OpenTool, LosslessCompressionTool.TOOL_ID,     [new(MKeys.Alt, Key.S)]),
-        new(LangId.Menu_MnuGetMoreTools,         API.IG_GetMoreTools),
+        new(LangId.Menu_MnuToolsSettings,        API.IG_OpenSettings, nameof(SettingsNavId.Tools)),
 
 
         // Settings

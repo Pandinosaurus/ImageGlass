@@ -140,7 +140,6 @@ public partial class AppAPIProvider
         { API.IG_ToggleTool,              PhCommands.Create(IG_ToggleTool) },
         { API.IG_OpenTool,                PhCommands.Create(IG_OpenTool) },
         { API.IG_CloseTool,               PhCommands.Create(IG_CloseTool) },
-        { API.IG_GetMoreTools,             PhCommands.Create(IG_GetMoreTools) },
 
 
         // Settings

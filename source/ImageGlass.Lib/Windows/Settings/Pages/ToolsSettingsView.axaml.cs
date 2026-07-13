@@ -65,8 +65,8 @@ public partial class ToolsSettingsView : SettingsPageView
         SetLocalizedText(PART_AddTool, LangId._Add);
         PART_AddTool.Click += async (_, _) => await AddOrEditToolAsync(null);
 
-        SetLocalizedText(PART_GetMoreTools, LangId.Menu_MnuGetMoreTools);
-        PART_GetMoreTools.Click += (_, _) => AppAPIProvider.IG_GetMoreTools();
+        SetLocalizedText(PART_GetMoreTools, LangId._GetMoreTools);
+        PART_GetMoreTools.Click += async (_, _) => await BHelper.OpenUrlAsync(App.SettingsWindow, "https://imageglass.org/tools", "from_get_more_tools");
 
         // rebuild on language change (also performs the initial render)
         AddLangRefresher(RebuildTable);

@@ -3015,15 +3015,6 @@ public partial class AppAPIProvider
         ToolHost.CloseCurrentTool();
     }
 
-
-    /// <summary>
-    /// Opens website to download more tools.
-    /// </summary>
-    public static void IG_GetMoreTools()
-    {
-        _ = BHelper.OpenUrlAsync(App.MainWindow, "https://imageglass.org/tools", "from_get_more_tools");
-    }
-
     #endregion // Tools APIs
 
 

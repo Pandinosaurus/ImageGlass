@@ -62,6 +62,7 @@ public enum LangId
     _Author,
     _View,
     _GetHelp,
+    _GetMoreTools,
     _Start,
 
     _UnhandledException,
@@ -356,7 +357,7 @@ public enum LangId
     Menu_MnuCropTool,
     Menu_MnuResizeTool,
     Menu_MnuFrameNav,
-    Menu_MnuGetMoreTools,
+    Menu_MnuToolsSettings,
 
     Menu_MnuLosslessCompression,
     Menu_MnuLosslessCompression_Confirm,
