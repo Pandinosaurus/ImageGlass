@@ -170,9 +170,7 @@ public partial class PluginsSettingsView : SettingsPageView
             var srcDir = Path.GetDirectoryName(manifestPath)!;
             var destDir = Path.Combine(pluginsDir, MakeSafeFolderName(manifest.Id));
 
-            // replace any previous install of the same id
-            if (Directory.Exists(destDir)) Directory.Delete(destDir, recursive: true);
-            MoveDirectory(srcDir, destDir);
+            ReplaceInstall(srcDir, destDir, pluginsDir);
             return true;
         }
         catch
@@ -182,6 +180,41 @@ public partial class PluginsSettingsView : SettingsPageView
         finally
         {
             try { if (Directory.Exists(staging)) Directory.Delete(staging, recursive: true); } catch { }
+        }
+    }
+
+
+    /// <summary>
+    /// Installs the staged plugin, moving any previous install aside into the trash stash first
+    /// (a loaded .dll is locked, so an in-place delete would strip the manifest) and restoring it on failure.
+    /// </summary>
+    private static void ReplaceInstall(string srcDir, string destDir, string pluginsDir)
+    {
+        string? stash = null;
+        if (Directory.Exists(destDir))
+        {
+            var trashRoot = Path.Combine(pluginsDir, PluginRegistry.TRASH_DIR_NAME);
+            Directory.CreateDirectory(trashRoot);
+            stash = Path.Combine(trashRoot, Guid.NewGuid().ToString("N"));
+            Directory.Move(destDir, stash); // atomic; leaves the old install intact if it throws
+        }
+
+        try
+        {
+            MoveDirectory(srcDir, destDir);
+        }
+        catch
+        {
+            // roll back to the previous install
+            try { if (Directory.Exists(destDir)) Directory.Delete(destDir, recursive: true); } catch { }
+            if (stash is not null && !Directory.Exists(destDir)) Directory.Move(stash, destDir);
+            throw;
+        }
+
+        // stale copy; a loaded .dll stays locked and is reaped on a later run
+        if (stash is not null)
+        {
+            try { Directory.Delete(stash, recursive: true); } catch { }
         }
     }
 

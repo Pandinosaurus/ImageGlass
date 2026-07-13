@@ -40,6 +40,11 @@ public sealed unsafe class PluginRegistry : PhDisposable
 
     private static int DecodeMajor(int abiVersion) => abiVersion / 1_000_000;
 
+    /// <summary>
+    /// Subfolder under <c>_plugins</c> where a reinstall stashes the previous install for later reaping.
+    /// </summary>
+    internal const string TRASH_DIR_NAME = "_trash";
+
 
     /// <summary>
     /// Validates a manifest <c>Executable</c> and resolves it to a full path inside
@@ -445,6 +450,9 @@ public sealed unsafe class PluginRegistry : PhDisposable
 
         foreach (var dir in Directory.EnumerateDirectories(pluginsDirectory))
         {
+            // skip the reinstall stash folder
+            if (string.Equals(Path.GetFileName(dir), TRASH_DIR_NAME, StringComparison.Ordinal)) continue;
+
             var manifestPath = Path.Combine(dir, PluginManifest.FILE_NAME);
             if (!File.Exists(manifestPath)) continue;
 
@@ -464,6 +472,22 @@ public sealed unsafe class PluginRegistry : PhDisposable
         }
 
         return results;
+    }
+
+
+    /// <summary>
+    /// Best-effort delete of stashed previous installs; skips still-locked folders. Call before any load.
+    /// </summary>
+    public static void CleanupTrashDirs(string pluginsDir)
+    {
+        var trashRoot = Path.Combine(pluginsDir, TRASH_DIR_NAME);
+        if (!Directory.Exists(trashRoot)) return;
+
+        foreach (var dir in Directory.GetDirectories(trashRoot))
+        {
+            try { Directory.Delete(dir, recursive: true); } catch { }
+        }
+        try { Directory.Delete(trashRoot, recursive: false); } catch { } // drop the root once empty
     }
 
 }

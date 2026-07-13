@@ -309,6 +309,10 @@ public static class Core
         _ = Task.Run(() =>
         {
             var pluginsDir = BHelper.ConfigDir(Dir.Plugins);
+
+            // reap stashed installs before any library loads
+            PluginRegistry.CleanupTrashDirs(pluginsDir);
+
             var discovered = PluginRegistry.DiscoverManifests(pluginsDir);
 
             // Extensions from registered codecs, merged into Config.FileFormats after discovery.
