@@ -39,7 +39,7 @@ public abstract class SettingsPageView : PhControl
     /// <summary>
     /// Gets the nav id of the hosting page.
     /// </summary>
-    protected string NavId { get; private set; } = string.Empty;
+    protected SettingsNavId NavId { get; private set; }
 
     /// <summary>
     /// Gets the localized label key of the hosting page (used for search breadcrumbs).
@@ -61,7 +61,7 @@ public abstract class SettingsPageView : PhControl
     /// Wires the page to its working copy and builds the rows. Call from the derived
     /// <c>(vm, navId, pageLabel)</c> constructor right after <c>InitializeComponent()</c>.
     /// </summary>
-    protected void Initialize(SettingsViewModel vm, string navId, LangId? pageLabel)
+    protected void Initialize(SettingsViewModel vm, SettingsNavId navId, LangId? pageLabel)
     {
         VM = vm;
         NavId = navId;

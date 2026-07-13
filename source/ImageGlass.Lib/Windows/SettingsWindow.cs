@@ -186,9 +186,7 @@ public partial class SettingsWindow : DialogWindow
     {
         _btnGetHelp = CreateLinkButton(Core.Lang[LangId._GetHelp], async () =>
         {
-            var campaign = string.IsNullOrEmpty(_viewEl.CurrentNavId)
-                ? "from_setting"
-                : $"from_setting_{_viewEl.CurrentNavId}";
+            var campaign = $"from_setting_{_viewEl.CurrentNavId}";
             await BHelper.OpenUrlAsync(this, "https://imageglass.org/docs", campaign);
         });
 

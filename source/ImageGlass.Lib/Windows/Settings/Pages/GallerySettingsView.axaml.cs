@@ -31,7 +31,7 @@ public partial class GallerySettingsView : SettingsPageView
     /// <summary>
     /// Creates the page bound to the given working-copy view model.
     /// </summary>
-    public GallerySettingsView(SettingsViewModel vm, string navId, LangId? pageLabel = null) : this()
+    public GallerySettingsView(SettingsViewModel vm, SettingsNavId navId, LangId? pageLabel = null) : this()
     {
         Initialize(vm, navId, pageLabel);
     }

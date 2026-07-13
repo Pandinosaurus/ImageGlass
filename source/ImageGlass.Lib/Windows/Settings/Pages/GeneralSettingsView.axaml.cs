@@ -34,7 +34,7 @@ public partial class GeneralSettingsView : SettingsPageView
     /// <summary>
     /// Creates the page bound to the given working-copy view model.
     /// </summary>
-    public GeneralSettingsView(SettingsViewModel vm, string navId, LangId? pageLabel = null) : this()
+    public GeneralSettingsView(SettingsViewModel vm, SettingsNavId navId, LangId? pageLabel = null) : this()
     {
         Initialize(vm, navId, pageLabel);
     }

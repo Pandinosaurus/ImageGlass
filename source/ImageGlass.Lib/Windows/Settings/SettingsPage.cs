@@ -32,13 +32,13 @@ public sealed class SettingsPage : PhControl
 {
     private bool _isBuilt;
     private readonly SettingsViewModel _vm;
-    private readonly Func<SettingsViewModel, string, LangId?, Control> _createView;
+    private readonly Func<SettingsViewModel, SettingsNavId, LangId?, Control> _createView;
 
 
     /// <summary>
     /// Gets the unique nav id of this page (matches the sidebar item / <see cref="Config.LastOpenedSetting"/>).
     /// </summary>
-    public string NavId { get; }
+    public SettingsNavId NavId { get; }
 
     /// <summary>
     /// Gets, sets the localization key of this page's sidebar label (used for search breadcrumbs).
@@ -50,8 +50,8 @@ public sealed class SettingsPage : PhControl
     /// <param name="createView">
     /// Factory that builds the page content from the view model, nav id and (resolved) nav label.
     /// </param>
-    public SettingsPage(SettingsViewModel vm, string navId,
-        Func<SettingsViewModel, string, LangId?, Control> createView)
+    public SettingsPage(SettingsViewModel vm, SettingsNavId navId,
+        Func<SettingsViewModel, SettingsNavId, LangId?, Control> createView)
     {
         _vm = vm;
         NavId = navId;

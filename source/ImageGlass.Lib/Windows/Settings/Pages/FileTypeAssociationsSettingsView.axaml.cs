@@ -71,7 +71,7 @@ public partial class FileTypeAssociationsSettingsView : SettingsPageView
     /// <summary>
     /// Creates the page bound to the given working-copy view model.
     /// </summary>
-    public FileTypeAssociationsSettingsView(SettingsViewModel vm, string navId, LangId? pageLabel = null) : this()
+    public FileTypeAssociationsSettingsView(SettingsViewModel vm, SettingsNavId navId, LangId? pageLabel = null) : this()
     {
         Initialize(vm, navId, pageLabel);
     }

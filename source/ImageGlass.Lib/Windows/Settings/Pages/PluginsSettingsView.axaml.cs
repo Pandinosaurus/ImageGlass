@@ -55,7 +55,7 @@ public partial class PluginsSettingsView : SettingsPageView
     /// <summary>
     /// Creates the page bound to the given working-copy view model.
     /// </summary>
-    public PluginsSettingsView(SettingsViewModel vm, string navId, LangId? pageLabel = null) : this()
+    public PluginsSettingsView(SettingsViewModel vm, SettingsNavId navId, LangId? pageLabel = null) : this()
     {
         Initialize(vm, navId, pageLabel);
     }

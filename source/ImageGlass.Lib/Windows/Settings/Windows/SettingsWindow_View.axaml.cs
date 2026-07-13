@@ -35,7 +35,7 @@ public partial class SettingsWindowView : PhControl
 {
     private SettingsViewModel _vm = null!;
     private List<SettingsNavItem> _navItems = [];
-    private readonly Dictionary<string, SettingsPage> _pages = [];
+    private readonly Dictionary<SettingsNavId, SettingsPage> _pages = [];
 
     // hotkey to active the search box
     private static readonly Hotkey _searchHotkey = new(Hotkey.Ctrl, Key.K);
@@ -51,7 +51,7 @@ public partial class SettingsWindowView : PhControl
     /// <summary>
     /// Gets the nav id of the currently shown page.
     /// </summary>
-    public string CurrentNavId { get; private set; } = string.Empty;
+    public SettingsNavId CurrentNavId { get; private set; }
 
 
 
@@ -352,7 +352,7 @@ public partial class SettingsWindowView : PhControl
     /// <summary>
     /// Selects the sidebar item with the given nav id (shows its page).
     /// </summary>
-    public void NavigateTo(string navId)
+    public void NavigateTo(SettingsNavId navId)
     {
         var item = _navItems.FirstOrDefault(i => i.NavId == navId);
         if (item is null) return;
@@ -367,9 +367,9 @@ public partial class SettingsWindowView : PhControl
     /// </summary>
     public void NavigateToPlugin(string pluginId)
     {
-        NavigateTo("plugins");
+        NavigateTo(SettingsNavId.Plugins);
 
-        if (_pages.TryGetValue("plugins", out var page) && page.Content is PluginsSettingsView view)
+        if (_pages.TryGetValue(SettingsNavId.Plugins, out var page) && page.Content is PluginsSettingsView view)
         {
             view.FocusPlugin(pluginId);
         }
@@ -381,7 +381,7 @@ public partial class SettingsWindowView : PhControl
     /// </summary>
     public void NotifyPluginsChanged()
     {
-        if (_pages.TryGetValue("file_assocs", out var page)
+        if (_pages.TryGetValue(SettingsNavId.FileAssociations, out var page)
             && page.Content is FileTypeAssociationsSettingsView view)
         {
             view.RefreshCodecFormats();
@@ -404,7 +404,11 @@ public partial class SettingsWindowView : PhControl
         }
 
         // otherwise a page nav id -> just show the page
-        if (_navItems.Any(i => i.NavId == configId)) NavigateTo(configId!);
+        if (Enum.TryParse<SettingsNavId>(configId, true, out var navId)
+            && _navItems.Any(i => i.NavId == navId))
+        {
+            NavigateTo(navId);
+        }
     }
 
 
@@ -417,7 +421,7 @@ public partial class SettingsWindowView : PhControl
         CurrentNavId = nav.NavId;
 
         // remember the last viewed page (persisted to disk on OK/Apply/app exit)
-        Core.Config.LastOpenedSetting = nav.NavId;
+        Core.Config.LastOpenedSetting = nav.NavId.ToString();
     }
 
 

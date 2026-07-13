@@ -45,7 +45,7 @@ public partial class ViewerSettingsView : SettingsPageView
     /// <summary>
     /// Creates the page bound to the given working-copy view model.
     /// </summary>
-    public ViewerSettingsView(SettingsViewModel vm, string navId, LangId? pageLabel = null) : this()
+    public ViewerSettingsView(SettingsViewModel vm, SettingsNavId navId, LangId? pageLabel = null) : this()
     {
         Initialize(vm, navId, pageLabel);
     }

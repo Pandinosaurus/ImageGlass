@@ -48,7 +48,7 @@ public partial class MouseSettingsView : SettingsPageView
     /// <summary>
     /// Creates the page bound to the given working-copy view model.
     /// </summary>
-    public MouseSettingsView(SettingsViewModel vm, string navId, LangId? pageLabel = null) : this()
+    public MouseSettingsView(SettingsViewModel vm, SettingsNavId navId, LangId? pageLabel = null) : this()
     {
         Initialize(vm, navId, pageLabel);
     }

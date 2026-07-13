@@ -34,7 +34,7 @@ public partial class ToolbarSettingsView : SettingsPageView
     /// <summary>
     /// Creates the page bound to the given working-copy view model.
     /// </summary>
-    public ToolbarSettingsView(SettingsViewModel vm, string navId, LangId? pageLabel = null) : this()
+    public ToolbarSettingsView(SettingsViewModel vm, SettingsNavId navId, LangId? pageLabel = null) : this()
     {
         Initialize(vm, navId, pageLabel);
     }

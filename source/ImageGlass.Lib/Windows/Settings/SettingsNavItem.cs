@@ -32,10 +32,10 @@ namespace ImageGlass.Common.Windows;
 public sealed class SettingsNavItem
 {
     /// <summary>
-    /// Gets the unique nav id (also used as <see cref="Config.LastOpenedSetting"/> value
-    /// and the docs help campaign suffix).
+    /// Gets the unique nav id (also persisted to <see cref="Config.LastOpenedSetting"/>
+    /// and used as the docs help campaign suffix via <see cref="SettingsNavIdExtensions.ToId"/>).
     /// </summary>
-    public required string NavId { get; init; }
+    public required SettingsNavId NavId { get; init; }
 
     /// <summary>
     /// Gets the localization key of the group label.
@@ -77,47 +77,47 @@ public sealed class SettingsNavItem
     {
         return
         [
-            CreateNavItem("general", LangId.Settings_Nav_General, ICON_GENERAL, 0,
+            CreateNavItem(SettingsNavId.General, LangId.Settings_Nav_General, ICON_GENERAL, 0,
                 (vm, navId, label) => new GeneralSettingsView(vm, navId, label)),
-            CreateNavItem("image", LangId.Settings_Nav_Image, ICON_IMAGE, 0,
+            CreateNavItem(SettingsNavId.Image, LangId.Settings_Nav_Image, ICON_IMAGE, 0,
                 (vm, navId, label) => new ImageSettingsView(vm, navId, label)),
-            CreateNavItem("slideshow", LangId.Settings_Nav_Slideshow, ICON_SLIDESHOW, 0,
+            CreateNavItem(SettingsNavId.Slideshow, LangId.Settings_Nav_Slideshow, ICON_SLIDESHOW, 0,
                 (vm, navId, label) => new SlideshowSettingsView(vm, navId, label)),
-            CreateNavItem("edit", LangId.Settings_Nav_Edit, Resx.GetIcon(ResxIconId.IconEdit), 0,
+            CreateNavItem(SettingsNavId.Edit, LangId.Settings_Nav_Edit, Resx.GetIcon(ResxIconId.IconEdit), 0,
                 (vm, navId, label) => new EditSettingsView(vm, navId, label)),
-            CreateNavItem("layout", LangId.Settings_Nav_Layout, ICON_LAYOUT, 0,
+            CreateNavItem(SettingsNavId.Layout, LangId.Settings_Nav_Layout, ICON_LAYOUT, 0,
                 (vm, navId, label) => new LayoutSettingsView(vm, navId, label)),
-            CreateNavItem("viewer", LangId.Settings_Nav_Viewer, ICON_VIEWER, 1,
+            CreateNavItem(SettingsNavId.Viewer, LangId.Settings_Nav_Viewer, ICON_VIEWER, 1,
                 (vm, navId, label) => new ViewerSettingsView(vm, navId, label)),
-            CreateNavItem("toolbar", LangId.Settings_Nav_Toolbar, ICON_TOOLBAR, 1,
+            CreateNavItem(SettingsNavId.Toolbar, LangId.Settings_Nav_Toolbar, ICON_TOOLBAR, 1,
                 (vm, navId, label) => new ToolbarSettingsView(vm, navId, label)),
-            CreateNavItem("gallery", LangId.Settings_Nav_Gallery, ICON_GALLERY, 1,
+            CreateNavItem(SettingsNavId.Gallery, LangId.Settings_Nav_Gallery, ICON_GALLERY, 1,
                 (vm, navId, label) => new GallerySettingsView(vm, navId, label)),
-            CreateNavItem("mouse", LangId.Settings_Nav_Mouse, ICON_MOUSE, 0,
+            CreateNavItem(SettingsNavId.Mouse, LangId.Settings_Nav_Mouse, ICON_MOUSE, 0,
                 (vm, navId, label) => new MouseSettingsView(vm, navId, label)),
-            CreateNavItem("keyboard", LangId.Settings_Nav_Keyboard, ICON_KEYBOARD, 0,
+            CreateNavItem(SettingsNavId.Keyboard, LangId.Settings_Nav_Keyboard, ICON_KEYBOARD, 0,
                 (vm, navId, label) => new KeyboardSettingsView(vm, navId, label)),
-            CreateNavItem("file_assocs", LangId.Settings_Nav_FileTypeAssociations, ICON_FILE_ASSOC, 0,
+            CreateNavItem(SettingsNavId.FileAssociations, LangId.Settings_Nav_FileTypeAssociations, ICON_FILE_ASSOC, 0,
                 (vm, navId, label) => new FileTypeAssociationsSettingsView(vm, navId, label)),
-            CreateNavItem("tools", LangId.Settings_Nav_Tools, ICON_TOOLS, 0,
+            CreateNavItem(SettingsNavId.Tools, LangId.Settings_Nav_Tools, ICON_TOOLS, 0,
                 (vm, navId, label) => new ToolsSettingsView(vm, navId, label)),
-            CreateNavItem("plugins", LangId.Settings_Nav_Plugins, ICON_PLUGINS, 0,
+            CreateNavItem(SettingsNavId.Plugins, LangId.Settings_Nav_Plugins, ICON_PLUGINS, 0,
                 (vm, navId, label) => new PluginsSettingsView(vm, navId, label)),
-            CreateNavItem("language", LangId.Settings_Nav_Language, ICON_LANGUAGE, 0,
+            CreateNavItem(SettingsNavId.Language, LangId.Settings_Nav_Language, ICON_LANGUAGE, 0,
                 (vm, navId, label) => new LanguageSettingsView(vm, navId, label)),
-            CreateNavItem("appearance", LangId.Settings_Nav_Appearance, ICON_APPEARANCE, 0,
+            CreateNavItem(SettingsNavId.Appearance, LangId.Settings_Nav_Appearance, ICON_APPEARANCE, 0,
                 (vm, navId, label) => new AppearanceSettingsView(vm, navId, label)),
         ];
     }
 
 
-    private static SettingsNavItem CreateNavItem(string navId, LangId label, string iconData, int indent,
-        Func<SettingsViewModel, string, LangId?, Control> createView)
+    private static SettingsNavItem CreateNavItem(SettingsNavId navId, LangId label, string iconData, int indent,
+        Func<SettingsViewModel, SettingsNavId, LangId?, Control> createView)
         => CreateNavItem(navId, label, ParseIcon(iconData), indent, createView);
 
 
-    private static SettingsNavItem CreateNavItem(string navId, LangId label, Geometry? icon, int indent,
-        Func<SettingsViewModel, string, LangId?, Control> createView)
+    private static SettingsNavItem CreateNavItem(SettingsNavId navId, LangId label, Geometry? icon, int indent,
+        Func<SettingsViewModel, SettingsNavId, LangId?, Control> createView)
     {
         return new SettingsNavItem
         {

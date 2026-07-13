@@ -40,7 +40,7 @@ public sealed class SettingItem
     /// <summary>
     /// Gets the nav id of the page that hosts this setting.
     /// </summary>
-    public string PageNavId { get; init; } = string.Empty;
+    public SettingsNavId PageNavId { get; init; }
 
     /// <summary>
     /// Gets the localization key of the page (sidebar tab) that hosts this setting.
