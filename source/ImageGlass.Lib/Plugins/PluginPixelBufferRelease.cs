@@ -54,6 +54,11 @@ internal sealed class PluginPixelBufferRelease
     public string PluginId = string.Empty;
 
     /// <summary>
+    /// Liveness gate of the owning plugin; the release no-ops once its library is unloaded.
+    /// </summary>
+    public PluginLiveToken? LiveToken;
+
+    /// <summary>
     /// Tracks whether the buffer has already been released so manual release paths
     /// (host failure cleanup) and Skia disposal cannot double-free.
     /// </summary>
@@ -88,6 +93,18 @@ internal sealed class PluginPixelBufferRelease
     {
         if (System.Threading.Interlocked.Exchange(ref _released, 1) != 0) return;
 
+        // Skip if the library was unloaded; calling into unmapped memory crashes with an
+        // uncatchable AccessViolationException. Memory is reclaimed by the OS on unload.
+        if (LiveToken is not null) LiveToken.RunIfAlive(FreeBuffer);
+        else FreeBuffer();
+    }
+
+
+    /// <summary>
+    /// Calls the plugin's <c>FreePixelBuffer</c>; only valid while the library is loaded.
+    /// </summary>
+    private unsafe void FreeBuffer()
+    {
         var apiPtr = CodecApiPtr;
         if (apiPtr == 0) return;
 

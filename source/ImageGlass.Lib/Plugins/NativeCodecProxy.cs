@@ -426,6 +426,7 @@ internal sealed unsafe class NativeCodecProxy : PhDisposable, ICodec
             CodecApiPtr = (nint)_codecApi,
             Buffer = buffer,
             PluginId = _plugin.PluginId,
+            LiveToken = _plugin.LiveToken,
         };
 
         // Wrap the plugin pointer in SKData with a release callback, then build the SKImage.
