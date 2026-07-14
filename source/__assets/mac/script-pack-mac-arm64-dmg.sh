@@ -28,10 +28,11 @@ NOTARY_PROFILE="${NOTARY_PROFILE:-imageglass-notary}"
 
 WORKSPACE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 APP_DIR="$WORKSPACE_DIR/__artifacts/bundle/osx-arm64/ImageGlass.app"
+APP_STAGE_DIR="$WORKSPACE_DIR/__artifacts/bundle/osx-arm64"
 ENTITLEMENTS_FILE="$WORKSPACE_DIR/__assets/mac/ImageGlass.entitlements"
 BUILD_PROPS_FILE="$WORKSPACE_DIR/Directory.Build.props"
 DMG_STAGING_DIR="$WORKSPACE_DIR/__artifacts/bundle/osx-arm64/dmg-staging"
-OUTPUT_DIR="$WORKSPACE_DIR/__artifacts/dist"
+OUTPUT_DIR="$WORKSPACE_DIR/__artifacts/bundle"
 
 # ---------------------------------------------------------------------------
 # Sanity checks
@@ -130,6 +131,9 @@ xcrun stapler staple "$DMG_PATH"
 echo "==> Validating Gatekeeper acceptance"
 spctl --assess --type open --context context:primary-signature --verbose=2 "$DMG_PATH" || true
 xcrun stapler validate "$DMG_PATH"
+
+# Remove the staged .app bundle — the signed/notarized .dmg is the deliverable.
+rm -rf "$APP_STAGE_DIR"
 
 echo ""
 echo "Done: $DMG_PATH"

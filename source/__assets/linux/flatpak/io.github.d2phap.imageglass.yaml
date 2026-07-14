@@ -28,8 +28,8 @@ modules:
       - install -Dm644 io.github.d2phap.imageglass.png ${FLATPAK_DEST}/share/icons/hicolor/512x512/apps/io.github.d2phap.imageglass.png
     sources:
       - type: archive
-        url: https://github.com/d2phap/ImageGlass/releases/download/10.0.2.66-beta-2/ImageGlass_10.0.2.66-beta-2_linux-x64.tar.gz
-        sha256: de4f2176ba77d6415cd613c395e9058af85717c3fcf02100fa2471110f042530
+        url: https://github.com/d2phap/ImageGlass/releases/download/10.0.2.714-beta-2/ImageGlass_10.0.2.714-beta-2_linux-x64.tar.gz
+        sha256: 1239796699d5bba392be1f920af197eb29b9e36d00b49a01c1cdb6b71177351a
         strip-components: 1
       - type: file
         path: io.github.d2phap.imageglass.desktop

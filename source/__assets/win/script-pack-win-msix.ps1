@@ -11,7 +11,7 @@
             The Store re-signs the package itself, so it is built UNSIGNED and
             carries the Store-reserved Identity (Name + Publisher) and the
             Store-supplied artwork (appxmanifest/Assets-msstore).
-            Output: __artifacts/dist/ImageGlass_<label>_win-<arch>-msstore.msix
+            Output: __artifacts/bundle/ImageGlass_<label>_win-<arch>-msstore.msix
 
       * SIGNED    (-Sign)    -> for direct download / GitHub Releases (sideload).
             Every payload .exe / .dll is Authenticode-signed, then the whole .msix
@@ -21,7 +21,7 @@
             (appxmanifest/Assets-signed).
             If NO signing certificate is found, the package is still built (same
             identity/artwork) but left UNSIGNED — sign it later before publishing.
-            Output: __artifacts/dist/ImageGlass_<label>_win-<arch>.msix
+            Output: __artifacts/bundle/ImageGlass_<label>_win-<arch>.msix
 
     Both flavours share the same package version: Major.Minor (from
     <IgBundleShortVersion>) . <IgBundleBuild> . 0 — e.g. 10.0.535.0. The 4th
@@ -133,7 +133,7 @@ $ManifestTpl  = Join-Path $PSScriptRoot 'appxmanifest\AppxManifest.xml'
 # Store-supplied artwork. (Regenerate the signed set with script-generate-msix-assets.ps1.)
 $AssetsDir    = Join-Path $PSScriptRoot ($Sign ? 'appxmanifest\Assets-signed' : 'appxmanifest\Assets-msstore')
 $AppExtras    = Join-Path $WorkspaceDir '__assets\__app'
-$DistDir      = Join-Path $WorkspaceDir '__artifacts\dist'
+$DistDir      = Join-Path $WorkspaceDir '__artifacts\bundle'
 
 # --- Helpers -------------------------------------------------------------------
 
@@ -413,6 +413,25 @@ if ($script:doSign) {
         Write-Warning "Could not sign the $ext — it has been left UNSIGNED."
         $script:doSign = $false
     }
+}
+
+# --- Clean up staging / temp produced during packing --------------------------
+# The .msix / .msixbundle in __artifacts\bundle\ is the deliverable; the per-arch
+# staging layouts, priconfig files and the bundle input folder are intermediate.
+$packTemp = [System.Collections.Generic.List[string]]::new()
+if ($Bundle) {
+    $packTemp.Add((Join-Path $DistDir 'win-msixbundle-input'))
+    foreach ($arch in @('x64', 'arm64')) {
+        $packTemp.Add((Join-Path $DistDir "win-$arch-msix"))
+        $packTemp.Add((Join-Path $DistDir "win-$arch-msix.priconfig.xml"))
+    }
+}
+else {
+    $packTemp.Add((Join-Path $DistDir "win-$Platform-msix"))
+    $packTemp.Add((Join-Path $DistDir "win-$Platform-msix.priconfig.xml"))
+}
+foreach ($p in $packTemp) {
+    if (Test-Path $p) { Remove-Item $p -Recurse -Force -ErrorAction SilentlyContinue }
 }
 
 # --- Done ----------------------------------------------------------------------

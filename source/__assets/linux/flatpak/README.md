@@ -27,7 +27,7 @@ flatpak install -y flathub org.freedesktop.Platform//25.08 org.freedesktop.Sdk//
 bash __assets/linux/script-pack-linux-x64-flatpak.sh
 ```
 
-Outputs to `__artifacts/dist/`:
+Outputs to `__artifacts/bundle/`:
 
 - `ImageGlass_<version>_linux-x64.tar.gz` — payload the Flathub manifest points at.
 - `ImageGlass_<version>_linux-x64.flatpak` — single-file bundle for direct install.

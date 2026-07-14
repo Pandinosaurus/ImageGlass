@@ -22,7 +22,7 @@ set -euo pipefail
 WORKSPACE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 PUBLISH_DIR="$WORKSPACE_DIR/__artifacts/publish/linux-x64"
 FLATPAK_DIR="$WORKSPACE_DIR/__assets/linux/flatpak"
-DIST_DIR="$WORKSPACE_DIR/__artifacts/dist"
+DIST_DIR="$WORKSPACE_DIR/__artifacts/bundle"
 BUILD_ROOT="$WORKSPACE_DIR/__artifacts/bundle/linux-flatpak"
 STATE_DIR="$BUILD_ROOT/.flatpak-builder"
 BUILD_PROPS_FILE="$WORKSPACE_DIR/Directory.Build.props"
@@ -184,6 +184,12 @@ else
 	BUNDLE_BUILT=1
 fi
 
+# --- Clean up staging / build temp produced during packing ---
+# The tarball + .flatpak bundle are the deliverables (in __artifacts/bundle/);
+# everything under BUILD_ROOT (stage, flatpak-builder cache/state, local repo,
+# exported pubkey) is intermediate and safe to drop.
+rm -rf "$BUILD_ROOT"
+
 echo ""
 echo "Done."
 echo "  Tarball (Flathub source): $TARBALL_PATH"
@@ -194,7 +200,6 @@ if [[ "$BUNDLE_BUILT" == "1" ]]; then
 	# PUBKEY_FILE is only set when signing actually happened (key present in keyring).
 	if [[ -n "${PUBKEY_FILE:-}" ]]; then
 		echo "  Signed with GPG key     : $GPG_KEY"
-		echo "  Embedded public key     : $PUBKEY_FILE"
 		echo "  Publish the fingerprint so users can trust the key:"
 		echo "      gpg --fingerprint $GPG_KEY"
 	else

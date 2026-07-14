@@ -23,7 +23,7 @@
 # To also upload to App Store Connect, set UPLOAD=1 and provide credentials:
 #   UPLOAD=1 APPLE_ID="you@example.com" APPLE_APP_PASSWORD="app-specific-pw" \
 #       ./script-pack-mac-arm64-pkg-appstore.sh
-# (Or omit UPLOAD and submit __artifacts/dist/*.pkg via the Transporter app.)
+# (Or omit UPLOAD and submit __artifacts/bundle/*.pkg via the Transporter app.)
 
 set -euo pipefail
 
@@ -35,10 +35,11 @@ INSTALLER_SIGN_IDENTITY="${INSTALLER_SIGN_IDENTITY:-3rd Party Mac Developer Inst
 
 WORKSPACE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 APP_DIR="$WORKSPACE_DIR/__artifacts/bundle/osx-arm64/ImageGlass.app"
+APP_STAGE_DIR="$WORKSPACE_DIR/__artifacts/bundle/osx-arm64"
 ENTITLEMENTS_FILE="$WORKSPACE_DIR/__assets/mac/appstore/ImageGlass.AppStore.entitlements"
 PROVISION_PROFILE="${PROVISION_PROFILE:-$WORKSPACE_DIR/__assets/mac/appstore/ImageGlass_AppStore.provisionprofile}"
 BUILD_PROPS_FILE="$WORKSPACE_DIR/Directory.Build.props"
-OUTPUT_DIR="$WORKSPACE_DIR/__artifacts/dist"
+OUTPUT_DIR="$WORKSPACE_DIR/__artifacts/bundle"
 
 UPLOAD="${UPLOAD:-0}"
 
@@ -140,6 +141,9 @@ productbuild \
 
 echo ""
 echo "Built: $PKG_PATH"
+
+# Remove the staged .app bundle — the signed .pkg is the deliverable.
+rm -rf "$APP_STAGE_DIR"
 
 # ---------------------------------------------------------------------------
 # 5. Optionally validate + upload to App Store Connect.

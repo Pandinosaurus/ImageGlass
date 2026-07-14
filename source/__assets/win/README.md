@@ -56,7 +56,7 @@ VS Code tasks:
 - **Microsoft Store:** `pack-win-msstore-msixbundle` — one unsigned `.msixbundle` (x64 + arm64).
 - **Everything:** `pack-win-all` — builds all three.
 
-Output lands in `__artifacts/dist/`:
+Output lands in `__artifacts/bundle/`:
 
 - `ImageGlass_<version>_win-x64.msix` / `..._win-arm64.msix` — signed, for GitHub.
 - `ImageGlass_<version>_win-msstore.msixbundle` — unsigned bundle, for the Store.
