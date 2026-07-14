@@ -32,7 +32,9 @@ namespace ImageGlass.UI;
 public class PhCommandPreview : PhControl
 {
     // sample path used to render the preview
-    private const string PREVIEW_FAKE_PATH = @"C:\sample\photo.jpg";
+    private string PreviewFakePath { get; } = BHelper.OS == OSType.Windows
+        ? @"C:\sample\photo.webp"
+        : "/sample/photo.webp";
 
     private readonly SelectableTextBlock _previewText;
 
@@ -110,7 +112,7 @@ public class PhCommandPreview : PhControl
     private void UpdatePreview()
     {
         var (exe, args) = BHelper.BuildExeArgs(
-            Executable ?? string.Empty, Argument ?? string.Empty, PREVIEW_FAKE_PATH);
+            Executable ?? string.Empty, Argument ?? string.Empty, PreviewFakePath);
 
         // app-protocol executables (ending with ':') join without a space
         var join = exe.EndsWith(':') ? string.Empty : " ";
