@@ -357,7 +357,8 @@ public partial class BHelper
 
 
     /// <summary>
-    /// Resolves a relative/protocol/link path to absolute path.
+    /// Resolves a relative/protocol/link path to absolute path,
+    /// including <c>.app</c> bundle on macOS.
     /// </summary>
     public static string ResolvePath(string? inputPath)
     {
@@ -388,13 +389,60 @@ public partial class BHelper
             path = Core.ShellProvider?.GetTargetPathFromShortcut(path) ?? path;
         }
 
+        // macOS: a .app is a directory, so resolve to its inner executable for direct launching
+        if (OS == OSType.Mac
+            && path.EndsWith(".app", StringComparison.OrdinalIgnoreCase)
+            && Directory.Exists(path))
+        {
+            // Prefer CFBundleExecutable from Info.plist; fall back to the bundle name.
+            var exeName = GetMacOsAppExecutableName(path)
+                ?? Path.GetFileNameWithoutExtension(path.TrimEnd('/'));
+
+            var innerExe = Path.Combine(path, "Contents", "MacOS", exeName);
+            if (File.Exists(innerExe)) path = innerExe;
+        }
+
         return path;
     }
 
 
     /// <summary>
+    /// Reads <c>CFBundleExecutable</c> from a macOS app bundle's <c>Contents/Info.plist</c>.
+    /// Returns <c>null</c> if the plist is missing or the key is absent.
+    /// </summary>
+    private static string? GetMacOsAppExecutableName(string appBundlePath)
+    {
+        var plistPath = Path.Combine(appBundlePath, "Contents", "Info.plist");
+        if (!File.Exists(plistPath)) return null;
+
+        try
+        {
+            // Info.plist is a <dict> of alternating <key>/<value> siblings.
+            var doc = System.Xml.Linq.XDocument.Load(plistPath);
+            var dict = doc.Root?.Element("dict");
+            if (dict is null) return null;
+
+            var elements = dict.Elements().ToList();
+            for (var i = 0; i < elements.Count - 1; i++)
+            {
+                if (elements[i].Name.LocalName == "key"
+                    && elements[i].Value == "CFBundleExecutable"
+                    && elements[i + 1].Name.LocalName == "string")
+                {
+                    var name = elements[i + 1].Value.Trim();
+                    return string.IsNullOrEmpty(name) ? null : name;
+                }
+            }
+        }
+        catch { }
+
+        return null;
+    }
+
+
+    /// <summary>
     /// Builds the command line from config value.
-    /// Example: <c>/EnableFullScreen=True</c>
+    /// Example: <c>-p:EnableFullScreen=True</c>
     /// </summary>
     public static string BuildConfigCmdLine(string configName, object? configValue)
     {
