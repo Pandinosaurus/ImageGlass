@@ -114,6 +114,9 @@ public sealed class ToolProcessManager : PhDisposable
             psi.ArgumentList.Add("--pipe");
             psi.ArgumentList.Add(pipeName);
 
+            // Inside a Flatpak sandbox, route the launch through the host (no-op otherwise).
+            BHelper.ApplyFlatpakHostSpawn(psi);
+
             process = Process.Start(psi);
         }
         catch (Exception ex)

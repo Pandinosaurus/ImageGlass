@@ -12,6 +12,8 @@ finish-args:
   - --filesystem=host
   - --socket=cups
   - --talk-name=org.freedesktop.FileManager1
+  # Allow launching external tools on the host via flatpak-spawn --host.
+  - --talk-name=org.freedesktop.Flatpak
 
 modules:
   - name: imageglass
@@ -29,7 +31,7 @@ modules:
     sources:
       - type: archive
         url: https://github.com/d2phap/ImageGlass/releases/download/10.0.2.714-beta-2/ImageGlass_10.0.2.714-beta-2_linux-x64.tar.gz
-        sha256: 1239796699d5bba392be1f920af197eb29b9e36d00b49a01c1cdb6b71177351a
+        sha256: 11cc3ff87918348bd3072a03ddb4a7321d3950839805572e766617dae14a5c97
         strip-components: 1
       - type: file
         path: io.github.d2phap.imageglass.desktop

@@ -178,6 +178,9 @@ internal sealed class ExternalToolProxy : ITool
                 psi.ArgumentList.Add(arg);
             }
 
+            // Inside a Flatpak sandbox, route the launch through the host (no-op otherwise).
+            BHelper.ApplyFlatpakHostSpawn(psi);
+
             // Process.Start throws Win32Exception when the executable/command can't be found.
             return Process.Start(psi) is not null ? ToolLaunchResult.Ok : ToolLaunchResult.Fail(null);
         }

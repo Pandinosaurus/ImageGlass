@@ -24,6 +24,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -37,6 +38,37 @@ public partial class BHelper
     private static readonly TaskFactory _taskFactory = new(
         CancellationToken.None, TaskCreationOptions.None,
         TaskContinuationOptions.None, TaskScheduler.Default);
+
+
+    /// <summary>
+    /// Whether running inside a Flatpak sandbox (host commands need <c>flatpak-spawn --host</c>).
+    /// </summary>
+    public static bool IsFlatpakSandbox { get; } = OS == OSType.Linux && File.Exists("/.flatpak-info");
+
+
+    /// <summary>
+    /// In a Flatpak sandbox, rewrites <paramref name="psi"/> to launch via <c>flatpak-spawn --host</c>
+    /// so host paths resolve (needs <c>--talk-name=org.freedesktop.Flatpak</c>); no-op otherwise.
+    /// </summary>
+    public static void ApplyFlatpakHostSpawn(ProcessStartInfo psi)
+    {
+        if (!IsFlatpakSandbox
+            || psi.UseShellExecute
+            || string.IsNullOrEmpty(psi.FileName)
+            || psi.FileName == "flatpak-spawn")
+        {
+            return;
+        }
+
+        var hostArgs = new List<string>(psi.ArgumentList.Count + 2) { "--host", psi.FileName };
+        hostArgs.AddRange(psi.ArgumentList);
+
+        // Sandbox working dir is meaningless on the host; use the host default.
+        psi.FileName = "flatpak-spawn";
+        psi.WorkingDirectory = string.Empty;
+        psi.ArgumentList.Clear();
+        foreach (var arg in hostArgs) psi.ArgumentList.Add(arg);
+    }
 
 
     /// <summary>
