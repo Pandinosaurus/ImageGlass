@@ -560,7 +560,8 @@ public static class Core
         // 2. Set default Inter font size for macOS, Linux
         if (BHelper.OS != OSType.Windows)
         {
-            app.Resources["ControlContentThemeFontSize"] = Const.FONT_SIZE_BODY;
+            app.Resources["ControlContentThemeFontSize"] =
+                app.Resources["ToolTipContentThemeFontSize"] = Const.FONT_SIZE_BODY;
         }
     }
 

@@ -103,7 +103,7 @@ public static class Const
     /// so the standard sizes are nudged down to match the Windows/Linux builds.
     /// </summary>
     private static readonly double FONT_SIZE_MAC_OFFSET = BHelper.OS != OSType.Mac ? -1 : 0;
-    public static readonly double FONT_SIZE_BODY = BHelper.OS == OSType.Mac ? 12 : 13;
+    public static readonly double FONT_SIZE_BODY = BHelper.OS == OSType.Mac ? 12.5 : 13;
     public static readonly double FONT_SIZE_TITLE = 22 + FONT_SIZE_MAC_OFFSET;
     public static readonly double FONT_SIZE_SUBTITLE = 18 + FONT_SIZE_MAC_OFFSET;
     public static readonly double FONT_SIZE_SMALL = 13 + FONT_SIZE_MAC_OFFSET;

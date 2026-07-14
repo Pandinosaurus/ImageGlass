@@ -61,7 +61,6 @@
                                 Margin="0,0,0,4"
                                 ColumnDefinitions="*, Auto"
                                 ColumnSpacing="4"
-                                TextElement.FontSize="14"
                                 TextElement.FontWeight="Bold">
                                 <TextBlock
                                     Grid.Column="0"
