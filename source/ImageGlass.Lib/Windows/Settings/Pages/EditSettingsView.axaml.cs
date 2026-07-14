@@ -17,6 +17,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 using Avalonia.Controls;
+using Avalonia.Layout;
 using Avalonia.Media;
 using ImageGlass.Common.Localization;
 using ImageGlass.Common.Types;
@@ -176,7 +177,7 @@ public partial class EditSettingsView : SettingsPageView
                 Cells =
                 [
                     PhTableControl.TextCell(extKey, maxWidth: 160, selectable: true, font: _codeFont),
-                    PhTableControl.TextCell(app.AppName, maxWidth: 160, selectable: true),
+                    AppNameCell(key, app),
                     PhTableControl.TextCell(app.Executable, selectable: true),
                     string.IsNullOrEmpty(app.Argument)
                         ? PhTableControl.TextCell(Core.Lang[LangId._Empty], muted: true)
@@ -192,6 +193,28 @@ public partial class EditSettingsView : SettingsPageView
 
         PART_AppsTable.EmptyText = Core.Lang[LangId._Empty];
         PART_AppsTable.Build(columns, rows);
+    }
+
+
+    /// <summary>
+    /// The app-name cell: a link button showing the app name (capped); clicking it opens the edit dialog.
+    /// </summary>
+    private Control AppNameCell(string extKey, EditingApp app)
+    {
+        var displayName = string.IsNullOrWhiteSpace(app.AppName) ? extKey : app.AppName;
+
+        var btn = new PhButton
+        {
+            Variant = PhButtonVariant.Link,
+            Text = displayName,
+            MaxWidth = 160,
+            HorizontalAlignment = HorizontalAlignment.Left,
+            ClipToBounds = true,
+        };
+        ToolTip.SetTip(btn, displayName);
+        btn.Click += (_, _) => _ = AddOrEditAppAsync(extKey);
+
+        return PhTableControl.WrapCell(btn);
     }
 
 
