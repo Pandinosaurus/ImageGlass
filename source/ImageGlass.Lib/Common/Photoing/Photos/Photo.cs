@@ -611,6 +611,10 @@ public partial class Photo : PhDisposable
                     await OnDecodingAsync(Metadata, token);
                     return null;
                 }
+                catch (TaskCanceledException)
+                {
+                    return null;
+                }
                 catch (Exception ex)
                 {
                     return ex;
@@ -630,6 +634,10 @@ public partial class Photo : PhDisposable
             {
                 await handleProgressFn(new(PhotoState.Loaded, this, token));
             }
+        }
+        catch (TaskCanceledException)
+        {
+            State = PhotoState.None;
         }
         catch (Exception ex)
         {
