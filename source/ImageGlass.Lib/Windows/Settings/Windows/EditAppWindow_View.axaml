@@ -25,14 +25,14 @@
             <ui:PhTextBox
                 x:Name="PART_AppName"
                 IsRequired="True"
-                PlaceholderText="Paint" />
+                PlaceholderText="{OnPlatform 'My Editor', Windows='MS Paint', x:TypeArguments=x:String}" />
         </StackPanel>
 
         <!--  Executable, argument & command preview  -->
         <ui:PhActionEditorControl
             x:Name="PART_Action"
             ArgumentPlaceholder="&lt;file&gt;"
-            ExecutablePlaceholder="mspaint.exe"
+            ExecutablePlaceholder="{OnPlatform '/path/to/editor', Windows='mspaint.exe', macOS='/Applications/MyEditor.app', x:TypeArguments=x:String}"
             ShowHotkeys="False" />
 
     </StackPanel>

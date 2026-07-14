@@ -25,7 +25,8 @@
                     Grid.Column="1"
                     Height="32"
                     VerticalAlignment="Top"
-                    IconData="{StaticResource IconFolderOpen}" />
+                    IconData="{StaticResource IconFolderOpen}"
+                    IsVisible="{OnPlatform True, macOS=False, x:TypeArguments=x:Boolean}" />
             </Grid>
         </StackPanel>
 

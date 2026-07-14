@@ -65,7 +65,7 @@
                                 x:Name="PART_CustomImagePath"
                                 Grid.Column="0"
                                 AcceptValue="FilePathValueOnly"
-                                PlaceholderText="C:\path\to\icon.svg" />
+                                PlaceholderText="\path\to\icon.svg" />
                             <ui:PhButton
                                 x:Name="PART_BrowseImage"
                                 Grid.Column="1"

@@ -361,7 +361,7 @@ public partial class DialogWindow : PhWindow
         var footerWrapper = new Grid
         {
             ColumnDefinitions = new ColumnDefinitions("*, Auto"),
-            Margin = new Thickness(24, 19, 24, 20),
+            Margin = new Thickness(24, 17, 24, 18),
             ColumnSpacing = 20,
         };
         Grid.SetColumn(footerLeftSlot, 0);
