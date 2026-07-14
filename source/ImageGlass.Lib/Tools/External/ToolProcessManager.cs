@@ -82,8 +82,7 @@ public sealed class ToolProcessManager : PhDisposable
     {
         if (string.IsNullOrEmpty(tool.Executable)) return (null, null);
 
-        // Full GUID so the name isn't guessable (35 chars, under macOS's ~104 socket-path limit).
-        var pipeName = $"ig_{Guid.NewGuid():N}";
+        var pipeName = CreatePipeName();
 
         // CurrentUserOnly restricts the pipe to this user (SID/UID); the SDK client sets the same flag.
         var pipeServer = new NamedPipeServerStream(
@@ -179,6 +178,23 @@ public sealed class ToolProcessManager : PhDisposable
         }
 
         return (info, null);
+    }
+
+
+    /// <summary>
+    /// Builds the pipe name. A bare GUID normally; inside a Flatpak sandbox an absolute socket path
+    /// under the shared host home, since each sandbox's <c>/tmp</c> (the default) is private.
+    /// </summary>
+    private static string CreatePipeName()
+    {
+        var id = $"ig_{Guid.NewGuid():N}";
+        if (!BHelper.IsFlatpakSandbox) return id;
+
+        // ~/.cache is shared via --filesystem=host, so the tool's own sandbox can reach the socket.
+        var dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+            ".cache", "ImageGlass", "tools");
+        Directory.CreateDirectory(dir);
+        return Path.Combine(dir, id);
     }
 
 
