@@ -16,7 +16,10 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Shapes;
+using Avalonia.Layout;
 using Avalonia.Markup.Xaml.MarkupExtensions;
 using Avalonia.Media;
 using ImageGlass.Common.Localization;
@@ -145,6 +148,7 @@ public partial class ToolsSettingsView : SettingsPageView
         [
             new() { Header = Core.Lang[LangId._Name] },
             new() { Header = Core.Lang[LangId._Executable], Star = true },
+            new() { Header = string.Empty }, // integrated indicator icon
             new() { Header = Core.Lang[LangId._Hotkeys] },
         ];
 
@@ -153,8 +157,9 @@ public partial class ToolsSettingsView : SettingsPageView
             Cells =
             [
                 NameCell(tool),
-                PhTableControl.TextCell(tool.Executable, selectable: true),
-                PhTableControl.TextCell(HotkeysText(tool), HOTKEY_MAX_WIDTH),
+                ExecutableCell(tool),
+                IntegratedCell(tool),
+                HotkeysCell(tool),
             ],
             Actions =
             [
@@ -168,40 +173,119 @@ public partial class ToolsSettingsView : SettingsPageView
     }
 
 
-    private static string HotkeysText(ExternalTool tool)
-        => string.Join(", ", tool.Hotkeys.Select(h => h.KeyString));
+    /// <summary>
+    /// The hotkeys cell: one keycap chip per hotkey (capped width so multiple chips wrap),
+    /// or an empty cell when the tool has none.
+    /// </summary>
+    private static Control HotkeysCell(ExternalTool tool)
+    {
+        if (tool.Hotkeys.Length == 0) return new Panel();
+
+        var panel = new WrapPanel { MaxWidth = HOTKEY_MAX_WIDTH };
+        foreach (var hk in tool.Hotkeys)
+        {
+            panel.Children.Add(new PhHotkeyChip(hk.KeyString)
+            {
+                Margin = new Thickness(0, 0, 6, 0),
+            });
+        }
+
+        return PhTableControl.WrapCell(panel);
+    }
 
 
     #region Table cell builders
 
     /// <summary>
-    /// The name cell: the tool name (capped + truncated), with the "Integrated" badge below when set.
+    /// The name cell: a link button showing the tool name (capped); clicking it opens the edit dialog.
     /// </summary>
-    private static Control NameCell(ExternalTool tool)
+    private Control NameCell(ExternalTool tool)
     {
-        var name = new SelectableTextBlock
+        var displayName = string.IsNullOrWhiteSpace(tool.ToolName) ? tool.ToolId : tool.ToolName;
+
+        var btn = new PhButton
         {
-            Text = string.IsNullOrWhiteSpace(tool.ToolName) ? tool.ToolId : tool.ToolName,
+            Variant = PhButtonVariant.Link,
+            Text = displayName,
             MaxWidth = NAME_MAX_WIDTH,
-            TextTrimming = TextTrimming.CharacterEllipsis,
-            IsTabStop = false,
+            HorizontalAlignment = HorizontalAlignment.Left,
+            ClipToBounds = true,
         };
+        ToolTip.SetTip(btn, displayName);
+        btn.Click += (_, _) => _ = AddOrEditToolAsync(tool);
 
+        return PhTableControl.WrapCell(btn);
+    }
+
+
+    /// <summary>
+    /// The executable cell: the executable path, with the arguments on a dimmed second line below it
+    /// (both selectable and truncated); the arguments line is omitted when empty.
+    /// </summary>
+    private static Control ExecutableCell(ExternalTool tool)
+    {
         var stack = new StackPanel { Spacing = 2 };
-        stack.Children.Add(name);
+        stack.Children.Add(ExecutableLine(tool.Executable, secondary: false));
 
-        if (tool.IsIntegrated)
+        if (!string.IsNullOrWhiteSpace(tool.Arguments))
         {
-            var badge = new PhTextBlock
-            {
-                Text = Core.Lang[LangId.Settings_Tools_Integrated],
-                FontSize = Const.FONT_SIZE_SMALL,
-            };
-            badge[!TextBlock.ForegroundProperty] = new DynamicResourceExtension("PhAccentFill");
-            stack.Children.Add(badge);
+            stack.Children.Add(ExecutableLine(tool.Arguments, secondary: true));
         }
 
         return PhTableControl.WrapCell(stack);
+    }
+
+
+    /// <summary>
+    /// One selectable, ellipsis-truncated line of the executable cell; <paramref name="secondary"/>
+    /// shrinks and dims it (used for the arguments line).
+    /// </summary>
+    private static SelectableTextBlock ExecutableLine(string text, bool secondary)
+    {
+        var tb = new SelectableTextBlock
+        {
+            Text = text,
+            TextTrimming = TextTrimming.CharacterEllipsis,
+            VerticalAlignment = VerticalAlignment.Top,
+            IsTabStop = false,
+        };
+        if (!string.IsNullOrEmpty(text)) ToolTip.SetTip(tb, text);
+
+        if (secondary)
+        {
+            tb.FontSize = Const.FONT_SIZE_SMALL;
+            tb.Opacity = 0.7;
+        }
+
+        return tb;
+    }
+
+
+    /// <summary>
+    /// The integrated-indicator cell: for integrated tools, the "integrated" glyph with an
+    /// "Integrated" tooltip; otherwise an empty cell.
+    /// </summary>
+    private static Control IntegratedCell(ExternalTool tool)
+    {
+        if (!tool.IsIntegrated) return new Panel();
+
+        var glyph = new Path
+        {
+            Data = Resx.GetIcon(ResxIconId.IconIntegrated),
+            Width = Const.FONT_SIZE_BODY,
+            Height = Const.FONT_SIZE_BODY,
+            StrokeThickness = 1.5,
+            StrokeLineCap = PenLineCap.Round,
+            StrokeJoin = PenLineJoin.Round,
+            Stretch = Stretch.Uniform,
+        };
+        glyph[!Shape.StrokeProperty] = new DynamicResourceExtension("PhAccentFill");
+
+        // transparent fill so the whole icon box reports hover for the tooltip
+        var hit = new Border { Background = Brushes.Transparent, Child = glyph };
+        ToolTip.SetTip(hit, Core.Lang[LangId.Settings_Tools_Integrated]);
+
+        return PhTableControl.WrapCell(hit);
     }
 
     #endregion // Table cell builders
