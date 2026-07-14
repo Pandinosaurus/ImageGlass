@@ -22,8 +22,7 @@
         <!--  Tool name  -->
         <StackPanel Spacing="5">
             <ui:PhTextBlock LangKey="_Name" />
-            <ui:PhTextBox x:Name="PART_Name"
-                PlaceholderText="My Tool" />
+            <ui:PhTextBox x:Name="PART_Name" PlaceholderText="My Tool" />
         </StackPanel>
 
         <!--  Integrated with ImageGlass.SDK (the SDK name is a link)  -->
@@ -45,7 +44,10 @@
         <ui:PhActionEditorControl
             x:Name="PART_Action"
             ArgumentPlaceholder="&lt;file&gt;"
-            ExecutablePlaceholder="{OnPlatform '/path/to/tool', Windows='C:\path\to\tool.exe', macOS='/Applications/MyTool.app', x:TypeArguments=x:String}" />
+            ExecutablePlaceholder="{OnPlatform '/path/to/tool',
+                                               Windows='C:\\path\\to\\tool.exe',
+                                               macOS='/Applications/MyTool.app',
+                                               x:TypeArguments=x:String}" />
 
     </StackPanel>
 </ui:PhControl>
