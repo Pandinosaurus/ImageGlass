@@ -22,6 +22,7 @@ using Avalonia.Media;
 using ImageGlass.Common;
 using ImageGlass.Common.Loggers;
 using ImageGlass.Common.ServiceProviders;
+using ImageGlass.Common.ServiceProviders.FileSearchService;
 using ImageGlass.Mac.Common.ServiceProviders;
 using System;
 
@@ -41,7 +42,7 @@ sealed class Program
         var isHandled = App.InitializeAppInstance(args, () =>
         {
             // initialize service providers
-            Core.FileSearchProvider = new MacFileSearchProvider();
+            Core.FileSearchProvider = new FileSearchProvider();
             Core.PreviewProvider = new PhotoPreviewProvider();
             Core.ShellProvider = new MacShellProvider();
             Core.ShareProvider = new MacShareProvider();

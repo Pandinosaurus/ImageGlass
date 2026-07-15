@@ -118,7 +118,6 @@ public enum LangId
     _SwitchedToNextFolder,
     _SwitchedToPreviousFolder,
     _ClipboardImage,
-    _FolderAccessPrompt,
 
     // about
     _Slogan,

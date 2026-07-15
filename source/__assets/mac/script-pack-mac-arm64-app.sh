@@ -25,9 +25,8 @@ if [[ -z "$IG_SHORT_VERSION" ]]; then
 	[[ -z "$IG_SHORT_VERSION" ]] && IG_SHORT_VERSION="$IG_VERSION"
 fi
 
-# Build number (CFBundleVersion): at most three integers; must increase with
-# every App Store upload. Prefer the explicit <IgBundleBuild>; fall back to the
-# last segment of IgVersion (e.g. 531).
+# Build number (CFBundleVersion): at most three integers. Prefer the explicit
+# <IgBundleBuild>; fall back to the last segment of IgVersion (e.g. 531).
 IG_BUILD="$(sed -n 's:.*<IgBundleBuild>\(.*\)</IgBundleBuild>.*:\1:p' "$BUILD_PROPS_FILE" | head -n 1)"
 if [[ -z "$IG_BUILD" ]]; then
 	IG_BUILD="${IG_VERSION##*.}"

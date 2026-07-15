@@ -133,20 +133,6 @@
       "group": "build"
     },
     {
-      "label": "pack-mac-arm64-pkg-appstore",
-      "type": "process",
-      "command": "/bin/bash",
-      "args": [
-        "${workspaceFolder}/__assets/mac/script-pack-mac-arm64-pkg-appstore.sh"
-      ],
-      "problemMatcher": [],
-      "dependsOn": [
-        "pack-mac-arm64-app"
-      ],
-      "dependsOrder": "sequence",
-      "group": "build"
-    },
-    {
       "label": "pack-linux-x64-flatpak",
       "type": "process",
       "command": "/bin/bash",

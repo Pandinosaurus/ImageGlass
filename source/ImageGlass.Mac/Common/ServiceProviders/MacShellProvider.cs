@@ -29,9 +29,6 @@ namespace ImageGlass.Mac.Common.ServiceProviders;
 
 internal partial class MacShellProvider : PhDisposable, IShellProvider
 {
-    private static readonly string _bundleId = $"com.duongdieuphap.imageglass";
-
-
     public object? ForegroundShell { get; set; }
 
 

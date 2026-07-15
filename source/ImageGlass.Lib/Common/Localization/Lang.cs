@@ -474,7 +474,6 @@ public class Lang
         new(LangId._SwitchedToNextFolder, "Switched to next folder\r\n{0}"), // v10.0
         new(LangId._SwitchedToPreviousFolder, "Switched to previous folder\r\n{0}"), // v10.0
         new(LangId._ClipboardImage, "Clipboard image"), //v9.0
-        new(LangId._FolderAccessPrompt, "Allow ImageGlass to access this folder to browse other images"), //v10.0
 
         // about
         new(LangId._Slogan, "A Fast, Seamless Photo Viewer"),
