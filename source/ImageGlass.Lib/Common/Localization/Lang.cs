@@ -426,6 +426,8 @@ public class Lang
         new(LangId._IncompatibleConfig, "Incompatible settings file"),
         new(LangId._IncompatibleConfig_Description, "Your settings file was created by an older version of ImageGlass and is not compatible with this version. It will be reset to the default settings.\r\n\r\nDo you want to continue?"),
         new(LangId._IncompatibleConfig_BackupNote, "Please manually back up your settings file before continuing if you want to keep it. Choosing No will quit ImageGlass without changing the file."),
+        new(LangId._IncompatibleTheme, "Incompatible theme packs"),
+        new(LangId._IncompatibleTheme_Description, "Your theme packs were created for the previous version of ImageGlass and are not compatible with this version."),
         new(LangId._CreatingFile, "Creating a temporary image file…"), //v9.0
         new(LangId._CreatingFileError, "Could not create temporary image file"), //v9.0
         new(LangId._NotSupported, "Unsupported format"), //v9.0

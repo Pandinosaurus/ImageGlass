@@ -518,7 +518,6 @@ public partial class Config
 
 
 
-    // Public static methods
     #region Public static methods
 
     /// <summary>
@@ -742,29 +741,27 @@ public partial class Config
 
 
     /// <summary>
-    /// Installs theme packs from the given <c>.igtheme</c> (zip) files into the user theme folder.
-    /// Returns the number of packs extracted successfully.
+    /// Installs <c>.igtheme.zip</c> packs into the user theme folder, skipping incompatible ones.
     /// </summary>
-    public static async Task<int> InstallThemePacksAsync(IEnumerable<string> igThemeFilePaths)
+    public static async Task<ThemePackInstallResult> InstallThemePacksAsync(IEnumerable<string> igThemeFilePaths)
     {
-        var destDir = ThemePacksDir;
-        Directory.CreateDirectory(destDir);
+        var themesRoot = ThemePacksDir;
+        Directory.CreateDirectory(themesRoot);
 
         return await Task.Run(() =>
         {
-            var count = 0;
+            var installed = 0;
+            var incompatible = new List<string>();
+
             foreach (var file in igThemeFilePaths)
             {
                 if (!File.Exists(file)) continue;
-                try
-                {
-                    ZipFile.ExtractToDirectory(file, destDir, overwriteFiles: true);
-                    count++;
-                }
-                catch { }
+
+                if (InstallOneThemePack(file, themesRoot)) installed++;
+                else incompatible.Add(GetThemePackFileName(file));
             }
 
-            return count;
+            return new ThemePackInstallResult(installed, incompatible);
         }).ConfigureAwait(false);
     }
 
@@ -793,7 +790,6 @@ public partial class Config
 
 
 
-    // Public methods
     #region Public methods
 
 
@@ -966,7 +962,6 @@ public partial class Config
 
 
 
-    // Private static methods (config merge)
     #region Private static methods (config merge)
 
     /// <summary>
@@ -1139,4 +1134,128 @@ public partial class Config
     #endregion // Private static methods (config merge)
 
 
+
+    #region Private static methods (theme pack)
+
+    /// <summary>
+    /// Extracts one pack to a temp folder and copies it into <c>_themes</c> only if it contains a
+    /// valid, current-version <c>igtheme.json</c>. Returns <c>false</c> for a missing, invalid, or
+    /// older-version pack (the caller reports it as incompatible).
+    /// </summary>
+    private static bool InstallOneThemePack(string packageFile, string themesRoot)
+    {
+        var staging = Path.Combine(Path.GetTempPath(), "ig_theme_" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            Directory.CreateDirectory(staging);
+            ZipFile.ExtractToDirectory(packageFile, staging, overwriteFiles: true);
+
+            // locate the pack folder (archive root, or one directory below)
+            var srcDir = FindThemePackDir(staging);
+            if (srcDir is null) return false;
+
+            // an incompatible/older pack fails to parse into the current model, or declares an older version
+            var theme = new IgTheme().Load(srcDir);
+            if (!theme.IsValid || theme._Metadata.Version < IgTheme.SPEC_VERSION) return false;
+
+            // dest folder name = the wrapping folder, or the archive name when the json is at the root
+            var folderName = string.Equals(srcDir, staging, StringComparison.OrdinalIgnoreCase)
+                ? MakeSafeThemeFolderName(GetThemePackFileName(packageFile))
+                : Path.GetFileName(srcDir);
+
+            MoveThemeDirectory(srcDir, Path.Combine(themesRoot, folderName));
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+        finally
+        {
+            try { if (Directory.Exists(staging)) Directory.Delete(staging, recursive: true); } catch { }
+        }
+    }
+
+
+    /// <summary>
+    /// Finds the folder that directly contains <see cref="IgTheme.CONFIG_FILE"/>: the archive root,
+    /// or one directory below it.
+    /// </summary>
+    private static string? FindThemePackDir(string root)
+    {
+        if (File.Exists(Path.Combine(root, IgTheme.CONFIG_FILE))) return root;
+
+        foreach (var sub in Directory.EnumerateDirectories(root))
+        {
+            if (File.Exists(Path.Combine(sub, IgTheme.CONFIG_FILE))) return sub;
+        }
+        return null;
+    }
+
+
+    /// <summary>
+    /// Moves the staged pack into <paramref name="dest"/> (replacing any existing one), copying
+    /// recursively when the source and destination are on different volumes.
+    /// </summary>
+    private static void MoveThemeDirectory(string src, string dest)
+    {
+        if (Directory.Exists(dest)) Directory.Delete(dest, recursive: true);
+
+        try
+        {
+            Directory.Move(src, dest);
+            return;
+        }
+        catch { }
+
+        Directory.CreateDirectory(dest);
+        foreach (var dir in Directory.GetDirectories(src, "*", SearchOption.AllDirectories))
+        {
+            Directory.CreateDirectory(Path.Combine(dest, Path.GetRelativePath(src, dir)));
+        }
+        foreach (var f in Directory.GetFiles(src, "*", SearchOption.AllDirectories))
+        {
+            File.Copy(f, Path.Combine(dest, Path.GetRelativePath(src, f)), overwrite: true);
+        }
+    }
+
+
+    /// <summary>
+    /// Gets the pack name from a package path, stripping the trailing <c>.igtheme.zip</c>.
+    /// </summary>
+    private static string GetThemePackFileName(string packageFile)
+    {
+        var name = Path.GetFileName(packageFile);
+        const string suffix = ".igtheme.zip";
+        if (name.EndsWith(suffix, StringComparison.OrdinalIgnoreCase)) name = name[..^suffix.Length];
+        return name;
+    }
+
+
+    /// <summary>
+    /// Replaces characters invalid in a file name with underscores.
+    /// </summary>
+    private static string MakeSafeThemeFolderName(string name)
+    {
+        var invalid = Path.GetInvalidFileNameChars();
+        var chars = name.ToCharArray();
+        for (var i = 0; i < chars.Length; i++)
+        {
+            if (Array.IndexOf(invalid, chars[i]) >= 0) chars[i] = '_';
+        }
+        return new string(chars);
+    }
+
+    #endregion // Private static methods (theme pack)
+
+
 }
+
+
+
+/// <summary>
+/// Outcome of a theme-pack install batch (installed count + names of the incompatible packs).
+/// </summary>
+public readonly record struct ThemePackInstallResult(
+    int InstalledCount,
+    IReadOnlyList<string> IncompatiblePackNames);

@@ -716,6 +716,8 @@ public enum LangId
     Settings_Theme_OpenThemeFolder,
     Settings_Theme_GetMoreThemes,
     Settings_Theme_InstallTheme,
+    _IncompatibleTheme,
+    _IncompatibleTheme_Description,
 
     Settings_UseThemeForDarkMode,
     Settings_UseThemeForLightMode,

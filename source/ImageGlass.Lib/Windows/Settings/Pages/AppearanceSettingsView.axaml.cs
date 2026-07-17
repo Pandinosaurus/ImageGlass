@@ -33,6 +33,7 @@ using ImageGlass.Common.Localization;
 using ImageGlass.Common.Photoing;
 using ImageGlass.Common.Types;
 using ImageGlass.UI;
+using ImageGlass.UI.Windowing;
 using SkiaSharp;
 using System;
 using System.Collections.Generic;
@@ -45,6 +46,9 @@ namespace ImageGlass.Common.Windows;
 public partial class AppearanceSettingsView : SettingsPageView
 {
     private const string THEMES_URL = "https://imageglass.org/themes";
+
+    // file picker filter pattern for installable theme packs
+    private const string THEME_PACKAGE_PATTERN = "*.igtheme.zip";
 
     // preview thumbnail size (logical px) and the reduced width images are decoded to (lightweight)
     private const double PREVIEW_W = 132;
@@ -165,7 +169,7 @@ public partial class AppearanceSettingsView : SettingsPageView
 
 
     /// <summary>
-    /// Opens a file picker for .igtheme packs, installs them, then reloads the list.
+    /// Opens a file picker for <c>*.igtheme.zip</c> packs, installs them, and reports incompatible ones.
     /// </summary>
     private async Task InstallThemesAsync()
     {
@@ -177,7 +181,9 @@ public partial class AppearanceSettingsView : SettingsPageView
             AllowMultiple = true,
             FileTypeFilter =
             [
-                new FilePickerFileType("ImageGlass theme pack") { Patterns = ["*.igtheme"] },
+                new FilePickerFileType(Core.Lang[LangId.Settings_Theme]) {
+                    Patterns = [THEME_PACKAGE_PATTERN]
+                },
             ],
         });
 
@@ -188,8 +194,22 @@ public partial class AppearanceSettingsView : SettingsPageView
             .ToList();
         if (paths.Count == 0) return;
 
-        await Config.InstallThemePacksAsync(paths);
+        var result = await Config.InstallThemePacksAsync(paths);
         await ReloadThemesAsync();
+
+        // report packs rejected as incompatible
+        if (result.IncompatiblePackNames.Count > 0)
+        {
+            var details = string.Join(Environment.NewLine, result.IncompatiblePackNames.Select(n => $"- {n}"));
+
+            await ModalWindow.ShowErrorAsync(TopLevel.GetTopLevel(this) as PhWindow, new ModalWindowOptions
+            {
+                Title = Core.Lang[LangId.Settings_Theme_InstallTheme],
+                Heading = Core.Lang[LangId._IncompatibleTheme],
+                Description = Core.Lang[LangId._IncompatibleTheme_Description],
+                Details = details,
+            });
+        }
     }
 
 
