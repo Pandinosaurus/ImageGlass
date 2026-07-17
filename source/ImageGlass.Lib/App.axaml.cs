@@ -154,6 +154,10 @@ public partial class App : Application
                 if (!isContinue) return;
             }
 
+            // if an incompatible user config was found and reset, warn before continuing;
+            // on No we exit without writing config, on Yes we fall through to Quick Setup
+            if (!await ConfirmIncompatibleConfigResetAsync()) return;
+
             // force Quick Setup on first run; false = app is exiting/restarting
             if (!await RunStartupQuickSetupAsync()) return;
 
@@ -390,6 +394,37 @@ public partial class App : Application
         }
 
         return false;
+    }
+
+
+    /// <summary>
+    /// Warns when an incompatible user config was found and reset to defaults.
+    /// Returns <c>false</c> after quitting without writing config; <c>true</c> to continue.
+    /// </summary>
+    private static async Task<bool> ConfirmIncompatibleConfigResetAsync()
+    {
+        var configPath = Config.IncompatibleUserConfigPath;
+        if (string.IsNullOrEmpty(configPath)) return true;
+
+        var result = await ModalWindow.ShowWarningAsync(null, new ModalWindowOptions
+        {
+            Title = BHelper.AppDisplayName,
+            Heading = Core.Lang[LangId._IncompatibleConfig],
+            Description = Core.Lang[LangId._IncompatibleConfig_Description],
+            Details = configPath,
+            Note = Core.Lang[LangId._IncompatibleConfig_BackupNote],
+            NoteStyle = InfoBarSeverity.Warning,
+            ShowInTaskbar = true,
+        }, ModalWindowButton.Yes_No);
+
+        // No / close: quit without writing config (leave the v9 file untouched)
+        if (result.ExitCode != DialogExitCode.OK)
+        {
+            BHelper.ExitApp(true);
+            return false;
+        }
+
+        return true;
     }
 
 

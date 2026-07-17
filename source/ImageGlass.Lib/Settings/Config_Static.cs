@@ -78,6 +78,13 @@ public partial class Config
 
 
     /// <summary>
+    /// Path of the ignored incompatible user config file, or <c>null</c> when none.
+    /// </summary>
+    [JsonIgnore]
+    public static string? IncompatibleUserConfigPath { get; private set; } = null;
+
+
+    /// <summary>
     /// Gets the default image formats.
     /// </summary>
     [JsonIgnore]
@@ -518,6 +525,7 @@ public partial class Config
     /// Loads and merges configs from multiple sources.
     /// Priority (lowest -> highest):
     /// developer defaults -> igconfig.default.json -> igconfig.json -> CLI args -> igconfig.admin.json.
+    /// The admin layer is included only when <see cref="Const.ENABLE_ADMIN_CONFIG"/> is enabled.
     /// </summary>
     public static Config Load(string configFileName, string[]? cliArgs = null)
     {
@@ -528,47 +536,43 @@ public partial class Config
             var jsonOptions = BHelper.CreateJsonOptions();
             var jsonContext = new ConfigJsonContext(jsonOptions);
 
-            if (Const.ENABLE_CONFIG_MERGE)
+            // 1. read igconfig.default.json (Startup Dir, then Config Dir fallback)
+            using var defaultDoc = ReadConfigJsonDocument(
+                BHelper.BaseDir(CONFIG_DEFAULT),
+                BHelper.ConfigDir(CONFIG_DEFAULT));
+
+            // 2. read igconfig.json (Config Dir only)
+            var userConfigPath = BHelper.ConfigDir(configFileName);
+            using var userDoc = BHelper.ReadJsonDocFromFile(userConfigPath);
+
+            // 3. parse CLI -p: args
+            var cliOverrides = ParseCliConfigArgs(cliArgs);
+
+            // 4. read igconfig.admin.json (install BaseDir ONLY; a ConfigDir fallback would let
+            // a user drop an admin config in AppData and seize top precedence). Merge-only layer.
+            using var adminDoc = Const.ENABLE_ADMIN_CONFIG
+                ? ReadConfigJsonDocument(BHelper.BaseDir(CONFIG_ADMIN))
+                : null;
+
+            // 5. drop incompatible older layers; flag an incompatible user file so startup can warn
+            var effectiveDefaultDoc = IsCompatibleConfigLayer(defaultDoc) ? defaultDoc : null;
+            var effectiveAdminDoc = IsCompatibleConfigLayer(adminDoc) ? adminDoc : null;
+            var effectiveUserDoc = userDoc;
+            if (!IsCompatibleConfigLayer(userDoc))
             {
-                // 1. read igconfig.default.json (Startup Dir, then Config Dir fallback)
-                using var defaultDoc = ReadConfigJsonDocument(
-                    BHelper.BaseDir(CONFIG_DEFAULT),
-                    BHelper.ConfigDir(CONFIG_DEFAULT));
-
-                // 2. read igconfig.json (Config Dir only)
-                var userConfigPath = BHelper.ConfigDir(configFileName);
-                using var userDoc = BHelper.ReadJsonDocFromFile(userConfigPath);
-
-                // 3. parse CLI -p: args
-                var cliOverrides = ParseCliConfigArgs(cliArgs);
-
-                // 4. read igconfig.admin.json (install BaseDir ONLY; a ConfigDir fallback would let
-                // a user drop an admin config in AppData and seize top precedence)
-                using var adminDoc = ReadConfigJsonDocument(BHelper.BaseDir(CONFIG_ADMIN));
-
-                // 5. merge all layers into a single JSON byte array
-                var mergedJson = MergeJsonLayers(defaultDoc, userDoc, cliOverrides, adminDoc);
-
-                // 6. deserialize the merged JSON into Config
-                var config = JsonSerializer.Deserialize(mergedJson, jsonContext.Config)
-                    ?? throw new FileLoadException("IGE: Could not parse merged config.");
-
-                // 7. migrate if config version changed
-                appConfig = MigrateUserConfigFile(config);
+                effectiveUserDoc = null;
+                IncompatibleUserConfigPath = userConfigPath;
             }
-            else
-            {
-                // simple single-file load (no merge)
-                var configPath = BHelper.ConfigDir(configFileName);
 
-                if (File.Exists(configPath))
-                {
-                    var config = BHelper.ReadJsonFromFile(configPath, jsonContext.Config)
-                        ?? throw new FileLoadException($"IGE: Could not parse settings from file: {configPath}");
+            // 6. merge the compatible layers into a single JSON byte array
+            var mergedJson = MergeJsonLayers(effectiveDefaultDoc, effectiveUserDoc, cliOverrides, effectiveAdminDoc);
 
-                    appConfig = MigrateUserConfigFile(config);
-                }
-            }
+            // 7. deserialize the merged JSON into Config
+            var config = JsonSerializer.Deserialize(mergedJson, jsonContext.Config)
+                ?? throw new FileLoadException("IGE: Could not parse merged config.");
+
+            // 8. migrate if config version changed
+            appConfig = MigrateUserConfigFile(config);
         }
         catch (Exception ex)
         {
@@ -581,12 +585,63 @@ public partial class Config
 
 
     /// <summary>
+    /// Whether a config layer's spec version is not older than <see cref="SPEC_VERSION"/>.
+    /// A <c>null</c> layer, or one with missing/unparsable version, is treated as compatible.
+    /// </summary>
+    private static bool IsCompatibleConfigLayer(JsonDocument? doc)
+    {
+        return doc == null || GetConfigLayerVersion(doc) >= SPEC_VERSION;
+    }
+
+
+    /// <summary>
+    /// Reads the spec version from a config layer's <c>_Metadata.Version</c>.
+    /// Returns <see cref="SPEC_VERSION"/> when the metadata is missing or unparsable.
+    /// </summary>
+    private static float GetConfigLayerVersion(JsonDocument doc)
+    {
+        var root = doc.RootElement;
+
+        if (root.ValueKind == JsonValueKind.Object
+            && TryGetPropertyIgnoreCase(root, nameof(_Metadata), out var meta)
+            && meta.ValueKind == JsonValueKind.Object
+            && TryGetPropertyIgnoreCase(meta, nameof(ConfigMetadata.Version), out var ver)
+            && ver.ValueKind == JsonValueKind.Number
+            && ver.TryGetSingle(out var version))
+        {
+            return version;
+        }
+
+        return SPEC_VERSION;
+    }
+
+
+    /// <summary>
+    /// Case-insensitive lookup of a JSON object property (matches the merge layer's case handling).
+    /// </summary>
+    private static bool TryGetPropertyIgnoreCase(JsonElement obj, string name, out JsonElement value)
+    {
+        foreach (var prop in obj.EnumerateObject())
+        {
+            if (string.Equals(prop.Name, name, StringComparison.OrdinalIgnoreCase))
+            {
+                value = prop.Value;
+                return true;
+            }
+        }
+
+        value = default;
+        return false;
+    }
+
+
+    /// <summary>
     /// Applies CLI config overrides (<c>-p:Key=Value</c>) to the current config instance.
     /// Used when the first instance receives forwarded args from a second instance.
     /// </summary>
     public static void ApplyCliOverrides(Config config, string[]? cliArgs)
     {
-        if (!Const.ENABLE_CONFIG_MERGE) return;
+        if (!Const.ENABLE_ADMIN_CONFIG) return;
 
         var overrides = ParseCliConfigArgs(cliArgs);
         if (overrides.Count == 0) return;

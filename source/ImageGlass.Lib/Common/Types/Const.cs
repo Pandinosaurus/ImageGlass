@@ -43,7 +43,7 @@ public static class Const
     public static readonly int MOUSE_WHEEL_SCROLL_DELTA = 120;
 
 
-    public const bool ENABLE_CONFIG_MERGE = true;
+    public const bool ENABLE_ADMIN_CONFIG = true;
 
     /// <summary>
     /// Gates the Pro-only "Lock Features" subsystem. When false, all
