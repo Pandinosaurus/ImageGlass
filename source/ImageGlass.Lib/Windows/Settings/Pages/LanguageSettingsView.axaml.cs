@@ -19,6 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 using Avalonia.Controls;
 using Avalonia.Platform.Storage;
 using ImageGlass.Common.Localization;
+using ImageGlass.UI.Windowing;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -118,8 +119,8 @@ public partial class LanguageSettingsView : SettingsPageView
 
 
     /// <summary>
-    /// Opens a file picker for <c>*.iglang.json</c> packs, installs them into the Config dir, then
-    /// reloads the list.
+    /// Opens a file picker for <c>*.iglang.json</c> packs, installs the compatible ones into the
+    /// Config dir, reloads the list, and reports any rejected as incompatible.
     /// </summary>
     private async Task InstallLanguagesAsync()
     {
@@ -139,8 +140,22 @@ public partial class LanguageSettingsView : SettingsPageView
             .ToList();
         if (paths.Count == 0) return;
 
-        await Lang.InstallLanguagePacksAsync(paths);
+        var result = await Lang.InstallLanguagePacksAsync(paths);
         await ReloadLanguagesAsync();
+
+        // report packs rejected as incompatible
+        if (result.IncompatiblePackNames.Count > 0)
+        {
+            var details = string.Join(Environment.NewLine, result.IncompatiblePackNames.Select(n => $"- {n}"));
+
+            await ModalWindow.ShowErrorAsync(TopLevel.GetTopLevel(this) as PhWindow, new ModalWindowOptions
+            {
+                Title = Core.Lang[LangId.Settings_InstallNewLanguagePack],
+                Heading = Core.Lang[LangId._IncompatibleLanguage],
+                Description = Core.Lang[LangId._IncompatibleLanguage_Description],
+                Details = details,
+            });
+        }
     }
 
 

@@ -21,8 +21,10 @@ using ImageGlass.Common.Types.JsonTypeConverters;
 using System;
 using System.Collections.Frozen;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
@@ -38,13 +40,20 @@ public partial class LangJsonContext : JsonSerializerContext { }
 /// </summary>
 public class Lang
 {
+    /// <summary>
+    /// Minimum <see cref="LangMetadata.MinVersion"/> a pack must declare to be compatible.
+    /// </summary>
+    public static float SPEC_VERSION => 10;
+
 
     #region JSON Serializable Properties
 
     /// <summary>
     /// Gets, sets the language metadata.
     /// </summary>
+    [JsonPropertyName("_Metadata")]
     public LangMetadata Metadata { get; set; } = new();
+
 
     /// <summary>
     /// Gets, sets the language string dictionary. Unknown keys (from version-skewed packs) are
@@ -121,7 +130,10 @@ public class Lang
     /// <param name="filePath">E.g. <c>C:\ImageGlass\Language\Vietnamese.iglang.json</c></param>
     public Lang(string filePath)
     {
-        FilePath = filePath;
+        if (!string.IsNullOrWhiteSpace(filePath))
+        {
+            FilePath = filePath;
+        }
     }
 
     #endregion // Instance Initialization
@@ -286,8 +298,8 @@ public class Lang
 
     /// <summary>
     /// Loads every installed language pack: built-in packs from the app base dir and user packs
-    /// from the Config dir. Packs are de-duplicated by file name (a user pack shadows a built-in
-    /// one of the same name). The result is sorted by local name.
+    /// from the Config dir. Incompatible packs are skipped. Packs are de-duplicated by file name
+    /// (a user pack shadows a built-in one of the same name). The result is sorted by local name.
     /// </summary>
     public static async Task<List<Lang>> LoadAllLanguagePacksAsync()
     {
@@ -300,6 +312,8 @@ public class Lang
 
             foreach (var file in Directory.EnumerateFiles(rootDir, "*.iglang.json"))
             {
+                if (GetPackMinVersion(file) < SPEC_VERSION) continue;
+
                 var lang = new Lang(file);
                 await lang.LoadAsync().ConfigureAwait(false);
                 found[lang.FileName] = lang;
@@ -314,29 +328,87 @@ public class Lang
 
     /// <summary>
     /// Installs language packs by copying the given <c>*.iglang.json</c> files into the user
-    /// language folder. Returns the number of files copied successfully.
+    /// language folder, skipping packs built for an older ImageGlass version.
     /// </summary>
-    public static async Task<int> InstallLanguagePacksAsync(IEnumerable<string> iglangFilePaths)
+    public static async Task<LangPackInstallResult> InstallLanguagePacksAsync(IEnumerable<string> iglangFilePaths)
     {
         var destDir = BHelper.ConfigDir(Dir.Language);
         Directory.CreateDirectory(destDir);
 
         return await Task.Run(() =>
         {
-            var count = 0;
+            var installed = 0;
+            var incompatible = new List<string>();
+
             foreach (var file in iglangFilePaths)
             {
                 if (!File.Exists(file)) continue;
+
+                // reject packs made for an older version (see GetPackMinVersion)
+                if (GetPackMinVersion(file) < SPEC_VERSION)
+                {
+                    incompatible.Add(GetPackFileName(file));
+                    continue;
+                }
+
                 try
                 {
                     File.Copy(file, Path.Combine(destDir, Path.GetFileName(file)), overwrite: true);
-                    count++;
+                    installed++;
                 }
                 catch { }
             }
 
-            return count;
+            return new LangPackInstallResult(installed, incompatible);
         }).ConfigureAwait(false);
+    }
+
+
+    /// <summary>
+    /// Whether the pack file targets this app version. The built-in English pack (no/missing file)
+    /// is always compatible; a real pack must declare <c>_Metadata.MinVersion</c> &gt;= <see cref="SPEC_VERSION"/>.
+    /// </summary>
+    public static bool IsPackFileCompatible(string? filePath)
+    {
+        if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath)) return true;
+        return GetPackMinVersion(filePath) >= SPEC_VERSION;
+    }
+
+
+    /// <summary>
+    /// Reads a pack's declared <c>_Metadata.MinVersion</c> from the file. Returns 0 (incompatible)
+    /// when the file is invalid or the value is missing. MinVersion may be a number or a string.
+    /// </summary>
+    private static float GetPackMinVersion(string filePath)
+    {
+        try
+        {
+            using var doc = BHelper.ReadJsonDocFromFile(filePath);
+            if (doc?.RootElement is not { ValueKind: JsonValueKind.Object } root
+                || !root.TryGetProperty("_Metadata", out var meta)
+                || !meta.TryGetProperty(nameof(LangMetadata.MinVersion), out var ver))
+                return 0;
+
+            if (ver.ValueKind == JsonValueKind.Number && ver.TryGetSingle(out var num)) return num;
+            if (ver.ValueKind == JsonValueKind.String
+                && float.TryParse(ver.GetString(), NumberStyles.Float, CultureInfo.InvariantCulture, out var str))
+                return str;
+        }
+        catch { }
+
+        return 0;
+    }
+
+
+    /// <summary>
+    /// Gets the pack name from a path, stripping the trailing <c>.iglang.json</c>.
+    /// </summary>
+    private static string GetPackFileName(string filePath)
+    {
+        var name = Path.GetFileName(filePath);
+        const string suffix = ".iglang.json";
+        if (name.EndsWith(suffix, StringComparison.OrdinalIgnoreCase)) name = name[..^suffix.Length];
+        return name;
     }
 
 
@@ -428,6 +500,8 @@ public class Lang
         new(LangId._IncompatibleConfig_BackupNote, "Please manually back up your settings file before continuing if you want to keep it. Choosing No will quit ImageGlass without changing the file."),
         new(LangId._IncompatibleTheme, "Incompatible theme packs"),
         new(LangId._IncompatibleTheme_Description, "Your theme packs were created for the previous version of ImageGlass and are not compatible with this version."),
+        new(LangId._IncompatibleLanguage, "Incompatible language packs"),
+        new(LangId._IncompatibleLanguage_Description, "Your language packs were created for the previous version of ImageGlass and are not compatible with this version."),
         new(LangId._CreatingFile, "Creating a temporary image file…"), //v9.0
         new(LangId._CreatingFileError, "Could not create temporary image file"), //v9.0
         new(LangId._NotSupported, "Unsupported format"), //v9.0
@@ -1166,5 +1240,13 @@ public class Lang
     ];
 
 }
+
+
+/// <summary>
+/// Outcome of a language-pack install batch (installed count + names of the incompatible packs).
+/// </summary>
+public readonly record struct LangPackInstallResult(
+    int InstalledCount,
+    IReadOnlyList<string> IncompatiblePackNames);
 
 

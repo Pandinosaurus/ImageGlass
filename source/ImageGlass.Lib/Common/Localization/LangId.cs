@@ -718,6 +718,8 @@ public enum LangId
     Settings_Theme_InstallTheme,
     _IncompatibleTheme,
     _IncompatibleTheme_Description,
+    _IncompatibleLanguage,
+    _IncompatibleLanguage_Description,
 
     Settings_UseThemeForDarkMode,
     Settings_UseThemeForLightMode,

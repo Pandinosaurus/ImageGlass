@@ -812,6 +812,11 @@ public partial class Config
     public async Task LoadCurrentLanguageAsync()
     {
         var langPath = Lang.ResolveFilePath(Language);
+        var isInvalid = !Lang.IsPackFileCompatible(langPath);
+
+        // an incompatible pack (e.g. a hand-edited config) falls back to built-in English
+        if (isInvalid) langPath = string.Empty;
+
         var lang = new Lang(langPath);
 
         // load language pack
@@ -819,6 +824,7 @@ public partial class Config
 
         // set app language
         Core.Lang = lang;
+        Core.Config.Language = lang.FileName;
     }
 
 
