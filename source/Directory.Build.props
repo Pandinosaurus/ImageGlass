@@ -1,12 +1,12 @@
 <Project>
   <PropertyGroup>
     <!-- Central app version: change ONLY here to update all platform projects -->
-    <IgVersion>10.0.2.714</IgVersion>
-    <IgReleaseType>beta-2</IgReleaseType>
+    <IgVersion>10.0.3.720</IgVersion>
+    <IgReleaseType>rc</IgReleaseType>
     <IgUpdateChannel>beta</IgUpdateChannel>
 
     <!-- App bundle version. Leave empty to derive from IgVersion -->
-    <IgBundleShortVersion>10.0.2</IgBundleShortVersion>
-    <IgBundleBuild>535</IgBundleBuild>
+    <IgBundleShortVersion>10.0.3</IgBundleShortVersion>
+    <IgBundleBuild>536</IgBundleBuild>
   </PropertyGroup>
 </Project>

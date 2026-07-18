@@ -931,7 +931,7 @@ public partial class Config : PhReactive
     /// <summary>
     /// Gets, sets the list of locked features.
     /// </summary>
-    [JsonConverter(typeof(JsonHashSetToStringConverter))]
+    [JsonConverter(typeof(JsonHashSetToArrayConverter))]
     public HashSet<string> LockedFeatures
     {
         get => Get(ConfigId.LockedFeatures, new HashSet<string>(StringComparer.OrdinalIgnoreCase));
