@@ -25,7 +25,7 @@ ImageGlass is a fast, modern, open-source image viewer built for Windows, macOS,
 
 <br/>
 
-[![ImageGlass 10 beta](https://github.com/user-attachments/assets/189595de-9066-4115-a939-fd0544a42aa9)](https://imageglass.org/news/announcing-imageglass-10-beta-2-101)
+[![ImageGlass 10 beta](https://github.com/user-attachments/assets/ca49c1be-4ab6-4714-b23b-8b094b5eda90)](https://imageglass.org/news/announcing-imageglass-10-beta-2-101)
 
 </div>
 
