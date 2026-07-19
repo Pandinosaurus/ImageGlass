@@ -61,8 +61,13 @@ if [[ -z "$IG_VERSION" ]]; then
 	echo "Error: could not read IgVersion from $BUILD_PROPS_FILE" >&2
 	exit 1
 fi
+IG_RELEASE_TYPE="$(sed -n 's:.*<IgReleaseType>\(.*\)</IgReleaseType>.*:\1:p' "$BUILD_PROPS_FILE" | head -n 1)"
 
-DMG_NAME="ImageGlass_${IG_VERSION}_mac-arm64.dmg"
+# Release label mirrors the Linux/Windows asset naming: <version>-<releasetype>.
+REL_LABEL="$IG_VERSION"
+[[ -n "$IG_RELEASE_TYPE" ]] && REL_LABEL="${IG_VERSION}-${IG_RELEASE_TYPE}"
+
+DMG_NAME="ImageGlass_${REL_LABEL}_mac-arm64.dmg"
 DMG_PATH="$OUTPUT_DIR/$DMG_NAME"
 VOLUME_NAME="ImageGlass ${IG_VERSION}"
 
