@@ -46,13 +46,15 @@ Prefer the classic installer? Grab it from **[imageglass.org/download](https://i
 
 > [!Caution]
 > ### Security Alert: Fake Repositories and AI Threat Mitigation
-> Automated malicious campaigns are actively deploying AI tools to impersonate trusted software. They stand up fake GitHub profiles and standalone Gists designed to trick users into downloading compromised packages. I need your help to protect the community by keeping these safety rules in mind:
-> - **Only use official channels**: Always download ImageGlass directly from the official website ([https://imageglass.org](https://imageglass.org)). Never download binaries from third-party mirrors, unverified GitHub forks, or standalone GitHub Gists.
-> - **Verify the repository source:** The only authentic spaces for this project on GitHub are the official [d2phap/ImageGlass](https://github.com/d2phap/ImageGlass) repository and the [ImageGlass Organization](https://github.com/ImageGlass). Any other profile or fork promising 'portable patches', 'extended releases', or alternative mirrors is completely unauthorized and highly likely to contain malware.
+> Automated malicious campaigns are actively deploying AI tools to impersonate trusted software. They stand up fake GitHub profiles and Gists designed to trick users into downloading compromised packages.
+> - **Only use official channels**: Always download ImageGlass directly from the ([official website](https://imageglass.org)). Never download binaries from third-party mirrors, unverified GitHub forks, or standalone GitHub Gists.
+> - **Verify the repo source:** The only authentic spaces for this project on GitHub are the official [d2phap/ImageGlass](https://github.com/d2phap/ImageGlass) repository and the [ImageGlass Organization](https://github.com/ImageGlass). Any other profile or fork promising 'portable patches', 'extended releases', or alternative mirrors is completely unauthorized and highly likely to contain malware.
 > - **Check the URL**: Double-check your browser address bar to ensure you are not visiting a typosquatted domain.
->
-> If you identify an unauthorized mirror, submit a report immediately to help keep the community safe.
 
+<br/>
+
+> [!Important]
+> ### ImageGlass 10 [Release Plans](https://github.com/d2phap/ImageGlass/discussions/2358): Classic Stays Free, Pro Is Coming
 
 ## Download
 ### Why the Microsoft Store?
