@@ -462,19 +462,27 @@ public partial class BHelper
 
         try
         {
-            var ub = new UriBuilder(url);
-            var queries = HttpUtility.ParseQueryString(ub.Query);
-            queries["utm_source"] = $"app_{Core.BuildInfo.AppVersion}";
-            queries["utm_medium"] = "app_click";
-            queries["utm_campaign"] = campaign;
+            if (!Uri.TryCreate(url, UriKind.Absolute, out var uri)) return;
 
-            ub.Query = queries.ToString();
+            // only tag http(s) web URLs with campaign tracking; protocol URIs (ms-settings:,
+            // mailto:, ...) must launch untouched or the extra query corrupts the deep link
+            if (uri.Scheme is "http" or "https")
+            {
+                var ub = new UriBuilder(uri);
+                var queries = HttpUtility.ParseQueryString(ub.Query);
+                queries["utm_source"] = $"app_{Core.BuildInfo.AppVersion}";
+                queries["utm_medium"] = "app_click";
+                queries["utm_campaign"] = campaign;
+
+                ub.Query = queries.ToString();
+                uri = ub.Uri;
+            }
 
 
             var launcher = TopLevel.GetTopLevel(visual)?.Launcher;
             if (launcher is not null)
             {
-                await launcher.LaunchUriAsync(ub.Uri);
+                await launcher.LaunchUriAsync(uri);
             }
         }
         catch { }

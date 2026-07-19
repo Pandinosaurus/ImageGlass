@@ -173,7 +173,7 @@ public partial class FileTypeAssociationsSettingsView : SettingsPageView
         var appQueryKey = scope == DefaultAppScope.LocalMachine
             ? "registeredAppMachine"
             : "registeredAppUser";
-        var defaultAppsUri = $"ms-settings:defaultapps?{appQueryKey}={BHelper.AppName}";
+        var defaultAppsUri = $"ms-settings:defaultapps?{appQueryKey}={Uri.EscapeDataString(BHelper.AppName)}";
 
         SetLocalizedText(PART_MakeDefault, LangId.Settings_MakeDefault);
         AddLangRefresher(() => ToolTip.SetTip(PART_MakeDefault, Core.Lang[LangId.Settings_UnmanagedSettingReminder]));
