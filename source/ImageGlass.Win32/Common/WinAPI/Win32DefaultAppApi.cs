@@ -22,6 +22,7 @@ using Microsoft.Win32;
 using System;
 using System.IO;
 using System.Security;
+using System.Security.Principal;
 using System.Threading.Tasks;
 using Windows.Win32;
 using Windows.Win32.UI.Shell;
@@ -54,17 +55,31 @@ public static class Win32DefaultAppApi
 
             NotifyShellAssocChanged();
         }
-        catch (UnauthorizedAccessException)
+        catch (Exception ex) when (ex is UnauthorizedAccessException or SecurityException)
         {
+            // already elevated but still denied: escalating again relaunches silently (no UAC
+            // prompt) and loops forever, so surface the error instead of spawning processes
+            if (IsProcessElevated()) throw;
+
             // per-machine (HKLM) writes need admin; relaunch elevated to finish the job
-            await RelaunchElevatedAsync(extensions, enable);
-        }
-        catch (SecurityException)
-        {
             await RelaunchElevatedAsync(extensions, enable);
         }
 
         return scope;
+    }
+
+
+    /// <summary>
+    /// Whether the current process is running with an elevated (administrator) token.
+    /// </summary>
+    private static bool IsProcessElevated()
+    {
+        try
+        {
+            using var identity = WindowsIdentity.GetCurrent();
+            return new WindowsPrincipal(identity).IsInRole(WindowsBuiltInRole.Administrator);
+        }
+        catch { return false; }
     }
 
 
