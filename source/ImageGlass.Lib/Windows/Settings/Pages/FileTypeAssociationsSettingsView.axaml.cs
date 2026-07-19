@@ -142,7 +142,7 @@ public partial class FileTypeAssociationsSettingsView : SettingsPageView
     {
         SetLocalizedText(PART_OpenExtIconFolder, LangId.Settings_OpenExtensionIconFolder);
         PART_OpenExtIconFolder.Click += (_, _) =>
-            BHelper.OpenFolderPath(BHelper.ConfigDir(Dir.ExtIcons));
+            BHelper.OpenFolderPath(BHelper.GetRealPlatformConfigDir(Dir.ExtIcons));
 
         // the description references the open-folder button name via its {0} placeholder
         AddLangRefresher(() => PART_ExtIconsDesc.LangParams = Core.Lang[LangId.Settings_OpenExtensionIconFolder]);

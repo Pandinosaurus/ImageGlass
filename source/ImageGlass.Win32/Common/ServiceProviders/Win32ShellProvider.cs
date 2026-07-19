@@ -331,6 +331,31 @@ public class Win32ShellProvider : PhDisposable, IShellProvider
     /// </summary>
     public DefaultAppScope GetDefaultViewerScope() => Win32DefaultAppApi.GetScope();
 
+
+    /// <summary>
+    /// <inheritdoc/>
+    /// </summary>
+    public string GetActualConfigDirPath(string localAppDataPath)
+    {
+        if (string.IsNullOrEmpty(localAppDataPath)) return localAppDataPath;
+
+        // LocalCacheFolder throws when unpackaged (no MSIX identity) -> no virtualization
+        string localCache;
+        try { localCache = ApplicationData.Current.LocalCacheFolder.Path; }
+        catch { return localAppDataPath; }
+
+        // only %LocalAppData% is virtualized
+        var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        if (!BHelper.IsPathContainedIn(localAppDataPath, localAppData)) return localAppDataPath;
+
+        // MSIX redirects newly-created AppData\Local writes to <pkg>\LocalCache\Local and reads it
+        // first; point at that copy when it physically exists, else the real (write-through) path
+        var rel = Path.GetRelativePath(localAppData, localAppDataPath);
+        var container = Path.Combine(localCache, "Local", rel);
+
+        return Directory.Exists(container) || File.Exists(container) ? container : localAppDataPath;
+    }
+
     #endregion // Public Methods
 
 

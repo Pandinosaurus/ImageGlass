@@ -111,6 +111,15 @@ public interface IShellProvider : IDisposable
 
 
     /// <summary>
+    /// Resolves a config dir path to where this process physically reads/writes it. On a
+    /// packaged (MSIX) Windows build, per-package write virtualization may redirect the content to
+    /// the package container; returns that real path when it exists. Default (non-Windows /
+    /// unpackaged): returns <paramref name="localAppDataPath"/> unchanged.
+    /// </summary>
+    string GetActualConfigDirPath(string localAppDataPath) => localAppDataPath;
+
+
+    /// <summary>
     /// Returns <c>true</c> if the current scroll event originates from a trackpad
     /// (precise/continuous scrolling). Must be called during a scroll event handler.
     /// Returns <c>false</c> for mouse wheel (discrete) events.

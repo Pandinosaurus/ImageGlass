@@ -67,7 +67,7 @@ public partial class PluginsSettingsView : SettingsPageView
         PART_AddPlugin.Click += async (_, _) => await AddPluginsAsync();
 
         SetLocalizedText(PART_OpenFolder, LangId.Settings_Plugins_OpenPluginFolder);
-        PART_OpenFolder.Click += (_, _) => BHelper.OpenFolderPath(BHelper.ConfigDir(Dir.Plugins));
+        PART_OpenFolder.Click += (_, _) => BHelper.OpenFolderPath(BHelper.GetRealPlatformConfigDir(Dir.Plugins));
 
         SetLocalizedText(PART_GetMorePlugins, LangId.Settings_Plugins_GetMorePlugins);
         PART_GetMorePlugins.Click += (_, _) =>

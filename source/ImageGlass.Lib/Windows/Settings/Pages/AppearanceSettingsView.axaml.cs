@@ -144,7 +144,7 @@ public partial class AppearanceSettingsView : SettingsPageView
         RegisterSearchKey(PART_RefreshThemes, LangId.Settings_Refresh, null, LangId.Settings_Theme);
 
         SetLocalizedText(PART_OpenThemeFolder, LangId.Settings_Theme_OpenThemeFolder);
-        PART_OpenThemeFolder.Click += (_, _) => BHelper.OpenFolderPath(Config.ThemePacksDir);
+        PART_OpenThemeFolder.Click += (_, _) => BHelper.OpenFolderPath(BHelper.GetRealPlatformConfigDir(Dir.Themes));
         RegisterSearchKey(PART_OpenThemeFolder, LangId.Settings_Theme_OpenThemeFolder, null, LangId.Settings_Theme);
 
         BindLink(PART_GetMoreThemes, LangId.Settings_Theme_GetMoreThemes, THEMES_URL,

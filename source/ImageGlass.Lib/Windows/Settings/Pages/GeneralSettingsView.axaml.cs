@@ -43,8 +43,10 @@ public partial class GeneralSettingsView : SettingsPageView
     protected override void Build()
     {
         var startupDir = BHelper.BasePath;
-        var configDir = BHelper.ConfigDir();
-        var userConfig = BHelper.ConfigDir(Config.CONFIG_USER);
+
+        // real physical path (MSIX-aware) so the links open where the files actually live
+        var configDir = BHelper.GetRealPlatformConfigDir();
+        var userConfig = BHelper.GetRealPlatformConfigDir(Config.CONFIG_USER);
 
         // Locations
         BindLink(PART_StartupDir, LangId.Settings_StartupDir, startupDir,
@@ -94,7 +96,8 @@ public partial class GeneralSettingsView : SettingsPageView
     {
         if (!File.Exists(filePath))
         {
-            BHelper.OpenFolderPath(BHelper.ConfigDir());
+            // open the file's own (already-resolved) folder, not the unresolved config dir
+            BHelper.OpenFolderPath(Path.GetDirectoryName(filePath));
             return;
         }
 

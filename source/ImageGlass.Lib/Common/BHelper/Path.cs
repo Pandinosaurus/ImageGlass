@@ -107,6 +107,17 @@ public partial class BHelper
 
 
     /// <summary>
+    /// Like <see cref="ConfigDir(string[])"/> but resolves to the real physical path (MSIX may
+    /// redirect config to the package container); use it to show/open config in the file explorer.
+    /// </summary>
+    public static string GetRealPlatformConfigDir(params string[] paths)
+    {
+        var configPath = ConfigDir(paths);
+        return Core.ShellProvider?.GetActualConfigDirPath(configPath) ?? configPath;
+    }
+
+
+    /// <summary>
     /// Check if the given path (file or directory) is writable. 
     /// </summary>
     /// <param name="type">Indicates if the given path is either file or directory</param>
