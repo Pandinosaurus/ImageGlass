@@ -44,6 +44,12 @@ public partial class SettingsWindow : DialogWindow
     protected override Thickness ContentPadding => new(0);
 
 
+    private const double DEFAULT_WIDTH = 900;
+    private const double DEFAULT_HEIGHT = 580;
+    private const double MIN_RESTORE_WIDTH = 200;
+    private const double MIN_RESTORE_HEIGHT = 100;
+
+
 
     public SettingsWindow(string? targetConfigId = null, string? editToolId = null)
     {
@@ -68,10 +74,18 @@ public partial class SettingsWindow : DialogWindow
 
         // restore window size & position
         var bounds = Core.Config.SettingsWindowBounds;
-        Width = bounds.Width;
-        Height = bounds.Height;
-        WindowStartupLocation = WindowStartupLocation.Manual;
-        Position = new((int)bounds.X, (int)bounds.Y);
+        var hasValidBounds = bounds.Width >= MIN_RESTORE_WIDTH && bounds.Height >= MIN_RESTORE_HEIGHT;
+        Width = hasValidBounds ? bounds.Width : DEFAULT_WIDTH;
+        Height = hasValidBounds ? bounds.Height : DEFAULT_HEIGHT;
+        if (hasValidBounds)
+        {
+            WindowStartupLocation = WindowStartupLocation.Manual;
+            Position = new((int)bounds.X, (int)bounds.Y);
+        }
+        else
+        {
+            WindowStartupLocation = WindowStartupLocation.CenterScreen;
+        }
 
         // restore window maximized state
         if (Core.Config.EnableSettingsWindowMaximized) WindowState = WindowState.Maximized;
@@ -154,13 +168,17 @@ public partial class SettingsWindow : DialogWindow
         // save state regardless of how the dialog was closed
         Core.Config.EnableSettingsWindowMaximized = WindowState == WindowState.Maximized;
 
-        // save window bounds only when in normal state (don't store maximized size as the restore size)
+        // save window bounds only when in normal state (don't store maximized size as the restore size);
+        // skip a degenerate size so a transient 0×0 on close can't reopen the window invisible
         if (WindowState == WindowState.Normal)
         {
             var size = ClientSize;
-            Core.Config.SettingsWindowBounds = new(Position.X, Position.Y,
-                (int)size.Width,
-                (int)size.Height);
+            if (size.Width >= MIN_RESTORE_WIDTH && size.Height >= MIN_RESTORE_HEIGHT)
+            {
+                Core.Config.SettingsWindowBounds = new(Position.X, Position.Y,
+                    (int)size.Width,
+                    (int)size.Height);
+            }
         }
 
         _ = Core.Config.SaveAsync();
