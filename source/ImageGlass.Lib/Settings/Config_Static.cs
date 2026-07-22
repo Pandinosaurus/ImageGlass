@@ -572,6 +572,9 @@ public partial class Config
 
             // 8. migrate if config version changed
             appConfig = MigrateUserConfigFile(config);
+
+            // 9. apply persisted tool configs derived from the merged config
+            ApplyPersistedToolConfigs(appConfig);
         }
         catch (Exception ex)
         {
@@ -580,6 +583,22 @@ public partial class Config
 
         appConfig ??= new();
         return appConfig;
+    }
+
+
+    /// <summary>
+    /// Applies persisted tool configs that feed runtime state living outside <see cref="Config"/>.
+    /// Runs inside <see cref="Load"/> so the merged (default/user/CLI/admin) values are used and
+    /// applied even when the owning tool is never opened.
+    /// </summary>
+    private static void ApplyPersistedToolConfigs(Config config)
+    {
+        // HDR tone-mapping options -> Core.HdrToneMappingConfig (the source of truth the viewer reads)
+        if (config.ToolSettings.TryGetValue(HdrToneMapperToolControl.TOOL_ID, out var hdrEl))
+        {
+            var opts = hdrEl.Deserialize(HdrToneMappingOptionsJsonContext.Default.HdrToneMappingOptions);
+            if (opts is not null) Core.HdrToneMappingConfig = opts;
+        }
     }
 
 

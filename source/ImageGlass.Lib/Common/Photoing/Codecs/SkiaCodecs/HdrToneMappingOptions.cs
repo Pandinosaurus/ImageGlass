@@ -17,7 +17,14 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+using ImageGlass.Common.Types.JsonTypeConverters;
+using System.Text.Json.Serialization;
+
 namespace ImageGlass.Common.Photoing;
+
+
+[JsonSerializable(typeof(HdrToneMappingOptions))]
+public partial class HdrToneMappingOptionsJsonContext : JsonSerializerContext { }
 
 
 /// <summary>
@@ -28,6 +35,7 @@ public sealed record HdrToneMappingOptions
     /// <summary>
     /// Tone mapping algorithm (BT.2408, Reinhard, ACES, or None for pass-through).
     /// </summary>
+    [JsonConverter(typeof(JsonStringEnumSafeConverter<HdrToneMappingMode>))]
     public HdrToneMappingMode Mode { get; set; } = HdrToneMappingMode.BT2408;
 
     /// <summary>

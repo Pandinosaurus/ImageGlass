@@ -164,6 +164,7 @@ public partial class AppAPIProvider
         new(LangId.Menu_MnuColorPicker,          API.IG_ToggleTool, ColorPickerToolControl.TOOL_ID,    [new(MKeys.Alt, Key.K)]),
         new(LangId.Menu_MnuCropTool,             API.IG_ToggleTool, CropImageToolControl.TOOL_ID,      [new(MKeys.Alt, Key.C)]),
         new(LangId.Menu_MnuFrameNav,             API.IG_ToggleTool, FrameNavToolControl.TOOL_ID,       [new(MKeys.Alt, Key.P)]),
+        new(LangId.Menu_MnuHdrToneMapper,        API.IG_ToggleTool, HdrToneMapperToolControl.TOOL_ID, [new(MKeys.Alt, Key.H)]),
         new(LangId.Menu_MnuResizeTool,           API.IG_OpenTool, ImageResizerTool.TOOL_ID,            [new(MKeys.Alt, Key.R)]),
         new(LangId.Menu_MnuLosslessCompression,  API.IG_OpenTool, LosslessCompressionTool.TOOL_ID,     [new(MKeys.Alt, Key.S)]),
         new(LangId.Menu_MnuToolsSettings,        API.IG_OpenSettings, nameof(SettingsNavId.Tools)),

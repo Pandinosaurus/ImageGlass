@@ -359,6 +359,7 @@ public enum LangId
     Menu_MnuCropTool,
     Menu_MnuResizeTool,
     Menu_MnuFrameNav,
+    Menu_MnuHdrToneMapper,
     Menu_MnuToolsSettings,
 
     Menu_MnuLosslessCompression,
@@ -756,6 +757,16 @@ public enum LangId
     Tool_Crop_DefaultSelectionType_SelectAll,
     Tool_Crop_DefaultSelectionType_CustomArea,
     #endregion // Tool: Crop
+
+
+    #region Tool: HDR tone mapper
+    Tool_Hdr_LblMode,
+    Tool_Hdr_LblExposure,
+    Tool_Hdr_LblWhitePoint,
+    Tool_Hdr_LblHighlightCompression,
+    Tool_Hdr_LblSaturation,
+    Tool_Hdr_BtnReset,
+    #endregion // Tool: HDR tone mapper
 
 
     #region Tool: Color picker

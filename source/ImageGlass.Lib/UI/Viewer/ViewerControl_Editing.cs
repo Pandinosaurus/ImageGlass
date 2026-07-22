@@ -182,6 +182,31 @@ public partial class ViewerControl
 
 
     /// <summary>
+    /// Re-decodes the current photo to re-apply HDR tone mapping with the latest
+    /// <see cref="Core.HdrToneMappingConfig"/>, keeping zoom and pan. No-op when tone
+    /// mapping is disabled or the current photo is not HDR (mirrors the color-profile path).
+    /// </summary>
+    public void ReapplyHdrToneMapping()
+    {
+        Photo? photo;
+        lock (_lock)
+        {
+            if (_animator is not null || IsVectorSource()) return;
+            if (Photo is not { State: PhotoState.Loaded }) return;
+            if (!Core.Config.EnableHdrToneMapping || Photo.Metadata?.IsHdr != true) return;
+            photo = Photo;
+        }
+
+        _ = SetPhotoAsync(photo, new PhotoLoadingOptions
+        {
+            ResetZoom = false,
+            UseCache = false,
+            Channels = Core.ColorChannels,
+        });
+    }
+
+
+    /// <summary>
     /// Checks if Skia color space profile can be applied to the current photo.
     /// </summary>
     private bool CanApplySkiaColorSpace()

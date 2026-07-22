@@ -293,10 +293,11 @@ public partial class MainWindow : PhWindow
         Core.Config.LastSeenImagePath = Core.Photos.CurrentFilePath;
         Core.Config.ZoomLockValue = PART_MainView.PART_Viewer.ZoomFactor * 100f;
 
-        // save settings for the current hosted tool
+        // persist the current hosted tool's settings, but keep LastOpenedTool intact
+        // (IG_CloseTool clears it) so the tool is re-opened on next launch
         if (PART_MainView.PART_ToolHost.Tool is ITool toolToSave)
         {
-            _ = await Core.API.RunApiAsync(API.IG_CloseTool, toolToSave.ToolId);
+            ToolRegistry.SaveToolSettings(toolToSave);
         }
 
 

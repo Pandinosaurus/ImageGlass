@@ -790,6 +790,7 @@ public class Lang
         new(LangId.Menu_MnuCropTool, "Crop image"), // v7.6
         new(LangId.Menu_MnuResizeTool, "Resize image"), // v9.2
         new(LangId.Menu_MnuFrameNav, "Frame navigation"), // v7.5
+        new(LangId.Menu_MnuHdrToneMapper, "HDR tone mapper"), // v10.0
         new(LangId.Menu_MnuToolsSettings, "Tools settings…"),
 
         new(LangId.Menu_MnuLosslessCompression, "Magick.NET Lossless Compression"), // v9.1
@@ -1187,6 +1188,16 @@ public class Lang
         new(LangId.Tool_Crop_DefaultSelectionType_CustomArea, "Custom area…"), //v9.0
 
         #endregion // Tool: Crop
+
+
+        #region Tool: HDR tone mapper
+        new(LangId.Tool_Hdr_LblMode, "Mode"), //v10.0
+        new(LangId.Tool_Hdr_LblExposure, "Exposure: {0}"), //v10.0
+        new(LangId.Tool_Hdr_LblWhitePoint, "White point (nits): {0}"), //v10.0
+        new(LangId.Tool_Hdr_LblHighlightCompression, "Highlight compression: {0}"), //v10.0
+        new(LangId.Tool_Hdr_LblSaturation, "Saturation: {0}"), //v10.0
+        new(LangId.Tool_Hdr_BtnReset, "Reset"), //v10.0
+        #endregion // Tool: HDR tone mapper
 
 
         #region Tool: Color picker
