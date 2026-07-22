@@ -24,6 +24,7 @@ using ImageGlass.Common;
 using ImageGlass.Common.Extensions;
 using ImageGlass.Common.Loggers;
 using ImageGlass.Common.Photoing;
+using ImageGlass.Common.ServiceProviders;
 using ImageGlass.Common.Types;
 using ImageGlass.UI.Viewer.ZoomAndPan;
 using SkiaSharp;
@@ -303,7 +304,9 @@ public partial class ViewerControl : PhControl
             var vDistance = _lastMousePanPoint.Value.Y - p.Position.Y;
             _lastMousePanPoint = p.Position;
 
-            requestRerender = PanTo(hDistance, vDistance, p.Position);
+            // honor the pan feature lock (drag-pan skips the RunApiAsync lock gate)
+            if (!FeatureManager.IsPanLocked())
+                requestRerender = PanTo(hDistance, vDistance, p.Position);
         }
         else
         {
@@ -361,13 +364,14 @@ public partial class ViewerControl : PhControl
             // Scroll Left/Right: Pan horizontally
             if (isScrollingHorz)
             {
-                PanTo(e.Delta.X * -50, e.Delta.Y * -50, position);
+                // this touchpad path skips the RunApiAsync lock gate, so check the pan lock here
+                if (!FeatureManager.IsPanLocked()) PanTo(e.Delta.X * -50, e.Delta.Y * -50, position);
                 return;
             }
 
             // Scroll Up/Down: Zoom
             delta *= 70;
-            _ = ZoomByDeltaToPoint(delta, position);
+            if (!FeatureManager.IsZoomLocked()) _ = ZoomByDeltaToPoint(delta, position);
             return;
         }
 

@@ -427,6 +427,8 @@ Occurs in `Program.cs` before Avalonia app setup (Linux/Mac have equivalent regi
 | `ImageGlass.Win32/Common/ServiceProviders/` | Win32 implementations of service providers |
 | `ImageGlass.Linux/Common/ServiceProviders/` | Linux implementations of service providers |
 | `ImageGlass.Mac/Common/ServiceProviders/` | macOS implementations of service providers |
+| `Common/ServiceProviders/AppAPIs/FeatureManager.cs` | Feature lock (`Config.LockedFeatures` API names): `IsLocked`, `IsZoomLocked`/`IsPanLocked`, `HideLockedMenuItems` |
+| `Settings/Config_Static.cs` (`AdminLockedConfigs`/`IsConfigLocked`) + `Windows/Settings/` | Admin settings-lock: disables + refuses to save settings defined in `igconfig.admin.json` |
 | `Common/AppThemes/` | Theme loading, color management (`AppThemeColors`, `IgThemeColors`) |
 | `Common/Localization/Lang.cs` | Translation key registry |
 | `Common/Types/Resx.cs` | Themed resource registry (`ResxId`); resolve via `{DynamicResource}` / `Resx.Get`. Also hosts icon helpers (`ResxIconId` + `GetIcon`) and platform stock icons (`StockIconId` + `GetStockIcon` / `GetDefaultWindowIcon`) |
@@ -467,6 +469,8 @@ Occurs in `Program.cs` before Avalonia app setup (Linux/Mac have equivalent regi
 - **Gesture not working?** Check `PhPanGestureRecognizer`, `PhPinchGestureRecognizer` in `ZoomAndPan/`; verify point accumulation
 - **Nav buttons not showing?** Check `Config.EnableNavigationButtons` binding, `NavButtonsOverlay.Background` must be `Brushes.Transparent` for hit-testing, and `EnableSelection` disables nav buttons
 - **Color wrong after switching profiles (brighter/over-saturated, persists until restart)?** The codec-selection cache is stuck on Magick (double profile application); ensure `Core.UpdateDestColorProfile()` calls `CodecRegistry.InvalidateSelectionCaches()`. CMYK profile showing inverted/negative? `ProcessMagickImage__` must cast a CMYK result to `ColorSpace.sRGB`.
+- **Admin-locked setting still editable or saved?** The admin settings-lock (`igconfig.admin.json` keys → `Config.AdminLockedConfigs`/`IsConfigLocked`) enforces at three points, all required: `SettingsViewModel.CommitAsync` (skip locked ids), `Config.ApplyCliOverrides` (skip locked ids), and the settings UI (`SettingsRegistry.DisableLockedControls` for `Bind*` controls + `SettingsPageView.DisableIfLocked` for composite editors). Capture runs in `Config.LoadAdminLockedConfigs()` independently of the user-config read (a corrupt `igconfig.json` must not empty the lock set). Plugins page is UI-disable-only (`PluginTrust` applies live via `PluginTrustPolicy`, never staged).
+- **Locked feature (`LockedFeatures`) still triggerable?** Only `AppAPIProvider.RunApiAsync` (both overloads) and the hotkey handler are auto-gated by `FeatureManager.IsLocked`. Any path that skips them must self-guard: context-menu items (bound via `GetApiCommand`) go through the `LockAwareApiCommand` wrapper; viewer wheel/drag/touch zoom-pan self-checks `FeatureManager.IsZoomLocked()`/`IsPanLocked()`. A new input path or a direct command execution without one of these is a bypass.
 - **Serialization fails?** Validate JSON converter exists in `Common/Types/JsonTypeConverters/`
 - **Cache not evicting?** Check `MipmapTileCache.MAX_CACHED_TILES` (100) and LRU promotion logic
 - **AOT trimming errors?** Review trimmer warnings; add `[DynamicallyAccessedMembers]` annotations or custom converters

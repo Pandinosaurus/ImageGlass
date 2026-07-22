@@ -184,11 +184,43 @@ public partial class AppAPIProvider
 
 
     /// <summary>
-    /// Gets the API command.
+    /// Gets the API command, wrapped so a direct <c>ICommand</c> binding (e.g. a context-menu item)
+    /// is disabled and refuses to run while the API is LockedFeatures-locked. Command bindings skip
+    /// <see cref="RunApiAsync(API, string?)"/>, so this restores the lock gate for them.
     /// </summary>
     public IPhCommand? GetApiCommand(API api)
     {
-        return _apis.GetValueOrDefault(api);
+        var cmd = _apis.GetValueOrDefault(api);
+        return cmd is null ? null : new LockAwareApiCommand(api, cmd);
+    }
+
+
+    /// <summary>
+    /// Wraps an API command to enforce the feature lock on direct <c>ICommand</c> bindings that
+    /// bypass <see cref="RunApiAsync(API, string?)"/> (menu items bound via <see cref="GetApiCommand(API)"/>).
+    /// <see cref="CanExecute"/> reports <c>false</c> when locked (so the bound item renders disabled),
+    /// and <see cref="Execute"/>/<see cref="ExecuteAsync"/> no-op when locked as a hard backstop.
+    /// </summary>
+    private sealed class LockAwareApiCommand(API api, IPhCommand inner) : IPhCommand
+    {
+        public bool IsAsync => inner.IsAsync;
+
+        public event EventHandler? CanExecuteChanged
+        {
+            add => inner.CanExecuteChanged += value;
+            remove => inner.CanExecuteChanged -= value;
+        }
+
+        public bool CanExecute(object? parameter)
+            => !FeatureManager.IsLocked(api) && inner.CanExecute(parameter);
+
+        public void Execute(object? parameter)
+        {
+            if (!FeatureManager.IsLocked(api)) inner.Execute(parameter);
+        }
+
+        public Task ExecuteAsync(object? parameter)
+            => FeatureManager.IsLocked(api) ? Task.CompletedTask : inner.ExecuteAsync(parameter);
     }
 
 

@@ -67,6 +67,21 @@ internal static class FeatureManager
 
 
     /// <summary>
+    /// Whether interactive zoom (mouse-wheel / touch / touchpad) is locked because a zoom API is
+    /// locked. Conservative: any zoom direction being locked disables interactive zoom entirely.
+    /// </summary>
+    public static bool IsZoomLocked() => IsLocked(API.IG_ZoomIn) || IsLocked(API.IG_ZoomOut);
+
+
+    /// <summary>
+    /// Whether interactive pan (mouse-wheel / touch / touchpad) is locked because a pan API is
+    /// locked. Conservative: any pan direction being locked disables interactive pan entirely.
+    /// </summary>
+    public static bool IsPanLocked() => IsLocked(API.IG_PanLeft) || IsLocked(API.IG_PanRight)
+        || IsLocked(API.IG_PanUp) || IsLocked(API.IG_PanDown);
+
+
+    /// <summary>
     /// Checks if a menu item with the given language key is locked.
     /// </summary>
     public static bool IsLocked(LangId? langKey)

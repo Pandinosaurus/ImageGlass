@@ -438,15 +438,19 @@ public partial class MainWindowView : PhControl
         switch (wheelAction)
         {
             case MouseWheelAction.Zoom:
-                _ = PART_Viewer.ZoomByDeltaToPoint(e.Delta, e.Position);
+                // respect a zoom feature lock (this path skips the RunApiAsync lock gate)
+                if (!FeatureManager.IsZoomLocked())
+                    _ = PART_Viewer.ZoomByDeltaToPoint(e.Delta, e.Position);
                 break;
 
             case MouseWheelAction.PanVertically:
-                PART_Viewer.PanTo(0, -e.Delta, e.Position);
+                if (!FeatureManager.IsPanLocked())
+                    PART_Viewer.PanTo(0, -e.Delta, e.Position);
                 break;
 
             case MouseWheelAction.PanHorizontally:
-                PART_Viewer.PanTo(-e.Delta, 0, e.Position);
+                if (!FeatureManager.IsPanLocked())
+                    PART_Viewer.PanTo(-e.Delta, 0, e.Position);
                 break;
 
             case MouseWheelAction.BrowseImages:
@@ -753,7 +757,7 @@ public partial class MainWindowView : PhControl
 
 
         // Hide locked menu items
-        ServiceProviders.FeatureManager.HideLockedMenuItems(mnuContext.Items);
+        FeatureManager.HideLockedMenuItems(mnuContext.Items);
     }
 
 
