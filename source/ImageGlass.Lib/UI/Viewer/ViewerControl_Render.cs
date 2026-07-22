@@ -49,6 +49,14 @@ public partial class ViewerControl
     private AnimatorImpl? _animator;
     internal MipmapTileCache? _mipmapCache;
 
+    // retained pre-tone-map HDR frame for live in-memory re-tone-mapping (only while the HDR tool is active)
+    private SKImageRef? _imgHdrSource;
+    private InterlockedBool _liveHdrToneMapping = new(false);
+
+    // coalescing state for the background HDR re-tone-map pump (latest-request-wins)
+    private volatile bool _hdrDirty;
+    private int _hdrActive;
+
     private RenderTargetBitmap? _bmpCheckerboard;
     private readonly CheckerboardInfo _checkerboard = new();
 

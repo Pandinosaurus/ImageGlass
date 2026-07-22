@@ -41,9 +41,6 @@ public partial class HdrToneMapperToolControl : PhControl, IToolControl
     // prevents feedback loop when loading control values from config
     private bool _isUpdatingUI;
 
-    // cached delegate so BHelper.Debounce coalesces rapid edits onto one instance
-    private readonly Action _reapplyAction;
-
     // Mode ComboBox items follow this enum order (index maps to the value)
     private static readonly HdrToneMappingMode[] _modes = Enum.GetValues<HdrToneMappingMode>();
 
@@ -58,7 +55,6 @@ public partial class HdrToneMapperToolControl : PhControl, IToolControl
     public HdrToneMapperToolControl()
     {
         InitializeComponent();
-        _reapplyAction = () => Viewer?.ReapplyHdrToneMapping();
     }
 
 
@@ -72,6 +68,9 @@ public partial class HdrToneMapperToolControl : PhControl, IToolControl
         PopulateModeItems();
         LoadConfigToUI();
         UpdateResponsiveColumns(Bounds.Width);
+
+        // retain the raw HDR frame so slider changes re-apply instantly (no disk re-decode)
+        Viewer?.BeginLiveHdrToneMapping();
 
         PART_CmbMode.SelectionChanged += Mode_SelectionChanged;
         PART_SldExposure.ValueChanged += Slider_ValueChanged;
@@ -92,6 +91,9 @@ public partial class HdrToneMapperToolControl : PhControl, IToolControl
         PART_SldSaturation.ValueChanged -= Slider_ValueChanged;
         PART_BtnReset.Click -= PART_BtnReset_Click;
         SizeChanged -= HdrTool_SizeChanged;
+
+        // stop retaining the raw HDR frame
+        Viewer?.EndLiveHdrToneMapping();
 
         base.OnUnloaded(e);
     }
@@ -129,8 +131,9 @@ public partial class HdrToneMapperToolControl : PhControl, IToolControl
 
     private void PART_BtnReset_Click(object? sender, RoutedEventArgs e)
     {
-        // reset to the built-in defaults of HdrToneMappingOptions
-        Core.HdrToneMappingConfig = new HdrToneMappingOptions();
+        // reset the sliders to defaults but keep the current Mode
+        var mode = Core.HdrToneMappingConfig.Mode;
+        Core.HdrToneMappingConfig = new HdrToneMappingOptions { Mode = mode };
 
         LoadConfigToUI();
         ToolRegistry.SaveToolSettings(this);
@@ -208,6 +211,7 @@ public partial class HdrToneMapperToolControl : PhControl, IToolControl
             PART_SldSaturation.Value = cfg.Saturation;
 
             UpdateValueLabels();
+            UpdateModeState();
         }
         finally
         {
@@ -217,8 +221,25 @@ public partial class HdrToneMapperToolControl : PhControl, IToolControl
 
 
     /// <summary>
-    /// Applies the control values to <see cref="Core.HdrToneMappingConfig"/>, persists them,
-    /// and re-decodes the current photo (debounced) to reflect changes in real time.
+    /// Disables the value sliders when Mode is <see cref="HdrToneMappingMode.None"/>
+    /// (pass-through ignores exposure/white-point/compression/saturation).
+    /// </summary>
+    private void UpdateModeState()
+    {
+        var idx = PART_CmbMode.SelectedIndex;
+        var mode = idx >= 0 ? _modes[idx] : HdrToneMappingMode.BT2408;
+        var enabled = mode != HdrToneMappingMode.None;
+
+        PART_SldExposure.IsEnabled = enabled;
+        PART_SldWhitePoint.IsEnabled = enabled;
+        PART_SldHighlightCompression.IsEnabled = enabled;
+        PART_SldSaturation.IsEnabled = enabled;
+    }
+
+
+    /// <summary>
+    /// Applies the control values to <see cref="Core.HdrToneMappingConfig"/>, persists them, and
+    /// requests a live re-tone-map. The viewer coalesces requests and runs the pass off-thread.
     /// </summary>
     private void SaveUIToConfig()
     {
@@ -230,10 +251,10 @@ public partial class HdrToneMapperToolControl : PhControl, IToolControl
         cfg.Saturation = PART_SldSaturation.Value;
 
         UpdateValueLabels();
+        UpdateModeState();
         ToolRegistry.SaveToolSettings(this);
 
-        // debounce the expensive re-decode while the user drags the sliders
-        BHelper.Debounce(200, _reapplyAction, runUIThread: true);
+        Viewer?.ReapplyHdrToneMapping();
     }
 
 

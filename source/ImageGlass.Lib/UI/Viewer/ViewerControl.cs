@@ -563,6 +563,7 @@ public partial class ViewerControl : PhControl
             // dispose native bitmap
             SKImageRef.Set(ref _imgSource, null);
             SKImageRef.Set(ref _imgRender, null);
+            SKImageRef.Set(ref _imgHdrSource, null);
         }
     }
 
@@ -820,6 +821,9 @@ public partial class ViewerControl : PhControl
         AnimatorImpl? animator = null;
         var hasSource = false;
 
+        // raw pre-tone-map HDR frame to keep for live re-tone-mapping (null = don't retain)
+        SKImage? hdrRawToRetain = null;
+
         try
         {
             // 2. check if photo error
@@ -876,8 +880,13 @@ public partial class ViewerControl : PhControl
                         PhotoTrace.Mark("viewer:color-managed", e.Photo.FilePath,
                             $"applied (hdrToneMap={Core.Config.EnableHdrToneMapping && e.Photo.Metadata.IsHdr}, srcProfile={(string.IsNullOrEmpty(e.Photo.Metadata.ColorProfileName) ? "none" : e.Photo.Metadata.ColorProfileName)})");
 
-                        // don't dispose the clipboard photo
-                        if (!e.Photo.IsClipboard)
+                        // retain the pre-tone-map HDR frame for live re-tone-mapping, else free it
+                        // (never dispose the clipboard photo's frame)
+                        if (_liveHdrToneMapping && e.Photo.Metadata.IsHdr && !e.Photo.IsClipboard)
+                        {
+                            hdrRawToRetain = imgFrame;
+                        }
+                        else if (!e.Photo.IsClipboard)
                         {
                             imgFrame?.Dispose();
                         }
@@ -923,6 +932,9 @@ public partial class ViewerControl : PhControl
                     {
                         _isFirstDraw.SetTrue();
                         SKImageRef.Set(ref _imgSource, imgFrame);
+
+                        // keep (or clear) the retained raw HDR frame for live re-tone-mapping
+                        SKImageRef.Set(ref _imgHdrSource, hdrRawToRetain);
                     }
 
 
@@ -1013,6 +1025,10 @@ public partial class ViewerControl : PhControl
 
             imgFrame?.Dispose();
             imgFrame = null;
+
+            // free the retained raw HDR frame if we hadn't stored it yet
+            hdrRawToRetain?.Dispose();
+            hdrRawToRetain = null;
 
             animator?.Dispose();
             animator = null;

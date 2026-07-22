@@ -19,6 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 using ImageGlass.Common.Extensions;
 using SkiaSharp;
 using System;
+using System.Threading.Tasks;
 
 namespace ImageGlass.Common.Photoing;
 
@@ -288,10 +289,13 @@ public static class HdrToneMapper
     {
         var applySaturation = MathF.Abs(saturation - 1f) > 1e-4f;
 
-        for (var y = 0; y < height; y++)
+        // parallelize per row (pointers captured as nint; lambdas can't capture pointer types)
+        var srcBase = (nint)srcPtr;
+        var dstBase = (nint)dstPtr;
+        Parallel.For(0, height, y =>
         {
-            var srcRow = (float*)(srcPtr + (long)y * srcRowBytes);
-            var dstRow = (float*)(dstPtr + (long)y * dstRowBytes);
+            var srcRow = (float*)((byte*)srcBase + (long)y * srcRowBytes);
+            var dstRow = (float*)((byte*)dstBase + (long)y * dstRowBytes);
 
             for (var x = 0; x < width; x++)
             {
@@ -322,7 +326,7 @@ public static class HdrToneMapper
                 dstRow[i + 2] = Math.Clamp(b, 0f, 1f);
                 dstRow[i + 3] = Math.Clamp(a, 0f, 1f);
             }
-        }
+        });
     }
 
 
@@ -337,10 +341,13 @@ public static class HdrToneMapper
     {
         var applySaturation = MathF.Abs(saturation - 1f) > 1e-4f;
 
-        for (var y = 0; y < height; y++)
+        // parallelize per row (pointers captured as nint; lambdas can't capture pointer types)
+        var srcBase = (nint)srcPtr;
+        var dstBase = (nint)dstPtr;
+        Parallel.For(0, height, y =>
         {
-            var srcRow = (float*)(srcPtr + (long)y * srcRowBytes);
-            var dstRow = (float*)(dstPtr + (long)y * dstRowBytes);
+            var srcRow = (float*)((byte*)srcBase + (long)y * srcRowBytes);
+            var dstRow = (float*)((byte*)dstBase + (long)y * dstRowBytes);
 
             for (var x = 0; x < width; x++)
             {
@@ -383,7 +390,7 @@ public static class HdrToneMapper
                 dstRow[i + 2] = Math.Clamp(sb, 0f, 1f);
                 dstRow[i + 3] = Math.Clamp(a, 0f, 1f);
             }
-        }
+        });
     }
 
 

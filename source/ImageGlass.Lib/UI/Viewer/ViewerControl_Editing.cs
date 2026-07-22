@@ -18,11 +18,14 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 using Avalonia;
 using Avalonia.Media;
+using Avalonia.Threading;
 using ImageGlass.Common;
 using ImageGlass.Common.Extensions;
 using ImageGlass.Common.Photoing;
 using ImageGlass.Common.Types;
 using SkiaSharp;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace ImageGlass.UI.Viewer;
 
@@ -182,27 +185,203 @@ public partial class ViewerControl
 
 
     /// <summary>
-    /// Re-decodes the current photo to re-apply HDR tone mapping with the latest
-    /// <see cref="Core.HdrToneMappingConfig"/>, keeping zoom and pan. No-op when tone
-    /// mapping is disabled or the current photo is not HDR (mirrors the color-profile path).
+    /// Enables live HDR re-tone-mapping: the pre-tone-map HDR frame is retained in memory so
+    /// slider changes re-apply instantly without a disk re-decode. Called when the HDR tool opens.
+    /// Captures the current photo's raw frame once (via a single re-decode) if it wasn't retained.
+    /// </summary>
+    public void BeginLiveHdrToneMapping()
+    {
+        _liveHdrToneMapping.SetTrue();
+        CaptureHdrSourceViaReload();
+    }
+
+
+    /// <summary>
+    /// Disables live HDR re-tone-mapping and releases the retained raw HDR frame.
+    /// Called when the HDR tool closes.
+    /// </summary>
+    public void EndLiveHdrToneMapping()
+    {
+        _liveHdrToneMapping.SetFalse();
+        lock (_lock)
+        {
+            SKImageRef.Set(ref _imgHdrSource, null);
+        }
+    }
+
+
+    /// <summary>
+    /// Requests a live HDR re-tone-map with the latest <see cref="Core.HdrToneMappingConfig"/>,
+    /// keeping zoom and pan. Coalesced and run on a background thread: rapid slider changes collapse
+    /// to back-to-back passes over the retained raw HDR frame (no disk decode), always using the
+    /// newest settings. No-op when tone mapping is disabled or the current photo is not HDR.
     /// </summary>
     public void ReapplyHdrToneMapping()
     {
-        Photo? photo;
-        lock (_lock)
+        _hdrDirty = true;
+        if (Interlocked.CompareExchange(ref _hdrActive, 1, 0) == 0)
         {
-            if (_animator is not null || IsVectorSource()) return;
-            if (Photo is not { State: PhotoState.Loaded }) return;
-            if (!Core.Config.EnableHdrToneMapping || Photo.Metadata?.IsHdr != true) return;
-            photo = Photo;
+            _ = HdrToneMapPumpAsync();
+        }
+    }
+
+
+    /// <summary>
+    /// Serialized pump that drains re-tone-map requests one pass at a time (latest-wins),
+    /// re-kicking if a request slips in during shutdown.
+    /// </summary>
+    private async Task HdrToneMapPumpAsync()
+    {
+        try
+        {
+            // _hdrDirty is volatile: direct reads/writes are already ordered
+            while (_hdrDirty)
+            {
+                _hdrDirty = false;
+                var retained = await DoOneHdrToneMapPassAsync().ConfigureAwait(false);
+
+                // no retained frame yet: capture it once (re-decode also applies current settings)
+                if (!retained)
+                {
+                    CaptureHdrSourceViaReload();
+                    break;
+                }
+            }
+        }
+        finally
+        {
+            Interlocked.Exchange(ref _hdrActive, 0);
         }
 
-        _ = SetPhotoAsync(photo, new PhotoLoadingOptions
+        // a request may have arrived after the last check but before we released the pump
+        if (_hdrDirty && Interlocked.CompareExchange(ref _hdrActive, 1, 0) == 0)
         {
-            ResetZoom = false,
-            UseCache = false,
-            Channels = Core.ColorChannels,
+            _ = HdrToneMapPumpAsync();
+        }
+    }
+
+
+    /// <summary>
+    /// Runs one re-tone-map pass off the UI thread and swaps the result in. Returns <c>false</c>
+    /// only when the current photo is HDR but no raw frame is retained yet (caller should capture).
+    /// </summary>
+    private async Task<bool> DoOneHdrToneMapPassAsync()
+    {
+        SKImageRef.ImageLease? lease;
+        Photo? photoAtStart;
+        HdrTransferFunction transferFn;
+        bool applyProfile;
+        var destProfile = Core.DestColorProfile;
+
+        lock (_lock)
+        {
+            if (_animator is not null || IsVectorSource()) return true;
+            if (Photo is not { State: PhotoState.Loaded }) return true;
+            if (!Core.Config.EnableHdrToneMapping || Photo.Metadata?.IsHdr != true) return true;
+
+            lease = _imgHdrSource?.Acquire();
+            if (lease is null) return false; // needs capture
+
+            photoAtStart = Photo;
+            transferFn = Photo.Metadata.HdrTransferFn;
+            applyProfile = CanApplySkiaColorSpace();
+        }
+
+        // heavy work off the UI thread; the lease keeps the raw frame alive across a photo change
+        SKImage? result = null;
+        var passthrough = false;
+        try
+        {
+            (result, passthrough) = await Task.Run(() =>
+            {
+                var toneMapped = HdrToneMapper.ToneMapToSdr(lease.Image, transferFn, Core.HdrToneMappingConfig);
+
+                // None / gain-map => pass-through (show the raw frame, optionally monitor-profiled)
+                if (toneMapped.IsDisposed())
+                {
+                    if (applyProfile && SkiaCodec.TryApplyColorSpace(lease.Image, destProfile, out var profiledRaw))
+                        return (profiledRaw, false);
+                    return ((SKImage?)null, true);
+                }
+
+                if (applyProfile && SkiaCodec.TryApplyColorSpace(toneMapped, destProfile, out var profiled))
+                {
+                    toneMapped.Dispose();
+                    return (profiled, false);
+                }
+                return (toneMapped, false);
+            }).ConfigureAwait(false);
+        }
+        finally
+        {
+            lease.Dispose();
+        }
+
+        // swap in on the UI thread
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            lock (_lock)
+            {
+                // drop a stale result if the photo changed or the retained frame is gone
+                if (!ReferenceEquals(Photo, photoAtStart)
+                    || _imgHdrSource is null || _imgHdrSource.Image.IsDisposed())
+                {
+                    result?.Dispose();
+                    return;
+                }
+
+                _isFirstDraw.SetTrue();
+                if (passthrough)
+                {
+                    // share the raw frame (no extra copy); ref-counting keeps both refs valid
+                    SKImageRef.Set(ref _imgSource, _imgHdrSource.Image, _imgHdrSource);
+                }
+                else if (!result.IsDisposed())
+                {
+                    SKImageRef.Set(ref _imgSource, result);
+                }
+                else
+                {
+                    return;
+                }
+
+                _mipmapCache?.Dispose();
+                _mipmapCache = null;
+            }
+
+            Refresh(false);
         });
+
+        return true;
+    }
+
+
+    /// <summary>
+    /// Re-decodes the current HDR photo once to (re)capture the retained raw frame, keeping zoom
+    /// and pan. The load retains the frame because <c>_liveHdrToneMapping</c> is set.
+    /// </summary>
+    private void CaptureHdrSourceViaReload()
+    {
+        Photo? photo = null;
+        lock (_lock)
+        {
+            var hasRaw = _imgHdrSource?.Image.IsDisposed() == false;
+            if (!hasRaw && _animator is null && !IsVectorSource()
+                && Photo is { State: PhotoState.Loaded } && Photo.Metadata?.IsHdr == true)
+            {
+                photo = Photo;
+            }
+        }
+
+        if (photo is not null)
+        {
+            _ = SetPhotoAsync(photo, new PhotoLoadingOptions
+            {
+                ResetZoom = false,
+                UseCache = false,
+                Channels = Core.ColorChannels,
+            });
+        }
     }
 
 
