@@ -32,12 +32,11 @@
             <!--  The slot for hosted tool content  -->
             <ContentControl
                 Grid.Column="0"
-                BorderBrush="{DynamicResource IG_BorderNeutralBrush}"
                 BorderThickness="0,1"
                 Content="{CompiledBinding #Root.Tool}" />
 
 
-            <!--  Close button  -->
+            <!--  Action buttons  -->
             <StackPanel
                 Margin="4"
                 HorizontalAlignment="Right"
