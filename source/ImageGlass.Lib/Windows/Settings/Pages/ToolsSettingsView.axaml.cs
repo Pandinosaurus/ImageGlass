@@ -75,6 +75,8 @@ public partial class ToolsSettingsView : SettingsPageView
         AddLangRefresher(RebuildTable);
 
         RegisterSearchKey(PART_AddTool, LangId.Settings_Nav_Tools, ConfigId.Tools, LangId.Settings_Nav_Tools);
+
+        DisableIfLocked(ConfigId.Tools, PART_AddTool, PART_Table);
     }
 
 

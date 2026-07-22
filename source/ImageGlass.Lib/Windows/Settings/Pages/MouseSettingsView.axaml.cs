@@ -83,6 +83,8 @@ public partial class MouseSettingsView : SettingsPageView
 
         RegisterSearchKey(PART_ResetWheel, LangId.Settings_MouseWheelAction,
             ConfigId.MouseWheelActions, LangId.Settings_MouseWheelAction);
+
+        DisableIfLocked(ConfigId.MouseWheelActions, PART_WheelTable, PART_ResetWheel);
     }
 
 
@@ -191,6 +193,8 @@ public partial class MouseSettingsView : SettingsPageView
 
         RegisterSearchKey(PART_ResetClick, LangId.Settings_MouseClickAction,
             ConfigId.MouseClickActions, LangId.Settings_MouseClickAction);
+
+        DisableIfLocked(ConfigId.MouseClickActions, PART_ClickTable, PART_ResetClick);
     }
 
 

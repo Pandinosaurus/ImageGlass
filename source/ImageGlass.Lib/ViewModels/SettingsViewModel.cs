@@ -80,11 +80,15 @@ public sealed class SettingsViewModel : PhReactive
     {
         if (_pending.Count == 0) return;
 
-        // 1. push staged values into the live config (raises PropertyChanged -> live UI updates)
-        var changedIds = _pending.Keys.ToList();
+        // 1. push staged values into the live config (raises PropertyChanged -> live UI updates).
+        //    admin-locked ids are refused here: skipping Set keeps their admin-merged value, and
+        //    excluding them from changedIds stops their post-apply side effects from running
+        var changedIds = new List<ConfigId>(_pending.Count);
         foreach (var (id, value) in _pending)
         {
-            if (value is not null) Core.Config.Set(id, value);
+            if (value is null || Config.IsConfigLocked(id)) continue;
+            Core.Config.Set(id, value);
+            changedIds.Add(id);
         }
         _pending.Clear();
 

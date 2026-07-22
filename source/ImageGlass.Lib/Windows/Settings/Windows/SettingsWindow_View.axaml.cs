@@ -313,6 +313,10 @@ public partial class SettingsWindowView : PhControl
             _pages[navItem.NavId] = page;
         }
 
+        // disable controls the admin has locked, and show the managed-settings warning bar
+        _vm.Registry.DisableLockedControls();
+        PART_LockWarning.IsVisible = Config.AdminLockedConfigs.Count > 0;
+
         // search box
         PART_Search.PlaceholderText = GetSearchPlaceholder();
         PART_Search.TextChanged += TxtSearch_TextChanged;

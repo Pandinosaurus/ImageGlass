@@ -69,6 +69,8 @@ public partial class ToolbarSettingsView : SettingsPageView
 
         RegisterSearchKey(PART_Editor, LangId.Settings_Toolbar_ToolbarButtons,
             ConfigId.ToolbarButtons, LangId.Settings_Toolbar_ToolbarButtons);
+
+        DisableIfLocked(ConfigId.ToolbarButtons, PART_Editor);
     }
 
 }

@@ -155,6 +155,11 @@ public partial class AppearanceSettingsView : SettingsPageView
 
         UpdateThemeOverview();
         _ = ReloadThemesAsync();
+
+        // theme selection is admin-locked when either the dark or light theme is locked; the
+        // shared card list has no per-mode sub-container, so lock the whole list for either
+        DisableIfLocked(ConfigId.DarkTheme, PART_ThemeList);
+        DisableIfLocked(ConfigId.LightTheme, PART_ThemeList);
     }
 
 

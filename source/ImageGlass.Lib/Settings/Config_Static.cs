@@ -28,6 +28,7 @@ using ImageGlass.UI;
 using ImageGlass.UI.Viewer;
 using System;
 using System.Buffers;
+using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -82,6 +83,21 @@ public partial class Config
     /// </summary>
     [JsonIgnore]
     public static string? IncompatibleUserConfigPath { get; private set; } = null;
+
+
+    /// <summary>
+    /// Config ids locked by <see cref="CONFIG_ADMIN"/>: every top-level key the admin layer
+    /// defines. The user cannot change these in the Settings window, and they are refused on save.
+    /// Empty when the admin layer is absent, spec-incompatible, or admin config is disabled.
+    /// </summary>
+    [JsonIgnore]
+    public static FrozenSet<ConfigId> AdminLockedConfigs { get; private set; } = FrozenSet<ConfigId>.Empty;
+
+
+    /// <summary>
+    /// Whether <paramref name="id"/> is locked by the admin config layer (<see cref="AdminLockedConfigs"/>).
+    /// </summary>
+    public static bool IsConfigLocked(ConfigId id) => AdminLockedConfigs.Contains(id);
 
 
     /// <summary>
@@ -530,6 +546,11 @@ public partial class Config
     {
         Config? appConfig = null;
 
+        // capture admin-locked ids from their own guarded read, BEFORE (and independently of) the
+        // main load. A corrupt/locked igconfig.json aborts the load below into the catch; if the lock
+        // capture lived there too, a user could defeat every admin lock by corrupting their own config.
+        AdminLockedConfigs = LoadAdminLockedConfigs();
+
         try
         {
             var jsonOptions = BHelper.CreateJsonOptions();
@@ -680,9 +701,11 @@ public partial class Config
             var updated = JsonSerializer.Deserialize(mergedJson, jsonContext.Config);
             if (updated == null) return;
 
-            // copy all values from the updated config
+            // copy all values, but never let a forwarded CLI override mutate an admin-locked setting
+            // (preserves the admin > CLI precedence of Load; mirrors SettingsViewModel.CommitAsync)
             foreach (var kvp in updated._values)
             {
+                if (IsConfigLocked(kvp.Key)) continue;
                 config.Set(kvp.Key, kvp.Value);
             }
         }
@@ -1132,6 +1155,53 @@ public partial class Config
         }
 
         return map;
+    }
+
+
+    /// <summary>
+    /// Reads <see cref="CONFIG_ADMIN"/> on its own and returns the locked <see cref="ConfigId"/>s,
+    /// independently of the main <see cref="Load"/> flow. Isolating it guarantees admin enforcement
+    /// survives a corrupt/unreadable user config (which would otherwise abort <see cref="Load"/>
+    /// before the locks were captured). Returns an empty set when admin config is disabled or on error.
+    /// </summary>
+    private static FrozenSet<ConfigId> LoadAdminLockedConfigs()
+    {
+        if (!Const.ENABLE_ADMIN_CONFIG) return FrozenSet<ConfigId>.Empty;
+
+        try
+        {
+            // BaseDir only, matching the merge layer: a ConfigDir fallback would let a user drop an
+            // admin config in AppData and lock themselves out (or forge locks)
+            using var adminDoc = ReadConfigJsonDocument(BHelper.BaseDir(CONFIG_ADMIN));
+            var effectiveAdminDoc = IsCompatibleConfigLayer(adminDoc) ? adminDoc : null;
+            return BuildAdminLockedConfigs(effectiveAdminDoc);
+        }
+        catch
+        {
+            return FrozenSet<ConfigId>.Empty;
+        }
+    }
+
+
+    /// <summary>
+    /// Builds the set of <see cref="ConfigId"/>s the admin layer defines (and therefore locks).
+    /// Only top-level property names that map to a known <see cref="ConfigId"/> are included;
+    /// <c>_Metadata</c> and any unknown keys are ignored. Returns an empty set for a <c>null</c>
+    /// or non-object admin document.
+    /// </summary>
+    private static FrozenSet<ConfigId> BuildAdminLockedConfigs(JsonDocument? adminDoc)
+    {
+        if (adminDoc is null || adminDoc.RootElement.ValueKind != JsonValueKind.Object)
+            return FrozenSet<ConfigId>.Empty;
+
+        var ids = new HashSet<ConfigId>();
+        foreach (var prop in adminDoc.RootElement.EnumerateObject())
+        {
+            // match case-insensitively like the merge; _Metadata never parses to a ConfigId
+            if (Enum.TryParse<ConfigId>(prop.Name, ignoreCase: true, out var id)) ids.Add(id);
+        }
+
+        return ids.ToFrozenSet();
     }
 
 

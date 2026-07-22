@@ -87,15 +87,31 @@
         </ListBox>
 
 
-        <!--  Content area: header (title + search) over the scrollable page  -->
+        <!--  Content area: warning bar + header (title + search) over the scrollable page  -->
         <Grid
             Grid.Column="1"
-            RowDefinitions="Auto, *"
+            RowDefinitions="Auto, Auto, *"
             Margin="28,0,0,0">
+
+            <!--  Admin-managed settings warning (shown when >=1 setting is locked by igconfig.admin.json)  -->
+            <Border
+                x:Name="PART_LockWarning"
+                Grid.Row="0"
+                Margin="0,14,14,0"
+                Padding="12,10"
+                Background="{DynamicResource IG_BackgroundWarningBrush}"
+                CornerRadius="{DynamicResource ControlCornerRadius}"
+                IsVisible="False">
+                <ui:PhTextBlock
+                    VerticalAlignment="Center"
+                    Foreground="{DynamicResource IG_TextWarningBrush}"
+                    LangKey="Settings_AdminLockWarning"
+                    TextWrapping="Wrap" />
+            </Border>
 
             <!--  Header  -->
             <Grid
-                Grid.Row="0"
+                Grid.Row="1"
                 ColumnDefinitions="*, Auto"
                 Margin="0,14,14,14"
                 ColumnSpacing="8">
@@ -151,7 +167,7 @@
 
             <!--  Scrollable page content  -->
             <ScrollViewer
-                Grid.Row="1"
+                Grid.Row="2"
                 HorizontalScrollBarVisibility="Disabled"
                 VerticalScrollBarVisibility="Auto">
                 <ContentControl x:Name="PART_ContentHost" Padding="0,0,14,32" />

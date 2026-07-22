@@ -101,6 +101,8 @@ public partial class EditSettingsView : SettingsPageView
         AddLangRefresher(RebuildAppsTable);
 
         RegisterSearchKey(PART_AddApp, LangId.Settings_EditApps, ConfigId.EditApps, LangId.Settings_EditApps);
+
+        DisableIfLocked(ConfigId.EditApps, PART_AddApp, PART_AppsTable);
     }
 
 

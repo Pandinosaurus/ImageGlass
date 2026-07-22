@@ -234,6 +234,8 @@ public partial class FileTypeAssociationsSettingsView : SettingsPageView
 
         RegisterSearchKey(PART_AddFormat, LangId.Settings_FileFormats, ConfigId.FileFormats,
             LangId.Settings_FileFormats);
+
+        DisableIfLocked(ConfigId.FileFormats, PART_AddFormat, PART_ResetFormats, PART_Table);
     }
 
 

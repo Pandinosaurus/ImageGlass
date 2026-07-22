@@ -111,6 +111,12 @@ public partial class LayoutSettingsView : SettingsPageView
         // Controls
         BuildPositionCombos();
         BuildArranger();
+
+        // lock the hand-wired composite editors when admin-managed (the reset button and the drag
+        // arranger aren't reached by the registry disable pass; the reset button also re-stages via
+        // the textbox, so it must be disabled too)
+        DisableIfLocked(ConfigId.ImageInfoTags, PART_ImageInfoTags, PART_ResetImageInfoTags);
+        DisableIfLocked(ConfigId.Layout, PART_ToolbarPosition, PART_GalleryPosition, PART_Preview);
     }
 
 

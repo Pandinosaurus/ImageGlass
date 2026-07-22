@@ -49,6 +49,8 @@ public partial class KeyboardSettingsView : SettingsPageView
 
         RegisterSearchKey(PART_Editor, LangId.Settings_Keyboard_MenuHotkeys,
             ConfigId.MenuHotkeys, LangId.Settings_Keyboard_MenuHotkeys);
+
+        DisableIfLocked(ConfigId.MenuHotkeys, PART_Editor);
     }
 
 }

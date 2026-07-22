@@ -123,6 +123,16 @@ public partial class ViewerSettingsView : SettingsPageView
     /// </summary>
     private void UpdateZoomLevelsEnabled()
     {
+        // an admin-locked zoom-levels setting disables all three controls (incl. the smooth-zoom
+        // toggle) so the value cannot be changed through any of them
+        if (Config.IsConfigLocked(ConfigId.ZoomLevels))
+        {
+            PART_UseSmoothZooming.IsEnabled = false;
+            PART_ZoomLevels.IsEnabled = false;
+            PART_LoadDefaultZoomLevels.IsEnabled = false;
+            return;
+        }
+
         var smooth = PART_UseSmoothZooming.IsChecked ?? false;
         PART_ZoomLevels.IsEnabled = !smooth;
         PART_LoadDefaultZoomLevels.IsEnabled = !smooth;

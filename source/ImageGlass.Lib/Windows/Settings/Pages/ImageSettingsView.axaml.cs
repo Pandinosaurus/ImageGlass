@@ -171,6 +171,8 @@ public partial class ImageSettingsView : SettingsPageView
 
         RegisterSearchKey(PART_ColorProfile, LangId.Settings_ColorProfile,
             ConfigId.ColorProfile, LangId.Settings_ColorManagement);
+
+        DisableIfLocked(ConfigId.ColorProfile, PART_ColorProfile, PART_BrowseColorProfile);
     }
 
 

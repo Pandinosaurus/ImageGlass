@@ -407,6 +407,7 @@ public enum LangId
     Settings_ResetSettings,
     Settings_UnmanagedSettingReminder,
     Settings_SearchPlaceholder,
+    Settings_AdminLockWarning,
 
     #region Settings > Navbar
     Settings_Nav_General,

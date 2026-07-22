@@ -106,6 +106,23 @@ public abstract class SettingsPageView : PhControl
 
 
     /// <summary>
+    /// Disables the given composite/custom editor controls when <paramref name="id"/> is
+    /// admin-locked. Use for editors that don't bind through a single <c>Bind*</c> helper
+    /// (tables, pickers, list editors), which the registry's
+    /// <see cref="SettingsRegistry.DisableLockedControls"/> pass cannot reach.
+    /// </summary>
+    protected static void DisableIfLocked(ConfigId id, params Control?[] targets)
+    {
+        if (!Config.IsConfigLocked(id)) return;
+
+        foreach (var target in targets)
+        {
+            if (target is not null) target.IsEnabled = false;
+        }
+    }
+
+
+    /// <summary>
     /// Registers a setting row into the shared search index.
     /// </summary>
     protected void RegisterSearchKey(Control target, LangId label, ConfigId? id, LangId? section)

@@ -79,6 +79,11 @@ public partial class PluginsSettingsView : SettingsPageView
         AddLangRefresher(RebuildTable);
 
         RegisterSearchKey(PART_AddPlugin, LangId.Settings_Nav_Plugins, null, LangId.Settings_Nav_Plugins);
+
+        // plugin trust is admin-managed: lock install + the per-row enable/disable/edit/delete table.
+        // (plugin trust is applied live via PluginTrustPolicy, not staged, so disabling the UI is the
+        // only lock point; disabling PART_Table propagates to rows rebuilt later.)
+        DisableIfLocked(ConfigId.PluginTrust, PART_AddPlugin, PART_Table);
     }
 
 

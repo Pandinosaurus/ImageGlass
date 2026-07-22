@@ -50,6 +50,22 @@ public sealed class SettingsRegistry
 
 
     /// <summary>
+    /// Disables every registered control whose config id is admin-locked, so managed settings
+    /// cannot be edited. Controls sharing a locked id are all disabled.
+    /// </summary>
+    public void DisableLockedControls()
+    {
+        foreach (var item in _items)
+        {
+            if (item.Id is { } id && item.Target is { } target && Config.IsConfigLocked(id))
+            {
+                target.IsEnabled = false;
+            }
+        }
+    }
+
+
+    /// <summary>
     /// Finds the first setting item matching the given config id string.
     /// Returns <c>null</c> if the id is invalid or not registered.
     /// </summary>
