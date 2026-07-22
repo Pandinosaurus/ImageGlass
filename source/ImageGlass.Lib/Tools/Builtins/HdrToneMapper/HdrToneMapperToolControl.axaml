@@ -16,7 +16,7 @@
         HorizontalAlignment="Center"
         VerticalAlignment="Center"
         Orientation="Horizontal"
-        Spacing="24">
+        Spacing="20">
 
         <!--  Sliders: reflow 1x4 -> 2x2 -> 4x1 by width (columns set in code)  -->
         <UniformGrid
@@ -78,7 +78,7 @@
             <!--  Saturation  -->
             <StackPanel
                 MinWidth="160"
-                Margin="0,0,12,8"
+                Margin="0,0,20,8"
                 Spacing="2">
                 <ui:PhTextBlock
                     x:Name="PART_LblSaturation"
@@ -94,23 +94,31 @@
         </UniformGrid>
 
 
-        <!--  Mode + Reset: one group (horizontal; becomes vertical when narrow, set in code)  -->
+        <!--  Mode + Reset: label on top (aligns with slider labels); combo+reset row below  -->
         <StackPanel
             x:Name="PART_ModeResetGroup"
             VerticalAlignment="Top"
-            Orientation="Horizontal"
-            Spacing="8">
-            <StackPanel VerticalAlignment="Top" Spacing="2">
-                <ui:PhTextBlock LangKey="Tool_Hdr_LblMode" Opacity="0.6" />
-                <ComboBox x:Name="PART_CmbMode" MinWidth="110" />
-            </StackPanel>
+            Spacing="2">
+            <ui:PhTextBlock LangKey="Tool_Hdr_LblMode" Opacity="0.6" />
 
-            <ui:PhButton
-                x:Name="PART_BtnReset"
-                MinWidth="80"
-                VerticalAlignment="Bottom"
-                HorizontalContentAlignment="Center"
-                IconData="{StaticResource IconReset}" />
+            <!--  combo + reset: side-by-side, stacks vertically when narrow (set in code)  -->
+            <StackPanel
+                x:Name="PART_ModeResetRow"
+                Orientation="Horizontal"
+                Spacing="8">
+                <ComboBox
+                    x:Name="PART_CmbMode"
+                    MinWidth="110"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Center" />
+                <ui:PhButton
+                    x:Name="PART_BtnReset"
+                    MinWidth="80"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Center"
+                    VerticalAlignment="Center"
+                    IconData="{StaticResource IconReset}" />
+            </StackPanel>
         </StackPanel>
 
     </StackPanel>

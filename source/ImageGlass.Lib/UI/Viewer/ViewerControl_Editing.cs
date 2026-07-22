@@ -277,7 +277,9 @@ public partial class ViewerControl
         {
             if (_animator is not null || IsVectorSource()) return true;
             if (Photo is not { State: PhotoState.Loaded }) return true;
-            if (!Core.Config.EnableHdrToneMapping || Photo.Metadata?.IsHdr != true) return true;
+            // Mode drives tone-map vs pass-through (Mode=None => EnableHdrToneMapping is off and
+            // ToneMapToSdr returns null => raw pass-through); only HDR photos are handled here
+            if (Photo.Metadata?.IsHdr != true) return true;
 
             lease = _imgHdrSource?.Acquire();
             if (lease is null) return false; // needs capture

@@ -182,7 +182,7 @@ public partial class HdrToneMapperToolControl : PhControl, IToolControl
 
     /// <summary>
     /// Reflows by available width: sliders grid 4 columns (1x4) -> 2 (2x2) -> 1 (4x1),
-    /// and the Mode+Reset group horizontal -> vertical at the narrowest size.
+    /// and the combo+reset row horizontal -> vertical at the narrowest size.
     /// </summary>
     private void UpdateResponsiveColumns(double width)
     {
@@ -190,7 +190,7 @@ public partial class HdrToneMapperToolControl : PhControl, IToolControl
         if (PART_SlidersGrid.Columns != cols) PART_SlidersGrid.Columns = cols;
 
         var orientation = cols == 1 ? Orientation.Vertical : Orientation.Horizontal;
-        if (PART_ModeResetGroup.Orientation != orientation) PART_ModeResetGroup.Orientation = orientation;
+        if (PART_ModeResetRow.Orientation != orientation) PART_ModeResetRow.Orientation = orientation;
     }
 
 
@@ -249,6 +249,9 @@ public partial class HdrToneMapperToolControl : PhControl, IToolControl
         cfg.WhitePointNits = PART_SldWhitePoint.Value;
         cfg.HighlightCompression = PART_SldHighlightCompression.Value;
         cfg.Saturation = PART_SldSaturation.Value;
+
+        // Mode 'None' turns HDR tone mapping off; any real mode turns it on
+        Core.Config.EnableHdrToneMapping = cfg.Mode != HdrToneMappingMode.None;
 
         UpdateValueLabels();
         UpdateModeState();
