@@ -3104,6 +3104,16 @@ public partial class AppAPIProvider
 
 
     /// <summary>
+    /// Open the Pro license window (Upgrade when unlicensed, Manage when licensed).
+    /// </summary>
+    public static async Task IG_ManageLicenseAsync()
+    {
+        var dialog = new UpgradeToProWindow();
+        _ = await dialog.ShowAsync(App.MainWindow);
+    }
+
+
+    /// <summary>
     /// Checks for new update asynchronously with option to shows UI feedback.
     /// </summary>
     /// <param name="boolStr">Values: <c>"true"</c>, <c>"false"</c> or empty.</param>

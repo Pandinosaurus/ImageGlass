@@ -123,6 +123,7 @@ public enum API
 
     // Menu > Help
     IG_OpenAboutWindow,
+    IG_ManageLicense,
     IG_CheckForUpdate,
     IG_ReportIssue,
     IG_QuickSetup,

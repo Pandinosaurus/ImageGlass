@@ -212,6 +212,10 @@ public partial class App : Application
 
     private void AppMenuAbout_Click(object? sender, EventArgs e) => RunAppMenuAction(LangId.Menu_MnuAbout);
 
+    private void AppMenuUpgradeToPro_Click(object? sender, EventArgs e) => RunAppMenuAction(LangId.Menu_MnuUpgradeToPro);
+
+    private void AppMenuManageProLicense_Click(object? sender, EventArgs e) => RunAppMenuAction(LangId.Menu_MnuManageProLicense);
+
     private void AppMenuSettings_Click(object? sender, EventArgs e) => RunAppMenuAction(LangId.Menu_MnuSettings);
 
 
@@ -244,6 +248,10 @@ public partial class App : Application
             {
                 item.Gesture = new KeyGesture(Key.OemComma, KeyModifiers.Meta);
             }
+
+            // show only the licensing item matching the current license state
+            if (langId == LangId.Menu_MnuUpgradeToPro) item.IsVisible = !Core.IsProEnabled;
+            else if (langId == LangId.Menu_MnuManageProLicense) item.IsVisible = Core.IsProEnabled;
         }
     }
 

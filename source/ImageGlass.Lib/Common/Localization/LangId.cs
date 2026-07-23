@@ -374,6 +374,28 @@ public enum LangId
     #region Main Menu > Help
     Menu_MnuHelp,
     Menu_MnuAbout,
+
+    Menu_MnuUpgradeToPro,
+    Menu_MnuUpgradeToPro_Description,
+    Menu_MnuUpgradeToPro_ImportLicense,
+    Menu_MnuUpgradeToPro_RetrieveFromEmail,
+    Menu_MnuUpgradeToPro_BuyOnline,
+    Menu_MnuUpgradeToPro_CompareFeatures,
+
+    Menu_MnuManageProLicense,
+    Menu_MnuManageProLicense_ChangeLicense,
+    Menu_MnuManageProLicense_UpgradePlan,
+    Menu_MnuManageProLicense_LicensedTo,
+    Menu_MnuManageProLicense_Plan,
+    Menu_MnuManageProLicense_Seats,
+    Menu_MnuManageProLicense_Expires,
+    Menu_MnuManageProLicense_Perpetual,
+    Menu_MnuManageProLicense_LicenseId,
+    Menu_MnuManageProLicense_ImportSuccess,
+    Menu_MnuManageProLicense_ImportFailed,
+    Menu_MnuManageProLicense_ImportExpired,
+    Menu_MnuManageProLicense_LicenseFileType,
+
     Menu_MnuQuickSetup,
     Menu_MnuReportIssue,
     Menu_MnuCheckForUpdate_NewVersion,

@@ -153,7 +153,7 @@ public class PhMenuItem : MenuItem
             Header = $"{localizedText} 🔒";
             IsEnabled = false;
         }
-        // Pro feature not yet unlocked
+        // Pro feature not yet unlocked: keep it clickable so it routes to the upgrade prompt
         else if (FeatureManager.IsProGated(LangKey))
         {
             Header = new TextBlock
@@ -164,7 +164,7 @@ public class PhMenuItem : MenuItem
                     new Run(" ✦") { Foreground = new SolidColorBrush(Core.AccentColor) },
                 },
             };
-            IsEnabled = false;
+            IsEnabled = true;
         }
         else
         {

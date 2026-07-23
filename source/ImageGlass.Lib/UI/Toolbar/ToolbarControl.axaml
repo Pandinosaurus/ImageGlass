@@ -487,10 +487,21 @@
 
                             <!--  Help  -->
                             <ui:PhMenuItem LangKey="Menu_MnuHelp">
-                                <ui:PhMenuItem Click="MainMenuItem_Click" LangKey="Menu_MnuAbout" />
+                                <ui:PhMenuItem
+                                    x:Name="PART_MnuUpgradeToPro"
+                                    Click="MainMenuItem_Click"
+                                    LangKey="Menu_MnuUpgradeToPro" />
+                                <ui:PhMenuItem
+                                    x:Name="PART_MnuManageProLicense"
+                                    Click="MainMenuItem_Click"
+                                    LangKey="Menu_MnuManageProLicense" />
+
+                                <ui:PhMenuItem Header="-" />
+
                                 <ui:PhMenuItem Click="MainMenuItem_Click" LangKey="_CheckForUpdate" />
-                                <ui:PhMenuItem Click="MainMenuItem_Click" LangKey="Menu_MnuReportIssue" />
                                 <ui:PhMenuItem Click="MainMenuItem_Click" LangKey="Menu_MnuQuickSetup" />
+                                <ui:PhMenuItem Click="MainMenuItem_Click" LangKey="Menu_MnuReportIssue" />
+
                                 <ui:PhMenuItem Header="-" IsVisible="{OnPlatform False, Windows=True, x:TypeArguments=x:Boolean}" />
 
                                 <ui:PhMenuItem
@@ -505,6 +516,10 @@
                                                            Windows=True,
                                                            x:TypeArguments=x:Boolean}"
                                     LangKey="Menu_MnuRemoveDefaultPhotoViewer" />
+
+                                <ui:PhMenuItem Header="-" />
+
+                                <ui:PhMenuItem Click="MainMenuItem_Click" LangKey="Menu_MnuAbout" />
                             </ui:PhMenuItem>
 
 

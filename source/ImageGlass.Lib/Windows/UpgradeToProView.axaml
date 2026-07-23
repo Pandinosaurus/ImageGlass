@@ -1,0 +1,205 @@
+<ui:PhControl
+    x:Class="ImageGlass.Common.Windows.UpgradeToProView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:types="using:ImageGlass.Common.Types"
+    xmlns:ui="using:ImageGlass.UI"
+    mc:Ignorable="d"
+    d:DesignWidth="460"
+    HorizontalContentAlignment="Stretch">
+
+    <StackPanel Orientation="Vertical">
+
+        <!--  Header: logo + title on a 45deg accent gradient  -->
+        <Border x:Name="PART_Header">
+            <Border.Background>
+                <LinearGradientBrush Opacity="0.3" StartPoint="0%,100%" EndPoint="100%,0%">
+                    <GradientStop Offset="0" Color="{DynamicResource SystemAccentColorDark3}" />
+                    <GradientStop Offset="1" Color="{DynamicResource SystemAccentColorLight3}" />
+                </LinearGradientBrush>
+            </Border.Background>
+
+            <StackPanel
+                Margin="24,22"
+                HorizontalAlignment="Center"
+                Orientation="Horizontal"
+                Spacing="12">
+                <Image
+                    x:Name="PART_Logo"
+                    Width="44"
+                    Height="44"
+                    VerticalAlignment="Center" />
+                <ui:PhTextBlock
+                    x:Name="PART_LblHeading"
+                    VerticalAlignment="Center"
+                    FontSize="{x:Static types:Const.FONT_SIZE_TITLE}"
+                    FontWeight="SemiBold" />
+            </StackPanel>
+        </Border>
+
+
+        <!--  Upgrade mode  -->
+        <StackPanel
+            x:Name="PART_UpgradeBody"
+            Margin="24,18,24,20"
+            Spacing="10">
+            <ui:PhTextBlock
+                MaxWidth="420"
+                HorizontalAlignment="Center"
+                LangKey="Menu_MnuUpgradeToPro_Description"
+                TextAlignment="Center"
+                TextWrapping="Wrap" />
+
+            <!--  link to the feature comparison on the website  -->
+            <ui:PhButton
+                x:Name="PART_BtnCompare"
+                HorizontalAlignment="Center"
+                Variant="Link" />
+
+            <Border
+                Height="1"
+                Margin="0,4"
+                Background="{DynamicResource IG_BorderNeutralBrush}" />
+
+            <!--  CTA buttons  -->
+            <StackPanel HorizontalAlignment="Center" Spacing="8">
+                <ui:PhButton
+                    x:Name="PART_BtnBuyOnline"
+                    Width="300"
+                    HorizontalContentAlignment="Stretch"
+                    Variant="Accent">
+                    <ui:PhTextBlock
+                        Foreground="{DynamicResource AccentButtonForeground}"
+                        LangKey="Menu_MnuUpgradeToPro_BuyOnline"
+                        TextAlignment="Center"
+                        TextTrimming="CharacterEllipsis" />
+                </ui:PhButton>
+                <ui:PhButton
+                    x:Name="PART_BtnImportLicense"
+                    Width="300"
+                    HorizontalContentAlignment="Stretch">
+                    <ui:PhTextBlock
+                        LangKey="Menu_MnuUpgradeToPro_ImportLicense"
+                        TextAlignment="Center"
+                        TextTrimming="CharacterEllipsis" />
+                </ui:PhButton>
+                <ui:PhButton
+                    x:Name="PART_BtnRetrieveEmail"
+                    Width="300"
+                    HorizontalContentAlignment="Stretch">
+                    <ui:PhTextBlock
+                        LangKey="Menu_MnuUpgradeToPro_RetrieveFromEmail"
+                        TextAlignment="Center"
+                        TextTrimming="CharacterEllipsis" />
+                </ui:PhButton>
+            </StackPanel>
+        </StackPanel>
+
+
+        <!--  Manage mode  -->
+        <StackPanel
+            x:Name="PART_ManageBody"
+            Margin="24,18,24,20"
+            Spacing="12">
+            <Grid
+                RowDefinitions="Auto,Auto,Auto,Auto,Auto"
+                ColumnDefinitions="Auto,*"
+                HorizontalAlignment="Center">
+                <ui:PhTextBlock
+                    Grid.Row="0"
+                    Grid.Column="0"
+                    Margin="0,4,16,4"
+                    FontWeight="SemiBold"
+                    LangKey="Menu_MnuManageProLicense_LicensedTo" />
+                <SelectableTextBlock
+                    x:Name="PART_ValLicensedTo"
+                    Grid.Row="0"
+                    Grid.Column="1"
+                    Margin="0,4"
+                    TextWrapping="Wrap" />
+
+                <ui:PhTextBlock
+                    Grid.Row="1"
+                    Grid.Column="0"
+                    Margin="0,4,16,4"
+                    FontWeight="SemiBold"
+                    LangKey="Menu_MnuManageProLicense_Plan" />
+                <SelectableTextBlock
+                    x:Name="PART_ValPlan"
+                    Grid.Row="1"
+                    Grid.Column="1"
+                    Margin="0,4"
+                    TextWrapping="Wrap" />
+
+                <ui:PhTextBlock
+                    Grid.Row="2"
+                    Grid.Column="0"
+                    Margin="0,4,16,4"
+                    FontWeight="SemiBold"
+                    LangKey="Menu_MnuManageProLicense_Seats" />
+                <SelectableTextBlock
+                    x:Name="PART_ValSeats"
+                    Grid.Row="2"
+                    Grid.Column="1"
+                    Margin="0,4"
+                    TextWrapping="Wrap" />
+
+                <ui:PhTextBlock
+                    Grid.Row="3"
+                    Grid.Column="0"
+                    Margin="0,4,16,4"
+                    FontWeight="SemiBold"
+                    LangKey="Menu_MnuManageProLicense_Expires" />
+                <SelectableTextBlock
+                    x:Name="PART_ValExpires"
+                    Grid.Row="3"
+                    Grid.Column="1"
+                    Margin="0,4"
+                    TextWrapping="Wrap" />
+
+                <ui:PhTextBlock
+                    Grid.Row="4"
+                    Grid.Column="0"
+                    Margin="0,4,16,4"
+                    FontWeight="SemiBold"
+                    LangKey="Menu_MnuManageProLicense_LicenseId" />
+                <SelectableTextBlock
+                    x:Name="PART_ValLicenseId"
+                    Grid.Row="4"
+                    Grid.Column="1"
+                    Margin="0,4"
+                    TextWrapping="Wrap" />
+            </Grid>
+
+            <Border
+                Height="1"
+                Margin="0,4"
+                Background="{DynamicResource IG_BorderNeutralBrush}" />
+
+            <!--  CTA buttons  -->
+            <StackPanel HorizontalAlignment="Center" Spacing="8">
+                <ui:PhButton
+                    x:Name="PART_BtnChangeLicense"
+                    Width="300"
+                    HorizontalContentAlignment="Stretch">
+                    <ui:PhTextBlock
+                        LangKey="Menu_MnuManageProLicense_ChangeLicense"
+                        TextAlignment="Center"
+                        TextTrimming="CharacterEllipsis" />
+                </ui:PhButton>
+                <ui:PhButton
+                    x:Name="PART_BtnUpgradePlan"
+                    Width="300"
+                    HorizontalContentAlignment="Stretch">
+                    <ui:PhTextBlock
+                        LangKey="Menu_MnuManageProLicense_UpgradePlan"
+                        TextAlignment="Center"
+                        TextTrimming="CharacterEllipsis" />
+                </ui:PhButton>
+            </StackPanel>
+        </StackPanel>
+
+    </StackPanel>
+</ui:PhControl>

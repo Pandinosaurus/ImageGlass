@@ -148,6 +148,7 @@ public partial class AppAPIProvider
 
         // Help
         { API.IG_OpenAboutWindow,           PhCommands.Create(IG_OpenAboutWindowAsync) },
+        { API.IG_ManageLicense,             PhCommands.Create(IG_ManageLicenseAsync) },
         { API.IG_CheckForUpdate,            PhCommands.Create(IG_CheckForUpdateAsync) },
         { API.IG_ReportIssue,               PhCommands.Create(IG_ReportIssue) },
         { API.IG_QuickSetup,                PhCommands.Create(IG_QuickSetupAsync) },
@@ -341,6 +342,15 @@ public partial class AppAPIProvider
     public async Task<Exception?> RunActionAsync(SingleAction? ac, bool showError, string? customArg = null)
     {
         if (string.IsNullOrWhiteSpace(ac?.Executable)) return null;
+
+
+        // route a Pro-gated feature to the upgrade prompt instead of running it
+        // (covers menu, hotkey and toolbar; startup-restore/IPC go through RunApiAsync and are unaffected)
+        if (FeatureManager.IsProGated(Lang.GetKey(ac.LangKey)))
+        {
+            _ = await RunApiAsync(API.IG_ManageLicense);
+            return null;
+        }
 
 
         // 1. run the current action

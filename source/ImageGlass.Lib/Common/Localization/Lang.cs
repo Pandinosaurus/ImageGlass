@@ -805,6 +805,28 @@ public class Lang
         #region Main Menu > Help
         new(LangId.Menu_MnuHelp, "Help"), //v7.0
         new(LangId.Menu_MnuAbout, "About"), //v3.0
+
+        new(LangId.Menu_MnuUpgradeToPro, "Upgrade to ImageGlass Pro"), // v10.0
+        new(LangId.Menu_MnuUpgradeToPro_Description, "Get the most out of ImageGlass. Pro unlocks advanced tools, smoother workflows, and priority support."), // v10.0
+        new(LangId.Menu_MnuUpgradeToPro_ImportLicense, "Import license file…"), // v10.0
+        new(LangId.Menu_MnuUpgradeToPro_RetrieveFromEmail, "Retrieve from email…"), // v10.0
+        new(LangId.Menu_MnuUpgradeToPro_BuyOnline, "Buy online…"), // v10.0
+        new(LangId.Menu_MnuUpgradeToPro_CompareFeatures, "View Pro features"), // v10.0
+
+        new(LangId.Menu_MnuManageProLicense, "Manage Pro license"), // v10.0
+        new(LangId.Menu_MnuManageProLicense_ChangeLicense, "Change license file…"), // v10.0
+        new(LangId.Menu_MnuManageProLicense_UpgradePlan, "Upgrade plan…"), // v10.0
+        new(LangId.Menu_MnuManageProLicense_LicensedTo, "Licensed to"), // v10.0
+        new(LangId.Menu_MnuManageProLicense_Plan, "Plan"), // v10.0
+        new(LangId.Menu_MnuManageProLicense_Seats, "Seats"), // v10.0
+        new(LangId.Menu_MnuManageProLicense_Expires, "Valid until"), // v10.0
+        new(LangId.Menu_MnuManageProLicense_Perpetual, "Perpetual license"), // v10.0
+        new(LangId.Menu_MnuManageProLicense_LicenseId, "License ID"), // v10.0
+        new(LangId.Menu_MnuManageProLicense_ImportSuccess, "License imported successfully. Restart ImageGlass now?"), // v10.0
+        new(LangId.Menu_MnuManageProLicense_ImportFailed, "Could not read this license file. Please check the file and try again."), // v10.0
+        new(LangId.Menu_MnuManageProLicense_ImportExpired, "This license has expired and can no longer activate ImageGlass Pro."), // v10.0
+        new(LangId.Menu_MnuManageProLicense_LicenseFileType, "ImageGlass license file"), // v10.0
+
         new(LangId.Menu_MnuQuickSetup, "Open ImageGlass Quick Setup"), //v9.0
         new(LangId.Menu_MnuReportIssue, "Report an issue…"), //v3.0
 
