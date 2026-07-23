@@ -2895,6 +2895,9 @@ public partial class AppAPIProvider
         if (string.IsNullOrEmpty(toolId)) return;
         if (Core.ToolRegistry.Get(toolId) is not { } tool) return;
 
+        // HDR tone mapper is a Pro tool
+        if (toolId == HdrToneMapperToolControl.TOOL_ID && !Core.IsProEnabled) return;
+
         if (tool.IsHosted)
         {
             var currentToolId = ToolHost.Tool?.ToolId;
@@ -2942,6 +2945,9 @@ public partial class AppAPIProvider
     {
         if (string.IsNullOrEmpty(toolId)) return;
         if (Core.ToolRegistry.Get(toolId) is not { } tool) return;
+
+        // HDR tone mapper is a Pro tool
+        if (toolId == HdrToneMapperToolControl.TOOL_ID && !Core.IsProEnabled) return;
 
         if (tool.IsHosted)
         {
@@ -3275,6 +3281,9 @@ public partial class AppAPIProvider
     /// </summary>
     public static void SetFileWatcher(bool enabled)
     {
+        // file watcher is a Pro feature
+        if (enabled && !Core.IsProEnabled) enabled = false;
+
         if (enabled)
         {
             // always prefer the current photo list's directory so the watcher

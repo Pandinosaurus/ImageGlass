@@ -61,11 +61,13 @@ public partial class ViewerSettingsView : SettingsPageView
         BindEnumDropdown(PART_CheckerboardMode, ConfigId.CheckerboardMode, CheckerboardType.None,
             LangId.Settings_CheckerboardMode, LangId.Settings_Appearance);
 
-        // Panning
+        // Panning (free & margin panning are Pro)
         BindToggle(PART_FreePan, ConfigId.EnableFreePan,
             LangId.Settings_EnableFreePan, LangId.Settings_Panning);
+        ProGate(PART_FreePanProBadge, PART_FreePan);
         BindDoubleInput(PART_PanMargin, ConfigId.PanMargin,
             LangId.Settings_PanMargin, LangId.Settings_Panning);
+        ProGate(PART_PanMarginProBadge, PART_PanMargin);
         BindSlider(PART_PanSpeed, ConfigId.PanSpeed,
             LangId.Settings_PanSpeed, LangId.Settings_Panning, 20d, PART_PanSpeedLabel);
 

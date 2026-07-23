@@ -839,6 +839,7 @@ public class Lang
         new(LangId.Settings_UnmanagedSettingReminder, "This setting is not managed by ImageGlass. Don't forget to disable it before you remove or relocate the app because ImageGlass does not handle this automatically."), // v9.1
         new(LangId.Settings_SearchPlaceholder, "Search settings…"), // v10.0
         new(LangId.Settings_AdminLockWarning, "Some settings are managed by your administrator and can't be changed here."), // v10.0
+        new(LangId.Settings_ProFeatureHint, "This is an ImageGlass Pro feature."), // v10.0
 
 
         #region Settings > Navbar

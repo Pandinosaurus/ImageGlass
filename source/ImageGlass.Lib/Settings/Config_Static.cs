@@ -540,7 +540,7 @@ public partial class Config
     /// Loads and merges configs from multiple sources.
     /// Priority (lowest -> highest):
     /// developer defaults -> igconfig.default.json -> igconfig.json -> CLI args -> igconfig.admin.json.
-    /// The admin layer is included only when <see cref="Const.ENABLE_ADMIN_CONFIG"/> is enabled.
+    /// The admin layer is included only when the Pro license is active.
     /// </summary>
     public static Config Load(string configFileName, string[]? cliArgs = null)
     {
@@ -570,7 +570,7 @@ public partial class Config
 
             // 4. read igconfig.admin.json (install BaseDir ONLY; a ConfigDir fallback would let
             // a user drop an admin config in AppData and seize top precedence). Merge-only layer.
-            using var adminDoc = Const.ENABLE_ADMIN_CONFIG
+            using var adminDoc = Core.IsProEnabled
                 ? ReadConfigJsonDocument(BHelper.BaseDir(CONFIG_ADMIN))
                 : null;
 
@@ -680,8 +680,6 @@ public partial class Config
     /// </summary>
     public static void ApplyCliOverrides(Config config, string[]? cliArgs)
     {
-        if (!Const.ENABLE_ADMIN_CONFIG) return;
-
         var overrides = ParseCliConfigArgs(cliArgs);
         if (overrides.Count == 0) return;
 
@@ -1166,7 +1164,8 @@ public partial class Config
     /// </summary>
     private static FrozenSet<ConfigId> LoadAdminLockedConfigs()
     {
-        if (!Const.ENABLE_ADMIN_CONFIG) return FrozenSet<ConfigId>.Empty;
+        // admin config is a Pro feature
+        if (!Core.IsProEnabled) return FrozenSet<ConfigId>.Empty;
 
         try
         {

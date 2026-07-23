@@ -31,6 +31,18 @@ namespace ImageGlass.UI.Viewer;
 
 public partial class ViewerControl
 {
+    /// <summary>
+    /// Gets, sets whether HDR tone mapping is rendered. The owner sets this from the
+    /// HDR setting, gated by the Pro license.
+    /// </summary>
+    public bool EnableHdrRendering
+    {
+        get => GetValue(EnableHdrRenderingProperty);
+        set => SetValue(EnableHdrRenderingProperty, value);
+    }
+    public static readonly StyledProperty<bool> EnableHdrRenderingProperty =
+        AvaloniaProperty.Register<ViewerControl, bool>(nameof(EnableHdrRendering));
+
 
     #region Control Methods
 
@@ -143,8 +155,8 @@ public partial class ViewerControl
         output = null;
         if (srcImage.IsDisposed()) return false;
 
-        // 1. HDR tone mapping (applies regardless of color profile setting)
-        if (Core.Config.EnableHdrToneMapping && Photo?.Metadata?.IsHdr == true)
+        // 1. HDR tone mapping (gated via EnableHdrRendering; applies regardless of color profile setting)
+        if (EnableHdrRendering && Photo?.Metadata?.IsHdr == true)
         {
             // Tone-map to standard sRGB (no monitor profile yet).
             // The monitor color profile will be applied below via TryApplyColorSpace,
@@ -263,6 +275,8 @@ public partial class ViewerControl
     /// </summary>
     private async Task DoOneHdrToneMapPassAsync()
     {
+        if (!EnableHdrRendering) return;
+
         for (var attempt = 0; attempt < 2; attempt++)
         {
             SKImageRef.ImageLease? lease;

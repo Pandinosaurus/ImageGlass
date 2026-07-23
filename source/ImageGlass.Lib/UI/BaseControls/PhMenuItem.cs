@@ -18,9 +18,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Documents;
 using Avalonia.Controls.Primitives;
 using Avalonia.Controls.Shapes;
 using Avalonia.Interactivity;
+using Avalonia.Media;
 using ImageGlass.Common;
 using ImageGlass.Common.Localization;
 using ImageGlass.Common.ServiceProviders;
@@ -145,10 +147,23 @@ public class PhMenuItem : MenuItem
         var localizedText = Core.Lang[LangKey, LangParams];
         if (string.IsNullOrWhiteSpace(localizedText)) return;
 
-        // Check if this menu item is locked
+        // admin-locked: forbidden
         if (FeatureManager.IsLocked(LangKey))
         {
             Header = $"{localizedText} 🔒";
+            IsEnabled = false;
+        }
+        // Pro feature not yet unlocked
+        else if (FeatureManager.IsProGated(LangKey))
+        {
+            Header = new TextBlock
+            {
+                Inlines = new InlineCollection
+                {
+                    new Run(localizedText),
+                    new Run(" ✦") { Foreground = new SolidColorBrush(Core.AccentColor) },
+                },
+            };
             IsEnabled = false;
         }
         else

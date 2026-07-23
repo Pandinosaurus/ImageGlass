@@ -43,15 +43,6 @@ public static class Const
     public static readonly int MOUSE_WHEEL_SCROLL_DELTA = 120;
 
 
-    public const bool ENABLE_ADMIN_CONFIG = true;
-
-    /// <summary>
-    /// Gates the Pro-only "Lock Features" subsystem. When false, all
-    /// lock checks short-circuit to "not locked" and no UI markers appear.
-    /// </summary>
-    public const bool ENABLE_LOCK_FEATURES = true;
-
-
     /// <summary>
     /// A file macro to replace with the current viewing image file path in double quotes.
     /// Example: <c>"C:\my\photo.jpg"</c>

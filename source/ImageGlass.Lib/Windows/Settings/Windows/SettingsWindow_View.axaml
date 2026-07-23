@@ -43,6 +43,15 @@
             <Setter Property="FontWeight" Value="SemiBold" />
             <Setter Property="Margin" Value="0,10,0,4" />
         </Style>
+
+        <!--  Pro-feature badge next to a gated setting  -->
+        <Style Selector="TextBlock.proBadge">
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Foreground">
+                <SolidColorBrush Color="{DynamicResource SystemAccentColor}" />
+            </Setter>
+        </Style>
     </ui:PhControl.Styles>
 
 

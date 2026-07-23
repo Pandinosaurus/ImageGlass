@@ -33,37 +33,52 @@ namespace ImageGlass.Common.ServiceProviders;
 internal static class FeatureManager
 {
     private static FrozenSet<string> _locked = FrozenSet<string>.Empty;
+    private static FrozenSet<LangId> _proGated = FrozenSet<LangId>.Empty;
     private static readonly Lock _lock = new();
+
+    // Menu features that require Pro; gated (badged) until a valid license is active.
+    private static readonly FrozenSet<LangId> _proFeatureKeys =
+        FrozenSet.ToFrozenSet(new[] { LangId.Menu_MnuHdrToneMapper });
 
 
     /// <summary>
-    /// Rebuilds the lock snapshot from Config.LockFeatures.
+    /// Rebuilds the lock and Pro-gate snapshots from the current license + config.
     /// </summary>
     public static void Refresh()
     {
-        if (!Const.ENABLE_LOCK_FEATURES) return;
+        // admin feature-lock is itself a Pro capability, so honor it only when licensed
+        var newLocked = Core.IsProEnabled
+            ? FrozenSet.ToFrozenSet(Core.Config.LockedFeatures, StringComparer.OrdinalIgnoreCase)
+            : FrozenSet<string>.Empty;
 
-        var newLocked = FrozenSet.ToFrozenSet(Core.Config.LockedFeatures, StringComparer.OrdinalIgnoreCase);
+        // consumer Pro features stay gated until a license is active
+        var newProGated = Core.IsProEnabled ? FrozenSet<LangId>.Empty : _proFeatureKeys;
 
         lock (_lock)
         {
             _locked = newLocked;
+            _proGated = newProGated;
         }
     }
 
 
     /// <summary>
+    /// Checks if a menu key is a Pro feature that is not yet unlocked.
+    /// </summary>
+    public static bool IsProGated(LangId? langKey)
+        => langKey is LangId key && _proGated.Contains(key);
+
+
+    /// <summary>
     /// Checks if an API is locked.
     /// </summary>
-    public static bool IsLocked(API api) => Const.ENABLE_LOCK_FEATURES && _locked.Contains(api.ToString("G"));
+    public static bool IsLocked(API api) => _locked.Contains(api.ToString("G"));
 
 
     /// <summary>
     /// Checks if an API name is locked.
     /// </summary>
-    public static bool IsLocked(string? apiName) => Const.ENABLE_LOCK_FEATURES
-        && !string.IsNullOrEmpty(apiName)
-        && _locked.Contains(apiName);
+    public static bool IsLocked(string? apiName) => !string.IsNullOrEmpty(apiName) && _locked.Contains(apiName);
 
 
     /// <summary>
@@ -86,8 +101,6 @@ internal static class FeatureManager
     /// </summary>
     public static bool IsLocked(LangId? langKey)
     {
-        if (!Const.ENABLE_LOCK_FEATURES) return false;
-
         var action = AppAPIProvider.GetMenuAction(langKey);
         return IsLocked(action?.Executable);
     }
@@ -98,8 +111,6 @@ internal static class FeatureManager
     /// </summary>
     public static void HideLockedMenuItems(ItemCollection items)
     {
-        if (!Const.ENABLE_LOCK_FEATURES) return;
-
         for (int i = items.Count - 1; i >= 0; i--)
         {
             if (items[i] is not PhMenuItem mnu) continue;

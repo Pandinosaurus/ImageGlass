@@ -408,6 +408,7 @@ public enum LangId
     Settings_UnmanagedSettingReminder,
     Settings_SearchPlaceholder,
     Settings_AdminLockWarning,
+    Settings_ProFeatureHint,
 
     #region Settings > Navbar
     Settings_Nav_General,

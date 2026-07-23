@@ -95,12 +95,9 @@
         </StackPanel>
 
 
-        <!--  File watcher  -->
-        <ui:PhTextBlock
-            Classes="group"
-            IsVisible="False"
-            LangKey="Settings_FileWatcher" />
-        <StackPanel Margin="{DynamicResource SettingsGroupIndent}" IsVisible="False">
+        <!--  File watcher (Pro; heading text is driven from code-behind for the badge)  -->
+        <ui:PhTextBlock x:Name="PART_FileWatcherGroup" Classes="group" />
+        <StackPanel Margin="{DynamicResource SettingsGroupIndent}">
             <CheckBox x:Name="PART_FileWatcher">
                 <ui:PhTextBlock LangKey="Settings_EnableFileWatcher" TextWrapping="Wrap" />
             </CheckBox>

@@ -91,6 +91,8 @@ public partial class ImageSettingsView : SettingsPageView
             LangId.Settings_EnableFileWatcher, LangId.Settings_FileWatcher, true);
         BindToggle(PART_AutoOpenNewAddedImage, ConfigId.EnableAutoOpenNewAddedImage,
             LangId.Settings_EnableAutoOpenNewAddedImage, LangId.Settings_FileWatcher);
+        // file watcher is Pro
+        ProGateHeading(PART_FileWatcherGroup, LangId.Settings_FileWatcher, PART_FileWatcher, PART_AutoOpenNewAddedImage);
 
         // Color management
         BindToggle(PART_HdrToneMapping, ConfigId.EnableHdrToneMapping,
