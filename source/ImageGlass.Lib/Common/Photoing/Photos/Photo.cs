@@ -814,6 +814,41 @@ public partial class Photo : PhDisposable
 
 
     /// <summary>
+    /// Decodes a fresh copy of the given frame directly from the source, WITHOUT touching the cached
+    /// <see cref="Bitmap"/> or the current frame index. The caller owns the returned image. Used by
+    /// the viewer to (re)capture the pre-tone-map HDR frame for live re-tone-mapping without a full,
+    /// display-disrupting reload.
+    /// </summary>
+    public async Task<SKImage?> DecodeStaticFrameAsync(uint frameIndex, CancellationToken token = default)
+    {
+        var newFrameIndex = (int)frameIndex;
+
+        return await Task.Factory.StartNew(async () =>
+        {
+            var options = ReadOptions with { FrameIndex = newFrameIndex };
+            var context = CreateCodecSelectionContext(Metadata);
+            var codec = Core.CodecRegistry.SelectDecodeCodec(Metadata, context);
+            if (codec is not null)
+            {
+                using var result = await codec.DecodeAsync(Metadata, options, context, token).ConfigureAwait(false);
+                if (result.SingleFrame is SKImage sf)
+                {
+                    // detach so the result's dispose doesn't free the returned image
+                    var detached = sf;
+                    result.SingleFrame = null;
+                    return detached;
+                }
+            }
+
+            // fallback: direct Magick decode
+            using var data = await MagickCodec.DecodeImageAsync(Metadata, options,
+                GetOrCreateMagickReadSettings(), null, token);
+            return SkiaCodec.FromMagick(data.SingleFrame, Metadata.SkiaColorSpace, Metadata.IsHdr);
+        }, token, TaskCreationOptions.LongRunning, TaskScheduler.Default).Unwrap();
+    }
+
+
+    /// <summary>
     /// Saves the photo to file.
     /// </summary>
     /// <exception cref="Exception"></exception>
