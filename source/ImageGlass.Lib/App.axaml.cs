@@ -30,6 +30,7 @@ using ImageGlass.Common.Localization;
 using ImageGlass.Common.Loggers;
 using ImageGlass.Common.Photoing;
 using ImageGlass.Common.ServiceProviders;
+using ImageGlass.Common.ServiceProviders.Licensing;
 using ImageGlass.Common.Types;
 using ImageGlass.Common.Windows;
 using ImageGlass.UI.Windowing;
@@ -325,6 +326,11 @@ public partial class App : Application
 
         // 2. load app configs (merges default, user, CLI -p: args, and admin configs)
         Core.Args = Environment.GetCommandLineArgs();
+
+        // verify the Pro license before config (config-independent; admin locks need it)
+        Core.AppLicense = LicenseService.LoadActive();
+        StartupTrace.Mark("InitInstance:licenseLoaded");
+
         Core.Config = Config.Load(Config.CONFIG_USER, Core.Args);
         StartupTrace.Mark("InitInstance:configLoaded");
 

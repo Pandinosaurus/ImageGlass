@@ -26,6 +26,7 @@ using ImageGlass.Common.Localization;
 using ImageGlass.Common.Loggers;
 using ImageGlass.Common.Photoing;
 using ImageGlass.Common.ServiceProviders;
+using ImageGlass.Common.ServiceProviders.Licensing;
 using ImageGlass.Common.Types;
 using ImageGlass.Plugins;
 using ImageGlass.SDK.Plugins;
@@ -218,6 +219,18 @@ public static class Core
     /// Gets or sets the HDR tone mapping options used when rendering high dynamic range images.
     /// </summary>
     public static HdrToneMappingOptions HdrToneMappingConfig { get; set; } = new();
+
+
+    /// <summary>
+    /// The active, signature-verified Pro license, or null when running as Classic.
+    /// </summary>
+    public static LicenseInfo? AppLicense { get; set; }
+
+
+    /// <summary>
+    /// Whether Pro features are unlocked (a valid license is active).
+    /// </summary>
+    public static bool IsProEnabled => AppLicense is not null;
 
 
     /// <summary>
