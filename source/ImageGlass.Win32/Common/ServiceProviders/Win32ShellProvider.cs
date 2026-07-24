@@ -320,7 +320,7 @@ public class Win32ShellProvider : PhDisposable, IShellProvider
     /// <summary>
     /// <inheritdoc/>
     /// </summary>
-    public async Task<DefaultAppScope> SetDefaultPhotoViewerAsync(string[] extensions, bool enable)
+    public async Task<DefaultAppScope?> SetDefaultPhotoViewerAsync(string[] extensions, bool enable)
     {
         return await Win32DefaultAppApi.SetDefaultPhotoViewerAsync(extensions, enable);
     }
@@ -330,6 +330,12 @@ public class Win32ShellProvider : PhDisposable, IShellProvider
     /// <inheritdoc/>
     /// </summary>
     public DefaultAppScope GetDefaultViewerScope() => Win32DefaultAppApi.GetScope();
+
+
+    /// <summary>
+    /// <inheritdoc/>
+    /// </summary>
+    public bool IsDefaultViewerConfigurable => !Win32AppIdentity.IsPackaged || Win32AppIdentity.IsUnvirtualizedResources;
 
 
     /// <summary>

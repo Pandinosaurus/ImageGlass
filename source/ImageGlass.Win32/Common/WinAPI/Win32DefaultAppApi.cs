@@ -33,10 +33,14 @@ public static class Win32DefaultAppApi
 {
     /// <summary>
     /// Registers or unregisters the app as the default photo viewer for the specified file extensions.
-    /// Returns the registry scope (per-user vs per-machine) that was used.
+    /// Returns the scope (per-user vs per-machine) that was used, or <c>null</c> when the operation
+    /// is not supported (virtualized Store MSIX).
     /// </summary>
-    public static async Task<DefaultAppScope> SetDefaultPhotoViewerAsync(string[] extensions, bool enable)
+    public static async Task<DefaultAppScope?> SetDefaultPhotoViewerAsync(string[] extensions, bool enable)
     {
+        // virtualized (Store) MSIX: writes never reach the shell; nothing we can do
+        if (Win32AppIdentity.IsPackaged && !Win32AppIdentity.IsUnvirtualizedResources) return null;
+
         var scope = GetScope();
         var root = scope == DefaultAppScope.LocalMachine
             ? Registry.LocalMachine
@@ -57,9 +61,8 @@ public static class Win32DefaultAppApi
         }
         catch (Exception ex) when (ex is UnauthorizedAccessException or SecurityException)
         {
-            // already elevated but still denied: escalating again relaunches silently (no UAC
-            // prompt) and loops forever, so surface the error instead of spawning processes
-            if (IsProcessElevated()) throw;
+            // don't self-relaunch when packaged (fast-fails) or already elevated (silent loop)
+            if (Win32AppIdentity.IsPackaged || IsProcessElevated()) throw;
 
             // per-machine (HKLM) writes need admin; relaunch elevated to finish the job
             await RelaunchElevatedAsync(extensions, enable);
@@ -89,6 +92,9 @@ public static class Win32DefaultAppApi
     /// </summary>
     public static DefaultAppScope GetScope()
     {
+        // packaged: always per-user (HKCU); a packaged exe can't be relaunched elevated for HKLM
+        if (Win32AppIdentity.IsPackaged) return DefaultAppScope.CurrentUser;
+
         var exeDir = Path.GetDirectoryName(BHelper.AppExePath);
         if (string.IsNullOrEmpty(exeDir)) return DefaultAppScope.CurrentUser;
 
@@ -109,6 +115,16 @@ public static class Win32DefaultAppApi
 
         return DefaultAppScope.CurrentUser;
     }
+
+
+    /// <summary>
+    /// Gets the app executable file path for command launch.
+    /// For MSIX, use alias, otherwise, use real path.
+    /// </summary>
+    private static string LaunchCommandExe => Win32AppIdentity.IsPackaged
+        ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "Microsoft", "WindowsApps", $"{BHelper.AppName}.exe")
+        : BHelper.AppExePath;
 
 
     /// <summary>
@@ -133,6 +149,7 @@ public static class Win32DefaultAppApi
         using (var key = root.CreateSubKey(capabilitiesPath, writable: true))
         {
             key.SetValue("ApplicationName", BHelper.AppDisplayName);
+            // the real exe has the embedded icon; the execution alias is a 0-byte reparse point (blank)
             key.SetValue("ApplicationIcon", $"\"{BHelper.AppExePath}\", 0");
             key.SetValue("ApplicationDescription", "A Fast, Seamless Photo Viewer");
 
@@ -167,18 +184,14 @@ public static class Win32DefaultAppApi
         using var progIdKey = classesKey.CreateSubKey(progId, writable: true);
         progIdKey.SetValue("", BHelper.AppDisplayName);
 
-        // 1. DefaultIcon
-        // get extension icon
-        var iconPath = BHelper.ConfigDir(Dir.ExtIcons, $"{extNoDot}.ico");
-        if (!File.Exists(iconPath))
+        // 1. DefaultIcon — resolve to the real path (MSIX may redirect the config dir)
+        var iconPath = BHelper.GetRealPlatformConfigDir(Dir.ExtIcons, $"{extNoDot}.ico");
+        // bundled fallback only when unpackaged (a packaged install-dir path is version-specific)
+        if (!File.Exists(iconPath) && !Win32AppIdentity.IsPackaged)
         {
             iconPath = BHelper.BaseDir(Dir.ExtIcons, $"{extNoDot}.ico");
-
-            if (!File.Exists(iconPath))
-            {
-                iconPath = string.Empty;
-            }
         }
+        if (!File.Exists(iconPath)) iconPath = string.Empty;
 
         // set extension icon
         if (!string.IsNullOrEmpty(iconPath))
@@ -197,7 +210,7 @@ public static class Win32DefaultAppApi
 
         // 3. HKCU\Software\Classes\ImageGlass.AssocFile.<EXT>\shell\open\command
         using var commandKey = openKey.CreateSubKey("command", writable: true);
-        commandKey.SetValue("", $"\"{BHelper.AppExePath}\" \"%1\"");
+        commandKey.SetValue("", $"\"{LaunchCommandExe}\" \"%1\"");
     }
 
 

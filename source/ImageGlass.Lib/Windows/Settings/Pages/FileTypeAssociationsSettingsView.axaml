@@ -14,12 +14,14 @@
 
         <!--  File extension icons (Windows only)  -->
         <ui:PhTextBlock
+            x:Name="PART_ExtIconsHeading"
             Classes="group"
             IsVisible="{OnPlatform False,
                                    Windows=True,
                                    x:TypeArguments=x:Boolean}"
             LangKey="Settings_FileExtensionIcons" />
         <StackPanel
+            x:Name="PART_ExtIconsGroup"
             Margin="{DynamicResource SettingsGroupIndent}"
             IsVisible="{OnPlatform False,
                                    Windows=True,
@@ -41,26 +43,38 @@
 
         <!--  Default photo viewer (Windows only)  -->
         <ui:PhTextBlock
+            x:Name="PART_DefaultViewerHeading"
             Classes="group"
             IsVisible="{OnPlatform False,
                                    Windows=True,
                                    x:TypeArguments=x:Boolean}"
             LangKey="Settings_DefaultPhotoViewer" />
         <StackPanel
+            x:Name="PART_DefaultViewerGroup"
             Margin="{DynamicResource SettingsGroupIndent}"
             IsVisible="{OnPlatform False,
                                    Windows=True,
                                    x:TypeArguments=x:Boolean}"
             Spacing="10">
             <ui:PhTextBlock LangKey="Settings_DefaultPhotoViewer_Description" TextWrapping="Wrap" />
+            <Border
+                Margin="0,8,0,0"
+                Padding="8"
+                Background="{DynamicResource IG_BackgroundWarningBrush}"
+                CornerRadius="{DynamicResource ControlCornerRadius}">
+                <ui:PhTextBlock
+                    x:Name="PART_LblSetViewerWarning"
+                    LangKey="Settings_UnmanagedSettingReminder"
+                    TextWrapping="Wrap" />
+            </Border>
             <ui:PhTextBlock x:Name="PART_ScopeInfo" TextWrapping="Wrap" />
             <StackPanel Orientation="Horizontal" Spacing="8">
                 <ui:PhButton
-                    x:Name="PART_MakeDefault"
+                    x:Name="PART_Register"
                     MinWidth="100"
                     HorizontalContentAlignment="Center" />
                 <ui:PhButton
-                    x:Name="PART_RemoveDefault"
+                    x:Name="PART_Unregister"
                     MinWidth="100"
                     HorizontalContentAlignment="Center" />
                 <ui:PhButton

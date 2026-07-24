@@ -100,6 +100,14 @@ public partial class ToolbarControl : PhControl
 
         Core.Config.PropertyChanged += Config_PropertyChanged;
 
+        // hide set/remove default when associations can't reach the shell (virtualized Store MSIX)
+        if (Core.ShellProvider?.IsDefaultViewerConfigurable == false)
+        {
+            PART_MnuDefaultViewerSeparator.IsVisible = false;
+            PART_MnuSetDefaultPhotoViewer.IsVisible = false;
+            PART_MnuRemoveDefaultPhotoViewer.IsVisible = false;
+        }
+
         ScheduleOverflowUpdate();
     }
 

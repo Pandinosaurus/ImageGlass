@@ -167,7 +167,8 @@
         "${workspaceFolder}/__assets/win/script-pack-win-msix.ps1",
         "-Platform",
         "x64",
-        "-Sign"
+        "-Sign",
+        "-UnvirtualizedResources"
       ],
       "problemMatcher": [],
       "group": "build"
@@ -184,7 +185,8 @@
         "${workspaceFolder}/__assets/win/script-pack-win-msix.ps1",
         "-Platform",
         "arm64",
-        "-Sign"
+        "-Sign",
+        "-UnvirtualizedResources"
       ],
       "problemMatcher": [],
       "group": "build"

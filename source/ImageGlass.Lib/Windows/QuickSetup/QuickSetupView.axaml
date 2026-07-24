@@ -177,17 +177,28 @@
                 Spacing="16">
                 <StackPanel Spacing="6">
                     <ui:PhTextBlock
-                        x:Name="PART_LblSetViewer"
+                        x:Name="PART_LblSetViewerTitle"
                         HorizontalAlignment="Center"
+                        FontSize="{x:Static types:Const.FONT_SIZE_SUBTITLE}"
                         FontWeight="SemiBold"
                         TextAlignment="Center"
                         TextWrapping="Wrap" />
                     <ui:PhTextBlock
-                        x:Name="PART_LblSetViewerDesc"
+                        x:Name="PART_LblSetViewer"
                         HorizontalAlignment="Center"
-                        Opacity="0.65"
                         TextAlignment="Center"
                         TextWrapping="Wrap" />
+
+                    <Border
+                        Margin="0,8,0,0"
+                        Padding="8"
+                        Background="{DynamicResource IG_BackgroundWarningBrush}"
+                        CornerRadius="{DynamicResource ControlCornerRadius}">
+                        <ui:PhTextBlock
+                            x:Name="PART_LblSetViewerWarning"
+                            TextAlignment="Center"
+                            TextWrapping="Wrap" />
+                    </Border>
                 </StackPanel>
 
                 <ui:PhButton

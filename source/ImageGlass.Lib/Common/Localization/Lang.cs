@@ -491,6 +491,8 @@ public class Lang
         new(LangId._GetHelp, "Get help"),
         new(LangId._GetMoreTools, "Get more tools…"),
         new(LangId._Start, "Start"),
+        new(LangId._Register, "Register"),
+        new(LangId._Unregister, "Unregister"),
 
         new(LangId._UnhandledException, "Unhandled exception"), // v9.0
         new(LangId._UnhandledException_Description, "Unhandled exception has occurred. If you click Continue, the application will ignore this error and attempt to continue. If you click Quit, the application will close immediately."), // v9.0
@@ -858,7 +860,7 @@ public class Lang
         #region Settings
 
         new(LangId.Settings_ResetSettings, "Reset settings"), // v9.1
-        new(LangId.Settings_UnmanagedSettingReminder, "This setting is not managed by ImageGlass. Don't forget to disable it before you remove or relocate the app because ImageGlass does not handle this automatically."), // v9.1
+        new(LangId.Settings_UnmanagedSettingReminder, "This is an unmanaged setting, it writes registry entries or files that are not cleaned up automatically. You will need to manually disable it before you uninstall the app."), // v9.1
         new(LangId.Settings_SearchPlaceholder, "Search settings…"), // v10.0
         new(LangId.Settings_AdminLockWarning, "Some settings are managed by your administrator and can't be changed here."), // v10.0
         new(LangId.Settings_ProFeatureHint, "This is an ImageGlass Pro feature."), // v10.0
@@ -1097,17 +1099,15 @@ public class Lang
         #region Settings > Tab File type associations
         // File type associations > File extension icons
         new(LangId.Settings_FileExtensionIcons, "File extension icons"),
-        new(LangId.Settings_FileExtensionIcons_Description, "For customizing file extension icons, download an icon pack, place all .ICO files in the extension icon folder, and click the '{0}' button. This will also set ImageGlass as default photo viewer."),
+        new(LangId.Settings_FileExtensionIcons_Description, "For customizing file extension icons, download an icon pack, place all .ICO files in the extension icon folder, and click the '{0}' button."),
         new(LangId.Settings_OpenExtensionIconFolder, "Open extension icon folder"),
         new(LangId.Settings_GetExtensionIconPacks, "Get extension icon packs…"),
 
         // File type associations > Default photo viewer
         new(LangId.Settings_DefaultPhotoViewer, "Default photo viewer"),
-        new(LangId.Settings_DefaultPhotoViewer_Description, "Register the supported formats of ImageGlass with Windows. You might need to open the Default apps settings and manually select ImageGlass from the list for it to take effect. This also registers the file extension icons."),
+        new(LangId.Settings_DefaultPhotoViewer_Description, "Register the supported formats of ImageGlass with Windows. You might need to open the Default apps settings and manually select ImageGlass from the list for it to take effect."),
         new(LangId.Settings_DefaultPhotoViewer_ScopePerMachine, "Scope: all user accounts on this computer (per-machine)."),
         new(LangId.Settings_DefaultPhotoViewer_ScopePerUser, "Scope: your user account only (per-user)."),
-        new(LangId.Settings_MakeDefault, "Make default"),
-        new(LangId.Settings_RemoveDefault, "Remove default"),
         new(LangId.Settings_OpenDefaultAppsSetting, "Open Default apps setting"),
 
         // File type associations > File formats
@@ -1263,8 +1263,7 @@ public class Lang
         new(LangId.QuickSetup_SettingsWillBeApplied, "Settings will be applied:" ), //v10.0
         new(LangId.QuickSetup_SettingProfileDescription, "To modify these settings later, simply open the app Settings." ), //v10.0
 
-        new(LangId.QuickSetup_SetDefaultViewer, "Do you want to set ImageGlass as the default photo viewer?" ), //v10.0
-        new(LangId.QuickSetup_SetDefaultViewer_Description, "You can reset it later in Settings > File type associations." ), //v10.0
+        new(LangId.QuickSetup_RegisterImageFormats, "Do you want to register the supported image formats of ImageGlass with Windows? You can unregister it later in Settings > File type associations." ), //v10.0
 
         new(LangId.QuickSetup_ConfirmCloseProcess, "Are you ready to apply the settings?" ), //v10.0
         new(LangId.QuickSetup_ConfirmCloseProcess_Description, "All other running instances of ImageGlass will be closed before the settings are saved." ), //v10.0

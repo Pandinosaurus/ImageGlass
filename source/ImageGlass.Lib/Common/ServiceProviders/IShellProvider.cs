@@ -98,9 +98,9 @@ public interface IShellProvider : IDisposable
 
     /// <summary>
     /// Sets or removes this app as the default photo viewer for the specified file extensions.
-    /// Returns the registry scope (per-user vs per-machine) that was used.
+    /// Returns the scope (per-user vs per-machine) used, or <c>null</c> when not supported.
     /// </summary>
-    Task<DefaultAppScope> SetDefaultPhotoViewerAsync(string[] extensions, bool enable);
+    Task<DefaultAppScope?> SetDefaultPhotoViewerAsync(string[] extensions, bool enable);
 
 
     /// <summary>
@@ -108,6 +108,12 @@ public interface IShellProvider : IDisposable
     /// the app as the default photo viewer, based on where the app is installed.
     /// </summary>
     DefaultAppScope GetDefaultViewerScope() => DefaultAppScope.CurrentUser;
+
+
+    /// <summary>
+    /// Whether the app can register file associations that the shell honors (false for a virtualized Store MSIX).
+    /// </summary>
+    bool IsDefaultViewerConfigurable => true;
 
 
     /// <summary>

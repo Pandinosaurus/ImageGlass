@@ -98,9 +98,9 @@ public partial class QuickSetupView : PhControl
 
         _loadLangAction = () => _ = LoadSelectedLanguageAsync();
 
-        // step 3 (default viewer) is Windows-only
+        // step 3 (default viewer): Windows only, and only when associations are configurable
         _stepPanels = [PART_Step1, PART_Step2];
-        if (BHelper.OS == OSType.Windows)
+        if (BHelper.OS == OSType.Windows && Core.ShellProvider?.IsDefaultViewerConfigurable != false)
         {
             _stepPanels.Add(PART_Step3);
         }
@@ -391,9 +391,10 @@ public partial class QuickSetupView : PhControl
         PART_LblRawThumbnail.Text = lang[LangId.Settings_EnableOnlyLoadRawPreview];
         PART_LblProfileNote.Text = lang[LangId.QuickSetup_SettingProfileDescription];
 
-        PART_LblSetViewer.Text = lang[LangId.QuickSetup_SetDefaultViewer];
-        PART_LblSetViewerDesc.Text = lang[LangId.QuickSetup_SetDefaultViewer_Description];
-        PART_BtnSetDefaultViewer.Text = lang[LangId.Settings_MakeDefault];
+        PART_LblSetViewerTitle.Text = lang[LangId.Settings_DefaultPhotoViewer];
+        PART_LblSetViewer.Text = lang[LangId.QuickSetup_RegisterImageFormats];
+        PART_LblSetViewerWarning.Text = lang[LangId.Settings_UnmanagedSettingReminder];
+        PART_BtnSetDefaultViewer.Text = lang[LangId._Register];
 
         UpdateStepInfo();
     }

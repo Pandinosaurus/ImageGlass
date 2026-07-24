@@ -3225,6 +3225,9 @@ public partial class AppAPIProvider
         {
             var scope = await Core.ShellProvider.SetDefaultPhotoViewerAsync(extensions, enable);
 
+            // null = the provider can't do it (virtualized Store MSIX); UI is hidden, so just stop
+            if (scope is null) return;
+
             // let the user know whether the change is per-machine (all users) or per-user
             var scopeText = Core.Lang[scope == DefaultAppScope.LocalMachine
                 ? LangId.Settings_DefaultPhotoViewer_ScopePerMachine

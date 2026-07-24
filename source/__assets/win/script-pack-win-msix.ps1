@@ -118,7 +118,11 @@ param(
 
     # Pack x64 + arm64 into a single .msixbundle instead of one .msix per arch.
     # -Platform is ignored in this mode.
-    [switch]$Bundle
+    [switch]$Bundle,
+
+    # Opt out of resources virtualization (unvirtualizedResources) so classic file-association
+    # registration + custom ext icons reach the real HKCU. Sideload/GitHub only; NOT the Store.
+    [switch]$UnvirtualizedResources
 )
 
 $ErrorActionPreference = 'Stop'
@@ -261,12 +265,18 @@ function New-MsixPackage([string]$Platform, [string]$OutMsixPath) {
     Copy-Item -Path $AssetsDir -Destination (Join-Path $stagingDir 'Assets') -Recurse -Force
 
     # 3. Generate AppxManifest.xml from the template (UTF-8 BOM, as the SDK expects).
+    # -UnvirtualizedResources (GitHub/sideload) opts out of resources virtualization; Store stays virtualized
+    $regVirt   = if ($UnvirtualizedResources) { '<desktop6:RegistryWriteVirtualization>disabled</desktop6:RegistryWriteVirtualization>' } else { '' }
+    $unvirtCap = if ($UnvirtualizedResources) { '<rescap:Capability Name="unvirtualizedResources" />' } else { '' }
+
     $manifest = Get-Content -Path $ManifestTpl -Raw
     $manifest = $manifest.Replace('{{IDENTITY_NAME}}', $identityName).
                           Replace('{{PUBLISHER}}', $publisher).
                           Replace('{{PUBLISHER_DISPLAY_NAME}}', $PublisherDisplayName).
                           Replace('{{VERSION}}', $pkgVersion).
-                          Replace('{{ARCH}}', $Platform)
+                          Replace('{{ARCH}}', $Platform).
+                          Replace('{{REGISTRY_VIRTUALIZATION}}', $regVirt).
+                          Replace('{{UNVIRTUALIZED_CAPABILITY}}', $unvirtCap)
     $utf8Bom = [System.Text.UTF8Encoding]::new($true)
     [System.IO.File]::WriteAllText((Join-Path $stagingDir 'AppxManifest.xml'), $manifest, $utf8Bom)
 

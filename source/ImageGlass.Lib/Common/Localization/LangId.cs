@@ -671,8 +671,8 @@ public enum LangId
     Settings_DefaultPhotoViewer_Description,
     Settings_DefaultPhotoViewer_ScopePerMachine,
     Settings_DefaultPhotoViewer_ScopePerUser,
-    Settings_MakeDefault,
-    Settings_RemoveDefault,
+    _Register,
+    _Unregister,
     Settings_OpenDefaultAppsSetting,
 
     // File type associations > File formats
@@ -829,8 +829,8 @@ public enum LangId
     QuickSetup_SettingsWillBeApplied,
     QuickSetup_SettingProfileDescription,
 
-    QuickSetup_SetDefaultViewer,
-    QuickSetup_SetDefaultViewer_Description,
+    QuickSetup_RegisterImageFormats,
+    QuickSetup_RegisterImageFormats_Description,
 
     QuickSetup_ConfirmCloseProcess,
     QuickSetup_ConfirmCloseProcess_Description,

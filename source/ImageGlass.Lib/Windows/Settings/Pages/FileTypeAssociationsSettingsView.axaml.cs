@@ -140,12 +140,20 @@ public partial class FileTypeAssociationsSettingsView : SettingsPageView
     /// </summary>
     private void BuildExtensionIcons()
     {
+        // hide when associations can't reach the shell (virtualized Store MSIX)
+        if (Core.ShellProvider?.IsDefaultViewerConfigurable == false)
+        {
+            PART_ExtIconsHeading.IsVisible = false;
+            PART_ExtIconsGroup.IsVisible = false;
+            return;
+        }
+
         SetLocalizedText(PART_OpenExtIconFolder, LangId.Settings_OpenExtensionIconFolder);
         PART_OpenExtIconFolder.Click += (_, _) =>
             BHelper.OpenFolderPath(BHelper.GetRealPlatformConfigDir(Dir.ExtIcons));
 
-        // the description references the open-folder button name via its {0} placeholder
-        AddLangRefresher(() => PART_ExtIconsDesc.LangParams = Core.Lang[LangId.Settings_OpenExtensionIconFolder]);
+        // the description references the 'Make default' button name via its {0} placeholder
+        AddLangRefresher(() => PART_ExtIconsDesc.LangParams = Core.Lang[LangId._Register]);
 
         SetLocalizedText(PART_GetExtIconPacks, LangId.Settings_GetExtensionIconPacks);
         PART_GetExtIconPacks.Click += async (_, _) =>
@@ -166,21 +174,27 @@ public partial class FileTypeAssociationsSettingsView : SettingsPageView
     /// </summary>
     private void BuildDefaultPhotoViewer()
     {
+        // hide when associations can't reach the shell (virtualized Store MSIX)
+        if (Core.ShellProvider?.IsDefaultViewerConfigurable == false)
+        {
+            PART_DefaultViewerHeading.IsVisible = false;
+            PART_DefaultViewerGroup.IsVisible = false;
+            return;
+        }
+
         // per-user vs per-machine registration, derived from the install location
         var scope = Core.ShellProvider?.GetDefaultViewerScope() ?? DefaultAppScope.CurrentUser;
 
-        // the Windows "Default apps" deep link key differs per registration scope
-        var appQueryKey = scope == DefaultAppScope.LocalMachine
-            ? "registeredAppMachine"
-            : "registeredAppUser";
+        // the Windows "Default apps" deep link key differs per scope; the app name must be URI-escaped
+        var appQueryKey = scope == DefaultAppScope.LocalMachine ? "registeredAppMachine" : "registeredAppUser";
         var defaultAppsUri = $"ms-settings:defaultapps?{appQueryKey}={Uri.EscapeDataString(BHelper.AppName)}";
 
-        SetLocalizedText(PART_MakeDefault, LangId.Settings_MakeDefault);
-        AddLangRefresher(() => ToolTip.SetTip(PART_MakeDefault, Core.Lang[LangId.Settings_UnmanagedSettingReminder]));
-        PART_MakeDefault.Click += async (_, _) => await AppAPIProvider.IG_SetDefaultPhotoViewerAsync();
+        SetLocalizedText(PART_Register, LangId._Register);
+        AddLangRefresher(() => ToolTip.SetTip(PART_Register, Core.Lang[LangId.Settings_UnmanagedSettingReminder]));
+        PART_Register.Click += async (_, _) => await AppAPIProvider.IG_SetDefaultPhotoViewerAsync();
 
-        SetLocalizedText(PART_RemoveDefault, LangId.Settings_RemoveDefault);
-        PART_RemoveDefault.Click += async (_, _) => await AppAPIProvider.IG_RemoveDefaultPhotoViewerAsync();
+        SetLocalizedText(PART_Unregister, LangId._Unregister);
+        PART_Unregister.Click += async (_, _) => await AppAPIProvider.IG_RemoveDefaultPhotoViewerAsync();
 
         // show the registration scope (all users vs current user)
         AddLangRefresher(() => PART_ScopeInfo.Text = Core.Lang[scope == DefaultAppScope.LocalMachine
@@ -190,7 +204,7 @@ public partial class FileTypeAssociationsSettingsView : SettingsPageView
         SetLocalizedText(PART_OpenDefaultApps, LangId.Settings_OpenDefaultAppsSetting);
         PART_OpenDefaultApps.Click += async (_, _) => await BHelper.OpenUrlAsync(this, defaultAppsUri, "from_default_apps");
 
-        RegisterSearchKey(PART_MakeDefault, LangId.Settings_DefaultPhotoViewer, null, LangId.Settings_DefaultPhotoViewer);
+        RegisterSearchKey(PART_Register, LangId.Settings_DefaultPhotoViewer, null, LangId.Settings_DefaultPhotoViewer);
     }
 
     #endregion // Default photo viewer
