@@ -17,7 +17,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 using Avalonia.Controls;
-using Avalonia.Controls.Documents;
 using Avalonia.Media;
 using ImageGlass.Common.Extensions;
 using ImageGlass.Common.Localization;
@@ -125,53 +124,14 @@ public abstract class SettingsPageView : PhControl
 
 
     /// <summary>
-    /// Pro-gates a setting: when Pro is not active, shows the ✦ badge (with a Pro-feature
-    /// tooltip) and disables the given input controls. The badge must be an enabled sibling,
-    /// so its tooltip still shows while the inputs are disabled.
+    /// Pro-gates a setting: when Pro is not active, reveals the ✦ Pro badge (a <see cref="PhProBadge"/>
+    /// sibling, which carries its own hover + tooltip) and disables the given input controls.
     /// </summary>
     protected void ProGate(Control? badge, params Control?[] inputs)
     {
         if (Core.IsProEnabled) return;
 
-        if (badge is not null)
-        {
-            badge.IsVisible = true;
-            AddLangRefresher(() => ToolTip.SetTip(badge, Core.Lang[LangId.Settings_ProFeatureHint]));
-        }
-
-        foreach (var input in inputs)
-        {
-            if (input is not null) input.IsEnabled = false;
-        }
-    }
-
-
-    /// <summary>
-    /// Pro-gates a group heading that has no separate badge element: renders the heading text with
-    /// an accent-colored ✦ badge (and a tooltip) when Pro is not active, and disables the inputs.
-    /// The heading must have no <c>LangKey</c> — its text is driven here so the badge survives a language change.
-    /// </summary>
-    protected void ProGateHeading(PhTextBlock heading, LangId key, params Control?[] inputs)
-    {
-        var pro = Core.IsProEnabled;
-
-        AddLangRefresher(() =>
-        {
-            if (pro)
-            {
-                heading.Text = Core.Lang[key];
-                return;
-            }
-
-            heading.Inlines = new InlineCollection
-            {
-                new Run(Core.Lang[key]),
-                new Run("  ✦") { Foreground = new SolidColorBrush(Core.AccentColor) },
-            };
-            ToolTip.SetTip(heading, Core.Lang[LangId.Settings_ProFeatureHint]);
-        });
-
-        if (pro) return;
+        if (badge is not null) badge.IsVisible = true;
 
         foreach (var input in inputs)
         {

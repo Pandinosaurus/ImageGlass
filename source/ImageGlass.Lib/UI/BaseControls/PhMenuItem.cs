@@ -152,6 +152,7 @@ public class PhMenuItem : MenuItem
         {
             Header = $"{localizedText} 🔒";
             IsEnabled = false;
+            ToolTip.SetTip(this, null);
         }
         // Pro feature not yet unlocked: keep it clickable so it routes to the upgrade prompt
         else if (FeatureManager.IsProGated(LangKey))
@@ -165,10 +166,12 @@ public class PhMenuItem : MenuItem
                 },
             };
             IsEnabled = true;
+            ToolTip.SetTip(this, Core.Lang[LangId.Settings_ProFeatureHint]);
         }
         else
         {
             Header = localizedText;
+            ToolTip.SetTip(this, null);
         }
     }
 

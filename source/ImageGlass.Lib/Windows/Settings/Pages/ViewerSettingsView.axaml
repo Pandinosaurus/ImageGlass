@@ -41,14 +41,14 @@
                 <CheckBox x:Name="PART_FreePan">
                     <ui:PhTextBlock LangKey="Settings_EnableFreePan" TextWrapping="Wrap" />
                 </CheckBox>
-                <TextBlock x:Name="PART_FreePanProBadge" Classes="proBadge" Text="✦" IsVisible="False" />
+                <ui:PhProBadge x:Name="PART_FreePanProBadge" IsVisible="False" />
             </StackPanel>
 
             <!--  Panning margin  -->
             <StackPanel Spacing="{DynamicResource SettingsLabelInputGap}">
                 <StackPanel Orientation="Horizontal" Spacing="8">
                     <ui:PhTextBlock LangKey="Settings_PanMargin" />
-                    <TextBlock x:Name="PART_PanMarginProBadge" Classes="proBadge" Text="✦" IsVisible="False" />
+                    <ui:PhProBadge x:Name="PART_PanMarginProBadge" IsVisible="False" />
                 </StackPanel>
                 <ui:PhTextBox
                     x:Name="PART_PanMargin"
