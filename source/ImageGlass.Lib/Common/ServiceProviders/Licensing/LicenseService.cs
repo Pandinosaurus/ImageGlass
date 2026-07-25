@@ -139,7 +139,7 @@ public static class LicenseService
 
             // the bundled file only supplies the details shown to the user; the store grants Pro
             var bundledDir = provider.BundledLicenseDirectory;
-            var bundled = TryLoadFirstValidLicense(bundledDir);
+            var bundled = TryLoadFirstValidLicense(bundledDir, out _);
             if (bundled is not null) return bundled;
 
             return CreateStoreEntitlementLicense(provider);
@@ -168,11 +168,48 @@ public static class LicenseService
 
 
     /// <summary>
-    /// Returns the newest authentic, in-validity license in a folder. Version scope is left to the
-    /// caller.
+    /// Finds the signed license bundled with a store build, which the user may save for their other
+    /// platforms. False when this is not a store build, or the bundled file is missing or unusable.
     /// </summary>
-    private static LicenseInfo? TryLoadFirstValidLicense(string? dir)
+    /// <remarks>
+    /// The caller must copy the file at <paramref name="filePath"/> byte for byte. Re-serializing
+    /// the parsed license would change the bytes and break its signature.
+    /// </remarks>
+    public static bool TryGetExportableLicense(out string filePath, out LicenseInfo license)
     {
+        filePath = string.Empty;
+        license = null!;
+
+        // no export offered when anything is off; it is a convenience, never a gate
+        try
+        {
+            var provider = Core.StoreEntitlementProvider;
+            if (provider is null) return false;
+
+            var isStoreEntitled = provider.IsStoreEntitled;
+            if (!isStoreEntitled) return false;
+
+            var bundled = TryLoadFirstValidLicense(provider.BundledLicenseDirectory, out var bundledPath);
+            if (bundled is null) return false;
+
+            filePath = bundledPath;
+            license = bundled;
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+
+    /// <summary>
+    /// Returns the newest authentic, in-validity license in a folder, and the path it came from.
+    /// Version scope is left to the caller.
+    /// </summary>
+    private static LicenseInfo? TryLoadFirstValidLicense(string? dir, out string filePath)
+    {
+        filePath = string.Empty;
         var files = EnumerateLicenseFiles(dir);
 
         foreach (var path in files)
@@ -183,6 +220,7 @@ public static class LicenseService
             var isWithinValidity = IsWithinValidity(lic);
             if (!isWithinValidity) continue;
 
+            filePath = path;
             return lic;
         }
 

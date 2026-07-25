@@ -28,6 +28,10 @@ every payload `.exe`/`.dll` *and* the package itself.
 - **.NET 10 SDK** — for `dotnet publish`.
 - **Code-signing certificate** (signed flavour only) — installed in
   `CurrentUser\My` / `LocalMachine\My` with its private key, or supplied as a PFX.
+- **A signed Pro license** (msstore flavour only) — issue one from the website admin dashboard with
+  `channel: msstore`, `versionScope: 10`, `initVersion: <current release>`, no email, no expiry, then
+  drop the downloaded `<licenseId>.iglicense.json` into `__artifacts\store-license\` (git-ignored)
+  or pass `-StoreLicenseFile`. The pack fails fast without it.
 
 ## Usage
 
@@ -68,6 +72,45 @@ architecture matching the device, so you publish one file instead of two. The
 per-arch packages inside the bundle are payload-signed (their `.exe`/`.dll` carry
 a trust chain) but **not** package-signed — only the `.msixbundle` itself is signed.
 
+## Testing the msstore package locally
+
+The msstore artifact is unsigned **on purpose**, and Windows refuses to install an unsigned
+package, so it cannot be tested by double-clicking it.
+
+Do not work around that by setting `Publisher` to your own certificate subject. Windows derives the
+publisher id in the package family name from that DN, and `Win32AppIdentity.IsMsStorePackage`
+checks it, so a re-published package reports itself as **not** a Store install and Pro stays off:
+the test would measure the wrong thing. Both options below keep the identity intact.
+
+**Self-signed with the Store publisher subject** (installs like the real thing):
+
+```powershell
+$subject = 'CN=29F1B9EC-D220-4DC3-BEDB-01A9CCA51904'   # must equal the manifest Publisher
+$cert = New-SelfSignedCertificate -Type CodeSigningCert -Subject $subject `
+    -CertStoreLocation Cert:\CurrentUser\My -FriendlyName 'ImageGlass msstore local test' `
+    -TextExtension @('2.5.29.19={text}')
+
+# trust it for install (needs admin), then sign a COPY, never the artifact you upload
+Export-Certificate -Cert $cert -FilePath "$env:TEMP\ig-store-test.cer" | Out-Null
+Import-Certificate -FilePath "$env:TEMP\ig-store-test.cer" -CertStoreLocation Cert:\LocalMachine\TrustedPeople
+Copy-Item __artifacts\bundle\ImageGlass_*_win-msstore.msixbundle __artifacts\bundle\local-test.msixbundle
+signtool sign /fd SHA256 /sha1 $cert.Thumbprint __artifacts\bundle\local-test.msixbundle
+Add-AppxPackage __artifacts\bundle\local-test.msixbundle
+```
+
+**Or register the loose layout** (no certificate, needs Developer Mode):
+
+```powershell
+makeappx unbundle /p __artifacts\bundle\ImageGlass_<version>_win-msstore.msixbundle /d "$env:TEMP\igb"
+makeappx unpack   /p "$env:TEMP\igb\ImageGlass-x64.msix" /d "$env:TEMP\igx"
+Add-AppxPackage -Register "$env:TEMP\igx\AppxManifest.xml"
+```
+
+Either way, check that Help shows **Manage Pro license**, the Pro features are unlocked, and the
+licensed-to row shows the bundled license's `customerName`. Afterwards `Remove-AppxPackage` the
+package, delete the signed copy, and remove the test certificate from `Cert:\CurrentUser\My` and
+`Cert:\LocalMachine\TrustedPeople`.
+
 ## Notes
 
 - **Version.** Both flavours use `<Major>.<Minor>.<IgBundleBuild>.0`, derived from
@@ -89,6 +132,13 @@ a trust chain) but **not** package-signed — only the `.msixbundle` itself is s
   a warning). Sign it before publishing — an unsigned MSIX cannot be installed.
 - **Faster iteration.** Pass `-SkipPublish` to reuse an existing
   `__artifacts/publish/win-<arch>` instead of re-publishing.
+- **The bundled license is export-only.** The msstore payload carries the signed license in
+  `ImageGlass\_store\`, a subfolder the app's license scan never looks in, so it grants nothing by
+  itself; the Store identity does that. It exists purely so a Store customer can save a copy for
+  their macOS/Linux machines, which is why it is scoped to the major line they bought. The signed
+  flavour refuses to build if a `_store` folder is present, so a stale `-SkipPublish` reuse cannot
+  leak it into a GitHub package. Anyone can still unzip it out of the Store package: that is
+  accepted, and the response to a leak is to bundle a fresh `licenseId` in the next submission.
 - **The msstore identity IS the Pro entitlement.** `Win32AppIdentity.IsMsStorePackage` requires the
   running package's Identity Name to equal `-MsStoreIdentityName` **and** its publisher id to equal
   the hash of `-MsStorePublisher`, and `Win32StoreEntitlementProvider` treats that as proof of a Pro

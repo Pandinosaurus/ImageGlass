@@ -122,7 +122,12 @@ param(
 
     # Opt out of resources virtualization (unvirtualizedResources) so classic file-association
     # registration + custom ext icons reach the real HKCU. Sideload/GitHub only; NOT the Store.
-    [switch]$UnvirtualizedResources
+    [switch]$UnvirtualizedResources,
+
+    # Signed license bundled into the msstore payload so a Store customer can export it for their
+    # macOS/Linux machines. Required for the msstore flavour, never shipped in the signed one.
+    # Defaults to the single *.iglicense.json in __artifacts\store-license (git-ignored).
+    [string]$StoreLicenseFile = ''
 )
 
 $ErrorActionPreference = 'Stop'
@@ -170,6 +175,39 @@ function Get-BuildProp([string]$Tag) {
     $m = Select-String -Path $BuildProps -Pattern "<$Tag>(.*?)</$Tag>" | Select-Object -First 1
     if ($m) { return $m.Matches[0].Groups[1].Value.Trim() }
     return ''
+}
+
+# Locate the signed license to bundle into the msstore payload. -StoreLicenseFile wins; otherwise
+# take the single *.iglicense.json in __artifacts\store-license, which .gitignore keeps out of the
+# repo. Throws rather than shipping a Store package a customer cannot export a license from.
+function Resolve-StoreLicense {
+    if ($StoreLicenseFile) {
+        if (-not (Test-Path -LiteralPath $StoreLicenseFile -PathType Leaf)) {
+            throw "-StoreLicenseFile not found: $StoreLicenseFile"
+        }
+        return (Resolve-Path -LiteralPath $StoreLicenseFile).Path
+    }
+
+    $defaultDir = Join-Path $WorkspaceDir '__artifacts\store-license'
+    $hits = @()
+    if (Test-Path $defaultDir) {
+        $hits = @(Get-ChildItem -Path $defaultDir -Filter '*.iglicense.json' -File -ErrorAction SilentlyContinue)
+    }
+
+    if ($hits.Count -eq 0) {
+        throw "No store license to bundle. Put the signed <licenseId>.iglicense.json in '$defaultDir', or pass -StoreLicenseFile."
+    }
+    if ($hits.Count -gt 1) {
+        throw "Found $($hits.Count) *.iglicense.json in '$defaultDir'. Pass -StoreLicenseFile to choose one."
+    }
+
+    return $hits[0].FullName
+}
+
+# Read the licenseId out of a license file, for the build log.
+function Get-LicenseId([string]$Path) {
+    try { return (Get-Content -LiteralPath $Path -Raw | ConvertFrom-Json).licenseId }
+    catch { return '(unreadable)' }
 }
 
 # Find a usable signing certificate and report its EXACT Subject DN (needed for
@@ -262,6 +300,22 @@ function New-MsixPackage([string]$Platform, [string]$OutMsixPath) {
     # Drop debug symbols — they bloat the package and are not part of the product.
     Get-ChildItem -Path $payloadDir -Recurse -Include '*.pdb' -File -ErrorAction SilentlyContinue |
         Remove-Item -Force
+
+    # Store only: stage the exportable license in _store\, a subfolder the app's license scan never
+    # looks in, so it can only leave the package deliberately.
+    $storeLicenseDir = Join-Path $payloadDir '_store'
+    if ($Sign) {
+        # a stale -SkipPublish reuse must never leak the store license into the signed package
+        if (Test-Path $storeLicenseDir) {
+            throw "Refusing to build the signed package: '$storeLicenseDir' exists. The store license ships only in the msstore flavour."
+        }
+    }
+    else {
+        if (Test-Path $storeLicenseDir) { Remove-Item $storeLicenseDir -Recurse -Force }
+        New-Item -ItemType Directory -Path $storeLicenseDir -Force | Out-Null
+        Copy-Item -LiteralPath $script:storeLicensePath -Destination $storeLicenseDir -Force
+    }
+
     Copy-Item -Path $AssetsDir -Destination (Join-Path $stagingDir 'Assets') -Recurse -Force
 
     # 3. Generate AppxManifest.xml from the template (UTF-8 BOM, as the SDK expects).
@@ -361,6 +415,12 @@ else {
     $script:doSign = $false
 }
 
+# Resolve the bundled license up front, so a missing one fails before the long publish.
+$script:storeLicensePath = ''
+if (-not $Sign) {
+    $script:storeLicensePath = Resolve-StoreLicense
+}
+
 # --- Output artifact name ------------------------------------------------------
 $ext         = if ($Bundle) { 'msixbundle' } else { 'msix' }
 $archTag     = if ($Bundle) { 'win' } else { "win-$Platform" }
@@ -376,6 +436,9 @@ Write-Host "    Identity    : $identityName"
 Write-Host "    Publisher   : $publisher"
 Write-Host "    Version     : $pkgVersion"
 Write-Host "    Assets      : $(Split-Path $AssetsDir -Leaf)"
+if (-not $Sign) {
+    Write-Host "    License     : $(Get-LicenseId $script:storeLicensePath) ($script:storeLicensePath)"
+}
 Write-Host "    Output      : $outArtifact"
 
 # --- Locate SDK tools ----------------------------------------------------------
