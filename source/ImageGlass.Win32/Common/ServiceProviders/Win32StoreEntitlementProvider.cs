@@ -18,6 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 using ImageGlass.Common;
 using ImageGlass.Common.ServiceProviders;
+using ImageGlass.Common.ServiceProviders.Licensing;
 using System.IO;
 
 namespace ImageGlass.Win32.Common.ServiceProviders;
@@ -30,15 +31,11 @@ namespace ImageGlass.Win32.Common.ServiceProviders;
 public class Win32StoreEntitlementProvider : IStoreEntitlementProvider
 {
     /// <summary>
-    /// Payload folder the Microsoft Store packer will place the bundled license in. Absent until
-    /// <c>__assets/win/script-pack-win-msix.ps1</c> learns to emit it.
+    /// Payload folder holding the license bundled for export. Staged by
+    /// <c>__assets/win/script-pack-win-msix.ps1</c> for the msstore flavour only; the signed
+    /// flavour refuses to build if it finds one.
     /// </summary>
     private const string BUNDLED_LICENSE_DIR = "_store";
-
-    /// <summary>
-    /// Channel recorded on a license granted by the Microsoft Store.
-    /// </summary>
-    private const string CHANNEL_ID = "msstore";
 
     /// <summary>
     /// Plan sold by the Microsoft Store listing.
@@ -61,7 +58,7 @@ public class Win32StoreEntitlementProvider : IStoreEntitlementProvider
     /// <summary>
     /// <inheritdoc/>
     /// </summary>
-    public string ChannelId => CHANNEL_ID;
+    public string ChannelId => LicenseService.CHANNEL_MSSTORE;
 
 
     /// <summary>

@@ -83,6 +83,19 @@ public static class LicenseScope
 
 
     /// <summary>
+    /// Gets the running app's major version as text, to pair with a license's scope in a message.
+    /// Falls back to the whole version string when it cannot be read.
+    /// </summary>
+    public static string GetRunningAppMajorText()
+    {
+        var appVersion = Core.BuildInfo?.Version ?? string.Empty;
+        var hasAppMajor = TryParseMajor(appVersion, out var appMajor);
+
+        return hasAppMajor ? appMajor.ToString(CultureInfo.InvariantCulture) : appVersion;
+    }
+
+
+    /// <summary>
     /// Whether this build ignores the version scope entirely.
     /// </summary>
     private static bool IsScopeExempt()

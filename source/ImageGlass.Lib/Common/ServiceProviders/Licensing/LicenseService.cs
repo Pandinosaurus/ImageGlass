@@ -39,6 +39,20 @@ public static class LicenseService
     private const string LICENSE_FILE_PATTERN = "*.iglicense.json";
 
     /// <summary>
+    /// Channel id recorded on a license granted by the Microsoft Store.
+    /// </summary>
+    public const string CHANNEL_MSSTORE = "msstore";
+
+    /// <summary>
+    /// Store brand names by channel id. Product names, so they are never localized. Add a store
+    /// here when one ships.
+    /// </summary>
+    private static readonly Dictionary<string, string> _channelNames = new(StringComparer.OrdinalIgnoreCase)
+    {
+        [CHANNEL_MSSTORE] = "Microsoft Store",
+    };
+
+    /// <summary>
     /// Product name a license must carry to be accepted.
     /// </summary>
     private const string PRODUCT_NAME = "ImageGlass";
@@ -165,6 +179,20 @@ public static class LicenseService
         SeatCount = 1,
         Channel = provider.ChannelId,
     };
+
+
+    /// <summary>
+    /// Gets the brand name of the store a channel id refers to, or the channel id itself when it is
+    /// not a known store.
+    /// </summary>
+    public static string GetChannelDisplayName(string? channelId)
+    {
+        var channel = channelId?.Trim() ?? string.Empty;
+        if (channel.Length == 0) return string.Empty;
+
+        var isKnownStore = _channelNames.TryGetValue(channel, out var name);
+        return isKnownStore ? name! : channel;
+    }
 
 
     /// <summary>

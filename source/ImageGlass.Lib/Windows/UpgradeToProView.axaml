@@ -46,9 +46,19 @@
             Margin="24,18,24,20"
             Spacing="10">
             <ui:PhTextBlock
+                x:Name="PART_LblDescription"
                 MaxWidth="420"
                 HorizontalAlignment="Center"
                 LangKey="Menu_MnuUpgradeToPro_Description"
+                TextAlignment="Center"
+                TextWrapping="Wrap" />
+
+            <!--  shown instead when a valid license does not cover this app version  -->
+            <ui:PhTextBlock
+                x:Name="PART_LblOutOfScope"
+                MaxWidth="420"
+                HorizontalAlignment="Center"
+                IsVisible="False"
                 TextAlignment="Center"
                 TextWrapping="Wrap" />
 
@@ -104,10 +114,11 @@
             Margin="24,18,24,20"
             Spacing="12">
             <Grid
-                RowDefinitions="Auto,Auto,Auto,Auto,Auto"
+                RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto"
                 ColumnDefinitions="Auto,*"
                 HorizontalAlignment="Center">
                 <ui:PhTextBlock
+                    x:Name="PART_LblLicensedTo"
                     Grid.Row="0"
                     Grid.Column="0"
                     Margin="0,4,16,4"
@@ -121,6 +132,7 @@
                     TextWrapping="Wrap" />
 
                 <ui:PhTextBlock
+                    x:Name="PART_LblPlan"
                     Grid.Row="1"
                     Grid.Column="0"
                     Margin="0,4,16,4"
@@ -134,6 +146,7 @@
                     TextWrapping="Wrap" />
 
                 <ui:PhTextBlock
+                    x:Name="PART_LblSeats"
                     Grid.Row="2"
                     Grid.Column="0"
                     Margin="0,4,16,4"
@@ -147,6 +160,7 @@
                     TextWrapping="Wrap" />
 
                 <ui:PhTextBlock
+                    x:Name="PART_LblExpires"
                     Grid.Row="3"
                     Grid.Column="0"
                     Margin="0,4,16,4"
@@ -160,6 +174,7 @@
                     TextWrapping="Wrap" />
 
                 <ui:PhTextBlock
+                    x:Name="PART_LblLicenseId"
                     Grid.Row="4"
                     Grid.Column="0"
                     Margin="0,4,16,4"
@@ -171,15 +186,50 @@
                     Grid.Column="1"
                     Margin="0,4"
                     TextWrapping="Wrap" />
+
+                <!--  only a store build names where the license came from  -->
+                <ui:PhTextBlock
+                    x:Name="PART_LblSource"
+                    Grid.Row="5"
+                    Grid.Column="0"
+                    Margin="0,4,16,4"
+                    FontWeight="SemiBold"
+                    LangKey="Menu_MnuManageProLicense_Source" />
+                <SelectableTextBlock
+                    x:Name="PART_ValSource"
+                    Grid.Row="5"
+                    Grid.Column="1"
+                    Margin="0,4"
+                    TextWrapping="Wrap" />
             </Grid>
 
             <Border
+                x:Name="PART_ManageDivider"
                 Height="1"
                 Margin="0,4"
                 Background="{DynamicResource IG_BorderNeutralBrush}" />
 
             <!--  CTA buttons  -->
             <StackPanel HorizontalAlignment="Center" Spacing="8">
+                <!--  store builds only: hand the bundled license to the user's other platforms  -->
+                <ui:PhTextBlock
+                    x:Name="PART_LblExportNote"
+                    MaxWidth="300"
+                    IsVisible="False"
+                    LangKey="Menu_MnuManageProLicense_ExportNote"
+                    TextAlignment="Center"
+                    TextWrapping="Wrap" />
+                <ui:PhButton
+                    x:Name="PART_BtnExportLicense"
+                    Width="300"
+                    HorizontalContentAlignment="Stretch"
+                    IsVisible="False">
+                    <ui:PhTextBlock
+                        LangKey="Menu_MnuManageProLicense_ExportLicense"
+                        TextAlignment="Center"
+                        TextTrimming="CharacterEllipsis" />
+                </ui:PhButton>
+                
                 <ui:PhButton
                     x:Name="PART_BtnChangeLicense"
                     Width="300"

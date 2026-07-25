@@ -44,6 +44,7 @@ public partial class UpgradeToProView : PhControl
 
         UpdateLogo();
         if (isPro) FillLicenseInfo();
+        else ShowOutOfScopeNoticeIfAny();
 
         PART_BtnCompare.Click += (_, _) => OpenUrl("https://imageglass.org/pricing#comparison");
         PART_BtnBuyOnline.Click += (_, _) => OpenUrl("https://imageglass.org/pricing");
@@ -51,6 +52,7 @@ public partial class UpgradeToProView : PhControl
         PART_BtnRetrieveEmail.Click += (_, _) => OpenUrl("https://imageglass.org/pro/retrieve");
         PART_BtnChangeLicense.Click += async (_, _) => await ImportLicenseAsync();
         PART_BtnUpgradePlan.Click += (_, _) => OpenUrl("https://imageglass.org/pricing");
+        PART_BtnExportLicense.Click += async (_, _) => await ExportLicenseAsync();
     }
 
 
@@ -67,8 +69,9 @@ public partial class UpgradeToProView : PhControl
     {
         base.OnIgLanguageChanged();
 
-        // the license values are not localized, but the "Perpetual" fallback is
+        // the license values are not localized, but the "Perpetual" fallback and the source are
         if (Core.IsProEnabled) FillLicenseInfo();
+        else ShowOutOfScopeNoticeIfAny();
 
         PART_LblHeading.Text = Core.Lang[Core.IsProEnabled
             ? LangId.Menu_MnuManageProLicense
@@ -85,14 +88,70 @@ public partial class UpgradeToProView : PhControl
     private void FillLicenseInfo()
     {
         var lic = Core.AppLicense;
+        var isStoreBuild = Core.StoreEntitlementProvider?.IsStoreEntitled == true;
 
-        PART_ValLicensedTo.Text = lic?.CustomerName ?? string.Empty;
+        // every customer of a store shares one bundled license, so showing its owner and id as if
+        // they belonged to this user would misattribute them
+        PART_ValLicensedTo.Text = isStoreBuild ? string.Empty : lic?.CustomerName ?? string.Empty;
+        PART_ValLicenseId.Text = isStoreBuild ? string.Empty : lic?.LicenseId ?? string.Empty;
+
         PART_ValPlan.Text = lic?.Plan ?? string.Empty;
         PART_ValSeats.Text = (lic?.SeatCount ?? 1).ToString();
         PART_ValExpires.Text = string.IsNullOrEmpty(lic?.ExpiresAt)
             ? Core.Lang[LangId.Menu_MnuManageProLicense_Perpetual]
             : FormatDate(lic.ExpiresAt);
-        PART_ValLicenseId.Text = lic?.LicenseId ?? string.Empty;
+        PART_ValSource.Text = isStoreBuild
+            ? LicenseService.GetChannelDisplayName(Core.StoreEntitlementProvider?.ChannelId)
+            : string.Empty;
+
+        // the store grants the entitlement, so there is no file to swap and no plan to upgrade
+        PART_BtnChangeLicense.IsVisible = !isStoreBuild;
+        PART_BtnUpgradePlan.IsVisible = !isStoreBuild;
+
+        var canExport = LicenseService.TryGetExportableLicense(out _, out _);
+        PART_BtnExportLicense.IsVisible = canExport;
+        PART_LblExportNote.IsVisible = canExport;
+
+        // otherwise the divider floats above an empty action area
+        var hasAnyAction = canExport || !isStoreBuild;
+        PART_ManageDivider.IsVisible = hasAnyAction;
+
+        HideEmptyLicenseRows();
+    }
+
+
+    // a store entitlement has no owner or id to show, so those rows would render as bare labels
+    private void HideEmptyLicenseRows()
+    {
+        (PhTextBlock Label, SelectableTextBlock Value)[] rows =
+        [
+            (PART_LblLicensedTo, PART_ValLicensedTo),
+            (PART_LblPlan, PART_ValPlan),
+            (PART_LblSeats, PART_ValSeats),
+            (PART_LblExpires, PART_ValExpires),
+            (PART_LblLicenseId, PART_ValLicenseId),
+            (PART_LblSource, PART_ValSource),
+        ];
+
+        foreach (var (label, value) in rows)
+        {
+            var hasValue = !string.IsNullOrWhiteSpace(value.Text);
+            label.IsVisible = hasValue;
+            value.IsVisible = hasValue;
+        }
+    }
+
+
+    // an authentic license bought for another version line: say so instead of a generic pitch
+    private void ShowOutOfScopeNoticeIfAny()
+    {
+        var lic = Core.OutOfScopeLicense;
+        if (lic is null) return;
+
+        PART_LblOutOfScope.Text = Core.Lang[LangId.Menu_MnuUpgradeToPro_OutOfScope,
+            lic.Plan, lic.VersionScope, LicenseScope.GetRunningAppMajorText()];
+        PART_LblOutOfScope.IsVisible = true;
+        PART_LblDescription.IsVisible = false;
     }
 
 
@@ -170,13 +229,73 @@ public partial class UpgradeToProView : PhControl
     }
 
 
-    private static async Task ShowError(PhWindow? owner, string heading, LangId messageKey)
+    // save the bundled license so the user can import it on their macOS or Linux machine
+    private async Task ExportLicenseAsync()
+    {
+        var topLevel = TopLevel.GetTopLevel(this);
+        if (topLevel is null) return;
+
+        var owner = topLevel as PhWindow;
+        var heading = Core.Lang[LangId.Menu_MnuManageProLicense];
+
+        // the licensing UI must never raise the unhandled-error dialog, so nothing may escape here
+        try
+        {
+            // read the live state: this view decided what to show back in its constructor
+            var canExport = LicenseService.TryGetExportableLicense(out var sourcePath, out var lic);
+            if (!canExport)
+            {
+                await ShowError(owner, heading, LangId.Menu_MnuManageProLicense_ExportFailed);
+                return;
+            }
+
+            var file = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+            {
+                SuggestedFileName = lic.LicenseId + LicenseService.LICENSE_FILE_EXTENSION,
+                // so a name the user edits still gets the suffix the import picker filters on
+                DefaultExtension = LicenseService.LICENSE_FILE_EXTENSION.TrimStart('.'),
+                FileTypeChoices =
+                [
+                    new FilePickerFileType(Core.Lang[LangId.Menu_MnuManageProLicense_LicenseFileType])
+                    {
+                        Patterns = ["*" + LicenseService.LICENSE_FILE_EXTENSION],
+                    },
+                ],
+            });
+
+            if (file is null) return;
+
+            // copy the bytes as they are; re-serializing would change them and break the signature.
+            // the scope closes the stream before the success message, so a failed flush is reported
+            var bytes = await File.ReadAllBytesAsync(sourcePath);
+            await using (var dest = await file.OpenWriteAsync())
+            {
+                await dest.WriteAsync(bytes);
+            }
+
+            await ModalWindow.ShowInfoAsync(owner, new ModalWindowOptions
+            {
+                Title = heading,
+                Heading = heading,
+                Description = Core.Lang[LangId.Menu_MnuManageProLicense_ExportSuccess],
+            });
+        }
+        catch (Exception ex)
+        {
+            // show what actually went wrong; a generic apology is not debuggable
+            await ShowError(owner, heading, LangId.Menu_MnuManageProLicense_ExportFailed, ex.ToString());
+        }
+    }
+
+
+    private static async Task ShowError(PhWindow? owner, string heading, LangId messageKey, string? details = null)
     {
         await ModalWindow.ShowErrorAsync(owner, new ModalWindowOptions
         {
             Title = heading,
             Heading = heading,
             Description = Core.Lang[messageKey],
+            Details = details,
         });
     }
 

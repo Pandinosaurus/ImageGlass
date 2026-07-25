@@ -381,6 +381,7 @@ public enum LangId
     Menu_MnuUpgradeToPro_RetrieveFromEmail,
     Menu_MnuUpgradeToPro_BuyOnline,
     Menu_MnuUpgradeToPro_CompareFeatures,
+    Menu_MnuUpgradeToPro_OutOfScope,
 
     Menu_MnuManageProLicense,
     Menu_MnuManageProLicense_ChangeLicense,
@@ -391,10 +392,15 @@ public enum LangId
     Menu_MnuManageProLicense_Expires,
     Menu_MnuManageProLicense_Perpetual,
     Menu_MnuManageProLicense_LicenseId,
+    Menu_MnuManageProLicense_Source,
     Menu_MnuManageProLicense_ImportSuccess,
     Menu_MnuManageProLicense_ImportFailed,
     Menu_MnuManageProLicense_ImportExpired,
     Menu_MnuManageProLicense_LicenseFileType,
+    Menu_MnuManageProLicense_ExportLicense,
+    Menu_MnuManageProLicense_ExportNote,
+    Menu_MnuManageProLicense_ExportSuccess,
+    Menu_MnuManageProLicense_ExportFailed,
 
     Menu_MnuQuickSetup,
     Menu_MnuReportIssue,

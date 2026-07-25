@@ -148,6 +148,10 @@ package, delete the signed copy, and remove the test certificate from `Cert:\Cur
   id is the first 8 bytes of the SHA-256 of the publisher DN in UTF-16LE, base32-encoded; it is the
   trailing segment of a package full name, so the simplest way to re-derive it is to read it off an
   installed package.
+  The same identity also makes the build skip the license version-scope check
+  ([`LicenseScope.IsScopeExempt`](../../ImageGlass.Lib/Common/ServiceProviders/Licensing/LicenseScope.cs)),
+  which is what gives a Store customer Pro on every future version on Windows even though the
+  bundled file is scoped to major 10. That scope still applies to the exported copy on macOS/Linux.
   This works only while the Store listing stays a **paid app with a time-limited trial**:
   Windows refuses to launch it once the trial lapses, which is what makes "the process is
   running" equivalent to "the customer is licensed". If the listing ever becomes free, or gains
