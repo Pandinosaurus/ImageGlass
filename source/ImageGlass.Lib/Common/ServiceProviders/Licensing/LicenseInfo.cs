@@ -33,48 +33,99 @@ public partial class LicenseJsonContext : JsonSerializerContext;
 /// </summary>
 public sealed class LicenseInfo
 {
+    /// <summary>
+    /// Product the license unlocks. Always "ImageGlass"; anything else is rejected.
+    /// </summary>
     [JsonPropertyName("product")]
     public string Product { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Schema version of the license file. Never selects the signed field set.
+    /// </summary>
     [JsonPropertyName("licenseVersion")]
     public int LicenseVersion { get; set; }
 
+    /// <summary>
+    /// Human-readable license id, e.g. "IG10-7Q4KD-2M9XB".
+    /// </summary>
     [JsonPropertyName("licenseId")]
     public string LicenseId { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Id of the signing key, used to pick the public key for verification.
+    /// </summary>
     [JsonPropertyName("keyId")]
     public string KeyId { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Name of the license owner.
+    /// </summary>
     [JsonPropertyName("customerName")]
     public string CustomerName { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Owning team or company. Null for an individual license.
+    /// </summary>
     [JsonPropertyName("organizationName")]
     public string? OrganizationName { get; set; }
 
+    /// <summary>
+    /// Plan display name, e.g. "Pro Individual".
+    /// </summary>
     [JsonPropertyName("plan")]
     public string Plan { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Major version line the license covers, e.g. "10", or "all" for any version.
+    /// </summary>
     [JsonPropertyName("versionScope")]
     public string VersionScope { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Number of users or devices the license covers. At least 1.
+    /// </summary>
     [JsonPropertyName("seatCount")]
     public int SeatCount { get; set; }
 
+    /// <summary>
+    /// Support tier: "none", "standard", "priority" or "custom".
+    /// </summary>
     [JsonPropertyName("supportLevel")]
     public string SupportLevel { get; set; } = string.Empty;
 
+    /// <summary>
+    /// When the license was purchased, as an ISO-8601 UTC timestamp.
+    /// </summary>
     [JsonPropertyName("purchaseDate")]
     public string PurchaseDate { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Expiry as an ISO-8601 UTC timestamp. Null means perpetual.
+    /// </summary>
     [JsonPropertyName("expiresAt")]
     public string? ExpiresAt { get; set; }
 
+    /// <summary>
+    /// True for a commercial source-code grant. Display only, unlocks no feature.
+    /// </summary>
     [JsonPropertyName("sourceLicense")]
     public bool SourceLicense { get; set; }
 
+    /// <summary>
+    /// Where the license came from, e.g. "stripe", "manual" or "msstore".
+    /// </summary>
     [JsonPropertyName("channel")]
     public string Channel { get; set; } = string.Empty;
 
+    /// <summary>
+    /// The release this license was bought from. Null when unknown.
+    /// </summary>
+    [JsonPropertyName("initVersion")]
+    public string? InitVersion { get; set; }
+
+    /// <summary>
+    /// Base64 RSA signature over all other fields. The only unsigned field.
+    /// </summary>
     [JsonPropertyName("signature")]
     public string Signature { get; set; } = string.Empty;
 }

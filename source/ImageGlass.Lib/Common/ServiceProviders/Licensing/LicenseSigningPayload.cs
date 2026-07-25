@@ -36,6 +36,8 @@ public static class LicenseSigningPayload
     {
         // sorted by key at build time, so the order fields are listed here never
         // affects the output (safe to reorder or reformat this initializer)
+        //
+        // there is exactly one payload shape: LicenseVersion never selects the field set
         var fields = new SortedDictionary<string, string>(StringComparer.Ordinal)
         {
             ["product"] = Str(lic.Product),
@@ -52,6 +54,7 @@ public static class LicenseSigningPayload
             ["expiresAt"] = NullableStr(lic.ExpiresAt),
             ["sourceLicense"] = lic.SourceLicense ? "true" : "false",
             ["channel"] = Str(lic.Channel),
+            ["initVersion"] = NullableStr(Normalize(lic.InitVersion)),
         };
 
         var sb = new StringBuilder(256);
@@ -80,6 +83,12 @@ public static class LicenseSigningPayload
     /// "null" or the escaped string.
     /// </summary>
     private static string NullableStr(string? value) => value is null ? "null" : Str(value);
+
+
+    /// <summary>
+    /// Collapses a blank optional value to null, so "" and null sign identically.
+    /// </summary>
+    private static string? Normalize(string? value) => string.IsNullOrWhiteSpace(value) ? null : value;
 
 
     /// <summary>
