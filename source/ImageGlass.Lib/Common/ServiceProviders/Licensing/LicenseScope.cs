@@ -87,8 +87,11 @@ public static class LicenseScope
     /// </summary>
     private static bool IsScopeExempt()
     {
-        // the Microsoft Store grant covers every release, so the Store build opts out here
-        return false;
+        // a store grant covers every release, so a store build opts out of the scope check
+        var provider = Core.StoreEntitlementProvider;
+        if (provider is null) return false;
+
+        return provider.IsStoreEntitled;
     }
 
 

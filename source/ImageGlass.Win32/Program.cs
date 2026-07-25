@@ -38,6 +38,10 @@ sealed class Program
         StartupTrace.Mark("Main:start");
         Core.BuildInfo = new AppBuildInfo();
 
+        // must precede InitializeAppInstance: the license is resolved in there, before the
+        // providers below are installed
+        Core.StoreEntitlementProvider = new Win32StoreEntitlementProvider();
+
         var isHandled = App.InitializeAppInstance(args, () =>
         {
             // initialize service providers

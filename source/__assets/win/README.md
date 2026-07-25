@@ -89,3 +89,16 @@ a trust chain) but **not** package-signed — only the `.msixbundle` itself is s
   a warning). Sign it before publishing — an unsigned MSIX cannot be installed.
 - **Faster iteration.** Pass `-SkipPublish` to reuse an existing
   `__artifacts/publish/win-<arch>` instead of re-publishing.
+- **The msstore identity IS the Pro entitlement.** `Win32AppIdentity.IsMsStorePackage` requires the
+  running package's Identity Name to equal `-MsStoreIdentityName` **and** its publisher id to equal
+  the hash of `-MsStorePublisher`, and `Win32StoreEntitlementProvider` treats that as proof of a Pro
+  purchase. So changing either parameter silently turns Pro off for every Store customer; update
+  `MSSTORE_IDENTITY_NAME` / `MSSTORE_PUBLISHER_ID` in the same commit
+  ([`Win32AppIdentity.cs`](../../ImageGlass.Win32/Common/WinAPI/Win32AppIdentity.cs)). The publisher
+  id is the first 8 bytes of the SHA-256 of the publisher DN in UTF-16LE, base32-encoded; it is the
+  trailing segment of a package full name, so the simplest way to re-derive it is to read it off an
+  installed package.
+  This works only while the Store listing stays a **paid app with a time-limited trial**:
+  Windows refuses to launch it once the trial lapses, which is what makes "the process is
+  running" equivalent to "the customer is licensed". If the listing ever becomes free, or gains
+  an unlimited trial, that shortcut has to be replaced with a live Store license query.

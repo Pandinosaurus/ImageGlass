@@ -115,6 +115,16 @@ public static class Core
 
 
     /// <summary>
+    /// Provides the Pro entitlement granted by the platform app store this build came from, e.g.
+    /// the Microsoft Store. <c>null</c> for a self-distributed build, which is every platform that
+    /// has no store channel yet. Must be registered before
+    /// <see cref="App.InitializeAppInstance"/>, because the license is resolved there, before the
+    /// other service providers are installed.
+    /// </summary>
+    public static IStoreEntitlementProvider? StoreEntitlementProvider { get; set; } = null;
+
+
+    /// <summary>
     /// Provides a singleton instance to access app APIs.
     /// </summary>
     public static AppAPIProvider API { get; set; } = null!;

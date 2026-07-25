@@ -27,14 +27,11 @@ namespace ImageGlass.Common.Types;
 /// </summary>
 public static class Const
 {
-    public const int MENU_ICON_HEIGHT = 24;
     public const int TOOLBAR_ICON_HEIGHT = 24;
-    public const int THUMBNAIL_HEIGHT = 70;
     public const string CONFIG_CMD_PREFIX = "-p:";
     public const string DATETIME_FORMAT = "yyyy/MM/dd HH:mm:ss";
     public const string DATE_FORMAT = "yyyy/MM/dd";
     public const string APP_PROTOCOL = "imageglass";
-    public const string MS_APPSTORE_ID = "9N33VZK3C7TH";
 
     public static readonly string SIGN_POSITIVE = NumberFormatInfo.CurrentInfo.PositiveSign;
     public static readonly string SIGN_NEGATIVE = NumberFormatInfo.CurrentInfo.NegativeSign;
@@ -88,6 +85,7 @@ public static class Const
         OSType.Windows => "Cascadia Code, Cascadia Mono, Consolas, Courier New, monospace",
         _ => "DejaVu Sans Mono, Liberation Mono, Noto Sans Mono, monospace",
     };
+
 
     /// <summary>
     /// On macOS the bundled Inter font renders larger than the native system font,
