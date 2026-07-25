@@ -194,7 +194,7 @@ public partial class BHelper
         var osArch = Environment.Is64BitOperatingSystem ? "64-bit" : "32-bit";
 
         var details = $"""
-            Version: {BHelper.AppDisplayName} v{Core.BuildInfo.AppVersion}
+            Version: {BHelper.AppDisplayName} v{Core.BuildInfo.FullVersion}
             Magick.NET: {MagickNET.Version}
             Runtime: .NET {Environment.Version}
             OS: {OS} {Environment.OSVersion.VersionString} {osArch}
@@ -220,7 +220,7 @@ public partial class BHelper
         var osArch = Environment.Is64BitOperatingSystem ? "64-bit" : "32-bit";
 
         var debugInfo = $"""
-            {BHelper.AppDisplayName} {Core.BuildInfo.AppVersion}
+            {BHelper.AppDisplayName} {Core.BuildInfo.FullVersion}
             {MagickNET.Version}
             {OS} {osArch} {Environment.OSVersion.Version}, .NET {Environment.Version}
             """;

@@ -141,7 +141,7 @@ public partial class AboutWindow : DialogWindow
         var dotnetVersion = RuntimeInformation.FrameworkDescription;
 
         _lblVersion.Text = $"""
-            {Core.Lang[LangId._AboutVersion]} {Core.BuildInfo.AppVersion}
+            {Core.Lang[LangId._AboutVersion]} {Core.BuildInfo.FullVersion}
             {magickVersion}
             {dotnetVersion}
             """;

@@ -481,7 +481,7 @@ public partial class BHelper
             {
                 var ub = new UriBuilder(uri);
                 var queries = HttpUtility.ParseQueryString(ub.Query);
-                queries["utm_source"] = $"app_{Core.BuildInfo.AppVersion}";
+                queries["utm_source"] = $"app_{Core.BuildInfo.FullVersion}";
                 queries["utm_medium"] = "app_click";
                 queries["utm_campaign"] = campaign;
 

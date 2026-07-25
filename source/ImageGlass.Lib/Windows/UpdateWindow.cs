@@ -47,7 +47,7 @@ public partial class UpdateWindow : ModalWindow
     {
         ShowInTaskbar = true;
         Title = Core.Lang[LangId._CheckForUpdate];
-        Description = Core.Lang[LangId.Menu_MnuCheckForUpdate_CurrentVersion, Core.BuildInfo.AppVersion];
+        Description = Core.Lang[LangId.Menu_MnuCheckForUpdate_CurrentVersion, Core.BuildInfo.Version];
     }
 
 
@@ -259,7 +259,7 @@ public partial class UpdateWindow : ModalWindow
         if (result.Status == UpdateCheckStatus.UpdateAvailable && release is not null)
         {
             Heading = Core.Lang[LangId.Menu_MnuCheckForUpdate_NewVersion];
-            Description = Core.Lang[LangId.Menu_MnuCheckForUpdate_CurrentVersion, Core.BuildInfo.AppVersion];
+            Description = Core.Lang[LangId.Menu_MnuCheckForUpdate_CurrentVersion, Core.BuildInfo.Version];
             ModalExtraContent = CreateReleaseCard(release);
 
             // "Skip this version" link + [Update] [Close]
@@ -278,7 +278,7 @@ public partial class UpdateWindow : ModalWindow
         {
             // NoUpdate: always show the latest release info when we have it
             Heading = Core.Lang[LangId.Menu_MnuCheckForUpdate_NoUpdate];
-            Description = Core.Lang[LangId.Menu_MnuCheckForUpdate_CurrentVersion, Core.BuildInfo.AppVersion];
+            Description = Core.Lang[LangId.Menu_MnuCheckForUpdate_CurrentVersion, Core.BuildInfo.Version];
 
             if (release is not null)
             {

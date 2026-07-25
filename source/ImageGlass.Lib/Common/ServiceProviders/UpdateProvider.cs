@@ -114,7 +114,7 @@ public sealed class UpdateProvider
         }
 
         // version comparison - already up-to-date, but keep the release so UI can show its info
-        if (CompareVersions(Core.BuildInfo.AppVersion, release.Version) <= 0)
+        if (CompareVersions(Core.BuildInfo.Version, release.Version) <= 0)
         {
             return UpdateCheckResult.NoUpdate(release);
         }
@@ -177,9 +177,9 @@ public sealed class UpdateProvider
     /// <summary>
     /// Compares two version strings. Returns positive if remote is newer, 0 if equal, negative if older.
     /// </summary>
-    internal static int CompareVersions(string currentFullVersion, string remoteVersion)
+    internal static int CompareVersions(string currentVersion, string remoteVersion)
     {
-        var currentNumeric = currentFullVersion.Split('-')[0];
+        var currentNumeric = currentVersion.Split('-')[0];
         var remoteNumeric = remoteVersion.Split('-')[0];
 
         var current = Version.Parse(currentNumeric);
@@ -196,7 +196,7 @@ public sealed class UpdateProvider
             Timeout = UpdateConstants.MetadataTimeout,
         };
 
-        client.DefaultRequestHeaders.UserAgent.ParseAdd($"ImageGlass/{Core.BuildInfo?.AppVersion ?? "10.0.0.0"}");
+        client.DefaultRequestHeaders.UserAgent.ParseAdd($"ImageGlass/{Core.BuildInfo?.FullVersion ?? "10.0.0.0"}");
 
         return client;
     }
