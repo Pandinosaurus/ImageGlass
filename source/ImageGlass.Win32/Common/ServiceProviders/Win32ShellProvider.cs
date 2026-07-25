@@ -341,6 +341,12 @@ public class Win32ShellProvider : PhDisposable, IShellProvider
     /// <summary>
     /// <inheritdoc/>
     /// </summary>
+    public bool IsPackagedApp => Win32AppIdentity.IsPackaged;
+
+
+    /// <summary>
+    /// <inheritdoc/>
+    /// </summary>
     public string GetActualConfigDirPath(string localAppDataPath)
     {
         if (string.IsNullOrEmpty(localAppDataPath)) return localAppDataPath;

@@ -168,7 +168,7 @@
             </StackPanel>
 
 
-            <!--  Step 3: Default photo viewer (Windows only)  -->
+            <!--  Step 3: Default photo viewer (unpackaged Windows only)  -->
             <StackPanel
                 x:Name="PART_Step3"
                 HorizontalAlignment="Center"

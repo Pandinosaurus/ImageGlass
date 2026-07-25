@@ -68,7 +68,7 @@ public partial class QuickSetupView : PhControl
 
 
     /// <summary>
-    /// Gets the total number of steps (3 on Windows, 2 elsewhere).
+    /// Gets the total number of steps (3 on unpackaged Windows, 2 otherwise).
     /// </summary>
     public int StepCount => _stepPanels.Count;
 
@@ -91,6 +91,15 @@ public partial class QuickSetupView : PhControl
     public bool IsProfessional { get; private set; }
 
 
+    /// <summary>
+    /// Whether the "Default photo viewer" step applies. An MSIX package registers its file
+    /// associations through the installer, so the step is dropped for packaged builds.
+    /// </summary>
+    private static bool IsDefaultViewerStepSupported
+        => Core.ShellProvider?.IsPackagedApp != true
+        && Core.ShellProvider?.IsDefaultViewerConfigurable != false;
+
+
 
     public QuickSetupView()
     {
@@ -98,9 +107,9 @@ public partial class QuickSetupView : PhControl
 
         _loadLangAction = () => _ = LoadSelectedLanguageAsync();
 
-        // step 3 (default viewer): Windows only, and only when associations are configurable
+        // step 3 (default viewer): Windows only, unpackaged, and only when associations are configurable
         _stepPanels = [PART_Step1, PART_Step2];
-        if (BHelper.OS == OSType.Windows && Core.ShellProvider?.IsDefaultViewerConfigurable != false)
+        if (BHelper.OS == OSType.Windows && IsDefaultViewerStepSupported)
         {
             _stepPanels.Add(PART_Step3);
         }

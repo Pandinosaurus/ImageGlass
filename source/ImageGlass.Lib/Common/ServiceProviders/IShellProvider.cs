@@ -117,6 +117,13 @@ public interface IShellProvider : IDisposable
 
 
     /// <summary>
+    /// Whether the app runs from a packaged install (Windows MSIX), where the installer/OS owns
+    /// file associations. Default (non-Windows / unpackaged): <c>false</c>.
+    /// </summary>
+    bool IsPackagedApp => false;
+
+
+    /// <summary>
     /// Resolves a config dir path to where this process physically reads/writes it. On a
     /// packaged (MSIX) Windows build, per-package write virtualization may redirect the content to
     /// the package container; returns that real path when it exists. Default (non-Windows /
