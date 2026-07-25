@@ -228,6 +228,13 @@ public static class Core
 
 
     /// <summary>
+    /// A signature-verified license that does not cover this app version, or null. Kept so the
+    /// upgrade prompt can name the license the user already owns instead of pitching generically.
+    /// </summary>
+    public static LicenseInfo? OutOfScopeLicense { get; set; }
+
+
+    /// <summary>
     /// Whether Pro features are unlocked (a valid license is active).
     /// </summary>
     public static bool IsProEnabled => AppLicense is not null;

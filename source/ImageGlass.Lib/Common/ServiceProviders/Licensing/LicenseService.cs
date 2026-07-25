@@ -59,8 +59,14 @@ public static class LicenseService
     /// Finds the active license: install folder first, then the config folder. Returns the
     /// license that should enable Pro, or null to run as Classic. Never throws.
     /// </summary>
-    public static LicenseInfo? LoadActive()
+    /// <param name="outOfScopeLicense">
+    /// The first authentic license that does not cover this app version, so the caller can
+    /// name it in the upgrade prompt. Null when there is none.
+    /// </param>
+    public static LicenseInfo? LoadActive(out LicenseInfo? outOfScopeLicense)
     {
+        outOfScopeLicense = null;
+
         try
         {
             // install folder wins, so a machine-wide deployed license takes precedence
@@ -83,7 +89,21 @@ public static class LicenseService
 
                 foreach (var path in files)
                 {
-                    if (TryVerify(path, out var lic) && IsWithinValidity(lic)) return lic;
+                    var isAuthentic = TryVerify(path, out var lic);
+                    if (!isAuthentic) continue;
+
+                    var isWithinValidity = IsWithinValidity(lic);
+                    if (!isWithinValidity) continue;
+
+                    // authentic and current, but bought for another version line
+                    var coversThisApp = LicenseScope.CoversRunningApp(lic);
+                    if (!coversThisApp)
+                    {
+                        outOfScopeLicense ??= lic;
+                        continue;
+                    }
+
+                    return lic;
                 }
             }
         }

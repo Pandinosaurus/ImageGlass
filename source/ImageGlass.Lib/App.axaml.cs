@@ -336,7 +336,8 @@ public partial class App : Application
         Core.Args = Environment.GetCommandLineArgs();
 
         // verify the Pro license before config (config-independent; admin locks need it)
-        Core.AppLicense = LicenseService.LoadActive();
+        Core.AppLicense = LicenseService.LoadActive(out var outOfScopeLicense);
+        Core.OutOfScopeLicense = outOfScopeLicense;
         StartupTrace.Mark("InitInstance:licenseLoaded");
 
         Core.Config = Config.Load(Config.CONFIG_USER, Core.Args);
