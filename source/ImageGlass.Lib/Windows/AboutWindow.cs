@@ -37,6 +37,7 @@ public partial class AboutWindow : DialogWindow
 {
     private Image _imgLogo = null!;
     private TextBlock _lblSlogan = null!;
+    private PhButton _btnEdition = null!;
     private SelectableTextBlock _lblVersion = null!;
     private SelectableTextBlock _lblCopyright = null!;
     private TextBlock _lblCredits = null!;
@@ -126,6 +127,11 @@ public partial class AboutWindow : DialogWindow
         _btnDonate.Text = "❤️ " + Core.Lang[LangId._Donate];
         _btnCheckForUpdate.Text = Core.Lang[LangId._CheckForUpdate];
 
+        // the edition name is not translatable, but the tooltip says what clicking it does
+        ToolTip.SetTip(_btnEdition, Core.Lang[Core.IsProEnabled
+            ? LangId.Menu_MnuManageLicense
+            : LangId.Menu_MnuUpgradeLicense]);
+
         UpdateVersionText();
     }
 
@@ -185,7 +191,11 @@ public partial class AboutWindow : DialogWindow
         };
 
 
-        // 4. Version info
+        // 4. Edition chip
+        _btnEdition = CreateEditionChip();
+
+
+        // 5. Version info
         _lblVersion = new SelectableTextBlock
         {
             FontSize = Const.FONT_SIZE_SMALL,
@@ -203,7 +213,7 @@ public partial class AboutWindow : DialogWindow
         };
 
 
-        // 5. Link buttons (Website, GitHub, EULA, Privacy)
+        // 6. Link buttons (Website, GitHub, EULA, Privacy)
         _btnWebsite = CreateLinkButton(() => _ = BHelper.OpenUrlAsync(this, "https://imageglass.org", "from_about"));
         _btnGitHub = CreateLinkButton(() => _ = BHelper.OpenUrlAsync(this, "https://github.com/d2phap/ImageGlass", "from_about"));
         _btnEula = CreateLinkButton(() => _ = BHelper.OpenUrlAsync(this, "https://imageglass.org/license", "from_about"));
@@ -216,7 +226,7 @@ public partial class AboutWindow : DialogWindow
         linksPanel.Children.AddRange([_btnWebsite, _btnGitHub, _btnEula, _btnPrivacy]);
 
 
-        // 6. Copyright
+        // 7. Copyright
         _lblCopyright = new SelectableTextBlock
         {
             Text = $"Copyright © 2010-{DateTime.UtcNow.Year} Dương Diệu Pháp",
@@ -235,12 +245,13 @@ public partial class AboutWindow : DialogWindow
         };
 
 
-        // 7. Credits
+        // 8. Credits
         _lblCredits = new TextBlock
         {
             Margin = new Thickness(0, 0, 0, 4),
             HorizontalAlignment = HorizontalAlignment.Center,
             TextAlignment = Avalonia.Media.TextAlignment.Center,
+            FontWeight = Avalonia.Media.FontWeight.SemiBold,
         };
 
         var lblDetails = new Border
@@ -266,7 +277,7 @@ public partial class AboutWindow : DialogWindow
         };
 
 
-        // 8. Root layout
+        // 9. Root layout
         var root = new StackPanel
         {
             Orientation = Orientation.Vertical,
@@ -278,6 +289,7 @@ public partial class AboutWindow : DialogWindow
             _imgLogo,
             lblAppName,
             _lblSlogan,
+            _btnEdition,
             _lblVersion,
             separator1,
             linksPanel,
@@ -288,7 +300,7 @@ public partial class AboutWindow : DialogWindow
         ]);
 
 
-        // 8. Footer left content: Donate + Check for Update
+        // 10. Footer left content: Donate + Check for Update
         _btnDonate = new PhButton
         {
             MinWidth = 80,
@@ -325,6 +337,52 @@ public partial class AboutWindow : DialogWindow
         footerLeftPanel.Children.AddRange([_btnDonate, _btnCheckForUpdate]);
 
         return footerLeftPanel;
+    }
+
+
+    /// <summary>
+    /// Creates the edition chip shown under the slogan: a filled accent pill for Pro, a plain one
+    /// for Classic. Clicking it opens the license window.
+    /// </summary>
+    private PhButton CreateEditionChip()
+    {
+        var isPro = Core.IsProEnabled;
+
+        var btn = new PhButton
+        {
+            // "Classic" and "Pro" are edition names, not translatable copy
+            Text = isPro ? "Pro" : "Classic",
+            Variant = isPro ? PhButtonVariant.Accent : PhButtonVariant.Outline,
+            FontSize = Const.FONT_SIZE_SMALL,
+            FontWeight = Avalonia.Media.FontWeight.SemiBold,
+            MinWidth = 0,
+            Padding = new Thickness(14, 2),
+            CornerRadius = new CornerRadius(20),
+            HorizontalAlignment = HorizontalAlignment.Center,
+            Margin = new Thickness(0, 10, 0, 0),
+            Cursor = new Avalonia.Input.Cursor(Avalonia.Input.StandardCursorType.Hand),
+        };
+
+        // the accent variant fills the background but leaves the text colour alone
+        if (isPro)
+        {
+            btn[!PhButton.ForegroundProperty] = Resx.CreateBinding(ResxId.AccentButtonForeground);
+        }
+
+        // owned by this dialog, not the main window, so it stacks on top of the modal About
+        btn.Click += async (_, _) =>
+        {
+            try
+            {
+                _ = await new ManageLicenseWindow().ShowAsync(this);
+            }
+            catch
+            {
+                // an async void handler must never reach the unhandled-error dialog
+            }
+        };
+
+        return btn;
     }
 
 
