@@ -32,9 +32,9 @@ using System.Threading.Tasks;
 
 namespace ImageGlass.Common.Windows;
 
-public partial class UpgradeToProView : PhControl
+public partial class ManageLicenseView : PhControl
 {
-    public UpgradeToProView()
+    public ManageLicenseView()
     {
         InitializeComponent();
 
@@ -46,6 +46,7 @@ public partial class UpgradeToProView : PhControl
         if (isPro) FillLicenseInfo();
         else ShowOutOfScopeNoticeIfAny();
 
+        PART_BtnPlan.Click += (_, _) => OpenUrl("https://imageglass.org/license");
         PART_BtnCompare.Click += (_, _) => OpenUrl("https://imageglass.org/pricing#comparison");
         PART_BtnBuyOnline.Click += (_, _) => OpenUrl("https://imageglass.org/pricing");
         PART_BtnImportLicense.Click += async (_, _) => await ImportLicenseAsync();
@@ -74,9 +75,9 @@ public partial class UpgradeToProView : PhControl
         else ShowOutOfScopeNoticeIfAny();
 
         PART_LblHeading.Text = Core.Lang[Core.IsProEnabled
-            ? LangId.Menu_MnuManageProLicense
-            : LangId.Menu_MnuUpgradeToPro];
-        PART_BtnCompare.Text = Core.Lang[LangId.Menu_MnuUpgradeToPro_CompareFeatures];
+            ? LangId.Menu_MnuManageLicense
+            : LangId.Menu_MnuUpgradeLicense];
+        PART_BtnCompare.Text = Core.Lang[LangId.Menu_MnuUpgradeLicense_CompareFeatures];
     }
 
     #endregion // Overrides
@@ -95,10 +96,10 @@ public partial class UpgradeToProView : PhControl
         PART_ValLicensedTo.Text = isStoreBuild ? string.Empty : lic?.CustomerName ?? string.Empty;
         PART_ValLicenseId.Text = isStoreBuild ? string.Empty : lic?.LicenseId ?? string.Empty;
 
-        PART_ValPlan.Text = lic?.Plan ?? string.Empty;
+        PART_BtnPlan.Text = lic?.Plan ?? string.Empty;
         PART_ValSeats.Text = (lic?.SeatCount ?? 1).ToString();
         PART_ValExpires.Text = string.IsNullOrEmpty(lic?.ExpiresAt)
-            ? Core.Lang[LangId.Menu_MnuManageProLicense_Perpetual]
+            ? Core.Lang[LangId.Menu_MnuManageLicense_Perpetual]
             : FormatDate(lic.ExpiresAt);
         PART_ValSource.Text = isStoreBuild
             ? LicenseService.GetChannelDisplayName(Core.StoreEntitlementProvider?.ChannelId)
@@ -126,7 +127,6 @@ public partial class UpgradeToProView : PhControl
         (PhTextBlock Label, SelectableTextBlock Value)[] rows =
         [
             (PART_LblLicensedTo, PART_ValLicensedTo),
-            (PART_LblPlan, PART_ValPlan),
             (PART_LblSeats, PART_ValSeats),
             (PART_LblExpires, PART_ValExpires),
             (PART_LblLicenseId, PART_ValLicenseId),
@@ -148,7 +148,7 @@ public partial class UpgradeToProView : PhControl
         var lic = Core.OutOfScopeLicense;
         if (lic is null) return;
 
-        PART_LblOutOfScope.Text = Core.Lang[LangId.Menu_MnuUpgradeToPro_OutOfScope,
+        PART_LblOutOfScope.Text = Core.Lang[LangId.Menu_MnuUpgradeLicense_OutOfScope,
             lic.Plan, lic.VersionScope, LicenseScope.GetRunningAppMajorText()];
         PART_LblOutOfScope.IsVisible = true;
         PART_LblDescription.IsVisible = false;
@@ -162,23 +162,25 @@ public partial class UpgradeToProView : PhControl
     }
 
 
-    // pick a license file, verify its signature, install it and offer a restart
+    /// <summary>
+    /// Pick a license file, verify its signature, install it and offer a restart.
+    /// </summary>
     private async Task ImportLicenseAsync()
     {
         var topLevel = TopLevel.GetTopLevel(this);
         if (topLevel is null) return;
 
         var owner = topLevel as PhWindow;
-        var heading = Core.Lang[Core.IsProEnabled
-            ? LangId.Menu_MnuManageProLicense
-            : LangId.Menu_MnuUpgradeToPro];
+        var title = Core.Lang[Core.IsProEnabled
+            ? LangId.Menu_MnuManageLicense
+            : LangId.Menu_MnuUpgradeLicense];
 
         var files = await topLevel.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
         {
             AllowMultiple = false,
             FileTypeFilter =
             [
-                new FilePickerFileType(Core.Lang[LangId.Menu_MnuManageProLicense_LicenseFileType])
+                new FilePickerFileType(Core.Lang[LangId.Menu_MnuManageLicense_LicenseFileType])
                 {
                     Patterns = ["*" + LicenseService.LICENSE_FILE_EXTENSION],
                 },
@@ -189,16 +191,16 @@ public partial class UpgradeToProView : PhControl
         if (string.IsNullOrEmpty(path)) return;
 
         // the signature is the source of truth; reject anything that doesn't verify
-        if (!LicenseService.TryVerify(path, out var lic))
+        if (!LicenseService.TryVerify(path, out var lic, out var errorCode))
         {
-            await ShowError(owner, heading, LangId.Menu_MnuManageProLicense_ImportFailed);
+            await ShowError(owner, title, LangId.Menu_MnuManageLicense_ImportFailed, path, errorCode);
             return;
         }
 
         // authentic but out of validity (expired past grace) can't activate Pro
         if (!LicenseService.IsWithinValidity(lic))
         {
-            await ShowError(owner, heading, LangId.Menu_MnuManageProLicense_ImportExpired);
+            await ShowError(owner, title, LangId.Menu_MnuManageLicense_ImportExpired, path);
             return;
         }
 
@@ -213,30 +215,31 @@ public partial class UpgradeToProView : PhControl
         }
         catch
         {
-            await ShowError(owner, heading, LangId.Menu_MnuManageProLicense_ImportFailed);
+            await ShowError(owner, title, LangId.Menu_MnuManageLicense_ImportFailed);
             return;
         }
 
         // the license only loads at startup, so offer to restart now
         var result = await ModalWindow.ShowInfoAsync(owner, new ModalWindowOptions
         {
-            Title = heading,
-            Heading = heading,
-            Description = Core.Lang[LangId.Menu_MnuManageProLicense_ImportSuccess],
+            Title = title,
+            Heading = Core.Lang[LangId.Menu_MnuManageLicense_ImportSuccess],
         }, ModalWindowButton.Yes_No);
 
         if (result.ExitCode == DialogExitCode.OK) BHelper.RestartApp();
     }
 
 
-    // save the bundled license so the user can import it on their macOS or Linux machine
+    /// <summary>
+    /// Save the bundled license so the user can import it on other installations.
+    /// </summary>
     private async Task ExportLicenseAsync()
     {
         var topLevel = TopLevel.GetTopLevel(this);
         if (topLevel is null) return;
 
         var owner = topLevel as PhWindow;
-        var heading = Core.Lang[LangId.Menu_MnuManageProLicense];
+        var title = Core.Lang[LangId.Menu_MnuManageLicense_ExportLicense];
 
         // the licensing UI must never raise the unhandled-error dialog, so nothing may escape here
         try
@@ -245,7 +248,7 @@ public partial class UpgradeToProView : PhControl
             var canExport = LicenseService.TryGetExportableLicense(out var sourcePath, out var lic);
             if (!canExport)
             {
-                await ShowError(owner, heading, LangId.Menu_MnuManageProLicense_ExportFailed);
+                await ShowError(owner, title, LangId.Menu_MnuManageLicense_ExportFailed);
                 return;
             }
 
@@ -256,9 +259,9 @@ public partial class UpgradeToProView : PhControl
                 DefaultExtension = LicenseService.LICENSE_FILE_EXTENSION.TrimStart('.'),
                 FileTypeChoices =
                 [
-                    new FilePickerFileType(Core.Lang[LangId.Menu_MnuManageProLicense_LicenseFileType])
+                    new FilePickerFileType(Core.Lang[LangId.Menu_MnuManageLicense_LicenseFileType])
                     {
-                        Patterns = ["*" + LicenseService.LICENSE_FILE_EXTENSION],
+                        Patterns = [LicenseService.LICENSE_FILE_EXTENSION],
                     },
                 ],
             });
@@ -275,26 +278,25 @@ public partial class UpgradeToProView : PhControl
 
             await ModalWindow.ShowInfoAsync(owner, new ModalWindowOptions
             {
-                Title = heading,
-                Heading = heading,
-                Description = Core.Lang[LangId.Menu_MnuManageProLicense_ExportSuccess],
+                Title = title,
+                Heading = Core.Lang[LangId.Menu_MnuManageLicense_ExportSuccess],
+                Description = file.TryGetLocalPath(),
             });
         }
         catch (Exception ex)
         {
-            // show what actually went wrong; a generic apology is not debuggable
-            await ShowError(owner, heading, LangId.Menu_MnuManageProLicense_ExportFailed, ex.ToString());
+            await ShowError(owner, title, LangId.Menu_MnuManageLicense_ExportFailed, ex.Message, ex.ToString());
         }
     }
 
 
-    private static async Task ShowError(PhWindow? owner, string heading, LangId messageKey, string? details = null)
+    private static async Task ShowError(PhWindow? owner, string title, LangId messageKey, string? description = null, string? details = null)
     {
         await ModalWindow.ShowErrorAsync(owner, new ModalWindowOptions
         {
-            Title = heading,
-            Heading = heading,
-            Description = Core.Lang[messageKey],
+            Title = title,
+            Heading = Core.Lang[messageKey],
+            Description = description,
             Details = details,
         });
     }

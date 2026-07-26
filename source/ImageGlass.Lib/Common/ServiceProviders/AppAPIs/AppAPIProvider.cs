@@ -3108,7 +3108,7 @@ public partial class AppAPIProvider
     /// </summary>
     public static async Task IG_ManageLicenseAsync()
     {
-        var dialog = new UpgradeToProWindow();
+        var dialog = new ManageLicenseWindow();
         _ = await dialog.ShowAsync(App.MainWindow);
     }
 

@@ -110,7 +110,7 @@ public static class LicenseService
 
                 foreach (var path in files)
                 {
-                    var isAuthentic = TryVerify(path, out var lic);
+                    var isAuthentic = TryVerify(path, out var lic, out _);
                     if (!isAuthentic) continue;
 
                     var isWithinValidity = IsWithinValidity(lic);
@@ -242,7 +242,7 @@ public static class LicenseService
 
         foreach (var path in files)
         {
-            var isAuthentic = TryVerify(path, out var lic);
+            var isAuthentic = TryVerify(path, out var lic, out _);
             if (!isAuthentic) continue;
 
             var isWithinValidity = IsWithinValidity(lic);
@@ -285,34 +285,65 @@ public static class LicenseService
     /// <summary>
     /// Parses and verifies a license file's signature. Ignores expiry (see <see cref="IsWithinValidity"/>).
     /// </summary>
-    public static bool TryVerify(string filePath, out LicenseInfo license)
+    public static bool TryVerify(string filePath, out LicenseInfo license, out string errorCode)
     {
         license = null!;
+        errorCode = string.Empty;
 
         try
         {
-            if (!File.Exists(filePath)) return false;
+            if (!File.Exists(filePath))
+            {
+                errorCode = "IGE_FILE_NOT_FOUND";
+                return false;
+            }
 
             var lic = BHelper.ReadJsonFromFile(filePath, LicenseJsonContext.Default.LicenseInfo);
-            if (lic is null) return false;
-            if (!string.Equals(lic.Product, PRODUCT_NAME, StringComparison.Ordinal)) return false;
-            if (string.IsNullOrEmpty(lic.KeyId) || string.IsNullOrEmpty(lic.Signature)) return false;
+            if (lic is null)
+            {
+                errorCode = "IGE_INVALID_JSON";
+                return false;
+            }
+
+            if (!string.Equals(lic.Product, PRODUCT_NAME, StringComparison.Ordinal))
+            {
+                errorCode = "IGE_INVALID_PRODUCT_NAME";
+                return false;
+            }
+            if (string.IsNullOrEmpty(lic.KeyId) || string.IsNullOrEmpty(lic.Signature))
+            {
+                errorCode = "IGE_INVALID_SIGNATURE";
+                return false;
+            }
 
             var pem = GetPublicKeyPem(lic.KeyId);
-            if (pem is null) return false;
+            if (pem is null)
+            {
+                errorCode = "IGE_INVALID_SIGNATURE";
+                return false;
+            }
 
             byte[] signature;
             try { signature = Convert.FromBase64String(lic.Signature); }
-            catch { return false; }
+            catch
+            {
+                errorCode = "IGE_INVALID_SIGNATURE";
+                return false;
+            }
 
             var payload = Encoding.UTF8.GetBytes(LicenseSigningPayload.Build(lic));
-            if (!LicenseVerifier.Verify(payload, signature, pem)) return false;
+            if (!LicenseVerifier.Verify(payload, signature, pem))
+            {
+                errorCode = "IGE_INVALID_SIGNATURE";
+                return false;
+            }
 
             license = lic;
             return true;
         }
         catch
         {
+            errorCode = "IGE_INVALID_FILE";
             return false;
         }
     }

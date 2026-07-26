@@ -212,9 +212,9 @@ public partial class App : Application
 
     private void AppMenuAbout_Click(object? sender, EventArgs e) => RunAppMenuAction(LangId.Menu_MnuAbout);
 
-    private void AppMenuUpgradeToPro_Click(object? sender, EventArgs e) => RunAppMenuAction(LangId.Menu_MnuUpgradeToPro);
+    private void AppMenuUpgradeLicense_Click(object? sender, EventArgs e) => RunAppMenuAction(LangId.Menu_MnuUpgradeLicense);
 
-    private void AppMenuManageProLicense_Click(object? sender, EventArgs e) => RunAppMenuAction(LangId.Menu_MnuManageProLicense);
+    private void AppMenuManageLicense_Click(object? sender, EventArgs e) => RunAppMenuAction(LangId.Menu_MnuManageLicense);
 
     private void AppMenuSettings_Click(object? sender, EventArgs e) => RunAppMenuAction(LangId.Menu_MnuSettings);
 
@@ -250,8 +250,8 @@ public partial class App : Application
             }
 
             // show only the licensing item matching the current license state
-            if (langId == LangId.Menu_MnuUpgradeToPro) item.IsVisible = !Core.IsProEnabled;
-            else if (langId == LangId.Menu_MnuManageProLicense) item.IsVisible = Core.IsProEnabled;
+            if (langId == LangId.Menu_MnuUpgradeLicense) item.IsVisible = !Core.IsProEnabled;
+            else if (langId == LangId.Menu_MnuManageLicense) item.IsVisible = Core.IsProEnabled;
         }
     }
 

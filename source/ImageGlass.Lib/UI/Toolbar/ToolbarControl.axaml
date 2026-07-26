@@ -488,13 +488,13 @@
                             <!--  Help  -->
                             <ui:PhMenuItem LangKey="Menu_MnuHelp">
                                 <ui:PhMenuItem
-                                    x:Name="PART_MnuUpgradeToPro"
+                                    x:Name="PART_MnuUpgradeLicense"
                                     Click="MainMenuItem_Click"
-                                    LangKey="Menu_MnuUpgradeToPro" />
+                                    LangKey="Menu_MnuUpgradeLicense" />
                                 <ui:PhMenuItem
-                                    x:Name="PART_MnuManageProLicense"
+                                    x:Name="PART_MnuManageLicense"
                                     Click="MainMenuItem_Click"
-                                    LangKey="Menu_MnuManageProLicense" />
+                                    LangKey="Menu_MnuManageLicense" />
 
                                 <ui:PhMenuItem Header="-" />
 

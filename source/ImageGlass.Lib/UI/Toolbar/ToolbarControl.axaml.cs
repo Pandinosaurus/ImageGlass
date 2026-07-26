@@ -745,8 +745,8 @@ public partial class ToolbarControl : PhControl
             = hasMultiFrames;
 
         // Pro licensing: show exactly one item for the current license state
-        PART_MnuUpgradeToPro.IsVisible = !Core.IsProEnabled;
-        PART_MnuManageProLicense.IsVisible = Core.IsProEnabled;
+        PART_MnuUpgradeLicense.IsVisible = !Core.IsProEnabled;
+        PART_MnuManageLicense.IsVisible = Core.IsProEnabled;
     }
 
 

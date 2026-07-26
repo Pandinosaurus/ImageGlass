@@ -176,8 +176,8 @@ public partial class AppAPIProvider
 
         // Help
         new(LangId.Menu_MnuAbout,                        API.IG_OpenAboutWindow, Key.F1),
-        new(LangId.Menu_MnuUpgradeToPro,                 API.IG_ManageLicense),
-        new(LangId.Menu_MnuManageProLicense,             API.IG_ManageLicense),
+        new(LangId.Menu_MnuUpgradeLicense,                 API.IG_ManageLicense),
+        new(LangId.Menu_MnuManageLicense,             API.IG_ManageLicense),
         new(LangId._CheckForUpdate,                         API.IG_CheckForUpdate),
         new(LangId.Menu_MnuReportIssue,                  API.IG_ReportIssue),
         new(LangId.Menu_MnuQuickSetup,                   API.IG_QuickSetup),

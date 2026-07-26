@@ -808,32 +808,32 @@ public class Lang
         new(LangId.Menu_MnuHelp, "Help"), //v7.0
         new(LangId.Menu_MnuAbout, "About"), //v3.0
 
-        new(LangId.Menu_MnuUpgradeToPro, "Upgrade to ImageGlass Pro"), // v10.0
-        new(LangId.Menu_MnuUpgradeToPro_Description, "Get the most out of ImageGlass. Pro unlocks advanced tools, smoother workflows, and priority support."), // v10.0
-        new(LangId.Menu_MnuUpgradeToPro_ImportLicense, "Import license file…"), // v10.0
-        new(LangId.Menu_MnuUpgradeToPro_RetrieveFromEmail, "Retrieve from email…"), // v10.0
-        new(LangId.Menu_MnuUpgradeToPro_BuyOnline, "Buy online…"), // v10.0
-        new(LangId.Menu_MnuUpgradeToPro_CompareFeatures, "View Pro features"), // v10.0
-        new(LangId.Menu_MnuUpgradeToPro_OutOfScope, "Your {0} license covers ImageGlass {1}, not ImageGlass {2}. Upgrade your license to turn Pro back on."), // v10.0
+        new(LangId.Menu_MnuUpgradeLicense, "Upgrade to ImageGlass Pro"), // v10.0
+        new(LangId.Menu_MnuUpgradeLicense_Description, "Get the most out of ImageGlass. Pro unlocks advanced tools, smoother workflows, and priority support."), // v10.0
+        new(LangId.Menu_MnuUpgradeLicense_ImportLicense, "Import license file…"), // v10.0
+        new(LangId.Menu_MnuUpgradeLicense_RetrieveFromEmail, "Retrieve from email…"), // v10.0
+        new(LangId.Menu_MnuUpgradeLicense_BuyOnline, "Buy online…"), // v10.0
+        new(LangId.Menu_MnuUpgradeLicense_CompareFeatures, "View Pro features"), // v10.0
+        new(LangId.Menu_MnuUpgradeLicense_OutOfScope, "Your {0} license covers ImageGlass {1}, not ImageGlass {2}. Upgrade your license to turn Pro back on."), // v10.0
 
-        new(LangId.Menu_MnuManageProLicense, "Manage Pro license"), // v10.0
-        new(LangId.Menu_MnuManageProLicense_ChangeLicense, "Change license file…"), // v10.0
-        new(LangId.Menu_MnuManageProLicense_UpgradePlan, "Upgrade plan…"), // v10.0
-        new(LangId.Menu_MnuManageProLicense_LicensedTo, "Licensed to"), // v10.0
-        new(LangId.Menu_MnuManageProLicense_Plan, "Plan"), // v10.0
-        new(LangId.Menu_MnuManageProLicense_Seats, "Seats"), // v10.0
-        new(LangId.Menu_MnuManageProLicense_Expires, "Valid until"), // v10.0
-        new(LangId.Menu_MnuManageProLicense_Perpetual, "Perpetual license"), // v10.0
-        new(LangId.Menu_MnuManageProLicense_LicenseId, "License ID"), // v10.0
-        new(LangId.Menu_MnuManageProLicense_Source, "Purchased from"), // v10.0
-        new(LangId.Menu_MnuManageProLicense_ImportSuccess, "License imported successfully. Restart ImageGlass now?"), // v10.0
-        new(LangId.Menu_MnuManageProLicense_ImportFailed, "Could not read this license file. Please check the file and try again."), // v10.0
-        new(LangId.Menu_MnuManageProLicense_ImportExpired, "This license has expired and can no longer activate ImageGlass Pro."), // v10.0
-        new(LangId.Menu_MnuManageProLicense_LicenseFileType, "ImageGlass license file"), // v10.0
-        new(LangId.Menu_MnuManageProLicense_ExportLicense, "Export license to file…"), // v10.0
-        new(LangId.Menu_MnuManageProLicense_ExportNote, "Save a copy of your license file to unlock Pro in any other ImageGlass install, on this or another computer. It covers the ImageGlass version line you bought."), // v10.0
-        new(LangId.Menu_MnuManageProLicense_ExportSuccess, "License file saved."), // v10.0
-        new(LangId.Menu_MnuManageProLicense_ExportFailed, "Could not save the license file."), // v10.0
+        new(LangId.Menu_MnuManageLicense, "Manage ImageGlass license"), // v10.0
+        new(LangId.Menu_MnuManageLicense_ChangeLicense, "Change license file…"), // v10.0
+        new(LangId.Menu_MnuManageLicense_UpgradePlan, "Upgrade plan…"), // v10.0
+        new(LangId.Menu_MnuManageLicense_LicensedTo, "Licensed to"), // v10.0
+        new(LangId.Menu_MnuManageLicense_Plan, "Plan"), // v10.0
+        new(LangId.Menu_MnuManageLicense_Seats, "Seats"), // v10.0
+        new(LangId.Menu_MnuManageLicense_Expires, "Valid until"), // v10.0
+        new(LangId.Menu_MnuManageLicense_Perpetual, "Perpetual license"), // v10.0
+        new(LangId.Menu_MnuManageLicense_LicenseId, "License ID"), // v10.0
+        new(LangId.Menu_MnuManageLicense_Source, "Purchased from"), // v10.0
+        new(LangId.Menu_MnuManageLicense_ImportSuccess, "License imported successfully. Restart ImageGlass now?"), // v10.0
+        new(LangId.Menu_MnuManageLicense_ImportFailed, "Could not import this license file."), // v10.0
+        new(LangId.Menu_MnuManageLicense_ImportExpired, "This license has expired and can no longer activate ImageGlass Pro."), // v10.0
+        new(LangId.Menu_MnuManageLicense_LicenseFileType, "ImageGlass license file"), // v10.0
+        new(LangId.Menu_MnuManageLicense_ExportLicense, "Export license to file…"), // v10.0
+        new(LangId.Menu_MnuManageLicense_ExportNote, "Save a copy of your license file to unlock Pro in any other installations, on this or another computer. It covers the ImageGlass version line you bought."), // v10.0
+        new(LangId.Menu_MnuManageLicense_ExportSuccess, "License file saved."), // v10.0
+        new(LangId.Menu_MnuManageLicense_ExportFailed, "Could not save the license file."), // v10.0
 
         new(LangId.Menu_MnuQuickSetup, "Open ImageGlass Quick Setup"), //v9.0
         new(LangId.Menu_MnuReportIssue, "Report an issue…"), //v3.0

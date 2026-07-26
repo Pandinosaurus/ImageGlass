@@ -22,9 +22,13 @@ using ImageGlass.UI.Windowing;
 
 namespace ImageGlass.Common.Windows;
 
-public partial class UpgradeToProWindow : DialogWindow
+public partial class ManageLicenseWindow : DialogWindow
 {
-    public UpgradeToProWindow()
+    protected override int MIN_WIDTH => 500;
+    protected override Thickness ContentPadding => new(0);
+
+
+    public ManageLicenseWindow()
     {
         IsButton1Visible = true;
         IsButton2Visible = false;
@@ -36,12 +40,8 @@ public partial class UpgradeToProWindow : DialogWindow
         ShowInTaskbar = true;
 
         Title = "ImageGlass Pro";
-        DialogContent = new UpgradeToProView();
+        DialogContent = new ManageLicenseView();
     }
-
-
-    // the header bleeds to the content edges, so drop the base content padding
-    protected override Thickness ContentPadding => new(0);
 
 
     protected override void OnIgLanguageChanged()
@@ -50,4 +50,5 @@ public partial class UpgradeToProWindow : DialogWindow
 
         Button1Text = Core.Lang[LangId._Close];
     }
+
 }
