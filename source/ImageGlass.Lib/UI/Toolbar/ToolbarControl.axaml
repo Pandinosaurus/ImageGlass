@@ -502,23 +502,6 @@
                                 <ui:PhMenuItem Click="MainMenuItem_Click" LangKey="Menu_MnuQuickSetup" />
                                 <ui:PhMenuItem Click="MainMenuItem_Click" LangKey="Menu_MnuReportIssue" />
 
-                                <ui:PhMenuItem x:Name="PART_MnuDefaultViewerSeparator" Header="-" IsVisible="{OnPlatform False, Windows=True, x:TypeArguments=x:Boolean}" />
-
-                                <ui:PhMenuItem
-                                    x:Name="PART_MnuSetDefaultPhotoViewer"
-                                    Click="MainMenuItem_Click"
-                                    IsVisible="{OnPlatform False,
-                                                           Windows=True,
-                                                           x:TypeArguments=x:Boolean}"
-                                    LangKey="Menu_MnuSetDefaultPhotoViewer" />
-                                <ui:PhMenuItem
-                                    x:Name="PART_MnuRemoveDefaultPhotoViewer"
-                                    Click="MainMenuItem_Click"
-                                    IsVisible="{OnPlatform False,
-                                                           Windows=True,
-                                                           x:TypeArguments=x:Boolean}"
-                                    LangKey="Menu_MnuRemoveDefaultPhotoViewer" />
-
                                 <ui:PhMenuItem Header="-" />
 
                                 <ui:PhMenuItem Click="MainMenuItem_Click" LangKey="Menu_MnuAbout" />

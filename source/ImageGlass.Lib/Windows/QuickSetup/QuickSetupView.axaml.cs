@@ -30,7 +30,6 @@ using ImageGlass.Common;
 using ImageGlass.Common.AppThemes;
 using ImageGlass.Common.Extensions;
 using ImageGlass.Common.Localization;
-using ImageGlass.Common.ServiceProviders;
 using ImageGlass.Common.Types;
 using ImageGlass.UI;
 using System;
@@ -44,7 +43,7 @@ public partial class QuickSetupView : PhControl
 {
     private const string NEWS_URL = "https://imageglass.org/news";
 
-    private readonly List<StackPanel> _stepPanels;
+    private readonly List<Control> _stepPanels;
     private readonly List<Border> _dots = [];
 
     private bool _isPopulatingLangs;
@@ -68,7 +67,7 @@ public partial class QuickSetupView : PhControl
 
 
     /// <summary>
-    /// Gets the total number of steps (3 on unpackaged Windows, 2 otherwise).
+    /// Gets the total number of steps (3 on Classic, 2 on Pro).
     /// </summary>
     public int StepCount => _stepPanels.Count;
 
@@ -91,25 +90,15 @@ public partial class QuickSetupView : PhControl
     public bool IsProfessional { get; private set; }
 
 
-    /// <summary>
-    /// Whether the "Default photo viewer" step applies. An MSIX package registers its file
-    /// associations through the installer, so the step is dropped for packaged builds.
-    /// </summary>
-    private static bool IsDefaultViewerStepSupported
-        => Core.ShellProvider?.IsPackagedApp != true
-        && Core.ShellProvider?.IsDefaultViewerConfigurable != false;
-
-
-
     public QuickSetupView()
     {
         InitializeComponent();
 
         _loadLangAction = () => _ = LoadSelectedLanguageAsync();
 
-        // step 3 (default viewer): Windows only, unpackaged, and only when associations are configurable
+        // step 3 pitches Pro, so there is nothing to show once it is active
         _stepPanels = [PART_Step1, PART_Step2];
-        if (BHelper.OS == OSType.Windows && IsDefaultViewerStepSupported)
+        if (!Core.IsProEnabled)
         {
             _stepPanels.Add(PART_Step3);
         }
@@ -128,9 +117,6 @@ public partial class QuickSetupView : PhControl
         PART_BtnStandard.Click += (_, _) => SelectProfile(false);
         PART_BtnProfessional.Click += (_, _) => SelectProfile(true);
         SelectProfile(false);
-
-        // step 3: default viewer
-        PART_BtnSetDefaultViewer.Click += async (_, _) => await AppAPIProvider.SetDefaultPhotoViewerAsync(true);
 
         UpdateLogo();
         LocalizeAll();
@@ -400,10 +386,8 @@ public partial class QuickSetupView : PhControl
         PART_LblRawThumbnail.Text = lang[LangId.Settings_EnableOnlyLoadRawPreview];
         PART_LblProfileNote.Text = lang[LangId.QuickSetup_SettingProfileDescription];
 
-        PART_LblSetViewerTitle.Text = lang[LangId.Settings_DefaultPhotoViewer];
-        PART_LblSetViewer.Text = lang[LangId.QuickSetup_RegisterImageFormats];
-        PART_LblSetViewerWarning.Text = lang[LangId.Settings_UnmanagedSettingReminder];
-        PART_BtnSetDefaultViewer.Text = lang[LangId._Register];
+        PART_LblUpgradePro.Text = lang[LangId.Menu_MnuUpgradeLicense];
+        PART_UpgradePro.PreviewLang = lang;
 
         UpdateStepInfo();
     }

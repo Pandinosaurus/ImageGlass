@@ -7,6 +7,7 @@
     xmlns:loc="using:ImageGlass.Common.Localization"
     xmlns:types="using:ImageGlass.Common.Types"
     xmlns:ui="using:ImageGlass.UI"
+    xmlns:windows="using:ImageGlass.Common.Windows"
     mc:Ignorable="d"
     d:DesignWidth="490">
 
@@ -168,43 +169,23 @@
             </StackPanel>
 
 
-            <!--  Step 3: Default photo viewer (unpackaged Windows only)  -->
+            <!--  Step 3: Upgrade to Pro (Classic only)  -->
             <StackPanel
                 x:Name="PART_Step3"
-                HorizontalAlignment="Center"
                 VerticalAlignment="Center"
                 IsVisible="False"
-                Spacing="16">
-                <StackPanel Spacing="6">
-                    <ui:PhTextBlock
-                        x:Name="PART_LblSetViewerTitle"
-                        HorizontalAlignment="Center"
-                        FontSize="{x:Static types:Const.FONT_SIZE_SUBTITLE}"
-                        FontWeight="SemiBold"
-                        TextAlignment="Center"
-                        TextWrapping="Wrap" />
-                    <ui:PhTextBlock
-                        x:Name="PART_LblSetViewer"
-                        HorizontalAlignment="Center"
-                        TextAlignment="Center"
-                        TextWrapping="Wrap" />
+                Spacing="12">
+                <ui:PhTextBlock
+                    x:Name="PART_LblUpgradePro"
+                    HorizontalAlignment="Center"
+                    FontWeight="SemiBold" />
 
-                    <Border
-                        Margin="0,8,0,0"
-                        Padding="8"
-                        Background="{DynamicResource IG_BackgroundWarningBrush}"
-                        CornerRadius="{DynamicResource ControlCornerRadius}">
-                        <ui:PhTextBlock
-                            x:Name="PART_LblSetViewerWarning"
-                            TextAlignment="Center"
-                            TextWrapping="Wrap" />
-                    </Border>
-                </StackPanel>
-
-                <ui:PhButton
-                    x:Name="PART_BtnSetDefaultViewer"
-                    MinWidth="150"
-                    HorizontalAlignment="Center" />
+                <windows:UpgradeToProControl
+                    x:Name="PART_UpgradePro"
+                    Campaign="from_quick_setup"
+                    CtaCornerRadius="{DynamicResource ControlCornerRadius}"
+                    IsDividerVisible="False"
+                    PromptRestartAfterImport="False" />
             </StackPanel>
 
         </Panel>
