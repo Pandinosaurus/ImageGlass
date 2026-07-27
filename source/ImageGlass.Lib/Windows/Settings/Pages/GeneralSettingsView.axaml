@@ -12,12 +12,40 @@
 
     <StackPanel Orientation="Vertical">
 
-        <!--  Locations (no heading): button links, tooltip = full path, click = open  -->
-        <StackPanel Margin="{DynamicResource SettingsGroupIndent}" HorizontalAlignment="Left">
-            <ui:PhButton x:Name="PART_StartupDir" Variant="Link" />
-            <ui:PhButton x:Name="PART_ConfigDir" Variant="Link" />
-            <ui:PhButton x:Name="PART_UserConfig" Variant="Link" />
-        </StackPanel>
+        <!--  Links (no heading): locations on the left, actions on the right  -->
+        <Grid
+            ColumnDefinitions="Auto,Auto"
+            Margin="{DynamicResource SettingsGroupIndent}"
+            ColumnSpacing="64">
+
+            <!--  Locations: tooltip = full path, click = open  -->
+            <StackPanel Grid.Column="0" HorizontalAlignment="Left">
+                <ui:PhButton
+                    x:Name="PART_StartupDir"
+                    HorizontalAlignment="Left"
+                    Variant="Link" />
+                <ui:PhButton
+                    x:Name="PART_ConfigDir"
+                    HorizontalAlignment="Left"
+                    Variant="Link" />
+                <ui:PhButton
+                    x:Name="PART_UserConfig"
+                    HorizontalAlignment="Left"
+                    Variant="Link" />
+            </StackPanel>
+
+            <!--  Actions  -->
+            <StackPanel Grid.Column="1" HorizontalAlignment="Left">
+                <ui:PhButton
+                    x:Name="PART_GetHelp"
+                    HorizontalAlignment="Left"
+                    Variant="Link" />
+                <ui:PhButton
+                    x:Name="PART_ResetSettings"
+                    HorizontalAlignment="Left"
+                    Variant="Link" />
+            </StackPanel>
+        </Grid>
 
 
         <!--  Startup  -->

@@ -113,9 +113,9 @@
             <!--  Header  -->
             <Grid
                 Grid.Row="1"
-                ColumnDefinitions="*, Auto"
+                ColumnDefinitions="*, Auto, Auto"
                 Margin="0,14,14,14"
-                ColumnSpacing="8">
+                ColumnSpacing="12">
                 <TextBlock
                     x:Name="PART_Title"
                     Grid.Column="0"
@@ -124,7 +124,16 @@
                     FontWeight="SemiBold"
                     TextTrimming="CharacterEllipsis" />
 
-                <Panel Grid.Column="1">
+                <!--  Upgrade pitch or manage license, depending on the edition  -->
+                <ui:PhButton
+                    x:Name="PART_License"
+                    Grid.Column="1"
+                    VerticalAlignment="Center"
+                    Click="License_Click"
+                    FontWeight="SemiBold"
+                    Variant="Outline" />
+
+                <Panel Grid.Column="2">
                     <ui:PhSearchBoxControl x:Name="PART_Search" Width="250" />
 
                     <Popup

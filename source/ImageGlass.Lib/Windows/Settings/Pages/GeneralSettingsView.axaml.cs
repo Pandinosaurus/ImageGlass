@@ -18,6 +18,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 using Avalonia.Controls;
 using ImageGlass.Common.Localization;
+using ImageGlass.UI.Windowing;
+using ImageGlass.Windows;
 using System;
 using System.IO;
 
@@ -56,6 +58,10 @@ public partial class GeneralSettingsView : SettingsPageView
         BindLink(PART_UserConfig, LangId.Settings_UserConfigFile, userConfig,
             () => OpenUserConfigFile(userConfig));
 
+        // Actions
+        BindLink(PART_GetHelp, LangId._GetHelp, OpenHelpDocs);
+        BindLink(PART_ResetSettings, LangId.Settings_ResetSettings, ShowQuickSetup);
+
         // Startup
         BindToggle(PART_WelcomeImage, ConfigId.EnableWelcomeImage,
             LangId.Settings_EnableWelcomeImage, LangId.Settings_Startup);
@@ -85,6 +91,39 @@ public partial class GeneralSettingsView : SettingsPageView
             VM.SetValue(id, (chk.IsChecked ?? false) ? DateTime.UtcNow.ToString() : "0");
 
         RegisterSearchKey(chk, label, id, section);
+    }
+
+
+    /// <summary>
+    /// Opens the online documentation.
+    /// </summary>
+    private async void OpenHelpDocs()
+    {
+        try
+        {
+            await BHelper.OpenUrlAsync(this, "https://imageglass.org/docs", $"from_setting_{NavId}");
+        }
+        catch
+        {
+            // an async void handler must never reach the unhandled-error dialog
+        }
+    }
+
+
+    /// <summary>
+    /// Opens the Quick Setup wizard, which owns the reset-to-defaults flow.
+    /// </summary>
+    private async void ShowQuickSetup()
+    {
+        try
+        {
+            var quickSetup = new QuickSetupWindow();
+            _ = await quickSetup.ShowAsync(TopLevel.GetTopLevel(this) as PhWindow);
+        }
+        catch
+        {
+            // an async void handler must never reach the unhandled-error dialog
+        }
     }
 
 

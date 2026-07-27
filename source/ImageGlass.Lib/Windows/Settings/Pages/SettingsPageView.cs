@@ -303,15 +303,24 @@ public abstract class SettingsPageView : PhControl
 
 
     /// <summary>
+    /// Configures a link-style button: localized text (kept refreshed) and a click action.
+    /// </summary>
+    protected void BindLink(PhButton btn, LangId label, Action onClick)
+    {
+        SetLocalizedText(btn, label);
+        btn.Click += (_, _) => onClick();
+
+        RegisterSearchKey(btn, label, null, null);
+    }
+
+
+    /// <summary>
     /// Configures a link-style button: localized text (kept refreshed), full-path tooltip, click action.
     /// </summary>
     protected void BindLink(PhButton btn, LangId label, string tooltip, Action onClick)
     {
-        SetLocalizedText(btn, label);
+        BindLink(btn, label, onClick);
         ToolTip.SetTip(btn, tooltip);
-        btn.Click += (_, _) => onClick();
-
-        RegisterSearchKey(btn, label, null, null);
     }
 
 

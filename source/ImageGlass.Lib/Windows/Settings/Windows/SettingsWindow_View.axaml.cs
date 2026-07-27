@@ -25,6 +25,7 @@ using Avalonia.VisualTree;
 using ImageGlass.Common.Localization;
 using ImageGlass.Common.Types;
 using ImageGlass.UI;
+using ImageGlass.UI.Windowing;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -104,6 +105,13 @@ public partial class SettingsWindowView : PhControl
             PART_Search.PlaceholderText = GetSearchPlaceholder();
         }
 
+        if (PART_License is not null)
+        {
+            PART_License.Text = "✦ " + Core.Lang[Core.IsProEnabled
+                ? LangId.Menu_MnuManageLicense
+                : LangId.Menu_MnuUpgradeLicense];
+        }
+
         // re-template the sidebar so the localized labels refresh
         if (PART_Sidebar is not null)
         {
@@ -159,6 +167,19 @@ public partial class SettingsWindowView : PhControl
                 NavigateTo(CurrentNavId);
             }
         }, DispatcherPriority.Input);
+    }
+
+
+    private async void License_Click(object? sender, RoutedEventArgs e)
+    {
+        try
+        {
+            _ = await new ManageLicenseWindow().ShowAsync(TopLevel.GetTopLevel(this) as PhWindow);
+        }
+        catch
+        {
+            // an async void handler must never reach the unhandled-error dialog
+        }
     }
 
 

@@ -19,11 +19,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
-using Avalonia.Layout;
 using ImageGlass.Common.Localization;
-using ImageGlass.UI;
 using ImageGlass.UI.Windowing;
-using ImageGlass.Windows;
 
 namespace ImageGlass.Common.Windows;
 
@@ -34,9 +31,6 @@ public partial class SettingsWindow : DialogWindow
     private readonly string? _targetConfigId;
     private readonly string? _editToolId;
     private bool _editToolShown;
-
-    private PhButton _btnGetHelp = null!;
-    private PhButton _btnResetSettings = null!;
 
 
     protected override int MIN_WIDTH => 0;
@@ -92,7 +86,6 @@ public partial class SettingsWindow : DialogWindow
 
         _viewEl = new SettingsWindowView(_vm);
         DialogContent = _viewEl;
-        DialogFooterLeftContent = CreateDialogFooterLeftContentElement();
     }
 
 
@@ -129,9 +122,6 @@ public partial class SettingsWindow : DialogWindow
         Button1Text = Core.Lang[LangId._OK];
         Button2Text = Core.Lang[LangId._Cancel];
         Button3Text = Core.Lang[LangId._Apply];
-
-        if (_btnGetHelp is not null) _btnGetHelp.Text = Core.Lang[LangId._GetHelp];
-        if (_btnResetSettings is not null) _btnResetSettings.Text = Core.Lang[LangId.Settings_ResetSettings];
     }
 
 
@@ -211,54 +201,6 @@ public partial class SettingsWindow : DialogWindow
     public void NavigateToTool(string? toolId) => _viewEl.NavigateToTool(toolId);
 
     #endregion // Public Methods
-
-
-
-    #region Private Methods
-
-    private StackPanel CreateDialogFooterLeftContentElement()
-    {
-        _btnGetHelp = CreateLinkButton(Core.Lang[LangId._GetHelp], async () =>
-        {
-            var campaign = $"from_setting_{_viewEl.CurrentNavId}";
-            await BHelper.OpenUrlAsync(this, "https://imageglass.org/docs", campaign);
-        });
-
-        _btnResetSettings = CreateLinkButton(Core.Lang[LangId.Settings_ResetSettings], async () =>
-        {
-            // reset-to-defaults is handled by the Quick Setup wizard
-            var quickSetup = new QuickSetupWindow();
-            await quickSetup.ShowAsync(this);
-        });
-
-        var footerLeftPanel = new StackPanel
-        {
-            Orientation = Orientation.Horizontal,
-            VerticalAlignment = VerticalAlignment.Center,
-            Spacing = 12,
-        };
-        footerLeftPanel.Children.AddRange([_btnGetHelp, _btnResetSettings]);
-
-        return footerLeftPanel;
-    }
-
-
-    /// <summary>
-    /// Creates a borderless, link-style button.
-    /// </summary>
-    private static PhButton CreateLinkButton(string text, System.Action onClick)
-    {
-        var btn = new PhButton
-        {
-            Text = text,
-            Variant = PhButtonVariant.Link,
-        };
-        btn.Click += (_, _) => onClick();
-
-        return btn;
-    }
-
-    #endregion // Private Methods
 
 
 }

@@ -808,7 +808,7 @@ public class Lang
         new(LangId.Menu_MnuHelp, "Help"), //v7.0
         new(LangId.Menu_MnuAbout, "About"), //v3.0
 
-        new(LangId.Menu_MnuUpgradeLicense, "Upgrade to ImageGlass Pro"), // v10.0
+        new(LangId.Menu_MnuUpgradeLicense, "Upgrade to Pro"), // v10.0
         new(LangId.Menu_MnuUpgradeLicense_Description, "Get the most out of ImageGlass. Pro unlocks advanced tools, smoother workflows, and priority support."), // v10.0
         new(LangId.Menu_MnuUpgradeLicense_ImportLicense, "Import license file…"), // v10.0
         new(LangId.Menu_MnuUpgradeLicense_RetrieveFromEmail, "Retrieve from email…"), // v10.0
@@ -816,7 +816,7 @@ public class Lang
         new(LangId.Menu_MnuUpgradeLicense_CompareFeatures, "View Pro features"), // v10.0
         new(LangId.Menu_MnuUpgradeLicense_OutOfScope, "Your {0} license covers ImageGlass {1}, not ImageGlass {2}. Upgrade your license to turn Pro back on."), // v10.0
 
-        new(LangId.Menu_MnuManageLicense, "Manage ImageGlass license"), // v10.0
+        new(LangId.Menu_MnuManageLicense, "Manage license"), // v10.0
         new(LangId.Menu_MnuManageLicense_ChangeLicense, "Change license file…"), // v10.0
         new(LangId.Menu_MnuManageLicense_UpgradePlan, "Upgrade plan…"), // v10.0
         new(LangId.Menu_MnuManageLicense_LicensedTo, "Licensed to"), // v10.0
