@@ -44,14 +44,9 @@ public partial class ManageLicenseView : PhControl
 
         UpdateLogo();
         if (isPro) FillLicenseInfo();
-        else ShowOutOfScopeNoticeIfAny();
 
         PART_BtnPlan.Click += (_, _) => OpenUrl("https://imageglass.org/license");
-        PART_BtnCompare.Click += (_, _) => OpenUrl("https://imageglass.org/pricing#comparison");
-        PART_BtnBuyOnline.Click += (_, _) => OpenUrl("https://imageglass.org/pricing");
-        PART_BtnImportLicense.Click += async (_, _) => await ImportLicenseAsync();
-        PART_BtnRetrieveEmail.Click += (_, _) => OpenUrl("https://imageglass.org/pro/retrieve");
-        PART_BtnChangeLicense.Click += async (_, _) => await ImportLicenseAsync();
+        PART_BtnChangeLicense.Click += async (_, _) => await UpgradeToProControl.ImportLicenseAsync(this);
         PART_BtnUpgradePlan.Click += (_, _) => OpenUrl("https://imageglass.org/pricing");
         PART_BtnExportLicense.Click += async (_, _) => await ExportLicenseAsync();
     }
@@ -72,12 +67,10 @@ public partial class ManageLicenseView : PhControl
 
         // the license values are not localized, but the "Perpetual" fallback and the source are
         if (Core.IsProEnabled) FillLicenseInfo();
-        else ShowOutOfScopeNoticeIfAny();
 
         PART_LblHeading.Text = Core.Lang[Core.IsProEnabled
             ? LangId.Menu_MnuManageLicense
             : LangId.Menu_MnuUpgradeLicense];
-        PART_BtnCompare.Text = Core.Lang[LangId.Menu_MnuUpgradeLicense_CompareFeatures];
     }
 
     #endregion // Overrides
@@ -142,91 +135,10 @@ public partial class ManageLicenseView : PhControl
     }
 
 
-    // an authentic license bought for another version line: say so instead of a generic pitch
-    private void ShowOutOfScopeNoticeIfAny()
-    {
-        var lic = Core.OutOfScopeLicense;
-        if (lic is null) return;
-
-        PART_LblOutOfScope.Text = Core.Lang[LangId.Menu_MnuUpgradeLicense_OutOfScope,
-            lic.Plan, lic.VersionScope, LicenseScope.GetRunningAppMajorText()];
-        PART_LblOutOfScope.IsVisible = true;
-        PART_LblDescription.IsVisible = false;
-    }
-
-
     private void OpenUrl(string url)
     {
         var campaign = Core.IsProEnabled ? "from_manage_license" : "from_upgrade_dialog";
         _ = BHelper.OpenUrlAsync(this, url, campaign);
-    }
-
-
-    /// <summary>
-    /// Pick a license file, verify its signature, install it and offer a restart.
-    /// </summary>
-    private async Task ImportLicenseAsync()
-    {
-        var topLevel = TopLevel.GetTopLevel(this);
-        if (topLevel is null) return;
-
-        var owner = topLevel as PhWindow;
-        var title = Core.Lang[Core.IsProEnabled
-            ? LangId.Menu_MnuManageLicense
-            : LangId.Menu_MnuUpgradeLicense];
-
-        var files = await topLevel.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
-        {
-            AllowMultiple = false,
-            FileTypeFilter =
-            [
-                new FilePickerFileType(Core.Lang[LangId.Menu_MnuManageLicense_LicenseFileType])
-                {
-                    Patterns = ["*" + LicenseService.LICENSE_FILE_EXTENSION],
-                },
-            ],
-        });
-
-        var path = (files.Count > 0 ? files[0] : null)?.TryGetLocalPath();
-        if (string.IsNullOrEmpty(path)) return;
-
-        // the signature is the source of truth; reject anything that doesn't verify
-        if (!LicenseService.TryVerify(path, out var lic, out var errorCode))
-        {
-            await ShowError(owner, title, LangId.Menu_MnuManageLicense_ImportFailed, path, errorCode);
-            return;
-        }
-
-        // authentic but out of validity (expired past grace) can't activate Pro
-        if (!LicenseService.IsWithinValidity(lic))
-        {
-            await ShowError(owner, title, LangId.Menu_MnuManageLicense_ImportExpired, path);
-            return;
-        }
-
-        // copy into the user config dir so LoadActive() picks it up next launch
-        try
-        {
-            var destPath = BHelper.ConfigDir(lic.LicenseId + LicenseService.LICENSE_FILE_EXTENSION);
-            if (!string.Equals(Path.GetFullPath(path), Path.GetFullPath(destPath), StringComparison.OrdinalIgnoreCase))
-            {
-                File.Copy(path, destPath, true);
-            }
-        }
-        catch
-        {
-            await ShowError(owner, title, LangId.Menu_MnuManageLicense_ImportFailed);
-            return;
-        }
-
-        // the license only loads at startup, so offer to restart now
-        var result = await ModalWindow.ShowInfoAsync(owner, new ModalWindowOptions
-        {
-            Title = title,
-            Heading = Core.Lang[LangId.Menu_MnuManageLicense_ImportSuccess],
-        }, ModalWindowButton.Yes_No);
-
-        if (result.ExitCode == DialogExitCode.OK) BHelper.RestartApp();
     }
 
 
@@ -248,7 +160,7 @@ public partial class ManageLicenseView : PhControl
             var canExport = LicenseService.TryGetExportableLicense(out var sourcePath, out var lic);
             if (!canExport)
             {
-                await ShowError(owner, title, LangId.Menu_MnuManageLicense_ExportFailed);
+                await UpgradeToProControl.ShowErrorAsync(owner, title, LangId.Menu_MnuManageLicense_ExportFailed);
                 return;
             }
 
@@ -285,20 +197,9 @@ public partial class ManageLicenseView : PhControl
         }
         catch (Exception ex)
         {
-            await ShowError(owner, title, LangId.Menu_MnuManageLicense_ExportFailed, ex.Message, ex.ToString());
+            await UpgradeToProControl.ShowErrorAsync(owner, title,
+                LangId.Menu_MnuManageLicense_ExportFailed, ex.Message, ex.ToString());
         }
-    }
-
-
-    private static async Task ShowError(PhWindow? owner, string title, LangId messageKey, string? description = null, string? details = null)
-    {
-        await ModalWindow.ShowErrorAsync(owner, new ModalWindowOptions
-        {
-            Title = title,
-            Heading = Core.Lang[messageKey],
-            Description = description,
-            Details = details,
-        });
     }
 
 

@@ -813,7 +813,7 @@ public class Lang
         new(LangId.Menu_MnuUpgradeLicense_ImportLicense, "Import license file…"), // v10.0
         new(LangId.Menu_MnuUpgradeLicense_RetrieveFromEmail, "Retrieve from email…"), // v10.0
         new(LangId.Menu_MnuUpgradeLicense_BuyOnline, "Buy online…"), // v10.0
-        new(LangId.Menu_MnuUpgradeLicense_CompareFeatures, "View Pro features"), // v10.0
+        new(LangId.Menu_MnuUpgradeLicense_ViewFeatures, "View Pro features"), // v10.0
         new(LangId.Menu_MnuUpgradeLicense_OutOfScope, "Your {0} license covers ImageGlass {1}, not ImageGlass {2}. Upgrade your license to turn Pro back on."), // v10.0
 
         new(LangId.Menu_MnuManageLicense, "Manage license"), // v10.0

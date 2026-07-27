@@ -380,7 +380,7 @@ public enum LangId
     Menu_MnuUpgradeLicense_ImportLicense,
     Menu_MnuUpgradeLicense_RetrieveFromEmail,
     Menu_MnuUpgradeLicense_BuyOnline,
-    Menu_MnuUpgradeLicense_CompareFeatures,
+    Menu_MnuUpgradeLicense_ViewFeatures,
     Menu_MnuUpgradeLicense_OutOfScope,
 
     Menu_MnuManageLicense,

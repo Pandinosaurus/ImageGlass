@@ -6,6 +6,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:types="using:ImageGlass.Common.Types"
     xmlns:ui="using:ImageGlass.UI"
+    xmlns:windows="using:ImageGlass.Common.Windows"
     mc:Ignorable="d"
     d:DesignWidth="460"
     HorizontalContentAlignment="Stretch">
@@ -41,72 +42,7 @@
 
 
         <!--  Upgrade mode  -->
-        <StackPanel x:Name="PART_UpgradeBody" Margin="0,20,0,0">
-            <ui:PhTextBlock
-                x:Name="PART_LblDescription"
-                MaxWidth="420"
-                HorizontalAlignment="Center"
-                LangKey="Menu_MnuUpgradeLicense_Description"
-                TextAlignment="Center"
-                TextWrapping="Wrap" />
-
-            <!--  shown instead when a valid license does not cover this app version  -->
-            <ui:PhTextBlock
-                x:Name="PART_LblOutOfScope"
-                MaxWidth="420"
-                HorizontalAlignment="Center"
-                IsVisible="False"
-                TextAlignment="Center"
-                TextWrapping="Wrap" />
-
-            <!--  link to the feature comparison on the website  -->
-            <ui:PhButton
-                x:Name="PART_BtnCompare"
-                HorizontalAlignment="Center"
-                Variant="Link" />
-
-
-            <Border
-                Height="1"
-                Margin="0,20,0,0"
-                Background="{DynamicResource IG_BorderNeutralBrush}" />
-
-
-            <!--  CTA buttons  -->
-            <Border Padding="24,20" Background="{DynamicResource IG_BackgroundNeutralBrush}">
-                <StackPanel HorizontalAlignment="Center" Spacing="8">
-                    <ui:PhButton
-                        x:Name="PART_BtnBuyOnline"
-                        Width="300"
-                        HorizontalContentAlignment="Stretch"
-                        Variant="Accent">
-                        <ui:PhTextBlock
-                            Foreground="{DynamicResource AccentButtonForeground}"
-                            LangKey="Menu_MnuUpgradeLicense_BuyOnline"
-                            TextAlignment="Center"
-                            TextTrimming="CharacterEllipsis" />
-                    </ui:PhButton>
-                    <ui:PhButton
-                        x:Name="PART_BtnImportLicense"
-                        Width="300"
-                        HorizontalContentAlignment="Stretch">
-                        <ui:PhTextBlock
-                            LangKey="Menu_MnuUpgradeLicense_ImportLicense"
-                            TextAlignment="Center"
-                            TextTrimming="CharacterEllipsis" />
-                    </ui:PhButton>
-                    <ui:PhButton
-                        x:Name="PART_BtnRetrieveEmail"
-                        Width="300"
-                        HorizontalContentAlignment="Stretch">
-                        <ui:PhTextBlock
-                            LangKey="Menu_MnuUpgradeLicense_RetrieveFromEmail"
-                            TextAlignment="Center"
-                            TextTrimming="CharacterEllipsis" />
-                    </ui:PhButton>
-                </StackPanel>
-            </Border>
-        </StackPanel>
+        <windows:UpgradeToProControl x:Name="PART_UpgradeBody" Margin="0,20,0,0" />
 
 
         <!--  Manage mode  -->
