@@ -1458,6 +1458,7 @@ public static class PhotoCodec
             settings.SetDefines(new HeicReadDefines()
             {
                 MaxChildrenPerBox = 500,
+                MaxItems = 2000, // Issue https://github.com/d2phap/ImageGlass/issues/2354
             });
         }
         else if (ext.Equals(".JP2", StringComparison.OrdinalIgnoreCase))
