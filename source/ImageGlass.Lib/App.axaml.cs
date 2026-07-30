@@ -261,13 +261,21 @@ public partial class App : Application
 
     #region Unhandled Exception Handlers
 
-    private static async void UIThread_UnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
+    private static void UIThread_UnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
     {
-        e.Handled = await ModalWindow.ShowUnhandledErrorAsync(e.Exception);
+        // must be set synchronously: awaiting first returns with Handled = false, and the
+        // dispatcher then rethrows, which kills the UI message loop (app freezes).
+        e.Handled = true;
+        var ex = e.Exception;
+
+        Dispatcher.UIThread.Post(async () =>
+        {
+            _ = await ModalWindow.ShowUnhandledErrorAsync(ex);
 
 #if DEBUG
-        throw e.Exception;
+            throw ex;
 #endif
+        });
     }
 
 
