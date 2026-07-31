@@ -33,6 +33,11 @@ public static class Const
     public const string DATE_FORMAT = "yyyy/MM/dd";
     public const string APP_PROTOCOL = "imageglass";
 
+    /// <summary>
+    /// Official website host. Campaign params are appended to this host and its subdomains only.
+    /// </summary>
+    public const string WEBSITE_HOST = "imageglass.org";
+
     public static readonly string SIGN_POSITIVE = NumberFormatInfo.CurrentInfo.PositiveSign;
     public static readonly string SIGN_NEGATIVE = NumberFormatInfo.CurrentInfo.NegativeSign;
     public static readonly string DECIMAL_SEPARATOR = NumberFormatInfo.CurrentInfo.NumberDecimalSeparator;

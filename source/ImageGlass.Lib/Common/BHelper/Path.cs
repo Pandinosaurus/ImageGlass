@@ -475,13 +475,14 @@ public partial class BHelper
         {
             if (!Uri.TryCreate(url, UriKind.Absolute, out var uri)) return;
 
-            // only tag http(s) web URLs with campaign tracking; protocol URIs (ms-settings:,
-            // mailto:, ...) must launch untouched or the extra query corrupts the deep link
-            if (uri.Scheme is "http" or "https")
+            // only tag our own http(s) pages with campaign params. Protocol URIs (ms-settings:,
+            // mailto:, ...) break if a query is appended, and third-party hosts (github.com) must
+            // never receive the app version or which button was clicked.
+            if (uri.Scheme is "http" or "https" && IsImageGlassHost(uri.Host))
             {
                 var ub = new UriBuilder(uri);
                 var queries = HttpUtility.ParseQueryString(ub.Query);
-                queries["utm_source"] = $"app_{Core.BuildInfo.FullVersion}";
+                queries["utm_source"] = $"app_{GetAppMajorVersion()}";
                 queries["utm_medium"] = "app_click";
                 queries["utm_campaign"] = campaign;
 
@@ -497,6 +498,31 @@ public partial class BHelper
             }
         }
         catch { }
+    }
+
+
+    /// <summary>
+    /// Whether <paramref name="host"/> is imageglass.org or one of its subdomains.
+    /// </summary>
+    private static bool IsImageGlassHost(string? host)
+    {
+        if (string.IsNullOrEmpty(host)) return false;
+
+        return host.Equals(Const.WEBSITE_HOST, StringComparison.OrdinalIgnoreCase)
+            || host.EndsWith($".{Const.WEBSITE_HOST}", StringComparison.OrdinalIgnoreCase);
+    }
+
+
+    /// <summary>
+    /// Gets the app major version, e.g. <c>10</c>. Falls back to an empty string.
+    /// </summary>
+    private static string GetAppMajorVersion()
+    {
+        var version = Core.BuildInfo?.Version;
+        if (string.IsNullOrEmpty(version)) return string.Empty;
+
+        var dotIndex = version.IndexOf('.');
+        return dotIndex > 0 ? version[..dotIndex] : version;
     }
 
 
