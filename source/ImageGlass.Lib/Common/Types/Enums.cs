@@ -122,6 +122,27 @@ public enum ImageOrderType
 
 
 /// <summary>
+/// How the app behaves while browsing photos.
+/// **If we need to rename, we MUST update the language string too.
+/// Because the name is also language keyword!
+/// </summary>
+public enum BrowsingMode
+{
+    /// <summary>
+    /// Navigation never waits: a photo still loading is replaced by the next one,
+    /// showing a preview while the user keeps browsing.
+    /// </summary>
+    Turbo = 0,
+
+    /// <summary>
+    /// Navigation is ignored until the current photo is fully loaded and rendered,
+    /// so every photo browsed to is displayed in full.
+    /// </summary>
+    Sequential = 1,
+}
+
+
+/// <summary>
 /// Image resampling methods. Member names and order mirror Magick.NET's <c>FilterType</c>
 /// (with <see cref="Auto"/> in place of <c>Undefined</c>), so a value casts directly to its filter.
 /// </summary>

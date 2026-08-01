@@ -603,6 +603,12 @@ public class Lang
         new(LangId.ImageOrderType_Asc, "Ascending"),  //v8.0
         new(LangId.ImageOrderType_Desc, "Descending"),  //v8.0
 
+        // BrowsingMode
+        new(LangId.BrowsingMode_Turbo, "Turbo"),
+        new(LangId.BrowsingMode_Turbo_Description, "Fastest. Images may be skipped while you browse quickly."),
+        new(LangId.BrowsingMode_Sequential, "Sequential"),
+        new(LangId.BrowsingMode_Sequential_Description, "Never skips. Each image is fully shown before the next."),
+
         // AfterEditAppAction
         new(LangId.AfterEditAppAction_Nothing, "Nothing"), //v8.0
         new(LangId.AfterEditAppAction_Minimize, "Minimize"), //v8.0
@@ -936,7 +942,7 @@ public class Lang
         new(LangId.Settings_EnableHiddenImagesLoading, "Load hidden images"),
         new(LangId.Settings_EnableLoopBackNavigation, "Loop back to the first image when reaching the end of the image list"),
         new(LangId.Settings_EnableAutoSwitchSiblingDir, "Switch to the sibling folder at the start/end of the list"),
-        new(LangId.Settings_EnableImageAsyncLoading, "Enable image asynchronous loading"),
+        new(LangId.Settings_BrowsingMode, "Browsing mode"),
         new(LangId.Settings_EnableImagePreview, "Display image preview while it's being loaded"),
 
         new(LangId.Settings_ImagePreview, "Image preview"),

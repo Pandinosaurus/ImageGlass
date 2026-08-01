@@ -49,9 +49,33 @@
             <CheckBox x:Name="PART_AutoSwitchSiblingDir">
                 <ui:PhTextBlock LangKey="Settings_EnableAutoSwitchSiblingDir" TextWrapping="Wrap" />
             </CheckBox>
-            <CheckBox x:Name="PART_ImageAsyncLoading">
-                <ui:PhTextBlock LangKey="Settings_EnableImageAsyncLoading" TextWrapping="Wrap" />
-            </CheckBox>
+
+            <!--  Sub-group: Browsing mode  -->
+            <ui:PhTextBlock Classes="subgroup" LangKey="Settings_BrowsingMode" />
+            <StackPanel Spacing="{DynamicResource SettingsLabelInputGap}">
+                <ComboBox x:Name="PART_BrowsingMode" MinWidth="200">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate x:DataType="windows:BrowsingModeOption">
+                            <StackPanel
+                                MaxWidth="200"
+                                Margin="0,3"
+                                Spacing="1">
+                                <ui:PhTextBlock Text="{CompiledBinding Name}" />
+                                <ui:PhTextBlock
+                                    FontSize="{x:Static types:Const.FONT_SIZE_SMALL}"
+                                    Opacity="0.6"
+                                    Text="{CompiledBinding Description}"
+                                    TextWrapping="Wrap" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                    <ComboBox.SelectionBoxItemTemplate>
+                        <DataTemplate x:DataType="windows:BrowsingModeOption">
+                            <ui:PhTextBlock Text="{CompiledBinding Name}" />
+                        </DataTemplate>
+                    </ComboBox.SelectionBoxItemTemplate>
+                </ComboBox>
+            </StackPanel>
 
 
             <!--  Sub-group: Image preview  -->

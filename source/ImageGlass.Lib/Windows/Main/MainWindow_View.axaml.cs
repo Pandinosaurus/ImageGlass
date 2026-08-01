@@ -45,20 +45,20 @@ namespace ImageGlass.Common.Windows;
 public partial class MainWindowView : PhControl
 {
     // how long to wait for the first paint before giving up (hidden window may never draw)
-    private static readonly TimeSpan _syncLoadRenderTimeout = TimeSpan.FromSeconds(2);
+    private static readonly TimeSpan _sequentialRenderTimeout = TimeSpan.FromSeconds(2);
 
-    // > 0 while a photo load + paint is in flight, synchronous loading only
-    private int _syncLoadDepth;
+    // > 0 while a photo load + paint is in flight, Sequential browsing only
+    private int _sequentialLoadDepth;
 
 
     public MainWindowViewModel VM => (MainWindowViewModel)DataContext!;
 
 
     /// <summary>
-    /// Gets whether a photo is currently loading and rendering while
-    /// <see cref="Config.EnableImageAsyncLoading"/> is disabled.
+    /// Gets whether a photo is currently loading and rendering under
+    /// <see cref="BrowsingMode.Sequential"/>.
     /// </summary>
-    public bool IsPhotoLoadInProgress => Volatile.Read(ref _syncLoadDepth) > 0;
+    public bool IsPhotoLoadInProgress => Volatile.Read(ref _sequentialLoadDepth) > 0;
 
 
     public MainWindowView()
@@ -926,10 +926,10 @@ public partial class MainWindowView : PhControl
 
     public async Task ViewPhotoAsync(Photo? photo, bool useCache = true, bool scrollToThumbnail = true, bool resetZoom = true)
     {
-        // sync loading: close the navigation gate here, not inside the post below,
+        // Sequential mode: close the navigation gate here, not inside the post below,
         // so the next key repeat already sees a load in flight
-        var syncLoading = !Core.Config.EnableImageAsyncLoading;
-        if (syncLoading) Interlocked.Increment(ref _syncLoadDepth);
+        var isSequential = Core.Config.BrowsingMode == BrowsingMode.Sequential;
+        if (isSequential) Interlocked.Increment(ref _sequentialLoadDepth);
 
         // clear the current in-app message
         _ = PART_Message.ClearAsync();
@@ -972,14 +972,14 @@ public partial class MainWindowView : PhControl
 
                 // reopening the gate at decode time is too early: the next navigation would
                 // dispose the image before it is ever painted
-                if (syncLoading)
+                if (isSequential)
                 {
-                    await PART_Viewer.WaitForPhotoRenderedAsync(_syncLoadRenderTimeout);
+                    await PART_Viewer.WaitForPhotoRenderedAsync(_sequentialRenderTimeout);
                 }
             }
             finally
             {
-                if (syncLoading) Interlocked.Decrement(ref _syncLoadDepth);
+                if (isSequential) Interlocked.Decrement(ref _sequentialLoadDepth);
             }
 
             // trigger background caching of adjacent photos

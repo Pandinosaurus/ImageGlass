@@ -916,16 +916,16 @@ public partial class AppAPIProvider
     /// </summary>
     public void IG_ViewByStep(int step)
     {
-        // sync loading: ignore navigation until the current photo is painted, so holding
+        // Sequential mode: ignore navigation until the current photo is painted, so holding
         // an arrow key advances one fully-drawn image at a time.
         // must run before GetByStep below, which advances CurrentIndex right away
-        var syncLoading = !Core.Config.EnableImageAsyncLoading;
-        if (syncLoading)
+        var isSequential = Core.Config.BrowsingMode == BrowsingMode.Sequential;
+        if (isSequential)
         {
             var isLoading = App.MainWindow.PART_MainView.IsPhotoLoadInProgress;
             if (isLoading)
             {
-                PhotoTrace.Mark("nav:blocked-sync-loading", Core.Photos.CurrentFilePath);
+                PhotoTrace.Mark("nav:blocked-sequential", Core.Photos.CurrentFilePath);
                 return;
             }
         }

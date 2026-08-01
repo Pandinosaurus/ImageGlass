@@ -168,6 +168,11 @@ public enum LangId
     ImageOrderType_Asc,
     ImageOrderType_Desc,
 
+    BrowsingMode_Turbo,
+    BrowsingMode_Turbo_Description,
+    BrowsingMode_Sequential,
+    BrowsingMode_Sequential_Description,
+
     AfterEditAppAction_Nothing,
     AfterEditAppAction_Minimize,
     AfterEditAppAction_Close,
@@ -504,7 +509,7 @@ public enum LangId
     Settings_EnableHiddenImagesLoading,
     Settings_EnableLoopBackNavigation,
     Settings_EnableAutoSwitchSiblingDir,
-    Settings_EnableImageAsyncLoading,
+    Settings_BrowsingMode,
     Settings_EnableImagePreview,
 
     Settings_ImagePreview,

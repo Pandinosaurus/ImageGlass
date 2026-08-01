@@ -391,9 +391,9 @@ public partial class AppAPIProvider
         var isBrowsingAction = executable.Equals(nameof(API.IG_ViewByStep), StringComparison.Ordinal)
             || executable.Equals(nameof(API.IG_ViewNext), StringComparison.Ordinal)
             || executable.Equals(nameof(API.IG_ViewPrevious), StringComparison.Ordinal);
-        // quick browsing is an async-loading optimization; sync loading renders every image in full
+        // quick browsing is a Turbo-mode optimization; Sequential renders every image in full
         _isQuickBrowsingPhotos.Set(isBrowsingAction && isHotkeyPressMultiTimes
-            && Core.Config.EnableImageAsyncLoading);
+            && Core.Config.BrowsingMode == BrowsingMode.Turbo);
         if (_isQuickBrowsingPhotos)
         {
             Viewer.ShouldLoadFullResolution.SetFalse();

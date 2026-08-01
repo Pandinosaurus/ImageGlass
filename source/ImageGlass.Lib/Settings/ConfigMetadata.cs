@@ -70,7 +70,6 @@ public enum ConfigId
     EnableOnlyLoadRawPreview,
     EnableOnlyLoadNonRawPreview,
     EnableImagePreview,
-    EnableImageAsyncLoading,
     EnableGalleryShellThumbnail,
     EnableCopyMultipleFiles,
     EnableCutMultipleFiles,
@@ -126,6 +125,7 @@ public enum ConfigId
     #region Enum settings
 
     CheckerboardMode,
+    BrowsingMode,
     ImageLoadingOrder,
     ImageLoadingOrderType,
     ZoomMode,

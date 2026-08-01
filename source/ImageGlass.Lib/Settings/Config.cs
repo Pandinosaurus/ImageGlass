@@ -407,16 +407,6 @@ public partial class Config : PhReactive
     }
 
     /// <summary>
-    /// Gets, sets value indicates that images are loaded asynchronously.
-    /// When disabled, navigation is ignored until the current photo is fully loaded and rendered.
-    /// </summary>
-    public bool EnableImageAsyncLoading
-    {
-        get => Get(ConfigId.EnableImageAsyncLoading, true);
-        set => Set(ConfigId.EnableImageAsyncLoading, value);
-    }
-
-    /// <summary>
     /// Gets, sets value indicates that gallery can use shell for thumbnails.
     /// </summary>
     public bool EnableGalleryShellThumbnail
@@ -770,6 +760,18 @@ public partial class Config : PhReactive
     {
         get => Get(ConfigId.CheckerboardMode, CheckerboardType.None);
         set => Set(ConfigId.CheckerboardMode, value);
+    }
+
+    /// <summary>
+    /// Gets, sets how the app behaves while browsing photos.
+    /// <see cref="BrowsingMode.Sequential"/> ignores navigation until the current photo
+    /// is fully loaded and rendered.
+    /// </summary>
+    [JsonConverter(typeof(JsonStringEnumSafeConverter<BrowsingMode>))]
+    public BrowsingMode BrowsingMode
+    {
+        get => Get(ConfigId.BrowsingMode, BrowsingMode.Turbo);
+        set => Set(ConfigId.BrowsingMode, value);
     }
 
     /// <summary>

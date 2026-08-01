@@ -22,6 +22,7 @@ using ImageGlass.Common.Localization;
 using ImageGlass.Common.Photoing;
 using ImageGlass.Common.Types;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace ImageGlass.Common.Windows;
@@ -67,8 +68,7 @@ public partial class ImageSettingsView : SettingsPageView
             LangId.Settings_EnableLoopBackNavigation, LangId.Settings_Browsing, true);
         BindToggle(PART_AutoSwitchSiblingDir, ConfigId.EnableAutoSwitchSiblingDir,
             LangId.Settings_EnableAutoSwitchSiblingDir, LangId.Settings_Browsing);
-        BindToggle(PART_ImageAsyncLoading, ConfigId.EnableImageAsyncLoading,
-            LangId.Settings_EnableImageAsyncLoading, LangId.Settings_Browsing, true);
+        BuildBrowsingMode();
 
         // Image preview
         BindToggle(PART_ImagePreview, ConfigId.EnableImagePreview,
@@ -110,6 +110,37 @@ public partial class ImageSettingsView : SettingsPageView
             LangId.Settings_ImageBoosterCacheMaxDimension, LangId.Settings_Caching, 8_000u);
         BindDoubleInput(PART_CacheMaxFileSize, ConfigId.CacheMaxFileSizeInMb,
             LangId.Settings_ImageBoosterCacheMaxFileSizeInMb, LangId.Settings_Caching, 100d);
+    }
+
+
+    /// <summary>
+    /// Builds the Browsing mode dropdown. Uses data items instead of <c>BindEnumDropdown</c>
+    /// so each option can show its description beneath the mode name.
+    /// </summary>
+    private void BuildBrowsingMode()
+    {
+        var options = new List<BrowsingModeOption>
+        {
+            new(BrowsingMode.Turbo, LangId.BrowsingMode_Turbo, LangId.BrowsingMode_Turbo_Description),
+            new(BrowsingMode.Sequential, LangId.BrowsingMode_Sequential, LangId.BrowsingMode_Sequential_Description),
+        };
+
+        var current = VM.GetValue(ConfigId.BrowsingMode, BrowsingMode.Turbo);
+        PART_BrowsingMode.ItemsSource = options;
+        PART_BrowsingMode.SelectedItem = options.Find(o => o.Value == current) ?? options[0];
+
+        PART_BrowsingMode.SelectionChanged += (_, _) =>
+        {
+            if (PART_BrowsingMode.SelectedItem is BrowsingModeOption opt)
+            {
+                VM.SetValue(ConfigId.BrowsingMode, opt.Value);
+            }
+        };
+
+        AddLangRefresher(() => options.ForEach(o => o.RefreshLang()));
+
+        RegisterSearchKey(PART_BrowsingMode, LangId.Settings_BrowsingMode,
+            ConfigId.BrowsingMode, LangId.Settings_Browsing);
     }
 
 
