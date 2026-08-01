@@ -30,6 +30,7 @@
             <ui:PhTextBlock
                 x:Name="PART_ExtIconsDesc"
                 LangKey="Settings_FileExtensionIcons_Description"
+                Opacity="0.75"
                 TextWrapping="Wrap" />
             <StackPanel Orientation="Horizontal" Spacing="8">
                 <ui:PhButton x:Name="PART_OpenExtIconFolder" HorizontalContentAlignment="Center" />
@@ -56,9 +57,12 @@
                                    Windows=True,
                                    x:TypeArguments=x:Boolean}"
             Spacing="10">
-            <ui:PhTextBlock LangKey="Settings_DefaultPhotoViewer_Description" TextWrapping="Wrap" />
+            <ui:PhTextBlock
+                LangKey="Settings_DefaultPhotoViewer_Description"
+                Opacity="0.75"
+                TextWrapping="Wrap" />
             <Border
-                Margin="0,8,0,0"
+                Margin="0,4,0,4"
                 Padding="8"
                 Background="{DynamicResource IG_BackgroundWarningBrush}"
                 CornerRadius="{DynamicResource ControlCornerRadius}">

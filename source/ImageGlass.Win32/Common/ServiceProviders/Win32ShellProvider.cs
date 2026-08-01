@@ -347,6 +347,14 @@ public class Win32ShellProvider : PhDisposable, IShellProvider
     /// <summary>
     /// <inheritdoc/>
     /// </summary>
+    public string InstallChannelId => Win32AppIdentity.IsMsStorePackage
+        ? "msstore"
+        : Win32AppIdentity.IsPackaged ? "msix" : "zip";
+
+
+    /// <summary>
+    /// <inheritdoc/>
+    /// </summary>
     public string GetActualConfigDirPath(string localAppDataPath)
     {
         if (string.IsNullOrEmpty(localAppDataPath)) return localAppDataPath;

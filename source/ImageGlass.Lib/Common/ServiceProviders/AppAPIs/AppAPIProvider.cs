@@ -3153,7 +3153,7 @@ public partial class AppAPIProvider
         }
 
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
-        var result = await Core.Update.CheckForUpdateAsync(cts.Token);
+        var result = await Core.Update.CheckForUpdateAsync(cts.Token, isScheduled: !showUI);
 
         if (showUI)
         {

@@ -69,6 +69,15 @@
             <CheckBox x:Name="PART_AutoUpdate">
                 <ui:PhTextBlock LangKey="Settings_AutoUpdate" TextWrapping="Wrap" />
             </CheckBox>
+            <ui:PhTextBlock
+                Margin="0,8,0,0"
+                LangKey="Settings_AutoUpdate_Description"
+                Opacity="0.75"
+                TextWrapping="Wrap" />
+            <ui:PhButton
+                x:Name="PART_SeeWhatIsSent"
+                HorizontalAlignment="Left"
+                Variant="Link" />
         </StackPanel>
 
 

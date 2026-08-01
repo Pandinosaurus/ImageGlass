@@ -18,6 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 using Avalonia.Controls;
 using ImageGlass.Common.Localization;
+using ImageGlass.Common.ServiceProviders.Update;
 using ImageGlass.UI.Windowing;
 using ImageGlass.Windows;
 using System;
@@ -73,6 +74,7 @@ public partial class GeneralSettingsView : SettingsPageView
         // App update — AutoUpdate is stored as a date string; "0" means disabled.
         BindAutoUpdateToggle(PART_AutoUpdate, ConfigId.AutoUpdate,
             LangId.Settings_AutoUpdate, LangId.Settings_AppUpdate);
+        BindLink(PART_SeeWhatIsSent, LangId.Settings_SeeWhatIsSent, ShowUsageStatsPreview);
 
         // Others
         BindIntInput(PART_MsgDuration, ConfigId.InAppMessageDuration,
@@ -91,6 +93,28 @@ public partial class GeneralSettingsView : SettingsPageView
             VM.SetValue(id, (chk.IsChecked ?? false) ? DateTime.UtcNow.ToString() : "0");
 
         RegisterSearchKey(chk, label, id, section);
+    }
+
+
+    /// <summary>
+    /// Shows the exact User-Agent this install would send on a scheduled update check.
+    /// </summary>
+    private async void ShowUsageStatsPreview()
+    {
+        try
+        {
+            var owner = TopLevel.GetTopLevel(this) as PhWindow;
+
+            _ = await ModalWindow.ShowInfoAsync(owner, new ModalWindowOptions
+            {
+                Title = Core.Lang[LangId.Settings_SeeWhatIsSent],
+                Details = UsageStatsAgent.Build(withStats: true),
+            });
+        }
+        catch
+        {
+            // an async void handler must never reach the unhandled-error dialog
+        }
     }
 
 

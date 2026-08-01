@@ -482,7 +482,7 @@ public partial class BHelper
             {
                 var ub = new UriBuilder(uri);
                 var queries = HttpUtility.ParseQueryString(ub.Query);
-                queries["utm_source"] = $"app_{GetAppMajorVersion()}";
+                queries["utm_source"] = $"app_{Core.BuildInfo.FullVersion}";
                 queries["utm_medium"] = "app_click";
                 queries["utm_campaign"] = campaign;
 
@@ -512,18 +512,6 @@ public partial class BHelper
             || host.EndsWith($".{Const.WEBSITE_HOST}", StringComparison.OrdinalIgnoreCase);
     }
 
-
-    /// <summary>
-    /// Gets the app major version, e.g. <c>10</c>. Falls back to an empty string.
-    /// </summary>
-    private static string GetAppMajorVersion()
-    {
-        var version = Core.BuildInfo?.Version;
-        if (string.IsNullOrEmpty(version)) return string.Empty;
-
-        var dotIndex = version.IndexOf('.');
-        return dotIndex > 0 ? version[..dotIndex] : version;
-    }
 
 
     /// <summary>

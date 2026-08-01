@@ -124,6 +124,14 @@ public interface IShellProvider : IDisposable
 
 
     /// <summary>
+    /// Coarse distribution channel reported by the anonymous usage statistics, e.g.
+    /// <c>msstore</c>, <c>msix</c>, <c>flatpak</c>, <c>dmg</c>, <c>zip</c>.
+    /// Must stay a small closed set; never derive it from a filesystem path.
+    /// </summary>
+    string InstallChannelId => "zip";
+
+
+    /// <summary>
     /// Resolves a config dir path to where this process physically reads/writes it. On a
     /// packaged (MSIX) Windows build, per-package write virtualization may redirect the content to
     /// the package container; returns that real path when it exists. Default (non-Windows /

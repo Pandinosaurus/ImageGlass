@@ -35,6 +35,12 @@ internal partial class MacShellProvider : PhDisposable, IShellProvider
     /// <summary>
     /// <inheritdoc/>
     /// </summary>
+    public string InstallChannelId => "dmg";
+
+
+    /// <summary>
+    /// <inheritdoc/>
+    /// </summary>
     protected override void OnDisposing()
     {
         base.OnDisposing();

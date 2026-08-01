@@ -46,4 +46,10 @@ internal static class UpdateConstants
     /// Default background check interval (7 days).
     /// </summary>
     public static readonly TimeSpan BackgroundCheckInterval = TimeSpan.FromDays(7);
+
+    /// <summary>
+    /// Upper bound of the random offset added to <see cref="BackgroundCheckInterval"/> (24 hours),
+    /// so same-cadence installs do not all check on the same day.
+    /// </summary>
+    public const int CheckJitterMinutes = 24 * 60;
 }

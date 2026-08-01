@@ -16,6 +16,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
+using ImageGlass.Common;
 using ImageGlass.Common.ServiceProviders;
 using ImageGlass.Common.Types;
 using System;
@@ -27,6 +28,12 @@ namespace ImageGlass.Linux.Common.ServiceProviders;
 internal class LinuxShellProvider : PhDisposable, IShellProvider
 {
     private static readonly string _desktopFileId = $"imageglass.desktop";
+
+
+    /// <summary>
+    /// <inheritdoc/>
+    /// </summary>
+    public string InstallChannelId => BHelper.IsFlatpakSandbox ? "flatpak" : "zip";
 
 
     public object? ForegroundShell { get; set; }

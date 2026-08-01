@@ -475,6 +475,8 @@ public enum LangId
 
     // General > App update
     Settings_AppUpdate,
+    Settings_AutoUpdate_Description,
+    Settings_SeeWhatIsSent,
 
     // General > Others
     Settings_Others,

@@ -1007,6 +1007,13 @@ public partial class Config : PhReactive
 
 
     /// <summary>
+    /// Whether a value is stored for <paramref name="configName"/>. <c>false</c> means the getter
+    /// falls back to its built-in default, which is how a never-written setting is detected.
+    /// </summary>
+    public bool HasValue(ConfigId configName) => _values.ContainsKey(configName);
+
+
+    /// <summary>
     /// Sets setting value.
     /// </summary>
     public void Set(ConfigId configName, object value)
