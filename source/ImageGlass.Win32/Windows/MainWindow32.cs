@@ -81,6 +81,12 @@ public partial class MainWindow32 : MainWindow
     }
 
 
+    protected override void OnIgTitleBarIconVisibilityChanged(bool show)
+    {
+        Win32WindowApi.SetTitleBarIconVisible(Handle, show);
+    }
+
+
     private void ColorProfileProvider_Changed(IWindowColorProfileProvider sender, ColorProfileChangedEventArgs e)
     {
         // update the current color profile

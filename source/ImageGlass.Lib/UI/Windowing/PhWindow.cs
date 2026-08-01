@@ -24,6 +24,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Styling;
+using Avalonia.Threading;
 using ImageGlass.Common;
 using ImageGlass.Common.AppThemes;
 using ImageGlass.Common.Extensions;
@@ -103,6 +104,20 @@ public partial class PhWindow : Window
 
 
     /// <summary>
+    /// Gets, sets the value indicates that the app icon is shown on the title bar.
+    /// The taskbar icon is not affected.
+    /// </summary>
+    public bool ShowTitleBarIcon
+    {
+        get => GetValue(ShowTitleBarIconProperty);
+        set => SetValue(ShowTitleBarIconProperty, value);
+    }
+    public static readonly StyledProperty<bool> ShowTitleBarIconProperty =
+        AvaloniaProperty.Register<Window, bool>(nameof(ShowTitleBarIcon), true);
+
+
+
+    /// <summary>
     /// Gets, sets the frameless mode.
     /// </summary>
     public bool IsFrameless
@@ -138,6 +153,9 @@ public partial class PhWindow : Window
     {
         base.OnOpened(e);
         OnIgLanguageChanged();
+
+        // needs a live window handle, so it cannot be applied when the property is set
+        OnIgTitleBarIconVisibilityChanged(ShowTitleBarIcon);
     }
 
 
@@ -235,6 +253,18 @@ public partial class PhWindow : Window
         {
             OnIgFramelessModeChanged((bool)e.NewValue!);
         }
+
+        // ShowTitleBarIcon
+        else if (e.Property == ShowTitleBarIconProperty)
+        {
+            OnIgTitleBarIconVisibilityChanged((bool)e.NewValue!);
+        }
+
+        // a new window icon (theme change) resets the title bar icon, so re-apply
+        else if (e.Property == IconProperty)
+        {
+            OnIgTitleBarIconVisibilityChanged(ShowTitleBarIcon);
+        }
     }
 
 
@@ -314,7 +344,20 @@ public partial class PhWindow : Window
             ExtendClientAreaToDecorationsHint = false;
             WindowDecorations = WindowDecorations.Full;
         }
+
+        // the restored title bar comes back without the app icon; re-assert it once the
+        // platform has rebuilt the frame
+        Dispatcher.Post(
+            () => OnIgTitleBarIconVisibilityChanged(ShowTitleBarIcon),
+            DispatcherPriority.Background);
     }
+
+
+    /// <summary>
+    /// Occurs when the visibility of the title bar icon is changed.
+    /// Does nothing by default; platforms that draw an app icon on the title bar override this.
+    /// </summary>
+    protected virtual void OnIgTitleBarIconVisibilityChanged(bool show) { }
 
 
     /// <summary>

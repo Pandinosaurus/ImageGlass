@@ -27,6 +27,12 @@ DisplayConfigGetDeviceInfo
 
 DwmSetWindowAttribute
 
+SendMessage
+WM_SETICON
+WM_GETICON
+CreateIconIndirect
+CreateBitmap
+
 
 SystemParametersInfo
 SYSTEM_PARAMETERS_INFO_ACTION

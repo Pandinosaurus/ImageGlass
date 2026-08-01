@@ -193,7 +193,7 @@
         <!--  Window  -->
         <ui:PhTextBlock Classes="group" LangKey="Settings_Window" />
         <StackPanel Margin="{DynamicResource SettingsGroupIndent}">
-            <CheckBox x:Name="PART_ShowAppIcon">
+            <CheckBox x:Name="PART_ShowAppIcon" IsVisible="{OnPlatform False, Windows=True, x:TypeArguments=x:Boolean}">
                 <ui:PhTextBlock LangKey="Settings_ShowAppIcon" TextWrapping="Wrap" />
             </CheckBox>
             <CheckBox x:Name="PART_EnableCenterWindowFit">
