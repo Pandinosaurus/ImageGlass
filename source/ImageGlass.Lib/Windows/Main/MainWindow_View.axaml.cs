@@ -37,13 +37,28 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ImageGlass.Common.Windows;
 
 public partial class MainWindowView : PhControl
 {
+    // how long to wait for the first paint before giving up (hidden window may never draw)
+    private static readonly TimeSpan _syncLoadRenderTimeout = TimeSpan.FromSeconds(2);
+
+    // > 0 while a photo load + paint is in flight, synchronous loading only
+    private int _syncLoadDepth;
+
+
     public MainWindowViewModel VM => (MainWindowViewModel)DataContext!;
+
+
+    /// <summary>
+    /// Gets whether a photo is currently loading and rendering while
+    /// <see cref="Config.EnableImageAsyncLoading"/> is disabled.
+    /// </summary>
+    public bool IsPhotoLoadInProgress => Volatile.Read(ref _syncLoadDepth) > 0;
 
 
     public MainWindowView()
@@ -911,6 +926,11 @@ public partial class MainWindowView : PhControl
 
     public async Task ViewPhotoAsync(Photo? photo, bool useCache = true, bool scrollToThumbnail = true, bool resetZoom = true)
     {
+        // sync loading: close the navigation gate here, not inside the post below,
+        // so the next key repeat already sees a load in flight
+        var syncLoading = !Core.Config.EnableImageAsyncLoading;
+        if (syncLoading) Interlocked.Increment(ref _syncLoadDepth);
+
         // clear the current in-app message
         _ = PART_Message.ClearAsync();
 
@@ -932,21 +952,35 @@ public partial class MainWindowView : PhControl
 
         Dispatcher.UIThread.Post(async () =>
         {
-            // apply user settings to the viewer
-            PART_Viewer.EnableImagePreview = Core.Config.EnableImagePreview;
-
-            if (scrollToThumbnail)
+            try
             {
-                // set photo to the viewer
-                PART_Gallery.ScrollToItem(Core.Photos.CurrentIndex);
+                // apply user settings to the viewer
+                PART_Viewer.EnableImagePreview = Core.Config.EnableImagePreview;
+
+                if (scrollToThumbnail)
+                {
+                    // set photo to the viewer
+                    PART_Gallery.ScrollToItem(Core.Photos.CurrentIndex);
+                }
+
+                await PART_Viewer.SetPhotoAsync(photo, new PhotoLoadingOptions
+                {
+                    UseCache = useCache,
+                    ResetZoom = resetZoom,
+                    Channels = Core.ColorChannels,
+                });
+
+                // reopening the gate at decode time is too early: the next navigation would
+                // dispose the image before it is ever painted
+                if (syncLoading)
+                {
+                    await PART_Viewer.WaitForPhotoRenderedAsync(_syncLoadRenderTimeout);
+                }
             }
-
-            await PART_Viewer.SetPhotoAsync(photo, new PhotoLoadingOptions
+            finally
             {
-                UseCache = useCache,
-                ResetZoom = resetZoom,
-                Channels = Core.ColorChannels,
-            });
+                if (syncLoading) Interlocked.Decrement(ref _syncLoadDepth);
+            }
 
             // trigger background caching of adjacent photos
             // after the current photo finishes loading

@@ -49,6 +49,9 @@
             <CheckBox x:Name="PART_AutoSwitchSiblingDir">
                 <ui:PhTextBlock LangKey="Settings_EnableAutoSwitchSiblingDir" TextWrapping="Wrap" />
             </CheckBox>
+            <CheckBox x:Name="PART_ImageAsyncLoading">
+                <ui:PhTextBlock LangKey="Settings_EnableImageAsyncLoading" TextWrapping="Wrap" />
+            </CheckBox>
 
 
             <!--  Sub-group: Image preview  -->

@@ -25,6 +25,7 @@ using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using ImageGlass.Common.Extensions;
 using ImageGlass.Common.Localization;
+using ImageGlass.Common.Loggers;
 using ImageGlass.Common.Photoing;
 using ImageGlass.Common.Types;
 using ImageGlass.Common.Windows;
@@ -915,6 +916,20 @@ public partial class AppAPIProvider
     /// </summary>
     public void IG_ViewByStep(int step)
     {
+        // sync loading: ignore navigation until the current photo is painted, so holding
+        // an arrow key advances one fully-drawn image at a time.
+        // must run before GetByStep below, which advances CurrentIndex right away
+        var syncLoading = !Core.Config.EnableImageAsyncLoading;
+        if (syncLoading)
+        {
+            var isLoading = App.MainWindow.PART_MainView.IsPhotoLoadInProgress;
+            if (isLoading)
+            {
+                PhotoTrace.Mark("nav:blocked-sync-loading", Core.Photos.CurrentFilePath);
+                return;
+            }
+        }
+
         // check if can navigate to the image
         var canLoopBack = Core.Config.EnableSlideshow
             ? Core.Config.EnableLoopSlideshow

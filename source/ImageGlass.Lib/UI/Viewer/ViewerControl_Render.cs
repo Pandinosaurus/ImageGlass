@@ -349,6 +349,9 @@ public partial class ViewerControl
             PhotoTrace.Mark("render:first-draw", Photo?.FilePath,
                 $"{imgSize}, vector={IsVectorSource()}");
 
+            // the photo is now on screen; release anyone waiting on the first paint
+            _firstDrawTcs?.TrySetResult();
+
             // vector images don't need raster caching
             if (IsVectorSource())
             {

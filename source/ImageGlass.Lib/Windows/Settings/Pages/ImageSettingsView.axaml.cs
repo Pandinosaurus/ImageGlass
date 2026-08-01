@@ -67,6 +67,8 @@ public partial class ImageSettingsView : SettingsPageView
             LangId.Settings_EnableLoopBackNavigation, LangId.Settings_Browsing, true);
         BindToggle(PART_AutoSwitchSiblingDir, ConfigId.EnableAutoSwitchSiblingDir,
             LangId.Settings_EnableAutoSwitchSiblingDir, LangId.Settings_Browsing);
+        BindToggle(PART_ImageAsyncLoading, ConfigId.EnableImageAsyncLoading,
+            LangId.Settings_EnableImageAsyncLoading, LangId.Settings_Browsing, true);
 
         // Image preview
         BindToggle(PART_ImagePreview, ConfigId.EnableImagePreview,

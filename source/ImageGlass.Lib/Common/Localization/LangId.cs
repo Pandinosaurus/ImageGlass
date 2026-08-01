@@ -499,6 +499,7 @@ public enum LangId
     Settings_EnableHiddenImagesLoading,
     Settings_EnableLoopBackNavigation,
     Settings_EnableAutoSwitchSiblingDir,
+    Settings_EnableImageAsyncLoading,
     Settings_EnableImagePreview,
 
     Settings_ImagePreview,

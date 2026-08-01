@@ -407,6 +407,16 @@ public partial class Config : PhReactive
     }
 
     /// <summary>
+    /// Gets, sets value indicates that images are loaded asynchronously.
+    /// When disabled, navigation is ignored until the current photo is fully loaded and rendered.
+    /// </summary>
+    public bool EnableImageAsyncLoading
+    {
+        get => Get(ConfigId.EnableImageAsyncLoading, true);
+        set => Set(ConfigId.EnableImageAsyncLoading, value);
+    }
+
+    /// <summary>
     /// Gets, sets value indicates that gallery can use shell for thumbnails.
     /// </summary>
     public bool EnableGalleryShellThumbnail

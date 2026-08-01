@@ -42,6 +42,9 @@ public partial class ViewerControl : PhControl
     internal InterlockedBool _isFirstDraw = new(false);
     internal PhotoLoadingOptions _loadingOptions = new();
 
+    // completes once the current photo is painted; null when nothing is pending
+    internal TaskCompletionSource? _firstDrawTcs;
+
     private Point? _lastMousePanPoint = null; // mouse panning
     private Point? _lockZoomSavedSrcPoint; // saved pan position for LockZoom
     private Point? _mouseClickDownPoint = null; // track press point for click action
@@ -586,6 +589,10 @@ public partial class ViewerControl : PhControl
             Photo?.CancelLoading();
             Photo?.Unload();
 
+            // release a waiter whose load is being superseded
+            _firstDrawTcs?.TrySetResult();
+            _firstDrawTcs = null;
+
             // reset
             AnimationSource = AnimationSources.None;
             ClearPhotoTransforms();
@@ -665,6 +672,25 @@ public partial class ViewerControl : PhControl
         if (Photo is null) return;
 
         await Photo.LoadAsync(useCache, OnPhotoLoadingProgressAsync, skipLoadingEvent);
+    }
+
+
+    /// <summary>
+    /// Waits until the current photo has actually been painted at least once.
+    /// Returns immediately when there is nothing pending to draw.
+    /// </summary>
+    public async Task WaitForPhotoRenderedAsync(TimeSpan timeout)
+    {
+        Task? drawTask;
+        lock (_lock)
+        {
+            drawTask = _firstDrawTcs?.Task;
+        }
+
+        if (drawTask is null || drawTask.IsCompleted) return;
+
+        // a minimized or occluded window may never produce a frame, so cap the wait
+        _ = await Task.WhenAny(drawTask, Task.Delay(timeout));
     }
 
 
@@ -927,6 +953,9 @@ public partial class ViewerControl : PhControl
                 // 5. calculate the source viewport to match with the preview
                 if (hasSource)
                 {
+                    // arm the render-completion signal before the draw is queued
+                    _firstDrawTcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+
                     // 5.1 set source based on type
                     if (e.Photo.Bitmap is SkiaVectorSource vectorSource)
                     {
@@ -1025,6 +1054,12 @@ public partial class ViewerControl : PhControl
 
         void HandleCancelLoaded(bool userCancelled)
         {
+            // no draw is coming, release any waiter
+            lock (_lock)
+            {
+                _firstDrawTcs?.TrySetResult();
+            }
+
             if (userCancelled) e.Photo.Unload();
 
             imgFrame?.Dispose();
@@ -1066,6 +1101,10 @@ public partial class ViewerControl : PhControl
             SourceKind = PhotoSource.Native;
             SKImageRef.Set(ref _imgSource, renderedFrame);
             SKImageRef.Set(ref _imgRender, renderedFrame, _imgSource);
+
+            // animated sources have no image at load time, so the first render pass consumes
+            // _isFirstDraw without drawing; the first frame is the real render signal
+            _firstDrawTcs?.TrySetResult();
         }
 
         InvalidateVisual();
