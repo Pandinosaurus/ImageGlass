@@ -20,6 +20,7 @@ using Avalonia;
 using Avalonia.Media.Imaging;
 using ImageGlass.Common.Extensions;
 using ImageGlass.Common.Loggers;
+using ImageGlass.Common.ServiceProviders;
 using ImageGlass.Common.Types;
 using ImageMagick;
 using SkiaSharp;
@@ -963,6 +964,14 @@ public partial class Photo : PhDisposable
                 var diskThumb = await ThumbnailDiskCache.TryGetAsync(FilePath, (int)thumbSize, token)
                     .ConfigureAwait(false);
                 if (token.IsCancellationRequested) return;
+
+                // drop entries written by an older, undersized source so they get regenerated
+                var isDiskThumbUsable = PhotoPreviewProvider.IsPreviewLargeEnough(diskThumb, Metadata, thumbSize);
+                if (diskThumb is not null && !isDiskThumbUsable)
+                {
+                    diskThumb.Dispose();
+                    diskThumb = null;
+                }
 
                 if (diskThumb is not null)
                 {

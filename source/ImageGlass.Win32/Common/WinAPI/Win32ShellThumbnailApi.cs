@@ -107,7 +107,7 @@ public static class Win32ShellThumbnailApi
                 return null;
 
             var info = new SKImageInfo(bm.bmWidth, bm.bmHeight, SKColorType.Bgra8888, SKAlphaType.Premul);
-            var bmpOutput = new SKBitmap(info);
+            using var bmpOutput = new SKBitmap(info);
 
             var bmi = new BITMAPINFO
             {
@@ -125,8 +125,6 @@ public static class Win32ShellThumbnailApi
             if (PInvoke.GetDIBits(hdc, (HBITMAP)hBitmap.DangerousGetHandle(),
                 0, (uint)bm.bmHeight, (void*)bmpOutput.GetPixels(), &bmi, DIB_USAGE.DIB_RGB_COLORS) == 0)
             {
-                bmpOutput.Dispose();
-                bmpOutput = null;
                 return null;
             }
 

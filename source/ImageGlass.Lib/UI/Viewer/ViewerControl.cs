@@ -792,26 +792,11 @@ public partial class ViewerControl : PhControl
                 SKImageRef.Set(ref _imgSource, imgPreview);
 
                 var desiredSrcZoomFactor = CalculateZoomFactor(ZoomMode, e.Metadata.Width, e.Metadata.Height);
-                var previewZoomFactor = desiredSrcZoomFactor;
 
-                if (ZoomMode == ZoomMode.AutoZoom)
-                {
-                    // if the source size is bigger than viewport,
-                    // fit the thumbnail to the viewport
-                    if (desiredSrcZoomFactor < 1)
-                    {
-                        previewZoomFactor = CalculateZoomFactor(ZoomMode.ScaleToFit, BitmapSize.Width, BitmapSize.Height);
-                    }
-                    // both preview and source size are smaller than viewport
-                    else
-                    {
-                        previewZoomFactor = 1;
-                    }
-                }
-                else
-                {
-                    previewZoomFactor = CalculateZoomFactor(ZoomMode, BitmapSize.Width, BitmapSize.Height);
-                }
+                // the preview is a shrunken copy of the source, so scale it back up by however
+                // much it was shrunk; it then covers the exact area the full image will
+                var previewToSrcScale = GetPreviewToSourceScale(BitmapSize, e.Metadata);
+                var previewZoomFactor = desiredSrcZoomFactor * previewToSrcScale;
 
                 SetZoomFactor(previewZoomFactor, false);
             }
@@ -832,6 +817,23 @@ public partial class ViewerControl : PhControl
             imgPreview?.Dispose();
             imgPreview = null;
         }
+    }
+
+
+    /// <summary>
+    /// Gets how many times the preview bitmap was shrunk from the full-size photo, so the preview
+    /// can be drawn over the exact area the full image is going to occupy.
+    /// </summary>
+    private static double GetPreviewToSourceScale(Size previewSize, PhotoMetadata meta)
+    {
+        if (previewSize.Width <= 0 || previewSize.Height <= 0) return 1;
+        if (meta.Width == 0 || meta.Height == 0) return 1;
+
+        var widthScale = meta.Width / previewSize.Width;
+        var heightScale = meta.Height / previewSize.Height;
+
+        // Min keeps the preview inside the final footprint when the aspect ratios differ slightly
+        return Math.Max(1, Math.Min(widthScale, heightScale));
     }
 
 

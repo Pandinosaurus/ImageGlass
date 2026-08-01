@@ -27,6 +27,13 @@ namespace ImageGlass.Common.ServiceProviders;
 
 public class PhotoPreviewProvider : IPhotoPreviewProvider
 {
+    /// <summary>
+    /// Fraction of the requested size a preview must reach to count as sharp enough.
+    /// Callers request 2x the size they display (supersampling margin), so half of it is still
+    /// drawn without any upscaling; below that the preview visibly blurs.
+    /// </summary>
+    private const double MIN_PREVIEW_SIZE_RATIO = 0.5;
+
 
     /// <summary>
     /// <inheritdoc/>
@@ -75,13 +82,18 @@ public class PhotoPreviewProvider : IPhotoPreviewProvider
 
         // 1. fast path: try to get the quick preview
         var imgPreview = await GetPreviewAsync(meta, minSize, token);
+        var isPreviewLargeEnough = IsPreviewLargeEnough(imgPreview, meta, minSize);
 
 
-        // 2. slow path: use ImageMagick for unsupported formats
-        if (imgPreview.IsDisposed())
+        // 2. slow path: use ImageMagick for unsupported formats, and for previews that came back
+        // smaller than the gallery cell (they would be scaled up and look blurry)
+        if (!isPreviewLargeEnough)
         {
             using var imgM = await MagickCodec.QuickDecodeAsync(meta.FilePath, maxSize, maxSize, token: token);
-            imgPreview = SkiaCodec.FromMagick(imgM, meta.SkiaColorSpace);
+            var imgMagick = SkiaCodec.FromMagick(imgM, meta.SkiaColorSpace);
+
+            // an undersized preview is still better than nothing if Magick did no better
+            _ = KeepLarger(ref imgPreview, imgMagick);
         }
 
 
@@ -97,7 +109,7 @@ public class PhotoPreviewProvider : IPhotoPreviewProvider
         // 3. resize if needed
         if (minSize > 0 && (imgPreview?.Width > maxSize || imgPreview?.Height > maxSize))
         {
-            var resizedBmpPreview = await SkiaCodec.ResizeAsync(imgPreview, minSize, token: token);
+            using var resizedBmpPreview = await SkiaCodec.ResizeAsync(imgPreview, minSize, token: token);
             imgPreview?.Dispose();
             imgPreview = SKImage.FromBitmap(resizedBmpPreview);
         }
@@ -105,6 +117,62 @@ public class PhotoPreviewProvider : IPhotoPreviewProvider
 
         if (imgPreview.IsDisposed()) imgPreview = null;
         return imgPreview;
+    }
+
+
+    /// <summary>
+    /// Checks whether <paramref name="img"/> can fill a <paramref name="requestedSize"/> box
+    /// without being scaled up. A source smaller than the request caps what any provider is able
+    /// to return, so the source's own size becomes the target in that case.
+    /// </summary>
+    public static bool IsPreviewLargeEnough(SKImage? img, PhotoMetadata meta, double requestedSize)
+    {
+        if (img.IsDisposed()) return false;
+        if (requestedSize <= 0) return true;
+
+        // the supersampling margin is optional, the source size is not: when the source is
+        // smaller than the request, its full size is the sharpest result obtainable
+        var wantedSize = requestedSize * MIN_PREVIEW_SIZE_RATIO;
+        var srcLongestSide = (double)Math.Max(meta.Width, meta.Height);
+        if (srcLongestSide > 0) wantedSize = Math.Min(wantedSize, srcLongestSide);
+
+        var imgLongestSide = (double)Math.Max(img.Width, img.Height);
+        return imgLongestSide >= wantedSize;
+    }
+
+
+    /// <summary>
+    /// Keeps whichever of <paramref name="current"/> and <paramref name="candidate"/> has the
+    /// larger longest side and disposes the other. Returns <c>true</c> when
+    /// <paramref name="candidate"/> won.
+    /// </summary>
+    protected static bool KeepLarger(ref SKImage? current, SKImage? candidate)
+    {
+        if (candidate.IsDisposed()) return false;
+
+        var currentSide = GetLongestSide(current);
+        var candidateSide = GetLongestSide(candidate);
+
+        if (candidateSide <= currentSide)
+        {
+            candidate.Dispose();
+            return false;
+        }
+
+        current?.Dispose();
+        current = candidate;
+        return true;
+    }
+
+
+    /// <summary>
+    /// Gets the longest side of the image, or <c>0</c> if it is null or disposed.
+    /// </summary>
+    private static int GetLongestSide(SKImage? img)
+    {
+        if (img.IsDisposed()) return 0;
+
+        return Math.Max(img.Width, img.Height);
     }
 
 

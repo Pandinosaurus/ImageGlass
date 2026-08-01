@@ -43,40 +43,51 @@ public class Win32PhotoPreviewProvider : PhotoPreviewProvider
 
 
         var size = (int)(minHeight ?? double.MinValue);
+        SKImage? imgPreview = null;
         var needPreprocess = false;
 
 
-        // 1. fast path: try Shell cache only (instant, no decoding)
-        var imgPreview = await Task.Run(() => Win32ShellThumbnailApi.GetThumbnail(meta.FilePath, size, size, true))
+        // 1. fast path: try Shell cache only (instant, no decoding).
+        // The Shell cache only holds discrete size tiers (96/256/768/1920), so a hit can be far
+        // smaller than requested; keep it as a fallback but keep looking for a sharper source.
+        var imgShellCached = await Task.Run(() => Win32ShellThumbnailApi.GetThumbnail(meta.FilePath, size, size, true))
             .ConfigureAwait(false);
+        _ = KeepLarger(ref imgPreview, imgShellCached); // Shell output needs no post-processing
 
 
         // 2. fast path: native scaled decode via SkiaSharp
-        if (imgPreview.IsDisposed())
+        var isLargeEnough = IsPreviewLargeEnough(imgPreview, meta, size);
+        if (!isLargeEnough)
         {
-            imgPreview = await Task.Run(() => SkiaCodec.LoadThumbnail(meta.FilePath, size), token)
+            var imgDecoded = await Task.Run(() => SkiaCodec.LoadThumbnail(meta.FilePath, size), token)
                 .ConfigureAwait(false);
-            needPreprocess = true;
+            var useDecoded = KeepLarger(ref imgPreview, imgDecoded);
+            if (useDecoded) needPreprocess = true;
         }
 
 
-        // 3. try getting thumbnail from Shell
-        if (imgPreview.IsDisposed())
+        // 3. try getting thumbnail from Shell; this one hits the disk, so the Shell can extract a
+        // bigger tier than the cache had
+        isLargeEnough = IsPreviewLargeEnough(imgPreview, meta, size);
+        if (!isLargeEnough)
         {
-            imgPreview = await Task.Run(() => Win32ShellThumbnailApi.GetThumbnail(meta.FilePath, size, size, false))
+            var imgShell = await Task.Run(() => Win32ShellThumbnailApi.GetThumbnail(meta.FilePath, size, size, false))
                 .ConfigureAwait(false);
-            needPreprocess = false;
+            var useShell = KeepLarger(ref imgPreview, imgShell);
+            if (useShell) needPreprocess = false;
         }
 
 
         // 4. try embedded EXIF preview
-        if (imgPreview.IsDisposed())
+        isLargeEnough = IsPreviewLargeEnough(imgPreview, meta, size);
+        if (!isLargeEnough)
         {
             using var thumbM = meta.GetEmbeddedPreview();
             if (thumbM is not null && thumbM.Height >= minHeight)
             {
-                imgPreview = SkiaCodec.FromMagick(thumbM, meta.SkiaColorSpace);
-                needPreprocess = true;
+                var imgEmbedded = SkiaCodec.FromMagick(thumbM, meta.SkiaColorSpace);
+                var useEmbedded = KeepLarger(ref imgPreview, imgEmbedded);
+                if (useEmbedded) needPreprocess = true;
             }
         }
 
