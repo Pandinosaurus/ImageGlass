@@ -22,10 +22,12 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Media;
 using ImageGlass.Common;
 using ImageGlass.Common.Localization;
+using ImageGlass.Common.ServiceProviders.Licensing;
 using ImageGlass.Common.ServiceProviders.Update;
 using ImageGlass.Common.Types;
 using ImageGlass.UI;
 using ImageGlass.UI.Windowing;
+using System;
 
 namespace ImageGlass.Windows;
 
@@ -35,6 +37,13 @@ public partial class UpdateWindow : ModalWindow
 
     protected override int MIN_WIDTH => 500;
     protected override int MAX_WIDTH => 500;
+
+
+    /// <summary>
+    /// Whether the app runs from the Microsoft Store package.
+    /// </summary>
+    private static bool IsMsStoreBuild => string.Equals(Core.ShellProvider?.InstallChannelId,
+        LicenseService.CHANNEL_MSSTORE, StringComparison.OrdinalIgnoreCase);
 
 
     /// <summary>
@@ -56,6 +65,13 @@ public partial class UpdateWindow : ModalWindow
 
     protected override void OnDialogSubmitted(DialogEventArgs e)
     {
+        // the Store delivers updates for its own package, so go to the Store listing
+        if (IsMsStoreBuild)
+        {
+            _ = BHelper.OpenUrlAsync(this, UpdateConstants.MsStoreProductUrl, "from_update_dialog");
+            return;
+        }
+
         // "Update" button opens the update URL, falling back to the changelog URL
         var release = _result?.Release;
         var url = !string.IsNullOrWhiteSpace(release?.UpdateUrl)

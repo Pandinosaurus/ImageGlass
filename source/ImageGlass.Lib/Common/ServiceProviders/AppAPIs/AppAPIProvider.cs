@@ -68,6 +68,10 @@ public partial class AppAPIProvider
     private DispatcherTimer? _slideshowCountdownTimer;
     private bool _slideshowIsAdvancing;
 
+    // set once the user runs a check-for-update with UI; the startup silent check then completes
+    // its work without popping its own window on top of what the user already asked for
+    private static InterlockedBool _hasManualUpdateCheck;
+
 
     private static ViewerControl Viewer => App.MainWindow.PART_MainView.PART_Viewer;
     private static ToolbarControl Toolbar => App.MainWindow.PART_MainView.PART_Toolbar;
@@ -3129,6 +3133,8 @@ public partial class AppAPIProvider
     /// </summary>
     public static async Task IG_CheckForUpdateAsync(bool showUI = true)
     {
+        if (showUI) _hasManualUpdateCheck.SetTrue();
+
         // silent mode: skip if disabled or checked recently
         if (!showUI)
         {
@@ -3136,7 +3142,7 @@ public partial class AppAPIProvider
             if (!UpdateProvider.ShouldCheck) return;
 
             // delay to let the app finish starting
-            await Task.Delay(TimeSpan.FromSeconds(30));
+            await Task.Delay(TimeSpan.FromSeconds(10));
         }
 
 
@@ -3162,8 +3168,8 @@ public partial class AppAPIProvider
         }
         else
         {
-            // silent mode: only show window if update is available
-            if (result.Status == Update.UpdateCheckStatus.UpdateAvailable)
+            // silent mode: only show window for an update the user has not already checked for
+            if (result.Status == Update.UpdateCheckStatus.UpdateAvailable && !_hasManualUpdateCheck)
             {
                 updateWindow = new UpdateWindow();
                 updateWindow.SetResultState(result);

@@ -33,6 +33,12 @@ internal static class UpdateConstants
     public const string FallbackReleasesUrl = "https://github.com/d2phap/ImageGlass/releases";
 
     /// <summary>
+    /// Microsoft Store product page. The Store owns updating for that package, so its build sends
+    /// the user here instead of to the download/changelog page.
+    /// </summary>
+    public const string MsStoreProductUrl = "ms-windows-store://pdp/?productid=9N33VZK3C7TH";
+
+    /// <summary>
     /// Maximum metadata response size (1 MB).
     /// </summary>
     public const long MaxMetadataSize = 1 * 1024 * 1024;
