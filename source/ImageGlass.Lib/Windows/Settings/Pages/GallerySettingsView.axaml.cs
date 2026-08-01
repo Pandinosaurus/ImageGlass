@@ -16,7 +16,12 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
+using Avalonia.Controls;
 using ImageGlass.Common.Localization;
+using ImageGlass.Common.Photoing;
+using ImageGlass.UI.Windowing;
+using System;
+using System.Threading.Tasks;
 
 namespace ImageGlass.Common.Windows;
 
@@ -54,5 +59,47 @@ public partial class GallerySettingsView : SettingsPageView
 
         BindUIntInput(PART_GalleryCacheSize, ConfigId.GalleryCacheSizeInMb,
             LangId.Settings_GalleryCacheSizeInMb, LangId.Settings_Appearance, 100u);
+
+        SetLocalizedText(PART_ClearCache, LangId._ClearCache);
+        PART_ClearCache.Click += async (_, _) => await ClearThumbnailCacheAsync();
+        RegisterSearchKey(PART_ClearCache, LangId._ClearCache, null, LangId.Settings_Appearance);
+    }
+
+
+    /// <summary>
+    /// Deletes every cached thumbnail from disk and reports the outcome.
+    /// </summary>
+    private async Task ClearThumbnailCacheAsync()
+    {
+        var owner = TopLevel.GetTopLevel(this) as PhWindow;
+        Exception? error;
+
+        // the cache folder can hold thousands of files, so delete it off the UI thread
+        PART_ClearCache.IsEnabled = false;
+        try
+        {
+            error = await Task.Run(ThumbnailDiskCache.Clear);
+        }
+        finally
+        {
+            PART_ClearCache.IsEnabled = true;
+        }
+
+        if (error is null)
+        {
+            await ModalWindow.ShowInfoAsync(owner, new ModalWindowOptions
+            {
+                Title = Core.Lang[LangId._ClearCache],
+                Heading = Core.Lang[LangId._ClearCache_Success],
+            });
+            return;
+        }
+
+        await ModalWindow.ShowErrorAsync(owner, new ModalWindowOptions
+        {
+            Title = Core.Lang[LangId._ClearCache],
+            Heading = Core.Lang[LangId._ClearCache_Error],
+            Details = error.Message,
+        });
     }
 }

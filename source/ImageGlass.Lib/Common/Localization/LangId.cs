@@ -64,6 +64,11 @@ public enum LangId
     _GetHelp,
     _GetMoreTools,
     _Start,
+    _Register,
+    _Unregister,
+    _ClearCache,
+    _ClearCache_Success,
+    _ClearCache_Error,
 
     _UnhandledException,
     _UnhandledException_Description,
@@ -680,8 +685,6 @@ public enum LangId
     Settings_DefaultPhotoViewer_Description,
     Settings_DefaultPhotoViewer_ScopePerMachine,
     Settings_DefaultPhotoViewer_ScopePerUser,
-    _Register,
-    _Unregister,
     Settings_OpenDefaultAppsSetting,
 
     // File type associations > File formats

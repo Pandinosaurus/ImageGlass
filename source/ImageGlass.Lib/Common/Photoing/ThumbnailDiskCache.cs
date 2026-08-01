@@ -168,9 +168,10 @@ internal static class ThumbnailDiskCache
 
 
     /// <summary>
-    /// Clears the entire disk cache.
+    /// Clears the entire disk cache. Returns the failure, or <c>null</c> when the cache is gone
+    /// (a thumbnail being written concurrently can keep the folder locked).
     /// </summary>
-    public static void Clear()
+    public static Exception? Clear()
     {
         try
         {
@@ -181,8 +182,12 @@ internal static class ThumbnailDiskCache
             }
 
             _cacheDir = null;
+            return null;
         }
-        catch { }
+        catch (Exception ex)
+        {
+            return ex;
+        }
     }
 
     #endregion // Public Methods

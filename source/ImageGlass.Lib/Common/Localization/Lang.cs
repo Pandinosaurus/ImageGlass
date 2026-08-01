@@ -493,6 +493,9 @@ public class Lang
         new(LangId._Start, "Start"),
         new(LangId._Register, "Register"),
         new(LangId._Unregister, "Unregister"),
+        new(LangId._ClearCache, "Clear cache"),
+        new(LangId._ClearCache_Success, "Cache are cleared"),
+        new(LangId._ClearCache_Error, "Could not clear the cache"),
 
         new(LangId._UnhandledException, "Unhandled exception"), // v9.0
         new(LangId._UnhandledException_Description, "Unhandled exception has occurred. If you click Continue, the application will ignore this error and attempt to continue. If you click Quit, the application will close immediately."), // v9.0
