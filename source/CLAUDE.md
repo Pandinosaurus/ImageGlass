@@ -369,6 +369,7 @@ Occurs in `Program.cs` before Avalonia app setup (Linux/Mac have equivalent regi
 - **CMYK profiles**: `SKColorSpace.CreateIcc()` returns `null` for CMYK → `Core.IsDestColorProfileSupported=false` → `SkiaCodecAdapter.CanDecode` refuses → Magick decodes. `ProcessMagickImage__` must never output CMYK pixels (they render inverted): cast `refImgM.ColorSpace = ColorSpace.sRGB` (keeps the print-like tint; do not ICC round-trip, it over-brightens).
 - **Codec-selection cache**: `Core.UpdateDestColorProfile()` calls `CodecRegistry.InvalidateSelectionCaches()` and always fires `ColorProfileChanged`. Without the invalidation, a CMYK choice leaves `.jpg` stuck on Magick ("sticky downgrade") and every later profile double-applies (brighter/over-saturated until restart).
 - **On change**: `Core_ColorProfileChanged()` re-decodes the current photo via `SetPhotoAsync(photo, { ResetZoom = false, UseCache = false })` — re-applies cleanly while keeping zoom/pan; never transforms `_imgSource` in place. `ColorProfile` is intentionally NOT in `SettingsViewModel.reloadPhoto` (a generic reload would reset zoom).
+- **Monitor change vs settings change**: `UpdateDestColorProfile(requiresPhotoReload)` carries the intent through `DestColorProfileChangedEventArgs`. The monitor-profile provider passes `false` (dragging the window between monitors must not flash the viewer, matching the `Settings_CurrentMonitorProfile_Description` note); the settings page uses the default `true`. The profile still updates for later loads either way.
 
 ---
 

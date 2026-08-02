@@ -137,8 +137,11 @@ public partial class ViewerControl : PhControl
     }
 
 
-    private void Core_ColorProfileChanged(object? sender, EventArgs e)
+    private void Core_ColorProfileChanged(object? sender, DestColorProfileChangedEventArgs e)
     {
+        // a monitor change only re-targets later loads; reloading here would flash the viewer
+        if (!e.RequiresPhotoReload) return;
+
         Photo? photo;
         lock (_lock)
         {

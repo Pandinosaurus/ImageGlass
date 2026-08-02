@@ -52,7 +52,7 @@ public static class Core
     public static event EventHandler<ThemePackChangedEventArgs>? ThemeChanged;
     public static event EventHandler<PhotoUnloadedEventArgs>? PhotoUnloaded;
     public static event EventHandler<PhotoSaveEventArgs>? PhotoSaved;
-    public static event EventHandler? ColorProfileChanged;
+    public static event EventHandler<DestColorProfileChangedEventArgs>? ColorProfileChanged;
 
     private static string _initImagePathFromArgs = string.Empty;
 
@@ -922,7 +922,11 @@ public static class Core
     /// <summary>
     /// Updates the current destination color space.
     /// </summary>
-    public static void UpdateDestColorProfile()
+    /// <param name="requiresPhotoReload">
+    /// Pass <see langword="false"/> when the profile changed only because the window moved to
+    /// another monitor, so the on-screen photo is left alone instead of flashing through a reload.
+    /// </param>
+    public static void UpdateDestColorProfile(bool requiresPhotoReload = true)
     {
         var results = SkiaCodec.GetColorProfileByName(Core.Config.ColorProfile);
         Core.IsDestColorProfileSupported = results.IsSupported;
@@ -931,10 +935,10 @@ public static class Core
         // (a codec chosen while Skia was ineligible must not stay stuck decoding).
         Core.CodecRegistry.InvalidateSelectionCaches();
 
-        // apply the new profile and notify (the viewer re-decodes the current photo)
+        // apply the new profile and notify
         Core.DestColorProfile?.Dispose();
         Core.DestColorProfile = results.ColorSpace;
-        Core.OnColorProfileChanged();
+        Core.OnColorProfileChanged(requiresPhotoReload);
     }
 
 
@@ -958,11 +962,11 @@ public static class Core
     /// <summary>
     /// Raises ColorProfileChanged event on UI thread.
     /// </summary>
-    public static void OnColorProfileChanged()
+    public static void OnColorProfileChanged(bool requiresPhotoReload = true)
     {
         Dispatcher.UIThread.Post(() =>
         {
-            ColorProfileChanged?.Invoke(null, new());
+            ColorProfileChanged?.Invoke(null, new(requiresPhotoReload));
         });
 
         ToolRegistry.ExternalTools.BroadcastToAll(MessageTypes.COLOR_PROFILE_CHANGED);
