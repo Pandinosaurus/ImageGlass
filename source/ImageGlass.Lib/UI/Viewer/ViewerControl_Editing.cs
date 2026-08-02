@@ -24,6 +24,8 @@ using ImageGlass.Common.Extensions;
 using ImageGlass.Common.Photoing;
 using ImageGlass.Common.Types;
 using SkiaSharp;
+using System;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -234,9 +236,16 @@ public partial class ViewerControl
     public void ReapplyHdrToneMapping()
     {
         _hdrDirty = true;
-        if (Interlocked.CompareExchange(ref _hdrActive, 1, 0) == 0)
+        if (Interlocked.CompareExchange(ref _hdrActive, 1, 0) != 0) return;
+
+        // the pump reads UI-thread-affine state, so it must start on the UI thread
+        if (Dispatcher.UIThread.CheckAccess())
         {
             _ = HdrToneMapPumpAsync();
+        }
+        else
+        {
+            Dispatcher.UIThread.Post(() => _ = HdrToneMapPumpAsync());
         }
     }
 
@@ -245,6 +254,12 @@ public partial class ViewerControl
     /// Serialized pump that drains re-tone-map requests one pass at a time (latest-wins),
     /// re-kicking if a request slips in during shutdown.
     /// </summary>
+    /// <remarks>
+    /// Runs on the UI thread and must stay there between passes: each pass reads
+    /// <see cref="EnableHdrRendering"/>, a styled property that throws when touched from another
+    /// thread. The expensive work inside a pass is already offloaded via <c>Task.Run</c>, so the
+    /// loop itself costs nothing on the UI thread.
+    /// </remarks>
     private async Task HdrToneMapPumpAsync()
     {
         try
@@ -253,8 +268,14 @@ public partial class ViewerControl
             while (_hdrDirty)
             {
                 _hdrDirty = false;
-                await DoOneHdrToneMapPassAsync().ConfigureAwait(false);
+                await DoOneHdrToneMapPassAsync();
             }
+        }
+        catch (Exception ex)
+        {
+            // nothing awaits this pump, so an escaping fault would resurface on the finalizer
+            // thread as an unobserved task exception and take the app down
+            Debug.WriteLine($"❌❌❌ {nameof(HdrToneMapPumpAsync)}: {ex.Message}");
         }
         finally
         {
