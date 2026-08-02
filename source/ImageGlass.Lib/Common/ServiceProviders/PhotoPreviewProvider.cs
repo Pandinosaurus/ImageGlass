@@ -106,12 +106,19 @@ public class PhotoPreviewProvider : IPhotoPreviewProvider
         }
 
 
-        // 3. resize if needed
-        if (minSize > 0 && (imgPreview?.Width > maxSize || imgPreview?.Height > maxSize))
+        // 3. shrink anything bigger than requested. The Shell hands back whole cache tiers and the
+        // Magick/codec fallbacks decode at maxSize for headroom, so results are routinely oversized;
+        // keeping them would cost several MB of gallery memory per photo. Skia-only: a Magick
+        // round-trip here costs ~170ms per thumbnail and dominates gallery load time.
+        if (minSize > 0 && (imgPreview?.Width > minSize || imgPreview?.Height > minSize))
         {
-            using var resizedBmpPreview = await SkiaCodec.ResizeAsync(imgPreview, minSize, token: token);
-            imgPreview?.Dispose();
-            imgPreview = SKImage.FromBitmap(resizedBmpPreview);
+            var imgScaled = await Task.Run(() => SkiaCodec.ScaleDown(imgPreview, minSize), token)
+                .ConfigureAwait(false);
+            if (!imgScaled.IsDisposed())
+            {
+                imgPreview?.Dispose();
+                imgPreview = imgScaled;
+            }
         }
 
 

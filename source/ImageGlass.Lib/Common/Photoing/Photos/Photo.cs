@@ -995,14 +995,17 @@ public partial class Photo : PhDisposable
 
                 // 5. get thumbnail from platform provider
                 PhotoTrace.Mark("thumb:provider", null, $"{FilePath} @ {(int)thumbSize}px");
+                var swThumb = PhotoTrace.Enabled ? Stopwatch.StartNew() : null;
                 using var skThumb = await Task.Run(
                     () => Core.PreviewProvider.GetThumbnailAsync(Metadata, thumbSize, token), token)
                     .ConfigureAwait(false);
                 if (token.IsCancellationRequested || skThumb.IsDisposed()) return;
 
-
-                // 5b. write to disk cache (fire-and-forget, encoding is synchronous)
-                _ = ThumbnailDiskCache.PutAsync(FilePath, (int)thumbSize, skThumb, token);
+                if (swThumb is not null)
+                {
+                    PhotoTrace.Mark("thumb:provider-done", null,
+                        $"{FilePath} -> {skThumb.Width}x{skThumb.Height} in {swThumb.ElapsedMilliseconds}ms");
+                }
 
 
                 // 6. convert SKImage to Avalonia Bitmap
@@ -1020,6 +1023,12 @@ public partial class Photo : PhDisposable
                 // 7. update the gallery thumbnail (triggers UI binding update)
                 GalleryThumbnail?.Dispose();
                 GalleryThumbnail = avBitmap;
+
+
+                // 8. write to disk cache last, so encoding never delays the thumbnail appearing.
+                // Awaited (not fire-and-forget) to keep skThumb alive until the encode is done.
+                await ThumbnailDiskCache.PutAsync(FilePath, (int)thumbSize, skThumb, token)
+                    .ConfigureAwait(false);
             }
             catch (OperationCanceledException) { }
             catch (Exception ex)

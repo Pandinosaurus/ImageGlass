@@ -813,6 +813,35 @@ public static partial class SkiaCodec
 
 
     /// <summary>
+    /// Shrinks the image so its longest side is <paramref name="maxSize"/>, entirely inside Skia.
+    /// Unlike <see cref="ResizeAsync(SKImage?, double, ImageResamplingMethod, CancellationToken)"/>
+    /// this skips the Magick round-trip (4 full pixel copies), which is far too costly for the
+    /// thumbnail pipeline. Returns <c>null</c> when the image already fits (it never upscales).
+    /// </summary>
+    public static SKImage? ScaleDown(SKImage? imgSrc, double maxSize)
+    {
+        if (imgSrc.IsDisposed() || maxSize <= 0) return null;
+
+        var newSize = BHelper.ResizeRatio(new Size(imgSrc.Width, imgSrc.Height), maxSize);
+        var newWidth = Math.Max(1, (int)newSize.Width);
+        var newHeight = Math.Max(1, (int)newSize.Height);
+        if (newWidth >= imgSrc.Width && newHeight >= imgSrc.Height) return null;
+
+        // no color space: matches the Magick path, which also read raw pixels into an unmanaged info
+        var info = new SKImageInfo(newWidth, newHeight, SKColorType.Bgra8888, SKAlphaType.Premul);
+        using var bmpDest = new SKBitmap(info);
+        using var pixmap = bmpDest.PeekPixels();
+        if (pixmap is null) return null;
+
+        // Mitchell keeps downscaled thumbnails smooth without ringing
+        var sampling = new SKSamplingOptions(SKCubicResampler.Mitchell);
+        if (!imgSrc.ScalePixels(pixmap, sampling)) return null;
+
+        return ToSKImage(bmpDest);
+    }
+
+
+    /// <summary>
     /// Resizes the specified bitmap to the given dimensions using the selected resampling method.
     /// </summary>
     public static async Task<SKBitmap?> ResizeAsync(SKImage? imgSrc,

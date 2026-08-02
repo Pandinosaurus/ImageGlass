@@ -102,9 +102,14 @@ internal static class ThumbnailDiskCache
 
 
     /// <summary>
-    /// Writes a thumbnail to the disk cache. Triggers async eviction if over budget.
+    /// Encodes and writes a thumbnail to the disk cache. Triggers async eviction if over budget.
     /// No-op if disk caching is disabled.
     /// </summary>
+    /// <remarks>
+    /// The caller must keep <paramref name="image"/> alive until this completes: encoding runs on a
+    /// background thread so it never blocks the gallery pipeline, so this must be awaited rather
+    /// than fired and forgotten.
+    /// </remarks>
     public static async Task PutAsync(string filePath,
         int thumbSize, SKImage image, CancellationToken token = default)
     {
@@ -116,17 +121,18 @@ internal static class ThumbnailDiskCache
         if (string.IsNullOrEmpty(filePath)) return;
         if (image.IsDisposed()) return;
 
-        // encode synchronously (runs on calling thread before first await)
-        using var encoded = image.Encode(SKEncodedImageFormat.Webp, 80);
-        if (encoded is null || encoded.Size == 0) return;
-
         var cachePath = GetCacheFilePath(filePath, thumbSize);
 
-        // write to disk asynchronously
+        // encode + write off the calling thread
         await Task.Run(() =>
         {
             try
             {
+                if (image.IsDisposed()) return;
+
+                using var encoded = image.Encode(SKEncodedImageFormat.Webp, 80);
+                if (encoded is null || encoded.Size == 0) return;
+
                 Directory.CreateDirectory(Path.GetDirectoryName(cachePath)!);
 
                 using var fs = File.Create(cachePath);
