@@ -20,6 +20,7 @@ using Avalonia;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
 using ImageGlass.Common;
+using ImageGlass.Common.Extensions;
 using ImageGlass.Common.Localization;
 using ImageGlass.Common.ServiceProviders;
 using ImageGlass.UI;
@@ -115,6 +116,7 @@ public partial class FrameNavToolControl : PhControl, IToolControl
     {
         base.OnLoaded(e);
         UpdateFrameInfo();
+        UpdateTheme();
 
         Viewer.PhotoFrameChanged += Viewer_PhotoFrameChanged;
 
@@ -146,6 +148,13 @@ public partial class FrameNavToolControl : PhControl, IToolControl
     {
         base.OnIgLanguageChanged();
         UpdateHotkeyTooltip();
+    }
+
+
+    protected override void OnIgThemeChanged(ThemePackChangedEventArgs e)
+    {
+        base.OnIgThemeChanged(e);
+        UpdateTheme();
     }
 
 
@@ -199,6 +208,18 @@ public partial class FrameNavToolControl : PhControl, IToolControl
 
 
     #region Control Methods
+
+    /// <summary>
+    /// Update tool control theme.
+    /// </summary>
+    private void UpdateTheme()
+    {
+        PART_PlaybackControlBorder.Background = Core.Theme.AccentColor
+            .Blend(Core.Theme.InvertedBaseColor)
+            .WithAlpha(20)
+            .ToBrush();
+    }
+
 
     /// <summary>
     /// Updates the frame-related information for the current photo.

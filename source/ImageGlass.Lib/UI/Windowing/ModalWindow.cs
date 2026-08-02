@@ -598,7 +598,7 @@ public partial class ModalWindow : DialogWindow
     /// <summary>
     /// Loads thumbnail icon.
     /// </summary>
-    private void LoadThumbnailIconSource()
+    protected void LoadThumbnailIconSource()
     {
         if (_thumbnailIconImage.Source is not null) return;
 

@@ -23,9 +23,9 @@
             TextAlignment="Right" />
 
         <Border
+            x:Name="PART_PlaybackControlBorder"
             Grid.Column="1"
             Padding="6"
-            Background="{DynamicResource IG_BackgroundNeutralBrush}"
             CornerRadius="10">
             <StackPanel
                 VerticalAlignment="Center"
