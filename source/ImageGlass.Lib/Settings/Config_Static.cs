@@ -65,7 +65,7 @@ public partial class Config
 
 
     /// <summary>
-    /// Gets the admin config file name.
+    /// Gets the admin config file name. Looked up in the startup dir first, then the config dir.
     /// </summary>
     [JsonIgnore]
     public static string CONFIG_ADMIN => "igconfig.admin.json";
@@ -568,11 +568,8 @@ public partial class Config
             // 3. parse CLI -p: args
             var cliOverrides = ParseCliConfigArgs(cliArgs);
 
-            // 4. read igconfig.admin.json (install BaseDir ONLY; a ConfigDir fallback would let
-            // a user drop an admin config in AppData and seize top precedence). Merge-only layer.
-            using var adminDoc = Core.IsProEnabled
-                ? ReadConfigJsonDocument(BHelper.BaseDir(CONFIG_ADMIN))
-                : null;
+            // 4. read igconfig.admin.json (BaseDir, then ConfigDir). Merge-only layer.
+            using var adminDoc = ReadAdminConfigDocument();
 
             // 5. drop incompatible older layers; flag an incompatible user file so startup can warn
             var effectiveDefaultDoc = IsCompatibleConfigLayer(defaultDoc) ? defaultDoc : null;
@@ -1037,6 +1034,21 @@ public partial class Config
 
 
     /// <summary>
+    /// Reads <see cref="CONFIG_ADMIN"/>: install BaseDir first, then ConfigDir. The BaseDir copy
+    /// always wins so a user cannot override a machine-wide admin config from AppData.
+    /// Returns <c>null</c> when the Pro license is inactive or no admin file exists.
+    /// </summary>
+    private static JsonDocument? ReadAdminConfigDocument()
+    {
+        if (!Core.IsProEnabled) return null;
+
+        return ReadConfigJsonDocument(
+            BHelper.BaseDir(CONFIG_ADMIN),
+            BHelper.ConfigDir(CONFIG_ADMIN));
+    }
+
+
+    /// <summary>
     /// Parses CLI arguments with <see cref="Const.CONFIG_CMD_PREFIX"/> prefix
     /// into a dictionary of property-name -> raw-JSON-value pairs.
     /// Example: <c>-p:ShowGallery=true</c> -> <c>{ "ShowGallery": "true" }</c>.
@@ -1164,14 +1176,9 @@ public partial class Config
     /// </summary>
     private static FrozenSet<ConfigId> LoadAdminLockedConfigs()
     {
-        // admin config is a Pro feature
-        if (!Core.IsProEnabled) return FrozenSet<ConfigId>.Empty;
-
         try
         {
-            // BaseDir only, matching the merge layer: a ConfigDir fallback would let a user drop an
-            // admin config in AppData and lock themselves out (or forge locks)
-            using var adminDoc = ReadConfigJsonDocument(BHelper.BaseDir(CONFIG_ADMIN));
+            using var adminDoc = ReadAdminConfigDocument();
             var effectiveAdminDoc = IsCompatibleConfigLayer(adminDoc) ? adminDoc : null;
             return BuildAdminLockedConfigs(effectiveAdminDoc);
         }
