@@ -210,10 +210,34 @@ public class PhotoPreviewProvider : IPhotoPreviewProvider
 
         using var result = await codec.DecodeAsync(meta, options, context, token).ConfigureAwait(false);
 
+        // an animated codec hands back an animator instead of a frame, so take the first
+        // frame from it. The animator owns its frame cache, hence the copy.
+        if (result.SingleFrame is null && result.Animator is not null)
+        {
+            var animatorFrame = result.Animator.GetRenderedFrameBitmap(0);
+            var ownedFrame = CopyImage(animatorFrame);
+            return ownedFrame;
+        }
+
         // detach the raster frame so disposing the result does not dispose it
         var imgFrame = result.SingleFrame;
         result.SingleFrame = null;
         return imgFrame;
+    }
+
+
+    /// <summary>
+    /// Copies an image owned by someone else into one the caller owns.
+    /// </summary>
+    private static SKImage? CopyImage(SKImage? imgSrc)
+    {
+        if (imgSrc.IsDisposed()) return null;
+
+        using var pixmap = imgSrc.PeekPixels();
+        if (pixmap is null) return null;
+
+        var imgCopy = SKImage.FromPixelCopy(pixmap);
+        return imgCopy;
     }
 
 
