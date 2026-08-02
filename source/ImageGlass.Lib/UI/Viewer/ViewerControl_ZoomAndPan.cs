@@ -248,8 +248,10 @@ public partial class ViewerControl
     ///         whether the scaled image fits within or overflows the viewport.</item>
     ///   <item>Clamp the source position to enforce panning margins (with FreePan ratcheting).</item>
     ///   <item>Preserve the logical (unclipped) position for the next frame.</item>
+    ///   <item>Align the source position to the pixel grid while rendering 1:1.</item>
     ///   <item>Clip source rect to valid image bounds, adjusting dest rect proportionally
     ///         to show a gap at the edge when over-panned.</item>
+    ///   <item>Snap the dest origin to a whole device pixel.</item>
     /// </list>
     /// </para>
     /// </summary>
@@ -268,9 +270,11 @@ public partial class ViewerControl
         // 1. Prepare DPI-scaled values and shared state
         // ═══════════════════════════════════════════════════════════════════════
 
+        var dpi = Dpi;
+
         // zoom factors in device pixels (divide by DPI to go from logical to physical)
-        var currentZoomFactor = _zooming.Factor / Dpi;
-        var oldZoomFactor = _zooming.OldFactor / Dpi;
+        var currentZoomFactor = _zooming.Factor / dpi;
+        var oldZoomFactor = _zooming.OldFactor / dpi;
 
         // cursor position relative to the DrawingArea origin (excluding padding)
         var zoomX = _zooming.ZoomedPoint.X - Padding.Left;
@@ -556,7 +560,21 @@ public partial class ViewerControl
 
 
         // ═══════════════════════════════════════════════════════════════════════
-        // 4.2. Clip source rect to valid image bounds
+        // 4.2. Keep 1:1 rendering aligned to the pixel grid
+        // ═══════════════════════════════════════════════════════════════════════
+        //
+        // At 100% one source pixel maps to one device pixel, so a fractional source offset
+        // puts the sampler on texel boundaries. Applied after step 4.1 so the pan state keeps
+        // its sub-pixel precision; only the drawn position is quantized.
+        if (_zooming.Factor == 1)
+        {
+            if (scaledImgWidth > controlW) srcX = Math.Round(srcX, MidpointRounding.AwayFromZero);
+            if (scaledImgHeight > controlH) srcY = Math.Round(srcY, MidpointRounding.AwayFromZero);
+        }
+
+
+        // ═══════════════════════════════════════════════════════════════════════
+        // 4.3. Clip source rect to valid image bounds
         // ═══════════════════════════════════════════════════════════════════════
         //
         // When the source position extends beyond [0, BitmapSize], clip it back
@@ -605,10 +623,29 @@ public partial class ViewerControl
         // ═══════════════════════════════════════════════════════════════════════
         // 5. Commit the final rectangles
         // ═══════════════════════════════════════════════════════════════════════
+        //
+        // A half-pixel dest origin makes the sampler land on source texel boundaries, so a 1px
+        // row/column is duplicated or dropped at 100% zoom. Snapped here rather than earlier
+        // because step 4.1 back-computes the pan state from the unsnapped position.
+        var snappedDestX = SnapToDevicePixel(destX, dpi);
+        var snappedDestY = SnapToDevicePixel(destY, dpi);
+
         SrcRect = new(srcX, srcY, srcWidth, srcHeight);
-        DestRect = new(destX, destY, destWidth, destHeight);
+        DestRect = new(snappedDestX, snappedDestY, destWidth, destHeight);
 
         _zooming.OldFactor = _zooming.Factor;
+    }
+
+
+    /// <summary>
+    /// Rounds a logical coordinate so that it lands on a whole device pixel.
+    /// </summary>
+    private static double SnapToDevicePixel(double logicalValue, double dpi)
+    {
+        if (dpi <= 0) return logicalValue;
+
+        var devicePixel = Math.Round(logicalValue * dpi, MidpointRounding.AwayFromZero);
+        return devicePixel / dpi;
     }
 
 
