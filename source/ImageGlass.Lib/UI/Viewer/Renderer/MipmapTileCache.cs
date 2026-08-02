@@ -33,7 +33,7 @@ namespace ImageGlass.UI.Viewer;
 /// and cached with LRU eviction to bound memory usage.
 /// <para>
 /// At each mip level, a tile covers <c>TILE_SIZE &lt;&lt; mipLevel</c> source pixels
-/// but always outputs a <c>TILE_SIZE × TILE_SIZE</c> bitmap. This keeps the number
+/// but always outputs a <c>TILE_SIZE × TILE_SIZE</c> image. This keeps the number
 /// of visible tiles roughly constant (~12 for a 1920×1080 viewport) regardless of zoom.
 /// </para>
 /// For animated images, this cache should NOT be used.
@@ -57,10 +57,10 @@ internal sealed class MipmapTileCache : PhDisposable
     private readonly Lock _lock = new();
 
     /// <summary>
-    /// Maps (tileX, tileY, mipLevel) to cached SKBitmap tiles.
-    /// Each tile is a 512×512 bitmap extracted from the source at the given mip level.
+    /// Maps (tileX, tileY, mipLevel) to cached SKImage tiles.
+    /// Each tile is a 512×512 image extracted from the source at the given mip level.
     /// </summary>
-    private readonly Dictionary<(int x, int y, int level), SKBitmap> _tiles = [];
+    private readonly Dictionary<(int x, int y, int level), SKImage> _tiles = [];
 
     /// <summary>
     /// Maps (tileX, tileY, mipLevel) to LinkedListNode for O(1) LRU promotion.
@@ -179,10 +179,10 @@ internal sealed class MipmapTileCache : PhDisposable
     #region Instance Methods
 
     /// <summary>
-    /// Gets a tile bitmap, returning a cached version or extracting a new one.
-    /// The returned <see cref="SKBitmap"/> is owned by the cache — do NOT dispose it.
+    /// Gets a tile image, returning a cached version or extracting a new one.
+    /// The returned <see cref="SKImage"/> is owned by the cache — do NOT dispose it.
     /// </summary>
-    public SKBitmap? GetTile(int tileX, int tileY, int mipLevel)
+    public SKImage? GetTile(int tileX, int tileY, int mipLevel)
     {
         if (IsDisposed) return null;
 
@@ -203,7 +203,7 @@ internal sealed class MipmapTileCache : PhDisposable
         }
 
         // extract tile outside lock (heavy work, SKImage reads are thread-safe)
-        SKBitmap? tile;
+        SKImage? tile;
         try
         {
             tile = ExtractTile(tileX, tileY, mipLevel);
@@ -239,9 +239,9 @@ internal sealed class MipmapTileCache : PhDisposable
                 _lruList.RemoveFirst();
                 _nodeMap.Remove(oldest);
 
-                if (_tiles.Remove(oldest, out var bitmap))
+                if (_tiles.Remove(oldest, out var image))
                 {
-                    bitmap.Dispose();
+                    image.Dispose();
                 }
             }
         }
@@ -253,7 +253,7 @@ internal sealed class MipmapTileCache : PhDisposable
     /// <summary>
     /// Extracts a tile from the source image at the given mip level.
     /// </summary>
-    private SKBitmap? ExtractTile(int tileX, int tileY, int mipLevel)
+    private SKImage? ExtractTile(int tileX, int tileY, int mipLevel)
     {
         if (IsDisposed) return null;
 
@@ -279,7 +279,7 @@ internal sealed class MipmapTileCache : PhDisposable
     /// <summary>
     /// Extracts a tile by reading from the full-resolution source image.
     /// </summary>
-    private SKBitmap? ExtractFromSource(int srcX, int srcY, int srcW, int srcH, int tileW, int tileH)
+    private SKImage? ExtractFromSource(int srcX, int srcY, int srcW, int srcH, int tileW, int tileH)
     {
         using var lease = _sourceRef.Acquire();
         var srcImage = lease?.Image;
@@ -288,16 +288,20 @@ internal sealed class MipmapTileCache : PhDisposable
         // Use the source's color type and space so that high-bit-depth / HDR
         // data is preserved in tiles without unwanted color-space conversion.
         var info = new SKImageInfo(tileW, tileH, _colorType, SKAlphaType.Premul, _colorSpace);
-        var bitmap = new SKBitmap(info);
+        using var bitmap = new SKBitmap(info);
 
-        using var canvas = new SKCanvas(bitmap);
-        var samping = SkiaCodec.ToSamplingOptions(ImageInterpolation.CubicMitchell);
+        using (var canvas = new SKCanvas(bitmap))
+        {
+            var sampling = SkiaCodec.ToSamplingOptions(ImageInterpolation.CubicMitchell);
 
-        canvas.DrawImage(srcImage,
-            new SKRect(srcX, srcY, srcX + srcW, srcY + srcH),
-            new SKRect(0, 0, tileW, tileH), samping);
+            canvas.DrawImage(srcImage,
+                new SKRect(srcX, srcY, srcX + srcW, srcY + srcH),
+                new SKRect(0, 0, tileW, tileH), sampling);
+        }
 
-        return bitmap;
+        // allow the image to share the bitmap's pixel data
+        bitmap.SetImmutable();
+        return SKImage.FromBitmap(bitmap);
     }
 
 
