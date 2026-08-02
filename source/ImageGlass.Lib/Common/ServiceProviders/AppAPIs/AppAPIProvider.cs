@@ -987,13 +987,14 @@ public partial class AppAPIProvider
         var direction = step >= 0 ? 1 : -1;
         var currentDir = Path.GetDirectoryName(Core.Photos.CurrentFilePath);
         var supportedExts = Core.GetSupportedFileExtensions();
+        var includeHidden = Core.Config.EnableHiddenImagesLoading;
 
-        var siblingDir = BHelper.GetSiblingDir(currentDir, direction, supportedExts);
+        var siblingDir = BHelper.GetSiblingDir(currentDir, direction, supportedExts, includeHidden);
         if (string.IsNullOrEmpty(siblingDir)) return false;
 
         // forward -> first image (null lands on index 0); backward -> last image
         var targetFile = direction < 0
-            ? BHelper.GetImageFilesInDir(siblingDir, supportedExts).LastOrDefault()
+            ? BHelper.GetImageFilesInDir(siblingDir, supportedExts, includeHidden).LastOrDefault()
             : null;
 
         // announce the switch once the new photo has loaded; showing it earlier would be wiped

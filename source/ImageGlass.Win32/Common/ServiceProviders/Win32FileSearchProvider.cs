@@ -18,6 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 using Avalonia.Threading;
 using D2Phap;
+using ImageGlass.Common;
 using ImageGlass.Common.ServiceProviders.FileSearchService;
 using System;
 using System.Collections.Concurrent;
@@ -168,8 +169,8 @@ public partial class Win32FileSearchProvider : FileSearchProvider
                     // path is dir
                     if (attrs.HasFlag(FileAttributes.Directory)) return false;
 
-                    // path is hidden
-                    if (!Options.IncludeHidden && attrs.HasFlag(FileAttributes.Hidden)) return false;
+                    // path is hidden/system
+                    if ((attrs & BHelper.GetSkippedFileAttributes(Options.IncludeHidden)) != 0) return false;
                 }
                 catch
                 {
@@ -211,14 +212,8 @@ public partial class Win32FileSearchProvider : FileSearchProvider
         {
             // search files for the sub dirs
             // get sub folders
-            var subDirList = Directory.EnumerateDirectories(rootDir, "*", new EnumerationOptions()
-            {
-                IgnoreInaccessible = true,
-                AttributesToSkip = Options.IncludeHidden
-                    ? FileAttributes.System
-                    : FileAttributes.System | FileAttributes.Hidden,
-                RecurseSubdirectories = false,
-            });
+            var subDirList = Directory.EnumerateDirectories(rootDir, "*",
+                BHelper.GetEnumerationOptions(Options.IncludeHidden));
 
             // find files in sub-folders
             foreach (var dirPath in subDirList)

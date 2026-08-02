@@ -157,17 +157,9 @@ public partial class FileSearchProvider() : PhDisposable, IFileSearchProvider
         // cancel if requested
         if (token.IsCancellationRequested) return;
 
-        // check attributes to skip
-        var skipAttrs = FileAttributes.System;
-        if (!Options.IncludeHidden) skipAttrs |= FileAttributes.Hidden;
-
-        // search files
-        var filePaths = Directory.EnumerateFiles(dirPath, "*", new EnumerationOptions()
-        {
-            IgnoreInaccessible = true,
-            AttributesToSkip = skipAttrs,
-            RecurseSubdirectories = Options.SearchSubDirectories,
-        });
+        // search files; hidden/system sub-folders are pruned from the recursion too
+        var filePaths = Directory.EnumerateFiles(dirPath, "*",
+            BHelper.GetEnumerationOptions(Options.IncludeHidden, Options.SearchSubDirectories));
 
 
         // cancel if requested

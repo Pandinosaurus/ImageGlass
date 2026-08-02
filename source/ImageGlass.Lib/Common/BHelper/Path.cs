@@ -289,8 +289,10 @@ public partial class BHelper
     /// <param name="currentPath">A directory path, or an image file path (its folder is used).</param>
     /// <param name="direction"><c>+1</c> for next, <c>-1</c> for previous.</param>
     /// <param name="allowedExtensions">Allowed extensions with a leading dot (e.g. <c>.jpg</c>).</param>
+    /// <param name="includeHidden">Whether hidden folders/files are eligible.</param>
     /// <returns>Full path of the sibling directory, or <c>null</c> if none is found.</returns>
-    public static string? GetSiblingDir(string? currentPath, int direction, ICollection<string> allowedExtensions)
+    public static string? GetSiblingDir(string? currentPath, int direction,
+        ICollection<string> allowedExtensions, bool includeHidden)
     {
         if (string.IsNullOrEmpty(currentPath)) return null;
 
@@ -306,6 +308,7 @@ public partial class BHelper
 
         try
         {
+            // the current dir must stay in the list to locate itself, even when it is hidden
             var siblingDirs = Directory.GetDirectories(parentDir)
                 .OrderBy(d => d, StringComparer.OrdinalIgnoreCase)
                 .ToList();
@@ -317,7 +320,8 @@ public partial class BHelper
 
             for (var i = currentIndex + direction; i >= 0 && i < siblingDirs.Count; i += direction)
             {
-                if (DirContainsImage(siblingDirs[i], allowedExtensions)) return siblingDirs[i];
+                if (IsPathSkippedByAttributes(siblingDirs[i], includeHidden)) continue;
+                if (DirContainsImage(siblingDirs[i], allowedExtensions, includeHidden)) return siblingDirs[i];
             }
         }
         catch (UnauthorizedAccessException) { }
@@ -331,13 +335,13 @@ public partial class BHelper
     /// Checks whether <paramref name="dir"/> directly contains a file whose extension is in
     /// <paramref name="allowedExtensions"/> (extensions include the leading dot, e.g. <c>.jpg</c>).
     /// </summary>
-    public static bool DirContainsImage(string? dir, ICollection<string> allowedExtensions)
+    public static bool DirContainsImage(string? dir, ICollection<string> allowedExtensions, bool includeHidden)
     {
         if (string.IsNullOrEmpty(dir)) return false;
 
         try
         {
-            foreach (var file in Directory.EnumerateFiles(dir))
+            foreach (var file in Directory.EnumerateFiles(dir, "*", GetEnumerationOptions(includeHidden)))
             {
                 if (allowedExtensions.Contains(Path.GetExtension(file))) return true;
             }
@@ -352,18 +356,88 @@ public partial class BHelper
     /// Returns the image file paths (matching <paramref name="allowedExtensions"/>) directly inside
     /// <paramref name="dir"/>, ordered by name (case-insensitive). Empty on error.
     /// </summary>
-    public static List<string> GetImageFilesInDir(string? dir, ICollection<string> allowedExtensions)
+    public static List<string> GetImageFilesInDir(string? dir, ICollection<string> allowedExtensions, bool includeHidden)
     {
         if (string.IsNullOrEmpty(dir)) return [];
 
         try
         {
-            return Directory.EnumerateFiles(dir)
+            return Directory.EnumerateFiles(dir, "*", GetEnumerationOptions(includeHidden))
                 .Where(f => allowedExtensions.Contains(Path.GetExtension(f)))
                 .OrderBy(f => f, StringComparer.OrdinalIgnoreCase)
                 .ToList();
         }
         catch { return []; }
+    }
+
+
+    /// <summary>
+    /// Gets the shared file/folder enumeration options: system items are always skipped,
+    /// hidden ones only when <paramref name="includeHidden"/> is <c>false</c>.
+    /// </summary>
+    public static EnumerationOptions GetEnumerationOptions(bool includeHidden, bool recurse = false)
+    {
+        return new EnumerationOptions()
+        {
+            IgnoreInaccessible = true,
+            AttributesToSkip = GetSkippedFileAttributes(includeHidden),
+            RecurseSubdirectories = recurse,
+        };
+    }
+
+
+    /// <summary>
+    /// Gets the file attributes excluded from browsing (see <see cref="GetEnumerationOptions"/>).
+    /// </summary>
+    public static FileAttributes GetSkippedFileAttributes(bool includeHidden)
+    {
+        var attrs = FileAttributes.System;
+        if (!includeHidden) attrs |= FileAttributes.Hidden;
+
+        return attrs;
+    }
+
+
+    /// <summary>
+    /// Checks whether <paramref name="path"/> carries an attribute excluded from browsing.
+    /// Unreadable paths are treated as not skipped.
+    /// </summary>
+    public static bool IsPathSkippedByAttributes(string? path, bool includeHidden)
+    {
+        if (string.IsNullOrEmpty(path)) return false;
+
+        try
+        {
+            return (File.GetAttributes(path) & GetSkippedFileAttributes(includeHidden)) != 0;
+        }
+        catch { return false; }
+    }
+
+
+    /// <summary>
+    /// Checks whether <paramref name="path"/>, or any of its folders up to (but excluding)
+    /// <paramref name="rootDir"/>, carries an attribute excluded from browsing. Used to keep
+    /// items inside a hidden sub-folder out of the photo list.
+    /// </summary>
+    public static bool IsPathSkippedUnderRoot(string? path, string? rootDir, bool includeHidden)
+    {
+        if (string.IsNullOrEmpty(path)) return false;
+        if (IsPathSkippedByAttributes(path, includeHidden)) return true;
+        if (string.IsNullOrEmpty(rootDir)) return false;
+
+        var root = rootDir.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        var dir = Path.GetDirectoryName(path);
+
+        // walk up to the watched root; the root itself may legitimately be hidden
+        while (!string.IsNullOrEmpty(dir)
+            && !string.Equals(dir.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar),
+                root, StringComparison.OrdinalIgnoreCase))
+        {
+            if (IsPathSkippedByAttributes(dir, includeHidden)) return true;
+            dir = Path.GetDirectoryName(dir);
+        }
+
+        return false;
     }
 
 

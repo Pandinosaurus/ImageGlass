@@ -190,12 +190,24 @@ public partial class PhotoManager
     }
 
 
+    /// <summary>
+    /// Checks whether the file, or any sub-folder holding it, is excluded from browsing.
+    /// Keeps the watcher from re-adding what the file search deliberately skipped.
+    /// </summary>
+    private bool IsExcludedFile(string? filePath)
+    {
+        return BHelper.IsPathSkippedUnderRoot(filePath, FileWatcherFolderPath,
+            Core.Config.EnableHiddenImagesLoading);
+    }
+
+
 
     #region File watcher event handlers
 
     private void FileWatcher_OnCreated(object? sender, FileChangedEvent e)
     {
         if (!IsSupportedFile(e.FullPath)) return;
+        if (IsExcludedFile(e.FullPath)) return;
         if (IndexOf(e.FullPath) >= 0) return;
 
         _pendingAdds.Enqueue(e.FullPath);
@@ -218,6 +230,8 @@ public partial class PhotoManager
         // if the file is not in our list, treat it as a new file
         if (IndexOf(e.FullPath) < 0)
         {
+            if (IsExcludedFile(e.FullPath)) return;
+
             _pendingAdds.Enqueue(e.FullPath);
             BHelper.Debounce(300, _processAddedFilesAction);
             return;
@@ -246,9 +260,14 @@ public partial class PhotoManager
             return;
         }
 
+        // renamed into a hidden folder (or made hidden) -> drop it from the list
+        var newExcluded = IsExcludedFile(newFilePath);
+
         // old was not supported, new is -> treat as add
         if (!oldSupported && newSupported)
         {
+            if (newExcluded) return;
+
             _pendingAdds.Enqueue(newFilePath);
             BHelper.Debounce(300, _processAddedFilesAction);
             return;
@@ -258,6 +277,12 @@ public partial class PhotoManager
         var imgIndex = IndexOf(oldFilePath);
         if (imgIndex >= 0)
         {
+            if (newExcluded)
+            {
+                _deleteQueue.Enqueue(oldFilePath);
+                return;
+            }
+
             SetFilePath(imgIndex, newFilePath);
 
             FileWatcherChanged?.Invoke(this, new FileWatcherChangedEventArgs(
@@ -265,7 +290,7 @@ public partial class PhotoManager
                 [newFilePath],
                 [oldFilePath]));
         }
-        else
+        else if (!newExcluded)
         {
             // file not in our list yet -> add it
             _pendingAdds.Enqueue(newFilePath);
