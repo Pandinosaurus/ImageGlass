@@ -446,30 +446,35 @@ public partial class ViewerControl
         // For overflow axes, limit how far the user can pan beyond the image edge.
         // panMarginSrc is PanMargin (screen px) converted to source coordinates.
         //
-        // Clamping is SKIPPED during zoom-to-cursor when:
-        //   - CanUseFreePan is on: zoom-to-cursor must stay unconstrained for smooth
-        //     overflow ↔ fits-within transitions.
-        //   - The axis just transitioned from fits-within -> overflow: skip for continuity
-        //     even without FreePan.
+        // Clamping is SKIPPED during zoom-to-cursor only when CanUseFreePan is on, so the
+        // overflow <-> fits-within transition stays smooth. Without FreePan the image must
+        // always stay inside the viewport, so the clamp keeps running while zooming.
         var panMargin = IsWindowFitMode ? 0 : PanMargin;
         var panMarginSrc = DpiScale(panMargin) / currentZoomFactor;
+        var skipClampWhileZooming = isZoomingToPoint && CanUseFreePan;
+
+        // An axis that just grew past the viewport has no over-pan gap to preserve, so it
+        // lands flush against the edge instead of inheriting the previous centering gap.
+        var wasWidthFitting = BitmapSize.Width * oldZoomFactor <= controlW;
+        var wasHeightFitting = BitmapSize.Height * oldZoomFactor <= controlH;
 
         // --- X-axis margin clamping ---
-        var wasWidthFitting = BitmapSize.Width * oldZoomFactor <= controlW;
-        if (scaledImgWidth > controlW && !(isZoomingToPoint && (CanUseFreePan || wasWidthFitting)))
+        if (scaledImgWidth > controlW && !skipClampWhileZooming)
         {
+            var baseMarginX = isZoomingToPoint && wasWidthFitting ? 0 : panMarginSrc;
+
             // Compute per-side effective margins.
             // When CanUseFreePan is on, use the PREVIOUS frame's edge gap (from DestRect,
             // which hasn't been overwritten yet) as a floor. This "ratchet" preserves the
-            // over-pan established by zoom-to-cursor — the user can pan back but not further out.
-            var effectiveLeftMarginX = panMarginSrc;
-            var effectiveRightMarginX = panMarginSrc;
+            // over-pan established by zoom-to-cursor: the user can pan back but not further out.
+            var effectiveLeftMarginX = baseMarginX;
+            var effectiveRightMarginX = baseMarginX;
             if (CanUseFreePan)
             {
                 var prevLeftGap = Math.Max(0, DestRect.X - DrawingArea.Left) / currentZoomFactor;
                 var prevRightGap = Math.Max(0, DrawingArea.Left + controlW - (DestRect.X + DestRect.Width)) / currentZoomFactor;
-                effectiveLeftMarginX = Math.Max(panMarginSrc, prevLeftGap);
-                effectiveRightMarginX = Math.Max(panMarginSrc, prevRightGap);
+                effectiveLeftMarginX = Math.Max(baseMarginX, prevLeftGap);
+                effectiveRightMarginX = Math.Max(baseMarginX, prevRightGap);
             }
 
             if (srcX < -effectiveLeftMarginX)
@@ -483,17 +488,18 @@ public partial class ViewerControl
         }
 
         // --- Y-axis margin clamping ---
-        var wasHeightFitting = BitmapSize.Height * oldZoomFactor <= controlH;
-        if (scaledImgHeight > controlH && !(isZoomingToPoint && (CanUseFreePan || wasHeightFitting)))
+        if (scaledImgHeight > controlH && !skipClampWhileZooming)
         {
-            var effectiveTopMarginY = panMarginSrc;
-            var effectiveBottomMarginY = panMarginSrc;
+            var baseMarginY = isZoomingToPoint && wasHeightFitting ? 0 : panMarginSrc;
+
+            var effectiveTopMarginY = baseMarginY;
+            var effectiveBottomMarginY = baseMarginY;
             if (CanUseFreePan)
             {
                 var prevTopGap = Math.Max(0, DestRect.Y - DrawingArea.Top) / currentZoomFactor;
                 var prevBottomGap = Math.Max(0, DrawingArea.Top + controlH - (DestRect.Y + DestRect.Height)) / currentZoomFactor;
-                effectiveTopMarginY = Math.Max(panMarginSrc, prevTopGap);
-                effectiveBottomMarginY = Math.Max(panMarginSrc, prevBottomGap);
+                effectiveTopMarginY = Math.Max(baseMarginY, prevTopGap);
+                effectiveBottomMarginY = Math.Max(baseMarginY, prevBottomGap);
             }
 
             if (srcY + srcHeight > BitmapSize.Height + effectiveBottomMarginY)
