@@ -1211,10 +1211,23 @@ public partial class ViewerControl : PhControl
             SKImageRef.Set(ref _imgRender, null);
             SKImageRef.Set(ref _imgSource, sourceImg);
             _isFirstDraw.SetTrue();
-            BitmapSize = Photo.Size;
         }
 
-        Refresh(resetZoom: _loadingOptions.ResetZoom);
+        // variable-size frames: each frame is its own canvas. Photo.Size still reports
+        // the metadata size for animated sources, so measure the decoded frame itself.
+        var frameSize = sourceImg.IsDisposed()
+            ? Photo.Size
+            : new Size(sourceImg.Width, sourceImg.Height);
+
+        if (frameSize != BitmapSize)
+        {
+            RefitForFrameSize(frameSize);
+            InvalidateVisual();
+        }
+        else
+        {
+            Refresh(resetZoom: _loadingOptions.ResetZoom);
+        }
 
         // emit frame changed event
         OnPhotoFrameChanged();
