@@ -149,52 +149,66 @@ public partial class ViewerControl
 
 
     /// <summary>
-    /// Attempts to apply HDR tone mapping and/or the destination Skia color profile
-    /// to the current photo.
+    /// Applies HDR tone mapping and/or the destination Skia color profile to a decoded frame,
+    /// off the UI thread. Both are full-image pixel passes: run inline they freeze the app for
+    /// over a second on a large HDR photo. Returns <see langword="null"/> if nothing applied.
     /// </summary>
-    private bool TryApplySkiaColorSpace(SKImage? srcImage, out SKImage? output)
+    /// <remarks>
+    /// Must be called on the UI thread (it reads <see cref="EnableHdrRendering"/>). The caller
+    /// owns <paramref name="srcImage"/> and must keep it alive for the whole pass
+    /// (see <see cref="Photo.PinBitmap"/>).
+    /// </remarks>
+    private async Task<SKImage?> ApplySkiaColorSpaceAsync(SKImage? srcImage, PhotoMetadata? meta)
     {
-        output = null;
-        if (srcImage.IsDisposed()) return false;
+        if (srcImage.IsDisposed()) return null;
 
-        // 1. HDR tone mapping (gated via EnableHdrRendering; applies regardless of color profile setting)
-        if (EnableHdrRendering && Photo?.Metadata?.IsHdr == true)
+        // snapshot UI-thread-affine state: the pass must not touch Photo or styled properties
+        var isHdr = EnableHdrRendering && meta?.IsHdr == true;
+        var transferFn = meta?.HdrTransferFn ?? HdrTransferFunction.None;
+        var options = Core.HdrToneMappingConfig;
+        var destProfile = CanApplySkiaColorSpace() ? Core.DestColorProfile : null;
+
+        // nothing to do: skip the thread hop entirely
+        if (!isHdr && destProfile is null) return null;
+
+        return await Task.Run(()
+            => ApplySkiaColorSpace(srcImage, isHdr, transferFn, options, destProfile));
+    }
+
+
+    /// <summary>
+    /// The color-management pixel work itself, with every input already snapshotted so it is
+    /// safe to run on a background thread.
+    /// </summary>
+    private static SKImage? ApplySkiaColorSpace(SKImage srcImage, bool isHdr,
+        HdrTransferFunction transferFn, HdrToneMappingOptions options, SKColorSpace? destProfile)
+    {
+        // 1. HDR: tone-map to standard sRGB first, then the monitor profile below (same as SDR)
+        if (isHdr)
         {
-            // Tone-map to standard sRGB (no monitor profile yet).
-            // The monitor color profile will be applied below via TryApplyColorSpace,
-            // same as SDR images, for consistent color handling.
-            var toneMapped = HdrToneMapper.ToneMapToSdr(srcImage,
-                Photo.Metadata.HdrTransferFn, Core.HdrToneMappingConfig);
+            var toneMapped = HdrToneMapper.ToneMapToSdr(srcImage, transferFn, options);
 
             if (!toneMapped.IsDisposed())
             {
-                // Apply monitor color profile to the tone-mapped SDR image
-                if (CanApplySkiaColorSpace()
-                    && SkiaCodec.TryApplyColorSpace(toneMapped, Core.DestColorProfile, out var profiled))
+                if (destProfile is not null
+                    && SkiaCodec.TryApplyColorSpace(toneMapped, destProfile, out var profiled))
                 {
                     toneMapped.Dispose();
-                    output = profiled;
-                }
-                else
-                {
-                    output = toneMapped;
+                    return profiled;
                 }
 
-                return true;
+                return toneMapped;
             }
         }
 
-
-        // 2. apply new color space for source image
-        if (!CanApplySkiaColorSpace()) return false;
-
-        if (SkiaCodec.TryApplyColorSpace(srcImage, Core.DestColorProfile, out var imgFrameColored))
+        // 2. monitor color profile only
+        if (destProfile is not null
+            && SkiaCodec.TryApplyColorSpace(srcImage, destProfile, out var colored))
         {
-            output = imgFrameColored;
-            return true;
+            return colored;
         }
 
-        return false;
+        return null;
     }
 
 
@@ -255,10 +269,9 @@ public partial class ViewerControl
     /// re-kicking if a request slips in during shutdown.
     /// </summary>
     /// <remarks>
-    /// Runs on the UI thread and must stay there between passes: each pass reads
-    /// <see cref="EnableHdrRendering"/>, a styled property that throws when touched from another
-    /// thread. The expensive work inside a pass is already offloaded via <c>Task.Run</c>, so the
-    /// loop itself costs nothing on the UI thread.
+    /// Runs on the UI thread and must stay there between passes: each pass reads viewer state that
+    /// is UI-thread-affine. The expensive work inside a pass is already offloaded via
+    /// <c>Task.Run</c>, so the loop itself costs nothing on the UI thread.
     /// </remarks>
     private async Task HdrToneMapPumpAsync()
     {
@@ -296,7 +309,7 @@ public partial class ViewerControl
     /// </summary>
     private async Task DoOneHdrToneMapPassAsync()
     {
-        if (!EnableHdrRendering) return;
+        if (!Core.IsProEnabled) return;
 
         for (var attempt = 0; attempt < 2; attempt++)
         {

@@ -325,6 +325,13 @@ public partial class Photo : PhDisposable
     private async Task OnDisposing(bool disposeEverything)
     {
         CancelLoading();
+
+        // let pinned background readers finish, else they read a freed bitmap
+        while (!_taskRefs.IsEmpty)
+        {
+            await Task.Delay(10).ConfigureAwait(false);
+        }
+
         UnloadBitmap();
 
         // dispose everything
@@ -519,6 +526,25 @@ public partial class Photo : PhDisposable
 
         // unload image
         await OnDisposing(false);
+    }
+
+
+    /// <summary>
+    /// Pins <see cref="Bitmap"/> for a background operation so <see cref="Unload"/> waits for it
+    /// instead of disposing the image mid-use. Dispose the returned scope when done.
+    /// </summary>
+    public IDisposable PinBitmap()
+    {
+        var taskId = Guid.NewGuid();
+        _ = _taskRefs.TryAdd(taskId, true);
+
+        return new BitmapPin(this, taskId);
+    }
+
+
+    private sealed class BitmapPin(Photo photo, Guid taskId) : IDisposable
+    {
+        public void Dispose() => photo._taskRefs.TryRemove(taskId, out _);
     }
 
 

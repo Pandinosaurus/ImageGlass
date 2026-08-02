@@ -529,6 +529,22 @@ public partial class ViewerControl : PhControl
             {
                 SetZoomMode(null, isManualZoom, zoomedByResizing);
             }
+            else if (DestRect.IsEmpty && !BitmapSize.IsEmpty)
+            {
+                // the viewport was emptied while the source was unloaded (a DPI change mid-load,
+                // e.g. dragging the window to another monitor); rebuild it
+                if (_zooming.IsManual)
+                {
+                    // clean recompute: keeps zoom + pan, skips the zoom-to-cursor path
+                    _zooming.ZoomedPoint = new();
+                    _zooming.OldFactor = _zooming.Factor;
+                    CalculateDrawingRegion();
+                }
+                else
+                {
+                    SetZoomMode(null, false, zoomedByResizing);
+                }
+            }
 
             InvalidateVisual();
         });
@@ -906,8 +922,15 @@ public partial class ViewerControl : PhControl
                     var frameToLoad = (uint)Math.Max(0, e.Photo.FrameIndex);
                     imgFrame = await e.Photo.GetFrameAsync(frameToLoad);
 
-                    // apply color space
-                    if (TryApplySkiaColorSpace(imgFrame, out var imgFrameColored))
+                    // apply color space off the UI thread; the pin keeps the frame alive if the
+                    // user navigates away mid-pass
+                    SKImage? imgFrameColored;
+                    using (e.Photo.PinBitmap())
+                    {
+                        imgFrameColored = await ApplySkiaColorSpaceAsync(imgFrame, e.Photo.Metadata);
+                    }
+
+                    if (imgFrameColored is not null)
                     {
                         PhotoTrace.Mark("viewer:color-managed", e.Photo.FilePath,
                             $"applied (hdrToneMap={Core.Config.EnableHdrToneMapping && e.Photo.Metadata.IsHdr}, srcProfile={(string.IsNullOrEmpty(e.Photo.Metadata.ColorProfileName) ? "none" : e.Photo.Metadata.ColorProfileName)})");
@@ -1161,12 +1184,14 @@ public partial class ViewerControl : PhControl
         var imgFrame = await Photo.GetFrameAsync(frameIndex);
         if (imgFrame is null) return;
 
-        // apply color space
-        var sourceImg = imgFrame;
-        if (TryApplySkiaColorSpace(imgFrame, out var colored))
+        // apply color space off the UI thread
+        SKImage? colored;
+        using (Photo.PinBitmap())
         {
-            sourceImg = colored;
+            colored = await ApplySkiaColorSpaceAsync(imgFrame, Photo.Metadata);
         }
+
+        var sourceImg = colored ?? imgFrame;
 
         lock (_lock)
         {
