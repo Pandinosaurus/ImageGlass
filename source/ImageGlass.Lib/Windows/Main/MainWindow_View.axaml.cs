@@ -50,6 +50,9 @@ public partial class MainWindowView : PhControl
     // > 0 while a photo load + paint is in flight, Sequential browsing only
     private int _sequentialLoadDepth;
 
+    // land on the last photo of the list being searched (backward folder switch)
+    private bool _selectLastOnSearch;
+
 
     public MainWindowViewModel VM => (MainWindowViewModel)DataContext!;
 
@@ -824,8 +827,14 @@ public partial class MainWindowView : PhControl
     }
 
 
-    public void PrepareLoadPhotoList(ICollection<string> inputPaths, string? currentFilePath, bool disposeForegroundShell, bool reloadInitPhoto)
+    /// <param name="selectLastPhoto">
+    /// Lands on the last photo of the loaded list instead of the first. The list order is only
+    /// known after the search runs (it may come from Explorer), so the choice can't be a path.
+    /// </param>
+    public void PrepareLoadPhotoList(ICollection<string> inputPaths, string? currentFilePath, bool disposeForegroundShell, bool reloadInitPhoto, bool selectLastPhoto = false)
     {
+        _selectLastOnSearch = selectLastPhoto;
+
         // dispose the foreground shell if requested
         if (disposeForegroundShell) Core.ShellProvider?.ForegroundShell = null;
 
@@ -887,8 +896,16 @@ public partial class MainWindowView : PhControl
         Dispatcher.UIThread.Invoke(() => Core.Photos.Add(e.Results));
 
 
+        // display the last file in a folder; re-applied on every batch, so it settles on the
+        // real last item once the search is done
+        if (_selectLastOnSearch)
+        {
+            var lastIndex = (int)Core.Photos.Count - 1;
+            Core.Photos.InitPhoto = Core.Photos.Select(lastIndex);
+            _ = ViewPhotoAsync(Core.Photos.InitPhoto, true, false);
+        }
         // if we haven't found current index for the init photo yet
-        if (Core.Photos.InitPhoto is not null && Core.Photos.CurrentIndex == -1)
+        else if (Core.Photos.InitPhoto is not null && Core.Photos.CurrentIndex == -1)
         {
             // find index of the init photo and select it
             _ = Core.Photos.Select(Core.Photos.InitPhoto.FilePath);

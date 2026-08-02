@@ -353,25 +353,6 @@ public partial class BHelper
 
 
     /// <summary>
-    /// Returns the image file paths (matching <paramref name="allowedExtensions"/>) directly inside
-    /// <paramref name="dir"/>, ordered by name (case-insensitive). Empty on error.
-    /// </summary>
-    public static List<string> GetImageFilesInDir(string? dir, ICollection<string> allowedExtensions, bool includeHidden)
-    {
-        if (string.IsNullOrEmpty(dir)) return [];
-
-        try
-        {
-            return Directory.EnumerateFiles(dir, "*", GetEnumerationOptions(includeHidden))
-                .Where(f => allowedExtensions.Contains(Path.GetExtension(f)))
-                .OrderBy(f => f, StringComparer.OrdinalIgnoreCase)
-                .ToList();
-        }
-        catch { return []; }
-    }
-
-
-    /// <summary>
     /// Gets the shared file/folder enumeration options: system items are always skipped,
     /// hidden ones only when <paramref name="includeHidden"/> is <c>false</c>.
     /// </summary>
