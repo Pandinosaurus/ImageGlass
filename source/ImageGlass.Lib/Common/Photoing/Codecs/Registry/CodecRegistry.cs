@@ -54,15 +54,27 @@ public sealed class CodecRegistry : PhDisposable
     private readonly ConcurrentDictionary<string, ICodec> _metadataCodecByExt = new(StringComparer.OrdinalIgnoreCase);
     private readonly ConcurrentDictionary<string, ICodec> _decodeCodecByExt = new(StringComparer.OrdinalIgnoreCase);
 
+    private readonly MagickCodecAdapter _fallbackDecodeCodec;
+
+
+    /// <summary>
+    /// Gets the built-in Magick.NET codec used as the last-resort decoder when no registered
+    /// codec claims the file. Magick sniffs the file content, so it can still succeed where the
+    /// extension-based <see cref="ICodec.CanDecode"/> checks all say no.
+    /// </summary>
+    public ICodec FallbackDecodeCodec => _fallbackDecodeCodec;
+
 
     /// <summary>
     /// Initializes a new instance of <see cref="CodecRegistry"/> with the built-in codecs.
     /// </summary>
     public CodecRegistry()
     {
+        _fallbackDecodeCodec = new MagickCodecAdapter();
+
         Register(new SvgCodecAdapter());
         Register(new SkiaCodecAdapter());
-        Register(new MagickCodecAdapter());
+        Register(_fallbackDecodeCodec);
     }
 
 

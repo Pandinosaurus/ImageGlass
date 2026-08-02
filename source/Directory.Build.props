@@ -1,7 +1,7 @@
 <Project>
   <PropertyGroup>
     <!-- Central app version: change ONLY here to update all platform projects -->
-    <IgVersion>10.0.3.725</IgVersion>
+    <IgVersion>10.0.3.802</IgVersion>
     <IgReleaseType>rc</IgReleaseType>
     <IgUpdateChannel>beta</IgUpdateChannel>
 

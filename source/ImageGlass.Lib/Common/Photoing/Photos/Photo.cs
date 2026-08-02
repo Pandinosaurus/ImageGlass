@@ -451,13 +451,17 @@ public partial class Photo : PhDisposable
     private async Task OnDecodingAsync(PhotoMetadata meta, CancellationToken token)
     {
         var context = CreateCodecSelectionContext(meta);
-        var codec = Core.CodecRegistry.SelectDecodeCodec(meta, context)
-            ?? throw new FormatException("IGE: No codec available to decode the current file.");
+        var selectedCodec = Core.CodecRegistry.SelectDecodeCodec(meta, context);
+
+        // no registered codec claims the file -> let Magick try anyway, it sniffs the content
+        var isFallback = selectedCodec is null;
+        var codec = selectedCodec ?? Core.CodecRegistry.FallbackDecodeCodec;
 
         // codec-agnostic trace: covers built-in and plugin codecs uniformly
         var isPlugin = codec is not (SvgCodecAdapter or SkiaCodecAdapter or MagickCodecAdapter);
         PhotoTrace.Mark("decode:codec", FilePath,
-            $"{codec.CodecId} (decodePriority={codec.DecodePriority}, plugin={isPlugin}, frameIndex={ReadOptions.FrameIndex})");
+            $"{codec.CodecId} (decodePriority={codec.DecodePriority}, plugin={isPlugin}, "
+            + $"fallback={isFallback}, frameIndex={ReadOptions.FrameIndex})");
 
         using var result = await codec.DecodeAsync(meta, ReadOptions, context, token).ConfigureAwait(false);
 
