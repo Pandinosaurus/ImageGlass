@@ -717,6 +717,42 @@ public partial class ViewerControl
 
 
     /// <summary>
+    /// Re-fits the viewport to an animation frame whose size differs from the
+    /// previous one. UI thread, outside <c>_lock</c> (same as <see cref="SetZoomMode"/>).
+    /// </summary>
+    internal void RefitForFrameSize(Size newSize)
+    {
+        if (newSize.IsEmpty || newSize == BitmapSize) return;
+
+        BitmapSize = newSize;
+
+        // the previous frame's rects belong to a differently-sized image
+        _logicalSrcPoint = default;
+        _zooming.ZoomedPoint = new();
+
+        // a manual zoom factor survives; otherwise refit via the active mode
+        if (!_zooming.IsManual)
+        {
+            _zooming.Factor = CalculateZoomFactor(_zooming.Mode, newSize.Width, newSize.Height);
+        }
+        _zooming.OldFactor = _zooming.Factor;
+
+        CalculateDrawingRegion();
+
+        if (!SourceSelection.IsEmpty) SetSourceSelection(SourceSelection);
+
+        ZoomChanged?.Invoke(this, new ViewerZoomEventArgs()
+        {
+            ZoomFactor = _zooming.Factor,
+            IsManualZoom = _zooming.IsManual,
+            IsZoomModeChange = false,
+            IsPreviewingImage = _isPreviewing,
+            ChangeSource = ZoomChangeSource.FrameChanged,
+        });
+    }
+
+
+    /// <summary>
     /// Calculates zoom factor by the input zoom mode, and source size.
     /// </summary>
     public double CalculateZoomFactor(ZoomMode zoomMode, double srcWidth, double srcHeight)

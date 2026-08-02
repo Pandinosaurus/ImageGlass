@@ -1135,6 +1135,13 @@ public partial class ViewerControl : PhControl
             _firstDrawTcs?.TrySetResult();
         }
 
+        // variable-size frames: each frame is its own canvas
+        if (!renderedFrame.IsDisposed()
+            && (renderedFrame.Width != BitmapSize.Width || renderedFrame.Height != BitmapSize.Height))
+        {
+            RefitForFrameSize(new Size(renderedFrame.Width, renderedFrame.Height));
+        }
+
         InvalidateVisual();
         OnPhotoFrameChanged(e);
     }

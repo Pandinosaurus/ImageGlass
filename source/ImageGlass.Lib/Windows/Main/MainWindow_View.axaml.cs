@@ -409,6 +409,7 @@ public partial class MainWindowView : PhControl
         // update window fit
         if (Core.Config.EnableWindowFit
             && e.ChangeSource != ZoomChangeSource.SizeChanged
+            && e.ChangeSource != ZoomChangeSource.FrameChanged
             && (e.IsManualZoom || e.IsZoomModeChange))
         {
             AppAPIProvider.ApplyWindowFitMode(e.ChangeSource == ZoomChangeSource.ZoomMode);
