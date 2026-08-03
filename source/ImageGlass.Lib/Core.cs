@@ -414,7 +414,7 @@ public static class Core
         {
             // Everything switched off: registering it would leave an empty-extension codec that
             // the catch-all convention mistakes for the fallback decoder.
-            if (proxy.SupportedExtensions.Count == 0 && proxy.EncodingExtensions.Count == 0)
+            if (proxy.DecodingExtensions.Count == 0 && proxy.EncodingExtensions.Count == 0)
             {
                 declaredExtensions.AddRange(proxy.DeclaredDecodingExtensions);
                 proxy.Dispose();
@@ -469,7 +469,7 @@ public static class Core
         {
             foreach (var proxy in old)
             {
-                foreach (var ext in proxy.SupportedExtensions) oldDecodeExts.Add(ext);
+                foreach (var ext in proxy.DecodingExtensions) oldDecodeExts.Add(ext);
 
                 // Unregister before disposing: Unregister clears the selection caches, and
                 // Register would reject a CodecId that is still present.
@@ -492,7 +492,7 @@ public static class Core
             {
                 foreach (var proxy in fresh)
                 {
-                    foreach (var ext in proxy.SupportedExtensions) newDecodeExts.Add(ext);
+                    foreach (var ext in proxy.DecodingExtensions) newDecodeExts.Add(ext);
                 }
             }
         }
@@ -580,7 +580,7 @@ public static class Core
             {
                 foreach (var proxy in proxies)
                 {
-                    foreach (var ext in proxy.SupportedExtensions) set.Add(ext);
+                    foreach (var ext in proxy.DecodingExtensions) set.Add(ext);
                 }
             }
         }

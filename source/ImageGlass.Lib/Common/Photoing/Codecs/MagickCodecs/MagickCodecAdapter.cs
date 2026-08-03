@@ -18,6 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 using Avalonia;
 using ImageGlass.Common.Types;
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -45,7 +46,16 @@ public sealed class MagickCodecAdapter : PhDisposable, ICodec
     public int DecodePriority { get; } = 10;
 
     /// <inheritdoc/>
-    public IReadOnlyList<string> SupportedExtensions => _supportedExtensions;
+    public int EncodePriority { get; } = 10;
+
+    /// <inheritdoc/>
+    public IReadOnlyList<string> DecodingExtensions => _supportedExtensions;
+
+    /// <inheritdoc/>
+    public bool SupportsEncoding { get; } = true;
+
+    /// <inheritdoc/>
+    public IReadOnlyList<string> EncodingExtensions => _supportedExtensions;
 
 
     /// <inheritdoc/>
@@ -98,4 +108,50 @@ public sealed class MagickCodecAdapter : PhDisposable, ICodec
             HasEmbeddedColorProfile = metadata.SkiaColorSpace is not null || metadata.MagickColorProfile is not null,
         };
     }
+
+
+    /// <inheritdoc/>
+    public bool CanEncode(string destFilePath, CodecEncodeContext context)
+    {
+        return !string.IsNullOrWhiteSpace(destFilePath)
+            && MagickCodec.CanWrite(destFilePath);
+    }
+
+
+    /// <inheritdoc/>
+    public async Task<CodecEncodeResult> EncodeAsync(CodecEncodeRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        if (!CanEncode(request.DestFilePath, CodecEncodeContext.Default))
+        {
+            return new CodecEncodeResult(false, true);
+        }
+
+        try
+        {
+            // transform is already applied by the caller, so pass null
+            await SkiaCodec.SaveAsync(request.Source, request.DestFilePath, null,
+                request.Quality, cancellationToken).ConfigureAwait(false);
+            return new CodecEncodeResult(true, false);
+        }
+        catch (OperationCanceledException) { throw; }
+        catch (Exception ex)
+        {
+            return new CodecEncodeResult(false, false, ex.Message);
+        }
+    }
+
+
+    /// <summary>
+    /// Always <c>false</c>: the built-in multi-frame writer is <c>MagickCodec.SaveAsync</c>, which
+    /// re-reads the source collection and so preserves palettes, disposal and the GIF coalesce
+    /// path far better than a frame-by-frame pixel round trip.
+    /// </summary>
+    public bool CanEncodeMultiFrame(string destFilePath, CodecEncodeContext context) => false;
+
+
+    /// <inheritdoc/>
+    public Task<CodecEncodeResult> EncodeMultiFrameAsync(CodecMultiFrameEncodeRequest request,
+        CancellationToken cancellationToken = default)
+        => Task.FromResult(new CodecEncodeResult(false, true));
 }

@@ -34,7 +34,28 @@ namespace ImageGlass.Common.Photoing;
 /// plugin, or <c>null</c> for a built-in codec.
 /// </summary>
 public sealed record CodecInfo(string CodecId, string CodecName, int DecodePriority,
-    IReadOnlyList<string> SupportedExtensions, bool IsPlugin, string? PluginId = null);
+    IReadOnlyList<string> DecodingExtensions, bool IsPlugin, string? PluginId = null)
+{
+    /// <summary>
+    /// Priority used when several codecs can write the same extension.
+    /// </summary>
+    public int EncodePriority { get; init; }
+
+    /// <summary>
+    /// Extensions this codec can write; empty for a decode-only codec.
+    /// </summary>
+    public IReadOnlyList<string> EncodingExtensions { get; init; } = [];
+
+    /// <summary>
+    /// Whether this codec can write anything.
+    /// </summary>
+    public bool SupportsEncoding { get; init; }
+
+    /// <summary>
+    /// Whether this is the last-resort decoder that claims files no other codec does.
+    /// </summary>
+    public bool IsFallback { get; init; }
+}
 
 
 /// <summary>
@@ -53,6 +74,10 @@ public sealed class CodecRegistry : PhDisposable
     // file content differs). Caches are cleared whenever a new codec is registered.
     private readonly ConcurrentDictionary<string, ICodec> _metadataCodecByExt = new(StringComparer.OrdinalIgnoreCase);
     private readonly ConcurrentDictionary<string, ICodec> _decodeCodecByExt = new(StringComparer.OrdinalIgnoreCase);
+    private readonly ConcurrentDictionary<string, ICodec> _encodeCodecByExt = new(StringComparer.OrdinalIgnoreCase);
+
+    // Only codecs that can write; keeps decode-only codecs out of encode selection.
+    private readonly List<ICodec> _encodeCodecs = [];
 
     // Registration order, used to break priority ties deterministically.
     private readonly Dictionary<string, long> _regSeqById = new(StringComparer.Ordinal);
@@ -104,13 +129,14 @@ public sealed class CodecRegistry : PhDisposable
             _codecs.Add(codec);
             _metadataCodecs.Add(codec);
             _decodeCodecs.Add(codec);
+            if (codec.SupportsEncoding) _encodeCodecs.Add(codec);
 
             _metadataCodecs.Sort((left, right) => Compare(right.MetadataPriority, left.MetadataPriority, left, right));
             _decodeCodecs.Sort((left, right) => Compare(right.DecodePriority, left.DecodePriority, left, right));
+            _encodeCodecs.Sort((left, right) => Compare(right.EncodePriority, left.EncodePriority, left, right));
 
-            // Invalidate fast-path caches: the new codec may outrank the cached winner.
-            _metadataCodecByExt.Clear();
-            _decodeCodecByExt.Clear();
+            // the new codec may outrank a cached winner
+            ClearSelectionCaches();
         }
     }
 
@@ -145,11 +171,11 @@ public sealed class CodecRegistry : PhDisposable
 
             _metadataCodecs.RemoveAll(c => ReferenceEquals(c, codec));
             _decodeCodecs.RemoveAll(c => ReferenceEquals(c, codec));
+            _encodeCodecs.RemoveAll(c => ReferenceEquals(c, codec));
             _regSeqById.Remove(codec.CodecId);
 
             // the removed codec may be a cached winner
-            _metadataCodecByExt.Clear();
-            _decodeCodecByExt.Clear();
+            ClearSelectionCaches();
             return true;
         }
     }
@@ -197,8 +223,87 @@ public sealed class CodecRegistry : PhDisposable
     {
         lock (_lock)
         {
-            _metadataCodecByExt.Clear();
-            _decodeCodecByExt.Clear();
+            ClearSelectionCaches();
+        }
+    }
+
+
+    /// <summary>
+    /// Clears every per-extension cache. One place, so a future cache cannot be forgotten.
+    /// Caller holds <c>_lock</c>.
+    /// </summary>
+    private void ClearSelectionCaches()
+    {
+        _metadataCodecByExt.Clear();
+        _decodeCodecByExt.Clear();
+        _encodeCodecByExt.Clear();
+    }
+
+
+    /// <summary>
+    /// Selects the codec that should write <paramref name="destFilePath"/>, or <c>null</c> if none can.
+    /// </summary>
+    public ICodec? SelectEncodeCodec(string destFilePath, CodecEncodeContext? context = null)
+    {
+        var ext = string.IsNullOrEmpty(destFilePath) ? string.Empty : Path.GetExtension(destFilePath);
+        var ctx = context ?? CodecEncodeContext.Default;
+
+        lock (_lock)
+        {
+            return SelectWithCache(_encodeCodecByExt, _encodeCodecs, ext,
+                c => c.CanEncode(destFilePath, ctx), nameof(SelectEncodeCodec));
+        }
+    }
+
+
+    /// <summary>
+    /// Selects the codec that should write multiple frames to <paramref name="destFilePath"/>.
+    /// Deliberately uncached: a codec can be static-only for the same extension, and saving is rare.
+    /// </summary>
+    public ICodec? SelectMultiFrameEncodeCodec(string destFilePath, CodecEncodeContext? context = null)
+    {
+        var ctx = context ?? CodecEncodeContext.Default;
+
+        lock (_lock)
+        {
+            return SelectFirst(_encodeCodecs, c => c.CanEncodeMultiFrame(destFilePath, ctx),
+                nameof(SelectMultiFrameEncodeCodec));
+        }
+    }
+
+
+    /// <summary>
+    /// Returns a snapshot of the codec that would write <paramref name="extension"/>, or <c>null</c>.
+    /// </summary>
+    public CodecInfo? GetEncodeCodecInfo(string extension)
+    {
+        if (string.IsNullOrWhiteSpace(extension)) return null;
+
+        // CanEncode wants a path, so give it a synthetic file name carrying the extension.
+        var probePath = "_" + (extension.StartsWith('.') ? extension : "." + extension);
+        var codec = SelectEncodeCodec(probePath);
+
+        return codec is null ? null : ToCodecInfo(codec);
+    }
+
+
+    /// <summary>
+    /// Returns every extension a registered codec explicitly advertises for writing, with its owner.
+    /// A catch-all encoder contributes nothing, since it enumerates no extensions.
+    /// </summary>
+    public IReadOnlyList<(string Ext, string CodecName, int EncodePriority, bool IsPlugin)> GetEncodingExtensions()
+    {
+        lock (_lock)
+        {
+            var list = new List<(string, string, int, bool)>();
+            foreach (var codec in _encodeCodecs)
+            {
+                foreach (var ext in codec.EncodingExtensions)
+                {
+                    list.Add((ext, codec.CodecName, codec.EncodePriority, !IsBuiltIn(codec)));
+                }
+            }
+            return list;
         }
     }
 
@@ -214,10 +319,7 @@ public sealed class CodecRegistry : PhDisposable
             var list = new List<CodecInfo>(_decodeCodecs.Count);
             foreach (var c in _decodeCodecs)
             {
-                var isBuiltIn = c is SvgCodecAdapter or SkiaCodecAdapter or MagickCodecAdapter;
-                var pluginId = (c as NativeCodecProxy)?.Plugin.PluginId;
-                list.Add(new CodecInfo(c.CodecId, c.CodecName, c.DecodePriority,
-                    c.SupportedExtensions, !isBuiltIn, pluginId));
+                list.Add(ToCodecInfo(c));
             }
             return list;
         }
@@ -239,14 +341,37 @@ public sealed class CodecRegistry : PhDisposable
             _codecs.Clear();
             _metadataCodecs.Clear();
             _decodeCodecs.Clear();
+            _encodeCodecs.Clear();
             _regSeqById.Clear();
-            _metadataCodecByExt.Clear();
-            _decodeCodecByExt.Clear();
+            ClearSelectionCaches();
         }
 
         base.OnDisposing();
     }
 
+
+
+    /// <summary>
+    /// Whether the codec ships with the host rather than coming from a plugin.
+    /// </summary>
+    private static bool IsBuiltIn(ICodec codec)
+        => codec is SvgCodecAdapter or SkiaCodecAdapter or MagickCodecAdapter;
+
+
+    /// <summary>
+    /// Builds the read-only snapshot of one registered codec.
+    /// </summary>
+    private CodecInfo ToCodecInfo(ICodec codec)
+    {
+        return new CodecInfo(codec.CodecId, codec.CodecName, codec.DecodePriority,
+            codec.DecodingExtensions, !IsBuiltIn(codec), (codec as NativeCodecProxy)?.Plugin.PluginId)
+        {
+            EncodePriority = codec.EncodePriority,
+            EncodingExtensions = codec.EncodingExtensions,
+            SupportsEncoding = codec.SupportsEncoding,
+            IsFallback = ReferenceEquals(codec, _fallbackDecodeCodec),
+        };
+    }
 
 
     private static ICodec? SelectFirst(List<ICodec> orderedCodecs, Func<ICodec, bool> predicate, string opName)

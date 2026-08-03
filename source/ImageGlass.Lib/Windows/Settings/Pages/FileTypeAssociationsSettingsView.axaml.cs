@@ -425,7 +425,7 @@ public partial class FileTypeAssociationsSettingsView : SettingsPageView
         foreach (var codec in _codecs)
         {
             if (!codec.IsPlugin) continue;
-            foreach (var ext in codec.SupportedExtensions) _pluginExts.Add(ext);
+            foreach (var ext in codec.DecodingExtensions) _pluginExts.Add(ext);
         }
     }
 
@@ -449,12 +449,12 @@ public partial class FileTypeAssociationsSettingsView : SettingsPageView
         // _codecs is ordered by decode priority (highest first)
         foreach (var codec in _codecs)
         {
-            if (codec.SupportedExtensions.Contains(ext, StringComparer.OrdinalIgnoreCase))
+            if (codec.DecodingExtensions.Contains(ext, StringComparer.OrdinalIgnoreCase))
                 return codec;
         }
 
         // not explicitly claimed -> the catch-all codec (empty extension list)
-        return _codecs.FirstOrDefault(c => c.SupportedExtensions.Count == 0);
+        return _codecs.FirstOrDefault(c => c.DecodingExtensions.Count == 0);
     }
 
 

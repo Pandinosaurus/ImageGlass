@@ -17,6 +17,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 using Avalonia;
+using ImageGlass.Common.Extensions;
 using ImageGlass.Common.Photoing;
 using ImageGlass.Common.Types;
 using ImageGlass.SDK.Plugins;
@@ -89,7 +90,10 @@ internal sealed unsafe class NativeCodecProxy : PhDisposable, ICodec
     /// <summary>
     /// Gets the extensions this codec decodes, after removing the ones the user switched off.
     /// </summary>
-    public IReadOnlyList<string> SupportedExtensions { get; }
+    public IReadOnlyList<string> DecodingExtensions { get; }
+
+    /// <inheritdoc/>
+    public bool SupportsEncoding => SupportsStaticRasterEncoding || SupportsMultiFrameEncoding;
 
     /// <summary>
     /// Gets the extensions this codec encodes, after removing the ones the user switched off.
@@ -171,10 +175,10 @@ internal sealed unsafe class NativeCodecProxy : PhDisposable, ICodec
 
         DeclaredDecodingExtensions = Normalize(capability.DecodingExtensions);
         DeclaredEncodingExtensions = Normalize(capability.EncodingExtensions);
-        SupportedExtensions = Filter(DeclaredDecodingExtensions, disabledDecode);
+        DecodingExtensions = Filter(DeclaredDecodingExtensions, disabledDecode);
         EncodingExtensions = Filter(DeclaredEncodingExtensions, disabledEncode);
 
-        _supportedExtensionsSet = new HashSet<string>(SupportedExtensions, StringComparer.OrdinalIgnoreCase);
+        _supportedExtensionsSet = new HashSet<string>(DecodingExtensions, StringComparer.OrdinalIgnoreCase);
         _encodingExtensionsSet = new HashSet<string>(EncodingExtensions, StringComparer.OrdinalIgnoreCase);
     }
 
@@ -454,6 +458,330 @@ internal sealed unsafe class NativeCodecProxy : PhDisposable, ICodec
             }
             PluginHostApiTable.ReleaseCancellation(cancelHandle);
             _plugin.LiveToken.Exit();
+        }
+    }
+
+
+    /// <summary>
+    /// Checks whether this codec should write the given destination path.
+    /// </summary>
+    public bool CanEncode(string destFilePath, CodecEncodeContext context)
+    {
+        if (!SupportsStaticRasterEncoding) return false;
+        if (_failureManager.IsQuarantined(_plugin.PluginId)) return false;
+        if (string.IsNullOrEmpty(destFilePath)) return false;
+        return _encodingExtensionsSet.Contains(Path.GetExtension(destFilePath));
+    }
+
+
+    /// <summary>
+    /// Checks whether this codec should write multiple frames to the given destination path.
+    /// </summary>
+    public bool CanEncodeMultiFrame(string destFilePath, CodecEncodeContext context)
+        => SupportsMultiFrameEncoding && CanEncode(destFilePath, context);
+
+
+    /// <summary>
+    /// Encodes one image through the plugin on a background thread.
+    /// </summary>
+    public Task<CodecEncodeResult> EncodeAsync(CodecEncodeRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        return Task.Factory.StartNew(() => EncodeCore(request, cancellationToken),
+            cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+    }
+
+
+    /// <summary>
+    /// Encodes every frame through the plugin's multi-frame session on a background thread.
+    /// </summary>
+    public Task<CodecEncodeResult> EncodeMultiFrameAsync(CodecMultiFrameEncodeRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        return Task.Factory.StartNew(() => EncodeMultiFrameCore(request, cancellationToken),
+            cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+    }
+
+
+    /// <summary>
+    /// Copies an <see cref="SKImage"/> into a freshly allocated host-owned BGRA8 unpremultiplied
+    /// buffer, reusing <paramref name="pixels"/> when it is already big enough.
+    /// </summary>
+    private static void ReadPixelsInto(SKImage image, ref byte* pixels, ref nuint capacity,
+        out IGPixelBuffer buffer)
+    {
+        // Unpremul because that is what IGPixelFormat.Bgra8Unorm means to a plugin. Do NOT copy
+        // SkiaCodec.ToMagick, which uses Premul: handing premultiplied bytes over is a silent
+        // dark-halo bug on any image with alpha.
+        var info = new SKImageInfo(image.Width, image.Height, SKColorType.Bgra8888, SKAlphaType.Unpremul);
+        var stride = checked(info.Width * 4);
+        var byteCount = (long)stride * info.Height;
+
+        if (byteCount > int.MaxValue) throw new InvalidDataException("IGE: frame too large to encode.");
+
+        if (capacity < (nuint)byteCount)
+        {
+            if (pixels != null) System.Runtime.InteropServices.NativeMemory.Free(pixels);
+            pixels = (byte*)System.Runtime.InteropServices.NativeMemory.Alloc((nuint)byteCount);
+            capacity = (nuint)byteCount;
+        }
+
+        // Always copy: PeekPixels returns null for a GPU-backed image, its layout is whatever the
+        // image happens to be, and a plugin-decoded image is backed by ANOTHER plugin's memory.
+        if (!image.ReadPixels(info, (nint)pixels, stride, 0, 0))
+        {
+            throw new InvalidDataException("IGE: could not read the source pixels.");
+        }
+
+        buffer = new IGPixelBuffer
+        {
+            Data = pixels,
+            Width = info.Width,
+            Height = info.Height,
+            Stride = stride,
+            PixelFormat = (int)IGPixelFormat.Bgra8Unorm,
+            ReleaseContext = HOST_OWNED_BUFFER,
+        };
+    }
+
+
+    /// <summary>
+    /// Sentinel the host puts in an encode input's <c>ReleaseContext</c> so a plugin that
+    /// symmetrically frees its buffers can detect and refuse host memory.
+    /// </summary>
+    private static readonly void* HOST_OWNED_BUFFER = (void*)1;
+
+
+    /// <summary>
+    /// Builds the encode options for a call; <paramref name="pSrc"/> and <paramref name="pIcc"/>
+    /// must stay fixed for the whole native call.
+    /// </summary>
+    private static IGEncodeOptions BuildOptions(uint quality, SKImage source, string srcPath,
+        char* pSrc, byte[]? icc, byte* pIcc)
+    {
+        return new IGEncodeOptions
+        {
+            StructSize = sizeof(IGEncodeOptions),
+            Quality = (int)Math.Clamp(quality, 1u, 100u),
+            Lossless = quality >= 100 ? 1 : 0,
+            PreserveAlpha = source.AlphaType != SKAlphaType.Opaque ? 1 : 0,
+            SourceFilePath = new IGStringRef { Data = pSrc, Length = srcPath.Length },
+            IccProfileData = pIcc,
+            IccProfileSize = icc?.Length ?? 0,
+        };
+    }
+
+
+    /// <summary>
+    /// Invokes the plugin's single-image encode entry point.
+    /// </summary>
+    private CodecEncodeResult EncodeCore(CodecEncodeRequest request, CancellationToken token)
+    {
+        // Re-check the extension: a plugin that ignores it would otherwise write its own format
+        // into whatever path a direct caller passed.
+        if (!CanEncode(request.DestFilePath, CodecEncodeContext.Default) || _codecApi->EncodeStaticRaster == null)
+        {
+            return new CodecEncodeResult(false, true);
+        }
+        if (!_plugin.LiveToken.TryEnter()) return new CodecEncodeResult(false, true);
+
+        var cancelHandle = PluginHostApiTable.RegisterCancellation(token);
+        var srcPath = request.SourceFilePath ?? string.Empty;
+        var icc = request.SourceIccProfile;
+        byte* pixels = null;
+        nuint capacity = 0;
+
+        try
+        {
+            ReadPixelsInto(request.Source, ref pixels, ref capacity, out var buffer);
+            token.ThrowIfCancellationRequested();
+
+            IGStatus status;
+            fixed (char* pDest = request.DestFilePath)
+            fixed (char* pSrc = srcPath)
+            fixed (byte* pIcc = icc)
+            {
+                var opts = BuildOptions(request.Quality, request.Source, srcPath, pSrc, icc, pIcc);
+                var destRef = new IGStringRef { Data = pDest, Length = request.DestFilePath.Length };
+
+                try
+                {
+                    status = _codecApi->EncodeStaticRaster(destRef, &buffer, &opts, (void*)cancelHandle);
+                }
+                catch (Exception ex)
+                {
+                    _failureManager.RecordSoftFailure(_plugin.PluginId,
+                        $"managed exception during EncodeStaticRaster: {ex.Message}");
+                    return new CodecEncodeResult(false, false, ex.Message);
+                }
+            }
+
+            return MapEncodeStatus(status, token);
+        }
+        finally
+        {
+            if (pixels != null) System.Runtime.InteropServices.NativeMemory.Free(pixels);
+            PluginHostApiTable.ReleaseCancellation(cancelHandle);
+            _plugin.LiveToken.Exit();
+        }
+    }
+
+
+    /// <summary>
+    /// Drives the plugin's multi-frame session, holding exactly one frame at a time.
+    /// </summary>
+    private CodecEncodeResult EncodeMultiFrameCore(CodecMultiFrameEncodeRequest request, CancellationToken token)
+    {
+        if (!CanEncodeMultiFrame(request.DestFilePath, CodecEncodeContext.Default)
+            || _codecApi->BeginEncodeMultiFrame == null
+            || _codecApi->EncodeFrame == null || _codecApi->EndEncodeMultiFrame == null)
+        {
+            return new CodecEncodeResult(false, true);
+        }
+        if (!_plugin.LiveToken.TryEnter()) return new CodecEncodeResult(false, true);
+
+        var cancelHandle = PluginHostApiTable.RegisterCancellation(token);
+        var srcPath = request.SourceFilePath ?? string.Empty;
+        var icc = request.SourceIccProfile;
+        void* session = null;
+        var committed = false;
+        byte* pixels = null;
+        nuint capacity = 0;
+
+        try
+        {
+            IGStatus status;
+            using (var firstFrame = FetchFrame(request, 0, token))
+            {
+                if (firstFrame is null) return new CodecEncodeResult(false, false, "frame 0 unavailable");
+
+                fixed (char* pDest = request.DestFilePath)
+                fixed (char* pSrc = srcPath)
+                fixed (byte* pIcc = icc)
+                {
+                    var info = new IGMultiFrameEncodeInfo
+                    {
+                        StructSize = sizeof(IGMultiFrameEncodeInfo),
+                        FrameCount = request.FrameCount,
+                        IsAnimated = request.IsAnimated ? 1 : 0,
+                        LoopCount = request.LoopCount,
+                        CanvasWidth = 0,
+                        CanvasHeight = 0,
+                    };
+                    var opts = BuildOptions(request.Quality, firstFrame.Frame.Image, srcPath, pSrc, icc, pIcc);
+                    var destRef = new IGStringRef { Data = pDest, Length = request.DestFilePath.Length };
+
+                    status = _codecApi->BeginEncodeMultiFrame(destRef, &info, &opts, &session, (void*)cancelHandle);
+                }
+
+                if (status is IGStatus.Unsupported or IGStatus.NotImplemented)
+                {
+                    session = null;
+                    return new CodecEncodeResult(false, true);
+                }
+                if (status != IGStatus.OK || session == null)
+                {
+                    session = null;
+                    return new CodecEncodeResult(false, false, $"BeginEncodeMultiFrame returned {status}");
+                }
+
+                status = WriteFrame(firstFrame.Frame, 0, ref pixels, ref capacity, session, cancelHandle);
+            }
+
+            if (status != IGStatus.OK) return MapEncodeStatus(status, token);
+
+            for (var i = 1; i < request.FrameCount; i++)
+            {
+                token.ThrowIfCancellationRequested();
+
+                using var frame = FetchFrame(request, i, token);
+                if (frame is null) return new CodecEncodeResult(false, false, $"frame {i} unavailable");
+
+                status = WriteFrame(frame.Frame, i, ref pixels, ref capacity, session, cancelHandle);
+                if (status != IGStatus.OK) return MapEncodeStatus(status, token);
+            }
+
+            status = _codecApi->EndEncodeMultiFrame(session, 1, (void*)cancelHandle);
+            committed = true;
+            return MapEncodeStatus(status, token);
+        }
+        finally
+        {
+            // abort so the plugin closes its handle; the host discards the temp file
+            if (session != null && !committed)
+            {
+                try { _codecApi->EndEncodeMultiFrame(session, 0, null); }
+                catch (Exception ex) { Debug.WriteLine($"[NativeCodecProxy] abort threw: {ex.Message}"); }
+            }
+            if (pixels != null) System.Runtime.InteropServices.NativeMemory.Free(pixels);
+            PluginHostApiTable.ReleaseCancellation(cancelHandle);
+            _plugin.LiveToken.Exit();
+        }
+    }
+
+
+    /// <summary>
+    /// Copies one frame across the ABI. The frame's pixels are copied first, so the caller may
+    /// release it as soon as this returns.
+    /// </summary>
+    private IGStatus WriteFrame(CodecEncodeFrame frame, int index, ref byte* pixels, ref nuint capacity,
+        void* session, nint cancelHandle)
+    {
+        ReadPixelsInto(frame.Image, ref pixels, ref capacity, out var buffer);
+
+        var frameInfo = new IGEncodeFrameInfo
+        {
+            StructSize = sizeof(IGEncodeFrameInfo),
+            FrameIndex = index,
+            DurationMs = frame.DurationMs,
+            HasAlpha = frame.Image.AlphaType != SKAlphaType.Opaque ? 1 : 0,
+        };
+
+        try
+        {
+            return _codecApi->EncodeFrame(session, &buffer, &frameInfo, (void*)cancelHandle);
+        }
+        catch (Exception ex)
+        {
+            _failureManager.RecordSoftFailure(_plugin.PluginId,
+                $"managed exception during EncodeFrame: {ex.Message}");
+            return IGStatus.Internal;
+        }
+    }
+
+
+    /// <summary>
+    /// Pulls frame <paramref name="index"/> and wraps it so only owned frames get disposed.
+    /// </summary>
+    private static OwnedFrame? FetchFrame(CodecMultiFrameEncodeRequest request, int index, CancellationToken token)
+    {
+        var frame = request.GetFrameAsync(index, token).GetAwaiter().GetResult();
+        return frame is null || frame.Image.IsDisposed() ? null : new OwnedFrame(frame);
+    }
+
+
+    /// <summary>
+    /// Translates a plugin encode status into a host result.
+    /// </summary>
+    private static CodecEncodeResult MapEncodeStatus(IGStatus status, CancellationToken token)
+    {
+        if (status == IGStatus.Canceled) token.ThrowIfCancellationRequested();
+        if (status is IGStatus.Unsupported or IGStatus.NotImplemented) return new CodecEncodeResult(false, true);
+        if (status != IGStatus.OK) return new CodecEncodeResult(false, false, $"codec returned {status}");
+        return new CodecEncodeResult(true, false);
+    }
+
+
+    /// <summary>
+    /// Disposes a pulled frame only when the producer handed over ownership.
+    /// </summary>
+    private sealed class OwnedFrame(CodecEncodeFrame frame) : IDisposable
+    {
+        public CodecEncodeFrame Frame { get; } = frame;
+
+        public void Dispose()
+        {
+            if (Frame.OwnsImage) Frame.Image.Dispose();
         }
     }
 

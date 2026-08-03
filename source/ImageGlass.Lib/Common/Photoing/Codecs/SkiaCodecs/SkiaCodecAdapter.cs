@@ -52,7 +52,19 @@ public sealed class SkiaCodecAdapter : PhDisposable, ICodec
     public int DecodePriority { get; } = 100;
 
     /// <inheritdoc/>
-    public IReadOnlyList<string> SupportedExtensions => _supportedExtensions;
+    public int EncodePriority { get; }
+
+    /// <inheritdoc/>
+    public IReadOnlyList<string> DecodingExtensions => _supportedExtensions;
+
+    /// <summary>
+    /// Decode-only. Writing goes through <see cref="MagickCodecAdapter"/>, which is also what
+    /// <c>SkiaCodec.SaveAsync</c> delegates to.
+    /// </summary>
+    public bool SupportsEncoding { get; }
+
+    /// <inheritdoc/>
+    public IReadOnlyList<string> EncodingExtensions => [];
 
 
     /// <inheritdoc/>
@@ -112,4 +124,21 @@ public sealed class SkiaCodecAdapter : PhDisposable, ICodec
 
         return CodecDecodeResultFactory.FromSkiaOutput(CodecId, output, metadata);
     }
+
+
+    /// <inheritdoc/>
+    public bool CanEncode(string destFilePath, CodecEncodeContext context) => false;
+
+    /// <inheritdoc/>
+    public Task<CodecEncodeResult> EncodeAsync(CodecEncodeRequest request,
+        CancellationToken cancellationToken = default)
+        => Task.FromResult(new CodecEncodeResult(false, true));
+
+    /// <inheritdoc/>
+    public bool CanEncodeMultiFrame(string destFilePath, CodecEncodeContext context) => false;
+
+    /// <inheritdoc/>
+    public Task<CodecEncodeResult> EncodeMultiFrameAsync(CodecMultiFrameEncodeRequest request,
+        CancellationToken cancellationToken = default)
+        => Task.FromResult(new CodecEncodeResult(false, true));
 }
