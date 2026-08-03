@@ -20,6 +20,9 @@ using Avalonia.Controls;
 using ImageGlass.Common.Localization;
 using ImageGlass.SDK.Plugins;
 using ImageGlass.UI;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace ImageGlass.Common.Windows;
 
@@ -66,12 +69,14 @@ public partial class PluginInfoWindowView : PhControl
         SetField(PART_ExecutableRow, PART_Executable, manifest.Executable);
         SetField(PART_AuthorRow, PART_Author, manifest.Author);
 
-        // prefer the codec's own extensions (re-probed live); fall back to the manifest override
-        var codecExts = Core.PluginRegistry.GetCodecSupportedExtensions(manifest.Id);
-        var extText = codecExts.Length > 0
-            ? string.Join(", ", codecExts)
-            : manifest.SupportedExtensions;
-        SetField(PART_ExtensionsRow, PART_Extensions, extText);
+        // Formats come from the codec, so they are only known while loaded; the row hides otherwise.
+        var (decodeExts, encodeExts) = Core.PluginRegistry.GetDeclaredCodecExtensions(manifest.Id);
+        var allExts = new List<string>(decodeExts);
+        foreach (var ext in encodeExts)
+        {
+            if (!allExts.Contains(ext, StringComparer.OrdinalIgnoreCase)) allExts.Add(ext);
+        }
+        SetField(PART_ExtensionsRow, PART_Extensions, string.Join(", ", allExts));
 
         PART_WebsiteRow.IsVisible = !string.IsNullOrWhiteSpace(_website);
         PART_Website.Text = _website;

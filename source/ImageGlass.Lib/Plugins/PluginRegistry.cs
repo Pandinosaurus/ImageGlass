@@ -45,6 +45,41 @@ public sealed unsafe class PluginRegistry : PhDisposable
     /// </summary>
     internal const string TRASH_DIR_NAME = "_trash";
 
+    // Derived from real field offsets: counting fields gets it wrong (a leading int pads to 8).
+    private static readonly int MIN_CODEC_API_SIZE = MeasureCodecApi();
+    private static readonly int MIN_CAPABILITY_SIZE = MeasureCapabilityDecodeFields();
+    private static readonly int CAPABILITY_ENCODE_FIELDS_END = MeasureCapabilityEncodeFields();
+
+
+    /// <summary>
+    /// Offset past <c>FreePixelBuffer</c>: the smallest table carrying the required decode members.
+    /// </summary>
+    private static int MeasureCodecApi()
+    {
+        IGCodecApi probe = default;
+        return (int)((byte*)&probe.FreePixelBuffer - (byte*)&probe) + sizeof(nint);
+    }
+
+
+    /// <summary>
+    /// Offset past <c>DecodeExtensions</c>: the smallest capability carrying the decode fields.
+    /// </summary>
+    private static int MeasureCapabilityDecodeFields()
+    {
+        IGCodecCapability probe = default;
+        return (int)((byte*)&probe.DecodeExtensions - (byte*)&probe) + sizeof(nint);
+    }
+
+
+    /// <summary>
+    /// Offset just past <c>EncodeExtensions</c>; below this the encode fields are absent.
+    /// </summary>
+    private static int MeasureCapabilityEncodeFields()
+    {
+        IGCodecCapability probe = default;
+        return (int)((byte*)&probe.EncodeExtensions - (byte*)&probe) + sizeof(nint);
+    }
+
 
     /// <summary>
     /// Validates a manifest <c>Executable</c> and resolves it to a full path inside
@@ -231,46 +266,54 @@ public sealed unsafe class PluginRegistry : PhDisposable
                     continue;
                 }
                 if (status != IGStatus.OK || codecApi == null) continue;
+
+                // First member and the only stable offset, so validate before touching anything
+                // else; a stale library has a function pointer here and gets refused.
+                if (codecApi->StructSize < MIN_CODEC_API_SIZE || codecApi->StructSize > sizeof(IGCodecApi))
+                {
+                    Debug.WriteLine($"[PluginRegistry] '{manifest.Id}' codec[{i}] reports StructSize="
+                        + $"{codecApi->StructSize} (expected {MIN_CODEC_API_SIZE}..{sizeof(IGCodecApi)}); "
+                        + "rebuild the plugin against the current SDK.");
+                    continue;
+                }
                 if (codecApi->GetCapability == null) continue;
 
 
-                IGCodecCapability cap = default;
+                // The plugin owns the capability struct and returns a pointer to it.
+                IGCodecCapability* cap = null;
                 try { status = codecApi->GetCapability(&cap); }
                 catch (Exception ex)
                 {
                     Debug.WriteLine($"[PluginRegistry] '{manifest.Id}' codec[{i}].GetCapability threw: {ex.Message}");
                     continue;
                 }
-                if (status != IGStatus.OK) continue;
+                if (status != IGStatus.OK || cap == null) continue;
 
-
-                var managed = MarshalCapability(in cap);
-
-                // Apply per-manifest extension override if present.
-                var manifestExts = ParseManifestExtensions(manifest.SupportedExtensions);
-                if (manifestExts.Length > 0)
+                if (cap->StructSize < MIN_CAPABILITY_SIZE || cap->StructSize > sizeof(IGCodecCapability))
                 {
-                    managed.SupportedExtensions = manifestExts;
+                    Debug.WriteLine($"[PluginRegistry] '{manifest.Id}' codec[{i}] capability StructSize="
+                        + $"{cap->StructSize} is unusable; skipping.");
+                    continue;
                 }
 
-                // Validate animation entry points if the codec advertises animation.
-                // If any of the three pointers is null, downgrade SupportsAnimation
-                // silently so the rest of the host treats this as a static-only codec.
-                if (managed.SupportsAnimation)
+                var managed = MarshalCapability(codecApi, cap);
+                if (!HasAnyCapability(managed))
                 {
-                    if (codecApi->GetAnimationInfo == null
-                        || codecApi->FreeAnimationInfo == null
-                        || codecApi->DecodeAnimationFrame == null)
-                    {
-                        Debug.WriteLine($"[PluginRegistry] '{manifest.Id}' codec[{i}] advertises SupportsAnimation "
-                            + "but is missing one of GetAnimationInfo / FreeAnimationInfo / DecodeAnimationFrame "
-                            + "-> downgraded.");
-                        managed.SupportsAnimation = false;
-                    }
+                    Debug.WriteLine($"[PluginRegistry] '{manifest.Id}' codec[{i}] advertises nothing usable; skipping.");
+                    continue;
                 }
 
                 capabilities.Add(managed);
                 handle.Codecs.Add(new NativeCodecEntry((nint)codecApi, managed));
+            }
+
+            // A plugin whose codecs all failed to probe contributes nothing; unload it rather
+            // than caching a loaded library forever.
+            if (handle.Codecs.Count == 0)
+            {
+                Debug.WriteLine($"[PluginRegistry] '{manifest.Id}' registered no codecs; unloading.");
+                handle.Dispose();
+                return null;
             }
 
             // 7. Register with loader
@@ -323,6 +366,19 @@ public sealed unsafe class PluginRegistry : PhDisposable
 
 
     /// <summary>
+    /// Returns the loaded plugin handle, or <c>null</c> when it is not loaded. Lets the host
+    /// rebuild a plugin's proxies without reloading the library.
+    /// </summary>
+    internal NativePlugin? GetLoadedPlugin(string pluginId)
+    {
+        lock (_lock)
+        {
+            return _plugins.GetValueOrDefault(pluginId);
+        }
+    }
+
+
+    /// <summary>
     /// Hot-unloads a loaded plugin (Shutdown + free library); returns <c>false</c> if not loaded.
     /// Outstanding buffers are gated by <c>PluginLiveToken</c>, so late releases safely no-op.
     /// </summary>
@@ -356,62 +412,90 @@ public sealed unsafe class PluginRegistry : PhDisposable
     }
 
 
-    private static CodecPluginCapability MarshalCapability(in IGCodecCapability cap)
+    /// <summary>
+    /// Snapshots a capability, downgrading each flag whose entry points are missing so the host
+    /// never sees an advertised-but-unwired capability.
+    /// </summary>
+    private static CodecPluginCapability MarshalCapability(IGCodecApi* codecApi, IGCodecCapability* cap)
     {
-        // Defensive: a negative ExtensionCount almost always indicates a struct
-        // layout mismatch (plugin built against a stale SDK assembly). Clamp +
-        // surface the bad value via Debug rather than throwing from List<>.
-        var extCount = cap.ExtensionCount;
-        if (extCount < 0)
-        {
-            Debug.WriteLine($"[PluginRegistry] codec capability reports negative ExtensionCount={extCount} (likely struct layout mismatch); clamping to 0.");
-            extCount = 0;
-        }
-        var exts = new List<string>(extCount);
-        if (cap.Extensions != null)
-        {
-            for (var i = 0; i < extCount; i++)
-            {
-                exts.Add(cap.Extensions[i].ToManaged());
-            }
-        }
+        var readable = Math.Min(cap->StructSize, sizeof(IGCodecCapability));
+
+        // A plugin built against a smaller capability struct carries no encode fields at all;
+        // reading them would be an over-read past its allocation.
+        var hasEncodeFields = readable >= CAPABILITY_ENCODE_FIELDS_END;
+
+        var decodeExts = MarshalExtensions(cap->DecodeExtensionCount, cap->DecodeExtensions, "DecodeExtensions");
+        var encodeExts = hasEncodeFields
+            ? MarshalExtensions(cap->EncodeExtensionCount, cap->EncodeExtensions, "EncodeExtensions")
+            : [];
+
+        var animDecode = cap->SupportsAnimationDecoding != 0
+            && codecApi->GetAnimationInfo != null
+            && codecApi->FreeAnimationInfo != null
+            && codecApi->DecodeAnimationFrame != null;
+
+        // An empty encode list must never read as "encodes everything".
+        var staticEncode = hasEncodeFields
+            && cap->SupportsStaticRasterEncoding != 0
+            && codecApi->EncodeStaticRaster != null
+            && encodeExts.Length > 0;
+
+        var multiEncode = staticEncode
+            && cap->SupportsMultiFrameEncoding != 0
+            && codecApi->BeginEncodeMultiFrame != null
+            && codecApi->EncodeFrame != null
+            && codecApi->EndEncodeMultiFrame != null;
 
         return new CodecPluginCapability
         {
-            CodecId = cap.CodecId.ToManaged(),
-            CodecName = cap.CodecName.ToManaged(),
-            MetadataPriority = cap.MetadataPriority,
-            DecodePriority = cap.DecodePriority,
-            SupportedExtensions = [.. exts],
-            SupportsMetadata = cap.SupportsMetadata != 0,
-            SupportsStaticRaster = cap.SupportsStaticRaster != 0,
-            SupportsColorProfiles = cap.SupportsColorProfiles != 0,
-            SupportsAnimation = cap.SupportsAnimation != 0,
+            CodecId = cap->CodecId.ToManaged(),
+            CodecName = cap->CodecName.ToManaged(),
+            MetadataPriority = cap->MetadataPriority,
+            DecodePriority = cap->DecodePriority,
+            EncodePriority = hasEncodeFields ? cap->EncodePriority : 0,
+            DecodingExtensions = decodeExts,
+            EncodingExtensions = encodeExts,
+            SupportsMetadata = cap->SupportsMetadata != 0 && codecApi->LoadMetadata != null,
+            SupportsColorProfiles = cap->SupportsColorProfiles != 0,
+            SupportsStaticRasterDecoding = cap->SupportsStaticRasterDecoding != 0
+                && codecApi->DecodeStaticRaster != null && codecApi->FreePixelBuffer != null,
+            SupportsAnimationDecoding = animDecode,
+            SupportsStaticRasterEncoding = staticEncode,
+            SupportsMultiFrameEncoding = multiEncode,
         };
     }
 
 
     /// <summary>
-    /// Parses a semicolon-separated extension list from the manifest into a
-    /// normalized array (lowercase, leading dot, deduplicated). Returns an
-    /// empty array when the input is null/whitespace.
+    /// Copies a plugin-owned extension array. A negative count means a struct layout mismatch,
+    /// so clamp and report rather than throwing from <see cref="List{T}"/>.
     /// </summary>
-    private static string[] ParseManifestExtensions(string? raw)
+    private static string[] MarshalExtensions(int count, IGStringRef* extensions, string what)
     {
-        if (string.IsNullOrWhiteSpace(raw)) return [];
-
-        var parts = raw.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        if (parts.Length == 0) return [];
-
-        var set = new HashSet<string>(parts.Length, StringComparer.OrdinalIgnoreCase);
-        var result = new List<string>(parts.Length);
-        foreach (var part in parts)
+        if (count < 0)
         {
-            var ext = part.StartsWith('.') ? part.ToLowerInvariant() : "." + part.ToLowerInvariant();
-            if (set.Add(ext)) result.Add(ext);
+            Debug.WriteLine($"[PluginRegistry] capability reports negative count for {what} ({count}); clamping to 0.");
+            count = 0;
         }
-        return [.. result];
+        if (extensions == null || count == 0) return [];
+
+        var list = new List<string>(count);
+        for (var i = 0; i < count; i++)
+        {
+            list.Add(extensions[i].ToManaged());
+        }
+        return [.. list];
     }
+
+
+    /// <summary>
+    /// Whether a codec advertises anything the host can use.
+    /// </summary>
+    private static bool HasAnyCapability(CodecPluginCapability cap)
+        => cap.SupportsMetadata
+        || cap.SupportsStaticRasterDecoding
+        || cap.SupportsAnimationDecoding
+        || cap.SupportsStaticRasterEncoding;
 
 
     protected override void OnDisposing()
@@ -429,41 +513,36 @@ public sealed unsafe class PluginRegistry : PhDisposable
 
 
     /// <summary>
-    /// Reads the codec-reported supported extensions for the loaded plugin with the given id,
-    /// re-probing each codec capability live so the result reflects the codec itself and ignores
-    /// any manifest <c>supportedExtensions</c> override. Returns an empty array when the plugin
-    /// is not loaded or reports none.
+    /// Returns everything the loaded plugin's codecs declare they can read and write, ignoring the
+    /// user's per-extension choices. Empty when not loaded: reading a codec's formats means running
+    /// it, which requires trust. Reads the probe-time snapshot, so it is safe on the UI thread.
     /// </summary>
-    public string[] GetCodecSupportedExtensions(string pluginId)
+    public (string[] Decode, string[] Encode) GetDeclaredCodecExtensions(string pluginId)
     {
-        NativePlugin? handle;
-        lock (_lock)
-        {
-            if (!_plugins.TryGetValue(pluginId, out handle)) return [];
-        }
+        var handle = GetLoadedPlugin(pluginId);
+        if (handle is null) return ([], []);
 
-        var set = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        var result = new List<string>();
+        var decode = new List<string>();
+        var encode = new List<string>();
+        var decodeSeen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var encodeSeen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
         foreach (var entry in handle.Codecs)
         {
-            var codecApi = (IGCodecApi*)entry.CodecApiPtr;
-            if (codecApi == null || codecApi->GetCapability == null) continue;
-
-            IGCodecCapability cap = default;
-            IGStatus status;
-            try { status = codecApi->GetCapability(&cap); }
-            catch { continue; }
-            if (status != IGStatus.OK) continue;
-
-            foreach (var ext in MarshalCapability(in cap).SupportedExtensions)
-            {
-                if (string.IsNullOrEmpty(ext)) continue;
-                var normalized = ext.StartsWith('.') ? ext.ToLowerInvariant() : "." + ext.ToLowerInvariant();
-                if (set.Add(normalized)) result.Add(normalized);
-            }
+            Collect(entry.Capability.DecodingExtensions, decodeSeen, decode);
+            Collect(entry.Capability.EncodingExtensions, encodeSeen, encode);
         }
 
-        return [.. result];
+        return ([.. decode], [.. encode]);
+
+        static void Collect(string[] source, HashSet<string> seen, List<string> target)
+        {
+            foreach (var ext in source)
+            {
+                var normalized = PluginTrustPolicy.NormalizeExtension(ext);
+                if (normalized.Length > 1 && seen.Add(normalized)) target.Add(normalized);
+            }
+        }
     }
 
 

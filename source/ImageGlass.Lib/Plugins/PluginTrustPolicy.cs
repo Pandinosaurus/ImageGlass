@@ -100,13 +100,62 @@ public static class PluginTrustPolicy
 
 
     /// <summary>
-    /// Returns <c>true</c> if the plugin is explicitly trusted to outrank built-in codecs
-    /// for core formats (via <see cref="PluginTrustInfo.AllowOverrideBuiltins"/>).
+    /// Normalizes an extension to the canonical persisted form: lowercase, leading dot.
     /// </summary>
-    public static bool AllowsBuiltinOverride(string pluginId)
+    internal static string NormalizeExtension(string extension)
     {
-        return Core.Config.PluginTrust.TryGetValue(pluginId, out var info)
-            && info is not null && info.AllowOverrideBuiltins;
+        if (string.IsNullOrWhiteSpace(extension)) return string.Empty;
+
+        var trimmed = extension.Trim().ToLowerInvariant();
+        return trimmed.StartsWith('.') ? trimmed : "." + trimmed;
+    }
+
+
+    /// <summary>
+    /// Gets the extensions the user switched off for this plugin. Both sets are non-null.
+    /// </summary>
+    public static (IReadOnlySet<string> Decode, IReadOnlySet<string> Encode) GetExtensionExclusions(string pluginId)
+    {
+        Core.Config.PluginTrust.TryGetValue(pluginId, out var info);
+
+        return (
+            info?.DisabledDecodeExtensions ?? EMPTY_EXCLUSIONS,
+            info?.DisabledEncodeExtensions ?? EMPTY_EXCLUSIONS);
+    }
+
+
+    /// <summary>
+    /// Whether the plugin may decode the given extension (i.e. the user has not switched it off).
+    /// </summary>
+    public static bool IsExtensionEnabledForDecode(string pluginId, string extension)
+        => !GetExtensionExclusions(pluginId).Decode.Contains(NormalizeExtension(extension));
+
+
+    /// <summary>
+    /// Whether the plugin may encode the given extension.
+    /// </summary>
+    public static bool IsExtensionEnabledForEncode(string pluginId, string extension)
+        => !GetExtensionExclusions(pluginId).Encode.Contains(NormalizeExtension(extension));
+
+
+    /// <summary>
+    /// Replaces both exclusion sets and persists. <c>false</c> when admin-locked, or when there is
+    /// no trust entry yet (use <see cref="TrustAsync"/> then).
+    /// </summary>
+    public static async Task<bool> SetExtensionExclusionsAsync(string pluginId,
+        IEnumerable<string>? disabledDecode, IEnumerable<string>? disabledEncode)
+    {
+        if (Config.IsConfigLocked(ConfigId.PluginTrust)) return false;
+        if (!Core.Config.PluginTrust.ContainsKey(pluginId)) return false;
+
+        await UpsertAsync(pluginId, old => new PluginTrustInfo
+        {
+            Enabled = old?.Enabled ?? false,
+            Hash = old?.Hash ?? string.Empty,
+            DisabledDecodeExtensions = Normalize(disabledDecode),
+            DisabledEncodeExtensions = Normalize(disabledEncode),
+        });
+        return true;
     }
 
 
@@ -131,22 +180,64 @@ public static class PluginTrustPolicy
 
 
     /// <summary>
-    /// Enables the plugin and pins the current library hash, then persists the config.
-    /// Returns <c>false</c> if the library could not be resolved or hashed.
+    /// Enables the plugin, pins the current library hash and persists. Pass the exclusion sets to
+    /// apply them in the same write so the first load sees them; <c>null</c> keeps what is stored.
+    /// <c>false</c> when admin-locked or the library could not be hashed.
     /// </summary>
-    public static async Task<bool> TrustAsync(PluginManifest manifest, string pluginDir)
+    public static async Task<bool> TrustAsync(PluginManifest manifest, string pluginDir,
+        IEnumerable<string>? disabledDecode = null, IEnumerable<string>? disabledEncode = null)
     {
+        if (Config.IsConfigLocked(ConfigId.PluginTrust)) return false;
+
         var libraryPath = ResolveLibraryPath(manifest, pluginDir);
         if (libraryPath is null) return false;
 
         var hash = ComputeSha256(libraryPath);
         if (hash is null) return false;
 
-        // reassign a fresh dictionary so the Config setter records the change
-        var trust = new Dictionary<string, PluginTrustInfo>(Core.Config.PluginTrust, StringComparer.Ordinal)
+        await UpsertAsync(manifest.Id, old => new PluginTrustInfo
         {
-            [manifest.Id] = new PluginTrustInfo { Enabled = true, Hash = hash },
-        };
+            Enabled = true,
+            Hash = hash,
+            DisabledDecodeExtensions = disabledDecode is null
+                ? Clone(old?.DisabledDecodeExtensions) : Normalize(disabledDecode),
+            DisabledEncodeExtensions = disabledEncode is null
+                ? Clone(old?.DisabledEncodeExtensions) : Normalize(disabledEncode),
+        });
+        return true;
+    }
+
+
+    /// <summary>
+    /// Disables the plugin (keeps a disabled entry and the user's format choices), then persists.
+    /// Returns <c>false</c> if the setting is admin-locked.
+    /// </summary>
+    public static async Task<bool> DisableAsync(string pluginId)
+    {
+        if (Config.IsConfigLocked(ConfigId.PluginTrust)) return false;
+
+        await UpsertAsync(pluginId, old => new PluginTrustInfo
+        {
+            Enabled = false,
+            Hash = old?.Hash ?? string.Empty,
+            DisabledDecodeExtensions = Clone(old?.DisabledDecodeExtensions),
+            DisabledEncodeExtensions = Clone(old?.DisabledEncodeExtensions),
+        });
+        return true;
+    }
+
+
+    /// <summary>
+    /// Drops the plugin's trust entry (used when the plugin is deleted), then persists the config.
+    /// Returns <c>false</c> if the setting is admin-locked.
+    /// </summary>
+    public static async Task<bool> RemoveAsync(string pluginId)
+    {
+        if (Config.IsConfigLocked(ConfigId.PluginTrust)) return false;
+        if (!Core.Config.PluginTrust.ContainsKey(pluginId)) return true;
+
+        var trust = new Dictionary<string, PluginTrustInfo>(Core.Config.PluginTrust, StringComparer.Ordinal);
+        trust.Remove(pluginId);
         Core.Config.PluginTrust = trust;
 
         await Core.Config.SaveAsync();
@@ -154,16 +245,21 @@ public static class PluginTrustPolicy
     }
 
 
+    private static readonly IReadOnlySet<string> EMPTY_EXCLUSIONS =
+        new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+
     /// <summary>
-    /// Disables the plugin (keeps a disabled entry), then persists the config.
+    /// Copy-on-write update of one trust entry: fresh info + fresh dictionary (the Config setter
+    /// ignores an equal reference), then persists.
     /// </summary>
-    public static async Task DisableAsync(string pluginId)
+    private static async Task UpsertAsync(string pluginId, Func<PluginTrustInfo?, PluginTrustInfo> mutate)
     {
         Core.Config.PluginTrust.TryGetValue(pluginId, out var existing);
 
         var trust = new Dictionary<string, PluginTrustInfo>(Core.Config.PluginTrust, StringComparer.Ordinal)
         {
-            [pluginId] = new PluginTrustInfo { Enabled = false, Hash = existing?.Hash ?? string.Empty },
+            [pluginId] = mutate(existing),
         };
         Core.Config.PluginTrust = trust;
 
@@ -172,16 +268,25 @@ public static class PluginTrustPolicy
 
 
     /// <summary>
-    /// Drops the plugin's trust entry (used when the plugin is deleted), then persists the config.
+    /// Normalizes an exclusion set; empty collapses to <c>null</c> so it is omitted from the JSON.
     /// </summary>
-    public static async Task RemoveAsync(string pluginId)
+    private static HashSet<string>? Normalize(IEnumerable<string>? extensions)
     {
-        if (!Core.Config.PluginTrust.ContainsKey(pluginId)) return;
+        if (extensions is null) return null;
 
-        var trust = new Dictionary<string, PluginTrustInfo>(Core.Config.PluginTrust, StringComparer.Ordinal);
-        trust.Remove(pluginId);
-        Core.Config.PluginTrust = trust;
-
-        await Core.Config.SaveAsync();
+        var set = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var ext in extensions)
+        {
+            var normalized = NormalizeExtension(ext);
+            if (normalized.Length > 1) set.Add(normalized);
+        }
+        return set.Count == 0 ? null : set;
     }
+
+
+    /// <summary>
+    /// Duplicates an exclusion set so a replaced entry is never aliased into the new one.
+    /// </summary>
+    private static HashSet<string>? Clone(HashSet<string>? set)
+        => set is null || set.Count == 0 ? null : new HashSet<string>(set, StringComparer.OrdinalIgnoreCase);
 }

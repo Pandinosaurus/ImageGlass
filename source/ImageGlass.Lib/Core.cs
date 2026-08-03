@@ -398,18 +398,39 @@ public static class Core
         var handle = PluginRegistry.LoadAndProbe(manifest, dir);
         if (handle is null) return false;
 
+        return RegisterProxies(handle, pluginExtensions);
+    }
+
+
+    /// <summary>
+    /// Builds and registers proxies for an already-loaded plugin. <paramref name="declaredExtensions"/>
+    /// collects the pre-filter extensions, which is the set <see cref="Config.PurgePluginFileFormats"/>
+    /// needs. Returns <c>true</c> if any codec registered.
+    /// </summary>
+    private static bool RegisterProxies(NativePlugin handle, List<string> declaredExtensions)
+    {
         var proxies = new List<NativeCodecProxy>();
         foreach (var proxy in PluginRegistry.CreateProxies(handle))
         {
+            // Everything switched off: registering it would leave an empty-extension codec that
+            // the catch-all convention mistakes for the fallback decoder.
+            if (proxy.SupportedExtensions.Count == 0 && proxy.EncodingExtensions.Count == 0)
+            {
+                declaredExtensions.AddRange(proxy.DeclaredDecodingExtensions);
+                proxy.Dispose();
+                continue;
+            }
+
             try
             {
                 CodecRegistry.Register(proxy);
                 proxies.Add(proxy);
-                pluginExtensions.AddRange(proxy.SupportedExtensions);
+                declaredExtensions.AddRange(proxy.DeclaredDecodingExtensions);
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[Core.RegisterPluginCodecs] register '{proxy.CodecId}' failed: {ex.Message}");
+                Debug.WriteLine($"[Core.RegisterProxies] register '{proxy.CodecId}' failed: {ex.Message}");
+                proxy.Dispose();
             }
         }
 
@@ -417,9 +438,70 @@ public static class Core
 
         lock (_pluginProxiesLock)
         {
-            _pluginProxies[manifest.Id] = proxies;
+            _pluginProxies[handle.PluginId] = proxies;
         }
         return true;
+    }
+
+
+    /// <summary>
+    /// Rebuilds a loaded plugin's codec proxies in place so a change to its per-extension choices
+    /// takes effect without a restart. Reuses the probed capabilities: no library load, no re-hash.
+    /// UI thread only (writes <see cref="Config.FileFormats"/>); no-op when not loaded.
+    /// </summary>
+    public static void ReloadPluginCodecs(string pluginId)
+    {
+        var handle = PluginRegistry.GetLoadedPlugin(pluginId);
+        if (handle is null) return;
+
+        // Cached photos hold pixels and metadata from the codec that is about to stop winning.
+        // Also cancels in-flight prefetch, so nothing decodes against a proxy we are disposing.
+        Photos.ClearCache();
+
+        List<NativeCodecProxy>? old;
+        lock (_pluginProxiesLock)
+        {
+            _pluginProxies.Remove(pluginId, out old);
+        }
+
+        var oldDecodeExts = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        if (old is not null)
+        {
+            foreach (var proxy in old)
+            {
+                foreach (var ext in proxy.SupportedExtensions) oldDecodeExts.Add(ext);
+
+                // Unregister before disposing: Unregister clears the selection caches, and
+                // Register would reject a CodecId that is still present.
+                CodecRegistry.Unregister(proxy);
+                proxy.Dispose();
+            }
+        }
+
+        var declared = new List<string>();
+        RegisterProxies(handle, declared);
+
+        if (declared.Count > 0) Config.PurgePluginFileFormats(declared);
+
+        // A decode change alters the browsable set, so the image list has to be rebuilt.
+        // An encode-only change needs neither reload; the caller refreshes its own UI.
+        var newDecodeExts = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        lock (_pluginProxiesLock)
+        {
+            if (_pluginProxies.TryGetValue(pluginId, out var fresh))
+            {
+                foreach (var proxy in fresh)
+                {
+                    foreach (var ext in proxy.SupportedExtensions) newDecodeExts.Add(ext);
+                }
+            }
+        }
+
+        if (!oldDecodeExts.SetEquals(newDecodeExts))
+        {
+            InvalidateCodecsAndReload();
+            AppAPIProvider.IG_ReloadList();
+        }
     }
 
 

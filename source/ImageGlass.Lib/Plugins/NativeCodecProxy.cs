@@ -43,6 +43,7 @@ internal sealed unsafe class NativeCodecProxy : PhDisposable, ICodec
     private readonly IGCodecApi* _codecApi;
     private readonly PluginFailureManager _failureManager;
     private readonly HashSet<string> _supportedExtensionsSet;
+    private readonly HashSet<string> _encodingExtensionsSet;
 
     /// <summary>
     /// Gets the plugin handle that owns this codec entry.
@@ -81,9 +82,29 @@ internal sealed unsafe class NativeCodecProxy : PhDisposable, ICodec
     public int DecodePriority { get; }
 
     /// <summary>
-    /// Gets the normalized list of extensions this codec proxy handles.
+    /// Gets the priority used when choosing a codec to write a destination extension.
+    /// </summary>
+    public int EncodePriority { get; }
+
+    /// <summary>
+    /// Gets the extensions this codec decodes, after removing the ones the user switched off.
     /// </summary>
     public IReadOnlyList<string> SupportedExtensions { get; }
+
+    /// <summary>
+    /// Gets the extensions this codec encodes, after removing the ones the user switched off.
+    /// </summary>
+    public IReadOnlyList<string> EncodingExtensions { get; }
+
+    /// <summary>
+    /// Gets every extension the codec declares for decoding, ignoring the user's choices.
+    /// </summary>
+    public IReadOnlyList<string> DeclaredDecodingExtensions { get; }
+
+    /// <summary>
+    /// Gets every extension the codec declares for encoding, ignoring the user's choices.
+    /// </summary>
+    public IReadOnlyList<string> DeclaredEncodingExtensions { get; }
 
     /// <summary>
     /// Gets whether the plugin codec supports metadata probing.
@@ -93,7 +114,7 @@ internal sealed unsafe class NativeCodecProxy : PhDisposable, ICodec
     /// <summary>
     /// Gets whether the plugin codec supports static-raster decoding.
     /// </summary>
-    public bool SupportsStaticRaster { get; }
+    public bool SupportsStaticRasterDecoding { get; }
 
     /// <summary>
     /// Gets whether the plugin codec can report embedded color profiles.
@@ -101,9 +122,19 @@ internal sealed unsafe class NativeCodecProxy : PhDisposable, ICodec
     public bool SupportsColorProfiles { get; }
 
     /// <summary>
-    /// Gets whether the plugin codec implements the animation entry points.
+    /// Gets whether the plugin codec implements the animation decode entry points.
     /// </summary>
-    public bool SupportsAnimation { get; }
+    public bool SupportsAnimationDecoding { get; }
+
+    /// <summary>
+    /// Gets whether the plugin codec implements static-raster encoding.
+    /// </summary>
+    public bool SupportsStaticRasterEncoding { get; }
+
+    /// <summary>
+    /// Gets whether the plugin codec implements the multi-frame encode session.
+    /// </summary>
+    public bool SupportsMultiFrameEncoding { get; }
 
 
     /// <summary>
@@ -123,34 +154,59 @@ internal sealed unsafe class NativeCodecProxy : PhDisposable, ICodec
         CodecName = string.IsNullOrEmpty(capability.CodecName)
             ? $"{plugin.PluginId}/{capability.CodecId}" : capability.CodecName;
 
-        // Clamp priority so a plugin can't outrank a built-in for a built-in format (unless trusted to).
-        if (PluginCodecPolicy.ClaimsCoreFormat(capability.SupportedExtensions)
-            && !PluginTrustPolicy.AllowsBuiltinOverride(plugin.PluginId))
-        {
-            MetadataPriority = PluginCodecPolicy.ClampToBuiltinCeiling(capability.MetadataPriority);
-            DecodePriority = PluginCodecPolicy.ClampToBuiltinCeiling(capability.DecodePriority);
-        }
-        else
-        {
-            MetadataPriority = capability.MetadataPriority;
-            DecodePriority = capability.DecodePriority;
-        }
+        // Trust is the gate, so reported priorities are honored as-is; ties go to built-ins.
+        MetadataPriority = capability.MetadataPriority;
+        DecodePriority = capability.DecodePriority;
+        EncodePriority = capability.EncodePriority;
 
         SupportsMetadata = capability.SupportsMetadata;
-        SupportsStaticRaster = capability.SupportsStaticRaster;
         SupportsColorProfiles = capability.SupportsColorProfiles;
-        SupportsAnimation = capability.SupportsAnimation;
+        SupportsStaticRasterDecoding = capability.SupportsStaticRasterDecoding;
+        SupportsAnimationDecoding = capability.SupportsAnimationDecoding;
+        SupportsStaticRasterEncoding = capability.SupportsStaticRasterEncoding;
+        SupportsMultiFrameEncoding = capability.SupportsMultiFrameEncoding;
 
-        var exts = new List<string>(capability.SupportedExtensions.Length);
-        _supportedExtensionsSet = new(StringComparer.OrdinalIgnoreCase);
-        foreach (var ext in capability.SupportedExtensions)
+        // Evaluated once, so changing the choices needs Core.ReloadPluginCodecs.
+        var (disabledDecode, disabledEncode) = PluginTrustPolicy.GetExtensionExclusions(plugin.PluginId);
+
+        DeclaredDecodingExtensions = Normalize(capability.DecodingExtensions);
+        DeclaredEncodingExtensions = Normalize(capability.EncodingExtensions);
+        SupportedExtensions = Filter(DeclaredDecodingExtensions, disabledDecode);
+        EncodingExtensions = Filter(DeclaredEncodingExtensions, disabledEncode);
+
+        _supportedExtensionsSet = new HashSet<string>(SupportedExtensions, StringComparer.OrdinalIgnoreCase);
+        _encodingExtensionsSet = new HashSet<string>(EncodingExtensions, StringComparer.OrdinalIgnoreCase);
+    }
+
+
+    /// <summary>
+    /// Normalizes a capability extension list (lowercase, leading dot, no blanks).
+    /// </summary>
+    private static List<string> Normalize(string[] extensions)
+    {
+        var list = new List<string>(extensions.Length);
+        foreach (var ext in extensions)
         {
-            if (string.IsNullOrEmpty(ext)) continue;
-            var normalized = ext.StartsWith('.') ? ext : "." + ext;
-            exts.Add(normalized);
-            _supportedExtensionsSet.Add(normalized);
+            var normalized = PluginTrustPolicy.NormalizeExtension(ext);
+            if (normalized.Length > 1) list.Add(normalized);
         }
-        SupportedExtensions = exts;
+        return list;
+    }
+
+
+    /// <summary>
+    /// Removes the extensions the user switched off for this direction.
+    /// </summary>
+    private static List<string> Filter(IReadOnlyList<string> declared, IReadOnlySet<string> disabled)
+    {
+        if (disabled.Count == 0) return [.. declared];
+
+        var list = new List<string>(declared.Count);
+        foreach (var ext in declared)
+        {
+            if (!disabled.Contains(ext)) list.Add(ext);
+        }
+        return list;
     }
 
 
@@ -172,7 +228,7 @@ internal sealed unsafe class NativeCodecProxy : PhDisposable, ICodec
     /// </summary>
     public bool CanDecode(PhotoMetadata metadata, CodecSelectionContext context)
     {
-        if (!SupportsStaticRaster) return false;
+        if (!SupportsStaticRasterDecoding) return false;
         if (_failureManager.IsQuarantined(_plugin.PluginId)) return false;
         if (metadata is null || string.IsNullOrEmpty(metadata.FilePath)) return false;
         return _supportedExtensionsSet.Contains(metadata.FileExtension);
@@ -204,7 +260,7 @@ internal sealed unsafe class NativeCodecProxy : PhDisposable, ICodec
         // Animation branch: the plugin advertises animation AND metadata says
         // the file plays as a timeline. Build the animator on a background
         // thread; per-frame decode is lazy inside the animator.
-        if (SupportsAnimation && metadata.CanAnimate)
+        if (SupportsAnimationDecoding && metadata.CanAnimate)
         {
             return Task.Factory.StartNew(() => DecodeAnimationCore(metadata, cancellationToken),
                 cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Default);
@@ -247,6 +303,9 @@ internal sealed unsafe class NativeCodecProxy : PhDisposable, ICodec
         var meta = new PhotoMetadata(filePath);
         if (_codecApi->LoadMetadata == null) return meta;
 
+        // hold the plugin alive: a hot-disable could otherwise unmap it mid-call
+        if (!_plugin.LiveToken.TryEnter()) return meta;
+
         // Register a host-side cancellation handle before crossing the ABI.
         var cancelHandle = PluginHostApiTable.RegisterCancellation(token);
         try
@@ -287,7 +346,7 @@ internal sealed unsafe class NativeCodecProxy : PhDisposable, ICodec
                 // Animation gate: only flip CanAnimate when the codec advertises animation
                 // AND the file genuinely has multiple frames. Multi-page documents (e.g. TIFF)
                 // report FrameCount > 1 but must NOT trigger the animation pipeline.
-                meta.CanAnimate = SupportsAnimation && info.FrameCount > 1;
+                meta.CanAnimate = SupportsAnimationDecoding && info.FrameCount > 1;
 
                 ApplyColorProfile(meta, in info);
             }
@@ -295,6 +354,7 @@ internal sealed unsafe class NativeCodecProxy : PhDisposable, ICodec
         finally
         {
             PluginHostApiTable.ReleaseCancellation(cancelHandle);
+            _plugin.LiveToken.Exit();
         }
         return meta;
     }
@@ -308,6 +368,12 @@ internal sealed unsafe class NativeCodecProxy : PhDisposable, ICodec
         if (_codecApi->DecodeStaticRaster == null || _codecApi->FreePixelBuffer == null)
         {
             throw new NotSupportedException($"Native codec '{CodecId}' does not support static-raster decode.");
+        }
+
+        // hold the plugin alive (see LoadMetadataCore)
+        if (!_plugin.LiveToken.TryEnter())
+        {
+            throw new InvalidDataException($"IGE: Native codec '{CodecId}' was unloaded.");
         }
 
         // Register cancellation before entering native code and keep track of buffer ownership.
@@ -387,6 +453,7 @@ internal sealed unsafe class NativeCodecProxy : PhDisposable, ICodec
                 }
             }
             PluginHostApiTable.ReleaseCancellation(cancelHandle);
+            _plugin.LiveToken.Exit();
         }
     }
 

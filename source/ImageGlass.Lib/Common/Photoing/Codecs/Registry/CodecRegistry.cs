@@ -54,6 +54,10 @@ public sealed class CodecRegistry : PhDisposable
     private readonly ConcurrentDictionary<string, ICodec> _metadataCodecByExt = new(StringComparer.OrdinalIgnoreCase);
     private readonly ConcurrentDictionary<string, ICodec> _decodeCodecByExt = new(StringComparer.OrdinalIgnoreCase);
 
+    // Registration order, used to break priority ties deterministically.
+    private readonly Dictionary<string, long> _regSeqById = new(StringComparer.Ordinal);
+    private long _regSeq;
+
     private readonly MagickCodecAdapter _fallbackDecodeCodec;
 
 
@@ -79,9 +83,10 @@ public sealed class CodecRegistry : PhDisposable
 
 
     /// <summary>
-    /// Registers a codec in the registry. All codecs (built-in or plugin) are treated equally
-    /// and ordered purely by <see cref="ICodec.MetadataPriority"/> / <see cref="ICodec.DecodePriority"/>;
+    /// Registers a codec in the registry. All codecs (built-in or plugin) are treated equally and
+    /// ordered by <see cref="ICodec.MetadataPriority"/> / <see cref="ICodec.DecodePriority"/>;
     /// a higher-priority plugin codec can therefore override a built-in for the same file.
+    /// Ties go to the earlier registration, and built-ins register first.
     /// </summary>
     public void Register(ICodec codec)
     {
@@ -94,17 +99,34 @@ public sealed class CodecRegistry : PhDisposable
                 throw new InvalidOperationException($"Codec '{codec.CodecId}' is already registered.");
             }
 
+            _regSeqById[codec.CodecId] = _regSeq++;
+
             _codecs.Add(codec);
             _metadataCodecs.Add(codec);
             _decodeCodecs.Add(codec);
 
-            _metadataCodecs.Sort(static (left, right) => right.MetadataPriority.CompareTo(left.MetadataPriority));
-            _decodeCodecs.Sort(static (left, right) => right.DecodePriority.CompareTo(left.DecodePriority));
+            _metadataCodecs.Sort((left, right) => Compare(right.MetadataPriority, left.MetadataPriority, left, right));
+            _decodeCodecs.Sort((left, right) => Compare(right.DecodePriority, left.DecodePriority, left, right));
 
             // Invalidate fast-path caches: the new codec may outrank the cached winner.
             _metadataCodecByExt.Clear();
             _decodeCodecByExt.Clear();
         }
+    }
+
+
+    /// <summary>
+    /// Orders by descending priority, then by ascending registration order. Both arguments are
+    /// pre-swapped by the caller so <paramref name="rightPriority"/> comes first.
+    /// </summary>
+    private int Compare(int rightPriority, int leftPriority, ICodec left, ICodec right)
+    {
+        var byPriority = rightPriority.CompareTo(leftPriority);
+        if (byPriority != 0) return byPriority;
+
+        var leftSeq = _regSeqById.GetValueOrDefault(left.CodecId, long.MaxValue);
+        var rightSeq = _regSeqById.GetValueOrDefault(right.CodecId, long.MaxValue);
+        return leftSeq.CompareTo(rightSeq);
     }
 
 
@@ -123,6 +145,7 @@ public sealed class CodecRegistry : PhDisposable
 
             _metadataCodecs.RemoveAll(c => ReferenceEquals(c, codec));
             _decodeCodecs.RemoveAll(c => ReferenceEquals(c, codec));
+            _regSeqById.Remove(codec.CodecId);
 
             // the removed codec may be a cached winner
             _metadataCodecByExt.Clear();
@@ -216,6 +239,7 @@ public sealed class CodecRegistry : PhDisposable
             _codecs.Clear();
             _metadataCodecs.Clear();
             _decodeCodecs.Clear();
+            _regSeqById.Clear();
             _metadataCodecByExt.Clear();
             _decodeCodecByExt.Clear();
         }

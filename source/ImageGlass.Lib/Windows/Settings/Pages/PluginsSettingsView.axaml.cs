@@ -396,8 +396,11 @@ public partial class PluginsSettingsView : SettingsPageView
         }, ModalWindowButton.Yes_No);
         if (confirm.ExitCode != DialogExitCode.OK) return;
 
+        // Bail before touching disk if the trust entry cannot be dropped (admin-locked), else the
+        // folder would go while the config still lists the plugin.
+        if (!await PluginTrustPolicy.RemoveAsync(plugin.Manifest.Id)) return;
+
         Core.DisablePlugin(plugin.Manifest.Id);
-        await PluginTrustPolicy.RemoveAsync(plugin.Manifest.Id);
         DeletePluginFolder(plugin.Dir);
 
         ReloadPlugins();
@@ -529,7 +532,9 @@ public partial class PluginsSettingsView : SettingsPageView
     /// </summary>
     private static async Task<bool> DisablePluginAsync((PluginManifest Manifest, string Dir) plugin)
     {
-        await PluginTrustPolicy.DisableAsync(plugin.Manifest.Id);
+        // Don't unload on a refused write, or the config would still say enabled.
+        if (!await PluginTrustPolicy.DisableAsync(plugin.Manifest.Id)) return false;
+
         Core.DisablePlugin(plugin.Manifest.Id);
         return true;
     }

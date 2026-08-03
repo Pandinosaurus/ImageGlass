@@ -16,6 +16,10 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
+using ImageGlass.Common.Types.JsonTypeConverters;
+using System.Collections.Generic;
+using System.Text.Json.Serialization;
+
 namespace ImageGlass.Common.Types;
 
 
@@ -23,6 +27,7 @@ namespace ImageGlass.Common.Types;
 /// Per-plugin trust decision persisted in <c>Config.PluginTrust</c> (keyed by plugin id).
 /// A native plugin is loaded only when <see cref="Enabled"/> is <c>true</c> AND the on-disk
 /// library still hashes to <see cref="Hash"/> (the value pinned when the user enabled it).
+/// Never mutate in place: copy, change, reassign.
 /// </summary>
 public sealed class PluginTrustInfo
 {
@@ -37,7 +42,15 @@ public sealed class PluginTrustInfo
     public string Hash { get; set; } = string.Empty;
 
     /// <summary>
-    /// Whether this plugin may outrank built-in codecs for built-in formats (default <c>false</c>).
+    /// Extensions the user switched OFF for decoding; <c>null</c>/empty means all are active.
+    /// Exclusions, not an allowlist, so a plugin update that adds a format is on by default.
     /// </summary>
-    public bool AllowOverrideBuiltins { get; set; }
+    [JsonConverter(typeof(JsonHashSetToArrayConverter))]
+    public HashSet<string>? DisabledDecodeExtensions { get; set; }
+
+    /// <summary>
+    /// Extensions the user switched OFF for encoding. See <see cref="DisabledDecodeExtensions"/>.
+    /// </summary>
+    [JsonConverter(typeof(JsonHashSetToArrayConverter))]
+    public HashSet<string>? DisabledEncodeExtensions { get; set; }
 }
