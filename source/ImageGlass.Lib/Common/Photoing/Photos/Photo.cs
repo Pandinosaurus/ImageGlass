@@ -894,8 +894,11 @@ public partial class Photo : PhDisposable
         {
             var lastWriteTime = File.GetLastWriteTime(destFilePath);
 
+            // 0. a plugin encoder claiming this extension wins; otherwise fall through unchanged
+            var handled = await CodecEncodePipeline.TryEncodeAsync(this, destFilePath, transforms, quality, token);
+
             // 1. save clipboard photo to file
-            if (IsClipboard && Bitmap is SKImage img)
+            if (!handled && IsClipboard && Bitmap is SKImage img)
             {
                 await Task.Factory.StartNew(async () =>
                 {
@@ -904,7 +907,7 @@ public partial class Photo : PhDisposable
             }
 
             // 2. save photo to file
-            else
+            else if (!handled)
             {
                 await Task.Factory.StartNew(async () =>
                 {
