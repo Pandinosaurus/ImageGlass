@@ -809,6 +809,7 @@ public class Lang
         new(LangId.Menu_MnuLosslessCompression_Description, "This tool uses Magick.NET library for lossless compression, optimizing file size. Overwrites only if the compressed file is smaller than the original."), // v9.1
         new(LangId.Menu_MnuLosslessCompression_Compressing, "Performing lossless compression…"), // v9.1
         new(LangId.Menu_MnuLosslessCompression_Done, "Done lossless compression."), // v9.1
+        new(LangId.Menu_MnuLosslessCompression_Error, "Could not compress the file."), // v10.0
         #endregion // Main Menu > Tools
 
         new(LangId.Menu_MnuSettings, "Settings"), // v3.0

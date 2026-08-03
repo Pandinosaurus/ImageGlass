@@ -377,6 +377,7 @@ public enum LangId
     Menu_MnuLosslessCompression_Description,
     Menu_MnuLosslessCompression_Compressing,
     Menu_MnuLosslessCompression_Done,
+    Menu_MnuLosslessCompression_Error,
     #endregion // Main Menu > Tools
 
     Menu_MnuSettings,

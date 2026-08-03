@@ -61,9 +61,15 @@ public sealed class LosslessCompressionTool : ITool
         // perform lossless compression
         Core.IsBusy = true;
 
-        var compressionWindow = new LosslessCompressionWindow(filePath);
-        _ = await compressionWindow.ShowAsync(context.Window);
-
-        Core.IsBusy = false;
+        try
+        {
+            var compressionWindow = new LosslessCompressionWindow(filePath);
+            _ = await compressionWindow.ShowAsync(context.Window);
+        }
+        finally
+        {
+            // never leave the app stuck in the busy state
+            Core.IsBusy = false;
+        }
     }
 }
