@@ -266,8 +266,8 @@ public partial class PhotoRenderer : ICustomDrawOperation
         var scaleX = _destRect.Width / _srcRect.Width;
         var scaleY = _destRect.Height / _srcRect.Height;
 
-        // bitmap coordinate scale: source pixels -> tile bitmap pixels
-        var bmapScale = (float)MipmapTileCache.TILE_SIZE / sourceTileSize;
+        // image coordinate scale: source pixels -> tile image pixels
+        var imageScale = (float)MipmapTileCache.TILE_SIZE / sourceTileSize;
 
         canvas.Save();
 
@@ -275,8 +275,7 @@ public partial class PhotoRenderer : ICustomDrawOperation
         {
             for (var tx = tileStartX; tx < tileEndX; tx++)
             {
-                var bmpTile = tileCache.GetTile(tx, ty, mipLevel);
-                var imgTile = SkiaCodec.ToSKImage(bmpTile);
+                var imgTile = tileCache.GetTile(tx, ty, mipLevel);
                 if (imgTile.IsDisposed()) continue;
 
                 // tile bounds in original image coordinates
@@ -295,10 +294,10 @@ public partial class PhotoRenderer : ICustomDrawOperation
 
                 // map clipped region to tile bitmap coordinates
                 var tileBitmapSrc = new SKRect(
-                    (clippedLeft - tileSrcLeft) * bmapScale,
-                    (clippedTop - tileSrcTop) * bmapScale,
-                    Math.Min((clippedRight - tileSrcLeft) * bmapScale, imgTile.Width),
-                    Math.Min((clippedBottom - tileSrcTop) * bmapScale, imgTile.Height));
+                    (clippedLeft - tileSrcLeft) * imageScale,
+                    (clippedTop - tileSrcTop) * imageScale,
+                    Math.Min((clippedRight - tileSrcLeft) * imageScale, imgTile.Width),
+                    Math.Min((clippedBottom - tileSrcTop) * imageScale, imgTile.Height));
 
                 // map clipped region to destination screen coordinates
                 var tileDest = new SKRect(
