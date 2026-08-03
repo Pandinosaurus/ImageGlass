@@ -17,11 +17,14 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Layout;
 using ImageGlass.Common.Localization;
 using ImageGlass.SDK.Plugins;
 using ImageGlass.UI;
 using ImageGlass.UI.Windowing;
+using System;
+using System.Collections.Generic;
 
 namespace ImageGlass.Common.Windows;
 
@@ -41,9 +44,10 @@ internal enum PluginInfoWindowMode
     Enable,
 
     /// <summary>
-    /// Disable prompt ([Disable] / [Cancel]).
+    /// Format picker for an already-trusted plugin ([Save] / [Cancel]), with Disable demoted to a
+    /// footer link so the primary action is non-destructive.
     /// </summary>
-    Disable,
+    Configure,
 }
 
 
@@ -56,6 +60,8 @@ internal sealed class PluginInfoWindow : DialogWindow
     private readonly PluginInfoWindowView _view;
     private readonly PluginInfoWindowMode _mode;
     private readonly PhButton _deleteButton;
+    private readonly PhButton _disableButton;
+    private readonly string _pluginName;
 
 
     // fixed dialog width so it doesn't grow/shrink with the metadata text
@@ -71,20 +77,46 @@ internal sealed class PluginInfoWindow : DialogWindow
 
 
     /// <summary>
-    /// Opens the window showing the metadata of <paramref name="manifest"/> (folder <paramref name="pluginDir"/>).
-    /// The <paramref name="mode"/> controls the footer buttons: <see cref="PluginInfoWindowMode.Enable"/>
-    /// shows the trust consent prompt ([Trust and Enable] / [Cancel]) and <paramref name="hashChanged"/>
-    /// adds a stronger warning; <see cref="PluginInfoWindowMode.Disable"/> shows [Disable] / [Cancel];
-    /// <see cref="PluginInfoWindowMode.View"/> is a read-only [OK] view.
+    /// Whether the user clicked the footer "Disable" link (the caller runs the disable flow).
+    /// </summary>
+    public bool DisableRequested { get; private set; }
+
+
+    /// <summary>
+    /// Extensions the user switched off for decoding.
+    /// </summary>
+    public IReadOnlyCollection<string> DisabledDecodeExtensions => _view.DisabledDecodeExtensions;
+
+
+    /// <summary>
+    /// Extensions the user switched off for encoding.
+    /// </summary>
+    public IReadOnlyCollection<string> DisabledEncodeExtensions => _view.DisabledEncodeExtensions;
+
+
+    /// <summary>
+    /// Whether the format choices differ from what the window opened with.
+    /// </summary>
+    public bool ChoicesChanged => _view.ChoicesChanged;
+
+
+    /// <summary>
+    /// Opens the window on <paramref name="manifest"/> (folder <paramref name="pluginDir"/>), titled
+    /// with the plugin's name. <paramref name="mode"/> picks the footer and whether the format picker
+    /// is editable: <see cref="PluginInfoWindowMode.Enable"/> is the consent prompt
+    /// (<paramref name="hashChanged"/> adds a stronger warning),
+    /// <see cref="PluginInfoWindowMode.Configure"/> allows edits, and
+    /// <see cref="PluginInfoWindowMode.View"/> is read-only.
     /// </summary>
     public PluginInfoWindow(PluginManifest manifest, string pluginDir,
         PluginInfoWindowMode mode = PluginInfoWindowMode.View, bool hashChanged = false)
     {
         _mode = mode;
+        _pluginName = string.IsNullOrWhiteSpace(manifest.Name) ? manifest.Id : manifest.Name;
 
-        if (mode is PluginInfoWindowMode.Enable or PluginInfoWindowMode.Disable)
+        if (mode is PluginInfoWindowMode.Enable or PluginInfoWindowMode.Configure)
         {
-            // action prompt: [Enable|Disable] [Cancel], with Cancel as the safe default
+            // action prompt: [Trust and enable|Save] [Cancel], with Cancel as the safe default
             IsButton1Visible = true;
             IsButton2Visible = true;
             IsButton3Visible = false;
@@ -101,22 +133,46 @@ internal sealed class PluginInfoWindow : DialogWindow
         }
 
         _view = new PluginInfoWindowView();
-        _view.LoadData(manifest, pluginDir);
+        _view.LoadData(manifest, pluginDir,
+            allowEdit: mode == PluginInfoWindowMode.Configure,
+            // file formats are a codec concept; a future non-codec kind gets the info tab only
+            showFormats: manifest.Kind == IGPluginKind.Codec);
         if (mode == PluginInfoWindowMode.Enable) _view.ShowConsentWarning(manifest, hashChanged);
         DialogContent = _view;
 
-        // footer-left "Delete" link; closes the window signalling the caller to run the delete flow
-        _deleteButton = new PhButton
+        // footer-left links; each closes the window signalling the caller to run that flow
+        _deleteButton = NewFooterLink(() => DeleteRequested = true);
+        _disableButton = NewFooterLink(() => DisableRequested = true);
+        _disableButton.IsVisible = mode == PluginInfoWindowMode.Configure;
+
+        var footer = new StackPanel
+        {
+            Orientation = Avalonia.Layout.Orientation.Horizontal,
+            Spacing = 12,
+            HorizontalAlignment = HorizontalAlignment.Left,
+        };
+        footer.Children.Add(_deleteButton);
+        footer.Children.Add(_disableButton);
+        DialogFooterLeftContent = footer;
+    }
+
+
+    /// <summary>
+    /// Creates a footer link that flags the requested action and closes the window.
+    /// </summary>
+    private PhButton NewFooterLink(Action flag)
+    {
+        var button = new PhButton
         {
             Variant = PhButtonVariant.Link,
             HorizontalAlignment = HorizontalAlignment.Left,
         };
-        _deleteButton.Click += (_, _) =>
+        button.Click += (_, _) =>
         {
-            DeleteRequested = true;
+            flag();
             OnDialogCancelled(new DialogEventArgs(DialogAction.Cancel));
         };
-        DialogFooterLeftContent = _deleteButton;
+        return button;
     }
 
 
@@ -124,10 +180,11 @@ internal sealed class PluginInfoWindow : DialogWindow
     {
         base.OnIgLanguageChanged();
 
-        // all modes keep the same window title; the enable prompt's heading lives in the banner,
+        // the plugin's own name titles the window; the enable prompt's heading lives in the banner,
         // and only the footer buttons differ per mode.
-        Title = Core.Lang[LangId.Settings_Plugins_ViewMetadata];
+        Title = _pluginName;
         _deleteButton.Text = Core.Lang[LangId._Delete];
+        _disableButton.Text = Core.Lang[LangId.Settings_Plugins_Disable];
 
         switch (_mode)
         {
@@ -136,8 +193,8 @@ internal sealed class PluginInfoWindow : DialogWindow
                 Button2Text = Core.Lang[LangId._Cancel];
                 break;
 
-            case PluginInfoWindowMode.Disable:
-                Button1Text = Core.Lang[LangId.Settings_Plugins_Disable];
+            case PluginInfoWindowMode.Configure:
+                Button1Text = Core.Lang[LangId._Save];
                 Button2Text = Core.Lang[LangId._Cancel];
                 break;
 

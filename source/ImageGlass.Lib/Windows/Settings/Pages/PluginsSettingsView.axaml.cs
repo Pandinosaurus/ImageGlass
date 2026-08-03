@@ -346,32 +346,57 @@ public partial class PluginsSettingsView : SettingsPageView
     private async Task<bool> EditPluginAsync((PluginManifest Manifest, string Dir) plugin)
     {
         var state = PluginTrustPolicy.GetState(plugin.Manifest, plugin.Dir);
-        var mode = state switch
-        {
-            PluginTrustPolicy.TrustState.Missing => PluginInfoWindowMode.View,
-            PluginTrustPolicy.TrustState.Trusted => PluginInfoWindowMode.Disable,
-            _ => PluginInfoWindowMode.Enable,
-        };
+
+        // Key the editable mode off IsLoaded, not TrustState: a Changed plugin is unloaded at
+        // startup but still loaded if its file changed while running.
+        var mode = state == PluginTrustPolicy.TrustState.Missing
+            ? PluginInfoWindowMode.View
+            : Core.PluginRegistry.IsLoaded(plugin.Manifest.Id)
+                ? PluginInfoWindowMode.Configure
+                : PluginInfoWindowMode.Enable;
 
         var win = new PluginInfoWindow(plugin.Manifest, plugin.Dir, mode,
             hashChanged: state == PluginTrustPolicy.TrustState.Changed);
         var result = await win.ShowAsync(TopLevel.GetTopLevel(this) as PhWindow);
 
-        // the window's "Delete" link runs the delete flow instead of the trust action
+        // footer links run their own flow instead of the primary action
         if (win.DeleteRequested)
         {
             await DeletePluginAsync(plugin);
             return false;
+        }
+        if (win.DisableRequested)
+        {
+            // format choices are deliberately not committed: the user chose a different action
+            return await DisablePluginAsync(plugin);
         }
 
         if (result != DialogExitCode.OK) return false;
 
         return mode switch
         {
-            PluginInfoWindowMode.Enable => await EnablePluginAsync(plugin),
-            PluginInfoWindowMode.Disable => await DisablePluginAsync(plugin),
+            PluginInfoWindowMode.Enable => await EnablePluginAsync(plugin, win),
+            PluginInfoWindowMode.Configure => await ApplyPluginChoicesAsync(plugin, win),
             _ => false,
         };
+    }
+
+
+    /// <summary>
+    /// Persists changed format choices and rebuilds the plugin's codecs in place. Returns
+    /// <c>true</c> when something changed.
+    /// </summary>
+    private static async Task<bool> ApplyPluginChoicesAsync((PluginManifest Manifest, string Dir) plugin,
+        PluginInfoWindow win)
+    {
+        if (!win.ChoicesChanged) return false;
+
+        var saved = await PluginTrustPolicy.SetExtensionExclusionsAsync(plugin.Manifest.Id,
+            win.DisabledDecodeExtensions, win.DisabledEncodeExtensions);
+        if (!saved) return false;
+
+        Core.ReloadPluginCodecs(plugin.Manifest.Id);
+        return true;
     }
 
 
@@ -436,9 +461,17 @@ public partial class PluginsSettingsView : SettingsPageView
     /// Trusts + enables the plugin, then hot-loads it so its codecs take effect without a restart.
     /// Returns <c>true</c> if the trust state changed.
     /// </summary>
-    private static async Task<bool> EnablePluginAsync((PluginManifest Manifest, string Dir) plugin)
+    private static async Task<bool> EnablePluginAsync((PluginManifest Manifest, string Dir) plugin,
+        PluginInfoWindow? win = null)
     {
-        if (!await PluginTrustPolicy.TrustAsync(plugin.Manifest, plugin.Dir)) return false;
+        // Persist any choices in the same write, so the plugin's first load already honors them.
+        var disabledDecode = win?.ChoicesChanged == true ? win.DisabledDecodeExtensions : null;
+        var disabledEncode = win?.ChoicesChanged == true ? win.DisabledEncodeExtensions : null;
+
+        if (!await PluginTrustPolicy.TrustAsync(plugin.Manifest, plugin.Dir, disabledDecode, disabledEncode))
+        {
+            return false;
+        }
 
         await Core.EnablePluginAsync(plugin.Manifest, plugin.Dir);
         return true;

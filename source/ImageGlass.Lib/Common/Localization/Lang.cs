@@ -480,6 +480,8 @@ public class Lang
         new(LangId._CommandPreview, "Command preview"),
         new(LangId._FileExtension, "File extension"),
         new(LangId._Codec, "Codec"),
+        new(LangId._Decoder, "Decoder"),
+        new(LangId._Encoder, "Encoder"),
         new(LangId._Empty, "(empty)"),
         new(LangId._Separator, "Separator"),
         new(LangId._Icon, "Icon"),
@@ -1169,6 +1171,11 @@ public class Lang
         new(LangId.Settings_Plugins_TrustPrompt, "\"{0}\" is a native plugin that runs inside ImageGlass with full access to your files and system. Only enable plugins you obtained from a source you trust."),
         new(LangId.Settings_Plugins_TrustChangedWarning, "This plugin's file has changed since it was last enabled. Only re-enable it if you updated the plugin yourself."),
         new(LangId.Settings_Plugins_EnableToLoad, "Enable the plugin below to load it."),
+        new(LangId.Settings_Plugins_Decode, "Decode"),
+        new(LangId.Settings_Plugins_Encode, "Encode"),
+        new(LangId.Settings_Plugins_ExtensionsHint, "Choose which file formats this plugin may decode and encode. Formats it does not support are marked -."),
+        new(LangId.Settings_Plugins_FormatsAfterEnable, "The formats this plugin provides can be chosen after you enable it."),
+        new(LangId.Settings_Plugins_NoFormats, "No formats"),
         #endregion // Settings > Tab Plugins
 
 

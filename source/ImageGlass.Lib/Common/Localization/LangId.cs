@@ -53,6 +53,8 @@ public enum LangId
     _CommandPreview,
     _FileExtension,
     _Codec,
+    _Decoder,
+    _Encoder,
     _Empty,
     _Separator,
     _Icon,
@@ -733,6 +735,11 @@ public enum LangId
     Settings_Plugins_TrustPrompt,
     Settings_Plugins_TrustChangedWarning,
     Settings_Plugins_EnableToLoad,
+    Settings_Plugins_Decode,
+    Settings_Plugins_Encode,
+    Settings_Plugins_ExtensionsHint,
+    Settings_Plugins_FormatsAfterEnable,
+    Settings_Plugins_NoFormats,
     #endregion // Settings > Tab Plugins
 
 

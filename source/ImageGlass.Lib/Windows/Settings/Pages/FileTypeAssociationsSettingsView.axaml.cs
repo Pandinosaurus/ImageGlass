@@ -55,8 +55,15 @@ public partial class FileTypeAssociationsSettingsView : SettingsPageView
     // never staged into Config.FileFormats
     private readonly HashSet<string> _pluginExts = new(StringComparer.OrdinalIgnoreCase);
 
-    // codec snapshot (ordered by decode priority, highest first) for the "Codec" column
+    // plugin extensions that are writable only; still supported formats, so they get rows too
+    private readonly HashSet<string> _pluginEncodeExts = new(StringComparer.OrdinalIgnoreCase);
+
+    // codec snapshot (ordered by decode priority, highest first) for the Decoder/Encoder columns
     private IReadOnlyList<CodecInfo> _codecs = [];
+
+    // per-extension lookup caches; the filter runs these once per row per keystroke
+    private readonly Dictionary<string, CodecInfo?> _decoderCache = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, CodecInfo?> _encoderCache = new(StringComparer.OrdinalIgnoreCase);
 
     // current table filter query (matches extension or codec name)
     private string _filter = string.Empty;
@@ -329,19 +336,27 @@ public partial class FileTypeAssociationsSettingsView : SettingsPageView
         [
             new() { Header = string.Empty },
             new() { Header = Core.Lang[LangId._FileExtension], MinWidth = 160 },
-            new() { Header = Core.Lang[LangId._Codec], Star = true },
+            // Decoder hugs its content so Encoder sits right next to it; Encoder takes the slack,
+            // which keeps both left-aligned instead of splitting the row in half.
+            new() { Header = Core.Lang[LangId._Decoder], MinWidth = 150 },
+            new() { Header = Core.Lang[LangId._Encoder], Star = true, MinWidth = 150 },
         ];
 
-        // full supported set = user/built-in formats + the formats contributed by loaded plugins
-        var all = new HashSet<string>(_exts, StringComparer.OrdinalIgnoreCase);
-        foreach (var ext in _pluginExts) all.Add(ext);
+        // browsable set = user/built-in formats + plugin decode formats; drives the total count
+        var browsable = new HashSet<string>(_exts, StringComparer.OrdinalIgnoreCase);
+        foreach (var ext in _pluginExts) browsable.Add(ext);
 
-        // filtered (by extension or codec name) + sorted by extension ascending
+        // rows also include write-only plugin formats: still supported, just not browsable
+        var all = new HashSet<string>(browsable, StringComparer.OrdinalIgnoreCase);
+        foreach (var ext in _pluginEncodeExts) all.Add(ext);
+
+        // filtered (by extension or either codec name) + sorted by extension ascending
         var q = _filter.Trim();
         var sorted = all
             .Where(e => q.Length == 0
                 || e.Contains(q, StringComparison.OrdinalIgnoreCase)
-                || CodecNameFor(e).Contains(q, StringComparison.OrdinalIgnoreCase))
+                || DecodeCodecNameFor(e).Contains(q, StringComparison.OrdinalIgnoreCase)
+                || EncodeCodecNameFor(e).Contains(q, StringComparison.OrdinalIgnoreCase))
             .OrderBy(e => e, StringComparer.OrdinalIgnoreCase)
             .ToList();
 
@@ -367,7 +382,8 @@ public partial class FileTypeAssociationsSettingsView : SettingsPageView
                 [
                     PhTableControl.TextCell((i + 1).ToString()),
                     PhTableControl.TextCell(ext, selectable: true, font: _codeFont),
-                    CodecCell(ext),
+                    CodecCell(DecodeCodecFor(ext)),
+                    CodecCell(EncodeCodecFor(ext)),
                 ],
                 Actions = actions,
             });
@@ -376,20 +392,26 @@ public partial class FileTypeAssociationsSettingsView : SettingsPageView
         PART_Table.EmptyText = Core.Lang[LangId._Empty];
         PART_Table.Build(columns, rows);
 
-        PART_TotalFormats.LangParams = all.Count;
+        // the label means "formats ImageGlass can open", so write-only formats are excluded
+        PART_TotalFormats.LangParams = browsable.Count;
     }
 
 
     /// <summary>
-    /// Builds the "Codec" cell for an extension: a link button (opens the owning plugin's info
-    /// window on the Plugins page) when a plugin codec decodes it, otherwise plain text.
+    /// Builds a codec cell: a link button (opens the owning plugin on the Plugins page) for a plugin
+    /// codec, plain text for a built-in, and a muted placeholder when nothing handles it.
     /// </summary>
-    private Control CodecCell(string ext)
+    private Control CodecCell(CodecInfo? codec)
     {
-        var codec = CodecFor(ext);
         var name = codec?.CodecName ?? string.Empty;
+        if (name.Length == 0)
+        {
+            // "(empty)" here means nothing can handle it; the plugin dialog's dash means
+            // "capability not declared". Deliberately different, do not unify.
+            return PhTableControl.TextCell(Core.Lang[LangId._Empty], muted: true);
+        }
 
-        // built-in codec (or none) -> plain text
+        // built-in codec -> plain text
         var pluginId = codec?.PluginId;
         if (string.IsNullOrEmpty(pluginId)) return PhTableControl.TextCell(name);
 
@@ -422,10 +444,15 @@ public partial class FileTypeAssociationsSettingsView : SettingsPageView
     {
         _codecs = Core.CodecRegistry.GetCodecInfos();
         _pluginExts.Clear();
+        _pluginEncodeExts.Clear();
+        _decoderCache.Clear();
+        _encoderCache.Clear();
+
         foreach (var codec in _codecs)
         {
             if (!codec.IsPlugin) continue;
             foreach (var ext in codec.DecodingExtensions) _pluginExts.Add(ext);
+            foreach (var ext in codec.EncodingExtensions) _pluginEncodeExts.Add(ext);
         }
     }
 
@@ -441,27 +468,58 @@ public partial class FileTypeAssociationsSettingsView : SettingsPageView
 
 
     /// <summary>
-    /// Returns the codec that would decode the given extension: the highest-priority codec that
-    /// claims it, falling back to the catch-all codec (Magick.NET). Returns <c>null</c> if none.
+    /// Returns the codec that would decode the extension: the highest-priority claimant, else the
+    /// fallback decoder that sniffs anything. Memoized; the filter hits this per row per keystroke.
     /// </summary>
-    private CodecInfo? CodecFor(string ext)
+    private CodecInfo? DecodeCodecFor(string ext)
     {
+        if (_decoderCache.TryGetValue(ext, out var cached)) return cached;
+
+        CodecInfo? found = null;
+
         // _codecs is ordered by decode priority (highest first)
         foreach (var codec in _codecs)
         {
             if (codec.DecodingExtensions.Contains(ext, StringComparer.OrdinalIgnoreCase))
-                return codec;
+            {
+                found = codec;
+                break;
+            }
         }
 
-        // not explicitly claimed -> the catch-all codec (empty extension list)
-        return _codecs.FirstOrDefault(c => c.DecodingExtensions.Count == 0);
+        // not explicitly claimed -> the fallback decoder, flagged rather than inferred from an
+        // empty extension list (per-extension filtering can leave a plugin proxy empty too)
+        found ??= _codecs.FirstOrDefault(c => c.IsFallback);
+
+        _decoderCache[ext] = found;
+        return found;
     }
 
 
     /// <summary>
-    /// Returns the friendly name of the codec that would decode the given extension.
+    /// Returns the codec that would write the extension, or <c>null</c> when none can. Uses the
+    /// registry's own selection so this matches what a save actually does.
     /// </summary>
-    private string CodecNameFor(string ext) => CodecFor(ext)?.CodecName ?? string.Empty;
+    private CodecInfo? EncodeCodecFor(string ext)
+    {
+        if (_encoderCache.TryGetValue(ext, out var cached)) return cached;
+
+        var found = Core.CodecRegistry.GetEncodeCodecInfo(ext);
+        _encoderCache[ext] = found;
+        return found;
+    }
+
+
+    /// <summary>
+    /// Friendly name of the decoder for the extension.
+    /// </summary>
+    private string DecodeCodecNameFor(string ext) => DecodeCodecFor(ext)?.CodecName ?? string.Empty;
+
+
+    /// <summary>
+    /// Friendly name of the encoder for the extension.
+    /// </summary>
+    private string EncodeCodecNameFor(string ext) => EncodeCodecFor(ext)?.CodecName ?? string.Empty;
 
     #endregion // File formats
 
