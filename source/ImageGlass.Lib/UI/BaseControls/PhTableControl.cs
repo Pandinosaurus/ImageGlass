@@ -25,6 +25,7 @@ using Avalonia.Layout;
 using Avalonia.Markup.Xaml.MarkupExtensions;
 using Avalonia.Media;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 using ImageGlass.Common;
 using ImageGlass.Common.Types;
 using System;
@@ -35,24 +36,32 @@ namespace ImageGlass.UI;
 
 
 /// <summary>
-/// A read-only data table.
+/// A read-only data table. Rows are virtualized: only the rows intersecting the viewport are
+/// kept in the visual tree, so a long table stays cheap to lay out while the window resizes.
 /// </summary>
-public class PhTableControl : PhControl
+public partial class PhTableControl : PhControl
 {
     private static readonly Thickness CELL_PADDING = new(10, 6);
     private static readonly TimeSpan REVEAL_DURATION = TimeSpan.FromMilliseconds(120);
     private const double FLASH_OPACITY = 0.18;
+    private const int MAX_SCROLL_PASSES = 4; // scroll-into-view corrections over estimated offsets
 
     private readonly Border _frame;
-    private readonly Grid _grid;
+    private readonly RowsPanel _panel;
     private readonly ScrollViewer _scroll;
     private readonly TextBlock _emptyLabel;
 
-    private readonly List<RowVisual> _rows = [];
-    private readonly List<Control> _headerCells = []; // pinned to the top while the body scrolls
+    private readonly List<RowSlot> _rows = [];
+
+    // header visuals: full-width layers + one label per column (null for the actions column).
+    // Always realized, and pinned to the top while the body scrolls under them.
+    private Control[] _headerSpanners = [];
+    private Control?[] _headerCells = [];
     private Border? _headerBg; // opaque header fill (re-resolved on theme change)
+
     private int _hoveredRow = -1;
     private int _focusedRow = -1;
+    private RowSlot? _flashSlot;
     private DispatcherTimer? _flashTimer;
 
 
@@ -75,19 +84,19 @@ public class PhTableControl : PhControl
         HorizontalAlignment = HorizontalAlignment.Stretch;
 
         // transparent background so the whole area (incl. gaps) reports pointer moves for row hit-testing
-        _grid = new Grid { Background = Brushes.Transparent };
-        _grid.PointerMoved += Grid_PointerMoved;
-        _grid.PointerExited += Grid_PointerExited;
+        _panel = new RowsPanel(this) { Background = Brushes.Transparent };
+        _panel.PointerMoved += Panel_PointerMoved;
+        _panel.PointerExited += Panel_PointerExited;
 
         // scrolls internally when the control is given a MaxHeight (e.g. a page fitting it to the window)
         _scroll = new ScrollViewer
         {
             HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled,
             VerticalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto,
-            Content = _grid,
+            Content = _panel,
         };
-        // keep the header row visually pinned to the top while the body scrolls under it
-        _scroll.ScrollChanged += (_, _) => SyncStickyHeader();
+        // realization is driven by the panel's EffectiveViewportChanged (in-pass), and the header is
+        // pinned by arranging it at the scroll offset, so nothing is wired to ScrollChanged here
 
         _frame = new Border
         {
@@ -123,72 +132,65 @@ public class PhTableControl : PhControl
     public void Build(IReadOnlyList<PhTableColumn> columns, IReadOnlyList<PhTableRow> rows)
     {
         _flashTimer?.Stop();
-        _grid.Children.Clear();
-        _grid.RowDefinitions.Clear();
-        _grid.ColumnDefinitions.Clear();
+        _flashSlot = null;
         _rows.Clear();
-        _headerCells.Clear();
+        _headerSpanners = [];
+        _headerCells = [];
+        _headerBg = null;
         _hoveredRow = _focusedRow = -1;
+
+        // a rebuilt (or filtered) list belongs at the top; keeping the old offset would realize the
+        // wrong band for one frame, since Extent is only republished on the next arrange
+        _scroll.Offset = default;
 
         var hasRows = rows.Count > 0;
         _emptyLabel.IsVisible = !hasRows;
         _frame.IsVisible = hasRows;
-        if (!hasRows) return;
+
+        if (!hasRows)
+        {
+            _panel.Reset(columns, 0);
+            return;
+        }
 
         var contentCols = columns.Count;
         var totalCols = contentCols + 1; // + actions column
 
-        foreach (var col in columns)
-        {
-            _grid.ColumnDefinitions.Add(new ColumnDefinition(
-                col.Star ? new GridLength(1, GridUnitType.Star) : GridLength.Auto)
-            {
-                MinWidth = col.MinWidth,
-            });
-        }
-        _grid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Auto));
-
-        // header row + underline spanning all columns. The header is the grid's row 0, but is kept
-        // visually pinned to the top via a render-transform synced to the scroll offset (SyncStickyHeader);
-        // an opaque background occludes the rows scrolling beneath it.
-        _grid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
-
+        // header: an opaque fill (so rows don't bleed through while pinned), the labels, the underline
         _headerBg = new Border { IsHitTestVisible = false };
         ApplyHeaderBackground();
-        AddHeaderCell(_headerBg, 0, totalCols);
+        _headerSpanners = [_headerBg, HLine(ResxId.IG_BorderControlBrush, VerticalAlignment.Bottom)];
+        foreach (var spanner in _headerSpanners) spanner.ZIndex = 1;
 
-        for (var c = 0; c < contentCols; c++) AddHeaderCell(HeaderCell(columns[c].Header), c);
-        AddHeaderCell(HLine(ResxId.IG_BorderControlBrush, VerticalAlignment.Bottom), 0, totalCols);
-
-        // data rows
-        for (var i = 0; i < rows.Count; i++)
+        _headerCells = new Control?[totalCols];
+        for (var c = 0; c < contentCols; c++)
         {
-            var spec = rows[i];
-            var row = i + 1;
-            _grid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
+            var cell = HeaderCell(columns[c].Header);
+            cell.ZIndex = 1;
+            _headerCells[c] = cell;
+        }
 
-            // full-row layer behind the cells: tints on hover and reports the row's bounds for hit-testing.
-            // uses the sidebar ListBoxItem's Fluent 2 SubtleFill (neutral, not accent) for a matching hover.
-            var highlight = new Border { IsHitTestVisible = false, Opacity = 0 };
-            highlight[!Border.BackgroundProperty] = new DynamicResourceExtension("PhListItemFillSecondary");
-            highlight.Transitions = new Transitions { FadeTransition() };
-            AddCell(highlight, row, 0, totalCols);
+        for (var i = 0; i < rows.Count; i++) _rows.Add(BuildRow(rows[i], i, totalCols));
 
-            // accent flash layer (above the hover tint): pulsed by FlashRow to notify the user
-            var flash = new Border { IsHitTestVisible = false, Opacity = 0 };
-            flash[!Border.BackgroundProperty] = new DynamicResourceExtension("PhAccentFill");
-            flash.Transitions = new Transitions { FadeTransition() };
-            AddCell(flash, row, 0, totalCols);
+        _panel.Reset(columns, totalCols);
+    }
 
-            // separator above every row except the first
-            if (i > 0) AddCell(HLine(ResxId.IG_BorderNeutralBrush, VerticalAlignment.Top), row, 0, totalCols);
 
-            for (var c = 0; c < contentCols && c < spec.Cells.Count; c++) AddCell(spec.Cells[c], row, c);
+    /// <summary>
+    /// Gets how many always-realized header visuals lead <c>Children</c>, so the panel can insert
+    /// realized rows after them and keep <c>Children</c> in row order.
+    /// </summary>
+    internal int HeaderVisualCount
+    {
+        get
+        {
+            var count = _headerSpanners.Length;
+            foreach (var cell in _headerCells)
+            {
+                if (cell is not null) count++;
+            }
 
-            var (actionsCell, buttons) = BuildActionsCell(spec.Actions, i);
-            AddCell(actionsCell, row, contentCols);
-
-            _rows.Add(new RowVisual(highlight, flash, actionsCell, buttons, spec.Key));
+            return count;
         }
     }
 
@@ -251,25 +253,32 @@ public class PhTableControl : PhControl
     public void FlashRow(int index)
     {
         if (index < 0 || index >= _rows.Count) return;
-        var flash = _rows[index].Flash;
+        var slot = _rows[index];
 
-        // defer so a freshly (re)built row has had a layout pass before we scroll/measure
+        // defer so a freshly (re)built table has had a layout pass before we scroll/measure
         Dispatcher.UIThread.Post(() =>
         {
-            flash.BringIntoView();
+            if (!_rows.Contains(slot)) return;
 
+            BringRowIntoView(slot);
+
+            // a pulse still running on another row would stay tinted once its timer is dropped
             _flashTimer?.Stop();
+            if (_flashSlot is not null && _flashSlot != slot) _flashSlot.Flash.Opacity = 0;
+
+            _flashSlot = slot;
             var pulses = 0;
-            flash.Opacity = FLASH_OPACITY;
+            slot.Flash.Opacity = FLASH_OPACITY;
 
             // toggle opacity (smoothed by the fade transition); end hidden after a few pulses
             _flashTimer = new DispatcherTimer { Interval = REVEAL_DURATION + TimeSpan.FromMilliseconds(140) };
             _flashTimer.Tick += (_, _) =>
             {
-                flash.Opacity = flash.Opacity > 0 ? 0 : FLASH_OPACITY;
+                slot.Flash.Opacity = slot.Flash.Opacity > 0 ? 0 : FLASH_OPACITY;
                 if (++pulses >= 5)
                 {
-                    flash.Opacity = 0;
+                    slot.Flash.Opacity = 0;
+                    _flashSlot = null;
                     _flashTimer!.Stop();
                 }
             };
@@ -280,56 +289,104 @@ public class PhTableControl : PhControl
     #endregion // Public Methods
 
 
-    #region Hover / focus reveal
+    #region Scrolling
 
-    private void Grid_PointerMoved(object? sender, PointerEventArgs e)
+    /// <summary>
+    /// Scrolls <paramref name="slot"/> into view and realizes it. Iterates because rows above the
+    /// target may still be unmeasured, so the first scroll aims at an estimated offset; each pass
+    /// measures the band it lands on and corrects. Stops as soon as the offset settles.
+    /// </summary>
+    private void BringRowIntoView(RowSlot slot)
     {
-        // ignore the band covered by the pinned header (it sits visually on top of the rows while scrolled)
-        var headerHeight = _headerBg?.Bounds.Height ?? 0;
-        var overHeader = e.GetPosition(_scroll).Y < headerHeight;
+        for (var pass = 0; pass < MAX_SCROLL_PASSES; pass++)
+        {
+            var before = _scroll.Offset.Y;
 
-        var index = overHeader ? -1 : RowAt(e.GetPosition(_grid).Y);
-        if (index == _hoveredRow) return;
+            ScrollRowIntoView(slot);
+            _panel.UpdateLayout();
 
-        _hoveredRow = index;
-        UpdateReveal();
+            // settled once the target is realized and the offset stopped moving
+            if (slot.IsRealized && Math.Abs(_scroll.Offset.Y - before) < 0.5) break;
+        }
     }
 
 
-    private void Grid_PointerExited(object? sender, PointerEventArgs e)
+    /// <summary>
+    /// Scrolls <paramref name="slot"/> fully into view, keeping it clear of the pinned header.
+    /// No-op when it is already visible.
+    /// </summary>
+    private void ScrollRowIntoView(RowSlot slot)
+    {
+        var headerHeight = _panel.HeaderHeight;
+        var top = headerHeight + slot.Y;
+        var bottom = top + _panel.RowHeightOf(slot);
+
+        var viewport = _scroll.Viewport.Height;
+        if (viewport <= 0) return;
+
+        // the pinned header covers the top band of the viewport, so that is not usable space
+        var viewTop = _scroll.Offset.Y + headerHeight;
+        var viewBottom = _scroll.Offset.Y + viewport;
+        if (top >= viewTop && bottom <= viewBottom) return;
+
+        var target = top < viewTop ? top - headerHeight : bottom - viewport;
+        var max = Math.Max(0, _scroll.Extent.Height - viewport);
+        _scroll.Offset = new Vector(_scroll.Offset.X, Math.Clamp(target, 0, max));
+    }
+
+
+    #endregion // Scrolling
+
+
+    #region Hover / focus reveal
+
+    private void Panel_PointerMoved(object? sender, PointerEventArgs e)
+    {
+        // the header is arranged at the scroll offset, so its band is the same coordinate system as
+        // the rows: ignore it, since it sits visually on top of them while scrolled
+        var y = e.GetPosition(_panel).Y;
+        var overHeader = y >= _scroll.Offset.Y && y < _scroll.Offset.Y + _panel.HeaderHeight;
+
+        var index = overHeader ? -1 : _panel.RowAt(y);
+        if (index == _hoveredRow) return;
+
+        var previous = _hoveredRow;
+        _hoveredRow = index;
+        UpdateReveal(previous, index);
+    }
+
+
+    private void Panel_PointerExited(object? sender, PointerEventArgs e)
     {
         if (_hoveredRow == -1) return;
 
+        var previous = _hoveredRow;
         _hoveredRow = -1;
-        UpdateReveal();
+        UpdateReveal(previous, -1);
     }
 
 
     /// <summary>
-    /// Returns the data-row index whose vertical band contains <paramref name="y"/> (grid space), or -1.
+    /// Re-applies the reveal state of the rows whose hovered/focused status just changed.
     /// </summary>
-    private int RowAt(double y)
+    private void UpdateReveal(params int[] changed)
     {
-        for (var i = 0; i < _rows.Count; i++)
+        foreach (var index in changed)
         {
-            var b = _rows[i].Highlight.Bounds;
-            if (y >= b.Top && y < b.Bottom) return i;
+            if (index >= 0 && index < _rows.Count) RefreshRowReveal(_rows[index]);
         }
-        return -1;
     }
 
 
     /// <summary>
-    /// Shows the actions (and hover tint) for the hovered/focused row; hides everyone else's.
+    /// Applies the hover tint and the actions visibility for one row. Called on state changes and
+    /// again whenever the row is realized, since an unrealized row cannot show them.
     /// </summary>
-    private void UpdateReveal()
+    private void RefreshRowReveal(RowSlot slot)
     {
-        for (var i = 0; i < _rows.Count; i++)
-        {
-            var r = _rows[i];
-            r.Actions.Opacity = i == _hoveredRow || i == _focusedRow ? 1 : 0;
-            r.Highlight.Opacity = i == _hoveredRow ? 1 : 0;
-        }
+        var isHovered = slot.Index == _hoveredRow;
+        slot.Actions.Opacity = isHovered || slot.Index == _focusedRow ? 1 : 0;
+        slot.Highlight.Opacity = isHovered ? 1 : 0;
     }
 
 
@@ -338,40 +395,155 @@ public class PhTableControl : PhControl
     #endregion // Hover / focus reveal
 
 
+    #region Keyboard navigation
+
+    /// <summary>
+    /// Keeps every row's actions reachable by Tab: virtualization leaves the off-screen rows out of
+    /// the visual tree, so hops between rows are handled here (scroll + realize, then focus).
+    /// </summary>
+    protected override void OnKeyDown(KeyEventArgs e)
+    {
+        base.OnKeyDown(e);
+        if (e.Handled || e.Key != Key.Tab) return;
+
+        // plain Tab / Shift+Tab only
+        var modifiers = e.KeyModifiers & ~KeyModifiers.Shift;
+        if (modifiers != KeyModifiers.None) return;
+
+        if (MoveActionFocus(back: e.KeyModifiers.HasFlag(KeyModifiers.Shift))) e.Handled = true;
+    }
+
+
+    /// <summary>
+    /// Moves focus to the next (or previous) focusable in the table, crossing into rows that are
+    /// not realized yet. Covers every focusable a cell may hold (action buttons, but also the
+    /// toggles, checkboxes and link buttons consumers put in cells), not just the actions column.
+    /// Returns <c>false</c> when the table is exhausted, so the default traversal can leave it.
+    /// </summary>
+    private bool MoveActionFocus(bool back)
+    {
+        if (!TryFindFocusedRow(out var row, out var focused)) return false;
+
+        var step = back ? -1 : 1;
+
+        // next focusable still inside the same row
+        var current = FocusablesOf(_rows[row]);
+        var at = current.IndexOf(focused);
+        if (at >= 0)
+        {
+            var next = at + step;
+            if (next >= 0 && next < current.Count) return current[next].Focus();
+        }
+
+        // otherwise the first/last focusable of the nearest row that has one. The scan works on
+        // unrealized rows too (their cells keep Focusable/IsVisible while detached), so we only
+        // scroll once a target is known instead of walking the table.
+        for (var r = row + step; r >= 0 && r < _rows.Count; r += step)
+        {
+            var slot = _rows[r];
+            var candidates = FocusablesOf(slot);
+            if (candidates.Count == 0) continue;
+
+            BringRowIntoView(slot);
+
+            var target = back ? candidates[^1] : candidates[0];
+            if (target.Focus()) return true;
+        }
+
+        return false;
+    }
+
+
+    /// <summary>
+    /// The row's focusable descendants in visual order (content cells left to right, actions last).
+    /// </summary>
+    private static List<Control> FocusablesOf(RowSlot slot)
+    {
+        var found = new List<Control>();
+
+        foreach (var cell in slot.Cells)
+        {
+            if (cell is not null) CollectFocusables(cell, found);
+        }
+
+        return found;
+    }
+
+
+    private static void CollectFocusables(Control control, List<Control> found)
+    {
+        if (!control.IsVisible || !control.IsEnabled) return;
+
+        if (control.Focusable) found.Add(control);
+
+        foreach (var child in control.GetVisualChildren())
+        {
+            if (child is Control c) CollectFocusables(c, found);
+        }
+    }
+
+
+    /// <summary>
+    /// Finds which row currently holds keyboard focus, and the focused control itself.
+    /// </summary>
+    private bool TryFindFocusedRow(out int row, out Control focused)
+    {
+        for (var r = 0; r < _rows.Count; r++)
+        {
+            foreach (var candidate in FocusablesOf(_rows[r]))
+            {
+                if (!candidate.IsFocused) continue;
+
+                row = r;
+                focused = candidate;
+                return true;
+            }
+        }
+
+        row = -1;
+        focused = null!;
+        return false;
+    }
+
+    #endregion // Keyboard navigation
+
+
     #region Cell builders
 
-    private void AddCell(Control content, int row, int col, int colSpan = 1)
-    {
-        Grid.SetRow(content, row);
-        Grid.SetColumn(content, col);
-        if (colSpan > 1) Grid.SetColumnSpan(content, colSpan);
-        _grid.Children.Add(content);
-    }
-
-
     /// <summary>
-    /// Adds a header-row (row 0) cell that stays pinned to the top: drawn above the data rows
-    /// (<see cref="Visual.ZIndex"/>) and translated by the scroll offset in <see cref="SyncStickyHeader"/>.
+    /// Builds one row's visuals: the full-width hover/flash/separator layers, the content cells
+    /// (padded to the column count) and the actions cell.
     /// </summary>
-    private void AddHeaderCell(Control content, int col, int colSpan = 1)
+    private RowSlot BuildRow(PhTableRow spec, int index, int totalCols)
     {
-        content.ZIndex = 1;
-        AddCell(content, 0, col, colSpan);
-        _headerCells.Add(content);
-    }
+        // full-row layer behind the cells: tints on hover.
+        // uses the sidebar ListBoxItem's Fluent 2 SubtleFill (neutral, not accent) for a matching hover.
+        var highlight = new Border { IsHitTestVisible = false, Opacity = 0 };
+        highlight[!Border.BackgroundProperty] = new DynamicResourceExtension("PhListItemFillSecondary");
+        highlight.Transitions = new Transitions { FadeTransition() };
 
+        // accent flash layer (above the hover tint): pulsed by FlashRow to notify the user
+        var flash = new Border { IsHitTestVisible = false, Opacity = 0 };
+        flash[!Border.BackgroundProperty] = new DynamicResourceExtension("PhAccentFill");
+        flash.Transitions = new Transitions { FadeTransition() };
 
-    /// <summary>
-    /// Translates the header cells down by the current vertical scroll offset so they appear fixed
-    /// at the top while the body scrolls beneath them.
-    /// </summary>
-    private void SyncStickyHeader()
-    {
-        var y = _scroll.Offset.Y;
-        foreach (var cell in _headerCells)
+        var layers = new List<Control> { highlight, flash };
+
+        // separator above every row except the first
+        if (index > 0) layers.Add(HLine(ResxId.IG_BorderNeutralBrush, VerticalAlignment.Top));
+
+        var contentCols = totalCols - 1;
+        var cells = new Control?[totalCols];
+        for (var c = 0; c < contentCols && c < spec.Cells.Count; c++) cells[c] = spec.Cells[c];
+
+        var (actionsCell, buttons) = BuildActionsCell(spec.Actions, index);
+        cells[contentCols] = actionsCell;
+
+        return new RowSlot(index, spec.Key, highlight, flash, actionsCell, buttons)
         {
-            cell.RenderTransform = y > 0 ? new TranslateTransform(0, y) : null;
-        }
+            Layers = [.. layers],
+            Cells = cells,
+        };
     }
 
 
@@ -475,15 +647,16 @@ public class PhTableControl : PhControl
         // keep hidden actions reachable by Tab: reveal the row on focus, hide again when focus leaves it
         btn.GotFocus += (_, _) =>
         {
+            var previous = _focusedRow;
             _focusedRow = rowIndex;
-            UpdateReveal();
+            UpdateReveal(previous, rowIndex);
         };
         btn.LostFocus += (_, _) => Dispatcher.UIThread.Post(() =>
         {
-            if (_focusedRow == rowIndex && !RowHasFocus(rowIndex))
+            if (_focusedRow == rowIndex && rowIndex < _rows.Count && !RowHasFocus(rowIndex))
             {
                 _focusedRow = -1;
-                UpdateReveal();
+                UpdateReveal(rowIndex);
             }
         });
 
@@ -499,12 +672,6 @@ public class PhTableControl : PhControl
 
     #endregion // Cell builders
 
-
-    /// <summary>
-    /// Per-row visuals the reveal logic toggles.
-    /// </summary>
-    private sealed record RowVisual(Border Highlight, Border Flash, Border Actions,
-        List<PhToolButton> Buttons, string? Key);
 }
 
 

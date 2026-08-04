@@ -389,7 +389,7 @@ public partial class FileTypeAssociationsSettingsView : SettingsPageView
             });
         }
 
-        PART_Table.EmptyText = Core.Lang[LangId._Empty];
+        PART_Table.EmptyText = "–";
         PART_Table.Build(columns, rows);
 
         // the label means "formats ImageGlass can open", so write-only formats are excluded
@@ -406,9 +406,9 @@ public partial class FileTypeAssociationsSettingsView : SettingsPageView
         var name = codec?.CodecName ?? string.Empty;
         if (name.Length == 0)
         {
-            // "(empty)" here means nothing can handle it; the plugin dialog's dash means
+            // "–" here means nothing can handle it; the plugin dialog's dash means
             // "capability not declared". Deliberately different, do not unify.
-            return PhTableControl.TextCell(Core.Lang[LangId._Empty], muted: true);
+            return PhTableControl.TextCell("–", muted: true);
         }
 
         // built-in codec -> plain text

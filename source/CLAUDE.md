@@ -437,7 +437,7 @@ Occurs in `Program.cs` before Avalonia app setup (Linux/Mac have equivalent regi
 | `Common/Extensions/`, `Common/BHelper/`, `Common/Types/JsonTypeConverters/` | Shared extensions, helpers, AOT-safe JSON converters (check before writing new) |
 | `UI/BaseControls/` | Reusable `Ph*` controls (`PhButton`, `PhTextBox`, etc.) |
 | `UI/Styles/` | App-wide XAML styles + resource dictionaries (incl. `IconResources.axaml`) |
-| `Directory.Packages.props` | Central package version management (Avalonia 12.0.0-rc1, SkiaSharp 3.119.x, Magick.NET 14.x, etc.) |
+| `Directory.Packages.props` | Central package version management (Avalonia 12.1.x, SkiaSharp 3.119.x, Magick.NET 14.x, etc.) |
 
 ---
 
