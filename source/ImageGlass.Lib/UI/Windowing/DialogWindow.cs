@@ -119,6 +119,42 @@ public partial class DialogWindow : PhWindow
 
 
     /// <summary>
+    /// Gets, sets the icon of button 1; <c>null</c> shows text only.
+    /// </summary>
+    public Geometry? Button1Icon
+    {
+        get => GetValue(Button1IconProperty);
+        set => SetValue(Button1IconProperty, value);
+    }
+    public static readonly StyledProperty<Geometry?> Button1IconProperty =
+        AvaloniaProperty.Register<DialogWindow, Geometry?>(nameof(Button1Icon));
+
+
+    /// <summary>
+    /// Gets, sets the icon of button 2; <c>null</c> shows text only.
+    /// </summary>
+    public Geometry? Button2Icon
+    {
+        get => GetValue(Button2IconProperty);
+        set => SetValue(Button2IconProperty, value);
+    }
+    public static readonly StyledProperty<Geometry?> Button2IconProperty =
+        AvaloniaProperty.Register<DialogWindow, Geometry?>(nameof(Button2Icon));
+
+
+    /// <summary>
+    /// Gets, sets the icon of button 3; <c>null</c> shows text only.
+    /// </summary>
+    public Geometry? Button3Icon
+    {
+        get => GetValue(Button3IconProperty);
+        set => SetValue(Button3IconProperty, value);
+    }
+    public static readonly StyledProperty<Geometry?> Button3IconProperty =
+        AvaloniaProperty.Register<DialogWindow, Geometry?>(nameof(Button3Icon));
+
+
+    /// <summary>
     /// Gets, sets the visibility of button 1.
     /// </summary>
     public bool IsButton1Visible
@@ -328,6 +364,7 @@ public partial class DialogWindow : PhWindow
             HorizontalContentAlignment = Avalonia.Layout.HorizontalAlignment.Center,
             VerticalContentAlignment = Avalonia.Layout.VerticalAlignment.Center,
             [!PhButton.TextProperty] = this[!Button1TextProperty],
+            [!PhButton.IconDataProperty] = this[!Button1IconProperty],
             [!PhButton.IsVisibleProperty] = this[!IsButton1VisibleProperty],
         };
         _btn2 = new PhButton
@@ -336,6 +373,7 @@ public partial class DialogWindow : PhWindow
             HorizontalContentAlignment = Avalonia.Layout.HorizontalAlignment.Center,
             VerticalContentAlignment = Avalonia.Layout.VerticalAlignment.Center,
             [!PhButton.TextProperty] = this[!Button2TextProperty],
+            [!PhButton.IconDataProperty] = this[!Button2IconProperty],
             [!PhButton.IsVisibleProperty] = this[!IsButton2VisibleProperty],
         };
         _btn3 = new PhButton
@@ -344,6 +382,7 @@ public partial class DialogWindow : PhWindow
             HorizontalContentAlignment = Avalonia.Layout.HorizontalAlignment.Center,
             VerticalContentAlignment = Avalonia.Layout.VerticalAlignment.Center,
             [!PhButton.TextProperty] = this[!Button3TextProperty],
+            [!PhButton.IconDataProperty] = this[!Button3IconProperty],
             [!PhButton.IsVisibleProperty] = this[!IsButton3VisibleProperty],
         };
         _btn1.Click += Button1_Click;
