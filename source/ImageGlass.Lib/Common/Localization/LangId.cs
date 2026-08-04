@@ -726,7 +726,6 @@ public enum LangId
     Settings_Plugins_Status,
     Settings_Plugins_Enable,
     Settings_Plugins_TrustAndEnable,
-    Settings_Plugins_Disable,
     Settings_Plugins_StatusEnabled,
     Settings_Plugins_StatusDisabled,
     Settings_Plugins_StatusUntrusted,

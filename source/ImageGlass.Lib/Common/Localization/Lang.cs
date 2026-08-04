@@ -1162,7 +1162,6 @@ public class Lang
         new(LangId.Settings_Plugins_Status, "Status"),
         new(LangId.Settings_Plugins_Enable, "Enable"),
         new(LangId.Settings_Plugins_TrustAndEnable, "Trust and enable"),
-        new(LangId.Settings_Plugins_Disable, "Disable"),
         new(LangId.Settings_Plugins_StatusEnabled, "Enabled"),
         new(LangId.Settings_Plugins_StatusDisabled, "Disabled"),
         new(LangId.Settings_Plugins_StatusUntrusted, "Not enabled"),
@@ -1171,9 +1170,9 @@ public class Lang
         new(LangId.Settings_Plugins_TrustPrompt, "\"{0}\" is a native plugin that runs inside ImageGlass with full access to your files and system. Only enable plugins you obtained from a source you trust."),
         new(LangId.Settings_Plugins_TrustChangedWarning, "This plugin's file has changed since it was last enabled. Only re-enable it if you updated the plugin yourself."),
         new(LangId.Settings_Plugins_EnableToLoad, "Enable the plugin below to load it."),
-        new(LangId.Settings_Plugins_ExtensionsHint, "Choose which file formats this plugin may decode and encode. Formats it does not support are marked -."),
-        new(LangId.Settings_Plugins_FormatsAfterEnable, "The formats this plugin provides can be chosen after you enable it."),
-        new(LangId.Settings_Plugins_NoFormats, "No formats"),
+        new(LangId.Settings_Plugins_ExtensionsHint, "This plugin can open and save the file types below. Turn off any you would rather leave to ImageGlass or another plugin."),
+        new(LangId.Settings_Plugins_FormatsAfterEnable, "Enable this plugin to see and choose the file types it supports."),
+        new(LangId.Settings_Plugins_NoFormats, "No file types supported."),
         #endregion // Settings > Tab Plugins
 
 

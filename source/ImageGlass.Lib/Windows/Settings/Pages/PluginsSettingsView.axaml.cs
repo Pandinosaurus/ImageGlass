@@ -339,7 +339,7 @@ public partial class PluginsSettingsView : SettingsPageView
 
 
     /// <summary>
-    /// Opens the plugin info window; for a trusted plugin it offers [Disable], otherwise the
+    /// Opens the plugin info window; for a trusted plugin it offers the format picker, otherwise the
     /// trust-and-enable consent prompt (a missing plugin is view-only). Applies the chosen action
     /// live (hot load/unload) and returns <c>true</c> if the trust state changed.
     /// </summary>
@@ -359,16 +359,11 @@ public partial class PluginsSettingsView : SettingsPageView
             hashChanged: state == PluginTrustPolicy.TrustState.Changed);
         var result = await win.ShowAsync(TopLevel.GetTopLevel(this) as PhWindow);
 
-        // footer links run their own flow instead of the primary action
+        // the footer link runs its own flow instead of the primary action
         if (win.DeleteRequested)
         {
             await DeletePluginAsync(plugin);
             return false;
-        }
-        if (win.DisableRequested)
-        {
-            // format choices are deliberately not committed: the user chose a different action
-            return await DisablePluginAsync(plugin);
         }
 
         if (result != DialogExitCode.OK) return false;

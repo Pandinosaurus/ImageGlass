@@ -17,9 +17,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 using Avalonia;
-using Avalonia.Controls;
 using Avalonia.Layout;
 using ImageGlass.Common.Localization;
+using ImageGlass.Common.Types;
 using ImageGlass.SDK.Plugins;
 using ImageGlass.UI;
 using ImageGlass.UI.Windowing;
@@ -44,8 +44,7 @@ internal enum PluginInfoWindowMode
     Enable,
 
     /// <summary>
-    /// Format picker for an already-trusted plugin ([Save] / [Cancel]), with Disable demoted to a
-    /// footer link so the primary action is non-destructive.
+    /// Format picker for an already-trusted plugin ([Save] / [Cancel]).
     /// </summary>
     Configure,
 }
@@ -53,14 +52,13 @@ internal enum PluginInfoWindowMode
 
 /// <summary>
 /// Modal window that displays a native plugin's manifest metadata and, depending on
-/// <see cref="PluginInfoWindowMode"/>, offers to enable or disable it.
+/// <see cref="PluginInfoWindowMode"/>, offers to enable it or edit its formats.
 /// </summary>
 internal sealed class PluginInfoWindow : DialogWindow
 {
     private readonly PluginInfoWindowView _view;
     private readonly PluginInfoWindowMode _mode;
     private readonly PhButton _deleteButton;
-    private readonly PhButton _disableButton;
     private readonly string _pluginName;
 
 
@@ -74,12 +72,6 @@ internal sealed class PluginInfoWindow : DialogWindow
     /// Whether the user clicked the footer "Delete" link (the caller runs the delete flow).
     /// </summary>
     public bool DeleteRequested { get; private set; }
-
-
-    /// <summary>
-    /// Whether the user clicked the footer "Disable" link (the caller runs the disable flow).
-    /// </summary>
-    public bool DisableRequested { get; private set; }
 
 
     /// <summary>
@@ -137,23 +129,16 @@ internal sealed class PluginInfoWindow : DialogWindow
             allowEdit: mode == PluginInfoWindowMode.Configure,
             // file formats are a codec concept; a future non-codec kind gets the info tab only
             showFormats: manifest.Kind == IGPluginKind.Codec);
-        if (mode == PluginInfoWindowMode.Enable) _view.ShowConsentWarning(manifest, hashChanged);
+        if (mode == PluginInfoWindowMode.Enable)
+        {
+            Button1Icon = Resx.GetIcon(ResxIconId.IconVerify);
+            _view.ShowConsentWarning(manifest, hashChanged);
+        }
         DialogContent = _view;
 
-        // footer-left links; each closes the window signalling the caller to run that flow
+        // footer-left link; closes the window signalling the caller to run the delete flow
         _deleteButton = NewFooterLink(() => DeleteRequested = true);
-        _disableButton = NewFooterLink(() => DisableRequested = true);
-        _disableButton.IsVisible = mode == PluginInfoWindowMode.Configure;
-
-        var footer = new StackPanel
-        {
-            Orientation = Avalonia.Layout.Orientation.Horizontal,
-            Spacing = 12,
-            HorizontalAlignment = HorizontalAlignment.Left,
-        };
-        footer.Children.Add(_deleteButton);
-        footer.Children.Add(_disableButton);
-        DialogFooterLeftContent = footer;
+        DialogFooterLeftContent = _deleteButton;
     }
 
 
@@ -184,7 +169,6 @@ internal sealed class PluginInfoWindow : DialogWindow
         // and only the footer buttons differ per mode.
         Title = _pluginName;
         _deleteButton.Text = Core.Lang[LangId._Delete];
-        _disableButton.Text = Core.Lang[LangId.Settings_Plugins_Disable];
 
         switch (_mode)
         {
