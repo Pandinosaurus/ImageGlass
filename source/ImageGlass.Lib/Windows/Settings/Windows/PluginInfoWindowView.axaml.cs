@@ -144,6 +144,7 @@ public partial class PluginInfoWindowView : PhControl
 
         PART_WebsiteRow.IsVisible = !string.IsNullOrWhiteSpace(_website);
         PART_Website.Text = _website;
+        ToolTip.SetTip(PART_Website, _website);
 
         PART_Folder.Text = pluginDir;
         ToolTip.SetTip(PART_Folder, pluginDir);
@@ -194,8 +195,8 @@ public partial class PluginInfoWindowView : PhControl
         PhTableColumn[] columns =
         [
             new() { Header = Core.Lang[LangId._FileExtension], Star = true, MinWidth = 140 },
-            new() { Header = Core.Lang[LangId.Settings_Plugins_Decode] },
-            new() { Header = Core.Lang[LangId.Settings_Plugins_Encode] },
+            new() { Header = Core.Lang[LangId._Decoder] },
+            new() { Header = Core.Lang[LangId._Encoder] },
         ];
 
         var rows = rowExts.Select(ext => new PhTableRow
@@ -229,7 +230,6 @@ public partial class PluginInfoWindowView : PhControl
         {
             IsChecked = !disabled.Contains(ext),
             IsEnabled = _isEditable,
-            VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
         };
 
         // Click, not IsCheckedChanged, so the initial assignment above doesn't mark it dirty.

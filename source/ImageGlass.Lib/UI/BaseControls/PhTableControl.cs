@@ -204,7 +204,7 @@ public class PhTableControl : PhControl
         TextBlock tb = selectable ? new SelectableTextBlock() : new TextBlock();
         tb.Text = text;
         tb.Padding = CELL_PADDING;
-        tb.VerticalAlignment = VerticalAlignment.Top;
+        tb.VerticalAlignment = VerticalAlignment.Center;
         tb.TextTrimming = TextTrimming.CharacterEllipsis;
         tb.IsTabStop = false; // only the action buttons take tab focus
         if (maxWidth > 0) tb.MaxWidth = maxWidth;
@@ -225,11 +225,11 @@ public class PhTableControl : PhControl
 
 
     /// <summary>
-    /// Wraps custom cell <paramref name="content"/> with the standard cell padding, top-aligned.
+    /// Wraps custom cell <paramref name="content"/> with the standard cell padding, centered on the row.
     /// </summary>
     public static Border WrapCell(Control content)
     {
-        content.VerticalAlignment = VerticalAlignment.Top;
+        content.VerticalAlignment = VerticalAlignment.Center;
         return new Border { Padding = CELL_PADDING, Child = content };
     }
 
@@ -427,7 +427,7 @@ public class PhTableControl : PhControl
             Orientation = Orientation.Horizontal,
             Spacing = 2,
             HorizontalAlignment = HorizontalAlignment.Right,
-            VerticalAlignment = VerticalAlignment.Top,
+            VerticalAlignment = VerticalAlignment.Center,
         };
 
         var buttons = new List<PhToolButton>(actions.Count);

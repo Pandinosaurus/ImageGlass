@@ -735,8 +735,6 @@ public enum LangId
     Settings_Plugins_TrustPrompt,
     Settings_Plugins_TrustChangedWarning,
     Settings_Plugins_EnableToLoad,
-    Settings_Plugins_Decode,
-    Settings_Plugins_Encode,
     Settings_Plugins_ExtensionsHint,
     Settings_Plugins_FormatsAfterEnable,
     Settings_Plugins_NoFormats,

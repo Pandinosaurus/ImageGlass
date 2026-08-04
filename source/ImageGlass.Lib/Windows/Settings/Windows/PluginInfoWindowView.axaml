@@ -58,24 +58,22 @@
             </StackPanel>
         </Border>
 
+
         <!--  Two tabs: metadata and the per-extension format picker  -->
         <TabControl
             x:Name="PART_Tabs"
             MinHeight="380"
-            Margin="24,10,24,16"
             Padding="0">
 
             <TabItem x:Name="PART_TabInfo">
                 <!--  Scrollable metadata  -->
                 <ScrollViewer
                     MaxHeight="440"
+                    Padding="24,20"
                     HorizontalContentAlignment="Stretch"
                     HorizontalScrollBarVisibility="Disabled"
                     VerticalScrollBarVisibility="Auto">
-                    <StackPanel
-                        Margin="0,14,0,8"
-                        Orientation="Vertical"
-                        Spacing="14">
+                    <StackPanel Orientation="Vertical" Spacing="14">
 
                         <!--  ID  -->
                         <StackPanel x:Name="PART_IdRow" Spacing="5">
@@ -93,7 +91,7 @@
                             </Border>
                         </StackPanel>
 
-                        <!--  Version & Type (side by side)  -->
+                        <!--  Version & Type  -->
                         <StackPanel Orientation="Horizontal" Spacing="40">
                             <StackPanel x:Name="PART_VersionRow" Spacing="5">
                                 <ui:PhTextBlock LangKey="_Version" />
@@ -117,6 +115,33 @@
                             </Border>
                         </StackPanel>
 
+                        <!--  Author & Website: a * column so a long URL trims; the gap is the author's margin  -->
+                        <Grid ColumnDefinitions="Auto,*">
+                            <StackPanel
+                                x:Name="PART_AuthorRow"
+                                Margin="0,0,40,0"
+                                Spacing="5">
+                                <ui:PhTextBlock LangKey="_Author" />
+                                <Border Classes="valueBox">
+                                    <SelectableTextBlock x:Name="PART_Author" />
+                                </Border>
+                            </StackPanel>
+                            <StackPanel
+                                x:Name="PART_WebsiteRow"
+                                Grid.Column="1"
+                                Spacing="5">
+                                <ui:PhTextBlock LangKey="_Website" />
+                                <Border Classes="valueBox">
+                                    <ui:PhButton
+                                        x:Name="PART_Website"
+                                        Padding="0"
+                                        HorizontalAlignment="Left"
+                                        TextTrimming="CharacterEllipsis"
+                                        Variant="Link" />
+                                </Border>
+                            </StackPanel>
+                        </Grid>
+
                         <!--  Executable  -->
                         <StackPanel x:Name="PART_ExecutableRow" Spacing="5">
                             <ui:PhTextBlock LangKey="_Executable" />
@@ -125,27 +150,7 @@
                             </Border>
                         </StackPanel>
 
-                        <!--  Author & Website (side by side)  -->
-                        <StackPanel Orientation="Horizontal" Spacing="40">
-                            <StackPanel x:Name="PART_AuthorRow" Spacing="5">
-                                <ui:PhTextBlock LangKey="_Author" />
-                                <Border Classes="valueBox">
-                                    <SelectableTextBlock x:Name="PART_Author" />
-                                </Border>
-                            </StackPanel>
-                            <StackPanel x:Name="PART_WebsiteRow" Spacing="5">
-                                <ui:PhTextBlock LangKey="_Website" />
-                                <Border Classes="valueBox">
-                                    <ui:PhButton
-                                        x:Name="PART_Website"
-                                        Padding="0"
-                                        HorizontalAlignment="Left"
-                                        Variant="Link" />
-                                </Border>
-                            </StackPanel>
-                        </StackPanel>
-
-                        <!--  Folder (1 line, truncated + tooltip) + open-folder link  -->
+                        <!--  Folder  -->
                         <StackPanel x:Name="PART_FolderRow" Spacing="5">
                             <ui:PhTextBlock LangKey="Settings_Plugins_FolderPath" />
                             <Border Classes="valueBox">
@@ -161,22 +166,17 @@
                 </ScrollViewer>
             </TabItem>
 
+
             <TabItem x:Name="PART_TabFormats">
                 <!--  Per-extension decode/encode picker (rows built in code-behind)  -->
                 <ScrollViewer
                     MaxHeight="440"
+                    Padding="24,20"
                     HorizontalContentAlignment="Stretch"
                     HorizontalScrollBarVisibility="Disabled"
                     VerticalScrollBarVisibility="Auto">
-                    <StackPanel
-                        x:Name="PART_ExtensionsRow"
-                        Margin="0,14,0,8"
-                        Spacing="8">
-                        <ui:PhTextBlock
-                            x:Name="PART_ExtensionsHint"
-                            FontSize="{x:Static types:Const.FONT_SIZE_SMALL}"
-                            Opacity="0.7"
-                            TextWrapping="Wrap" />
+                    <StackPanel x:Name="PART_ExtensionsRow" Spacing="8">
+                        <ui:PhTextBlock x:Name="PART_ExtensionsHint" TextWrapping="Wrap" />
                         <ui:PhTableControl x:Name="PART_ExtensionsTable" HorizontalAlignment="Stretch" />
                     </StackPanel>
                 </ScrollViewer>
