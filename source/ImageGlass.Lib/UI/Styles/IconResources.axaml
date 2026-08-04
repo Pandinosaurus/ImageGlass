@@ -80,8 +80,8 @@
 
     <StreamGeometry x:Key="IconInfo">M12 1.999c5.524 0 10.002 4.478 10.002 10.002 0 5.523-4.478 10.001-10.002 10.001-5.524 0-10.002-4.478-10.002-10.001C1.998 6.477 6.476 1.999 12 1.999Zm0 1.5a8.502 8.502 0 1 0 0 17.003A8.502 8.502 0 0 0 12 3.5Zm-.004 7a.75.75 0 0 1 .744.648l.007.102.003 5.502a.75.75 0 0 1-1.493.102l-.007-.101-.003-5.502a.75.75 0 0 1 .75-.751Zm.005-3.497a.999.999 0 1 1 0 1.997.999.999 0 0 1 0-1.997Z</StreamGeometry>
 
-    <!--  verified badge; the check is a reverse-wound subpath so it knocks out of the fill  -->
-    <StreamGeometry x:Key="IconVerify">M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z M8.29,12.71 L11,15.41 L15.71,10.71 L14.29,9.29 L11,12.59 L9.71,11.29 Z</StreamGeometry>
+    <!--  verified badge (badge + checkmark); render stroked  -->
+    <StreamGeometry x:Key="IconVerify">M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z M9,12 L11,14 L15,10</StreamGeometry>
 
     <!--  dark mode (crescent moon)  -->
     <StreamGeometry x:Key="IconWeatherMoon">M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z</StreamGeometry>

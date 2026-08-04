@@ -18,6 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Shapes;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
@@ -37,9 +38,9 @@ public class PhButton : Button
     // gap between the icon and the text of the default content
     private static readonly Thickness ICON_GAP = new(0, 0, 4, 0);
 
-    // elements of the default content, kept to toggle the link underline and the icon gap
+    // elements of the default content, kept to toggle the link underline and repaint the icon
     private TextBlock? _textEl;
-    private PathIcon? _iconEl;
+    private Path? _iconEl;
 
 
     // events
@@ -67,6 +68,18 @@ public class PhButton : Button
     }
     public static readonly StyledProperty<Geometry?> IconDataProperty =
         AvaloniaProperty.Register<PhButton, Geometry?>(nameof(IconData));
+
+
+    /// <summary>
+    /// Gets, sets the stroke width for an outline icon; <c>0</c> (default) fills the icon instead.
+    /// </summary>
+    public double IconStrokeThickness
+    {
+        get => GetValue(IconStrokeThicknessProperty);
+        set => SetValue(IconStrokeThicknessProperty, value);
+    }
+    public static readonly StyledProperty<double> IconStrokeThicknessProperty =
+        AvaloniaProperty.Register<PhButton, double>(nameof(IconStrokeThickness));
 
 
     /// <summary>
@@ -185,6 +198,7 @@ public class PhButton : Button
 
         OnIgLanguageChanged();
         UpdateOutlineBorderBrush();
+        UpdateIconPaint();
         Core.ThemeChanged += Core_ThemeChanged;
         Core.LanguageChanged += Core_LanguageChanged;
     }
@@ -238,6 +252,10 @@ public class PhButton : Button
         else if (e.Property == IsPressedProperty || e.Property == IsPointerOverProperty)
         {
             UpdateContentVisual();
+        }
+        else if (e.Property == ForegroundProperty || e.Property == IconStrokeThicknessProperty)
+        {
+            UpdateIconPaint();
         }
         else if (e.Property == VariantProperty)
         {
@@ -433,13 +451,15 @@ public class PhButton : Button
     /// </summary>
     private DockPanel CreateContentElement()
     {
-        var pathEl = _iconEl = new PathIcon
+        var pathEl = _iconEl = new Path
         {
             Width = 14,
             Height = 14,
-            [!PathIcon.DataProperty] = this[!IconDataProperty],
-            [!PathIcon.ForegroundProperty] = this[!ForegroundProperty],
-            [!PathIcon.IsVisibleProperty] = this[!IsIconVisibleProperty],
+            Stretch = Stretch.Uniform,
+            StrokeLineCap = PenLineCap.Round,
+            StrokeJoin = PenLineJoin.Round,
+            [!Path.DataProperty] = this[!IconDataProperty],
+            [!Path.IsVisibleProperty] = this[!IsIconVisibleProperty],
         };
         DockPanel.SetDock(pathEl, Dock.Left);
 
@@ -473,6 +493,20 @@ public class PhButton : Button
         if (_iconEl is null) return;
 
         _iconEl.Margin = IsTextVisible ? ICON_GAP : default;
+    }
+
+
+    /// <summary>
+    /// Paints the icon from the button foreground: stroked when <see cref="IconStrokeThickness"/> is set, filled otherwise.
+    /// </summary>
+    private void UpdateIconPaint()
+    {
+        if (_iconEl is null) return;
+
+        var isOutlined = IconStrokeThickness > 0;
+        _iconEl.StrokeThickness = IconStrokeThickness;
+        _iconEl.Fill = isOutlined ? null : Foreground;
+        _iconEl.Stroke = isOutlined ? Foreground : null;
     }
 
 

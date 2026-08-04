@@ -131,7 +131,9 @@ internal sealed class PluginInfoWindow : DialogWindow
             showFormats: manifest.Kind == IGPluginKind.Codec);
         if (mode == PluginInfoWindowMode.Enable)
         {
+            // the badge glyph is an outline, so it has to be stroked instead of filled
             Button1Icon = Resx.GetIcon(ResxIconId.IconVerify);
+            _btn1.IconStrokeThickness = 1.5;
             _view.ShowConsentWarning(manifest, hashChanged);
         }
         DialogContent = _view;
