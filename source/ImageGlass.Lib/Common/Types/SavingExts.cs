@@ -46,8 +46,6 @@ public static class SavingExts
         new(".exif",  "EXIF"),
         new(".ico",   "ICO"),
         new(".wmf",   "WMF"),
-        new(".b64",   "Base64"),
-        new(".txt",   "Base64 text"),
     ];
 
 
@@ -96,7 +94,7 @@ public static class SavingExts
     /// <summary>
     /// Plugin-contributed writable extensions, ordered by encode priority then name.
     /// </summary>
-    private static IEnumerable<(string Ext, int EncodePriority)> GetPluginExtensions()
+    private static List<(string Ext, int EncodePriority)> GetPluginExtensions()
     {
         try
         {
