@@ -44,6 +44,7 @@
         <StyleInclude Source="avares://ImageGlass.Lib/UI/Styles/ToggleSwitchStyle.axaml" />
         <StyleInclude Source="avares://ImageGlass.Lib/UI/Styles/MenuStyle.axaml" />
         <StyleInclude Source="avares://ImageGlass.Lib/UI/Styles/ListBoxItemStyle.axaml" />
+        <StyleInclude Source="avares://ImageGlass.Lib/UI/Styles/TabControlStyle.axaml" />
         <StyleInclude Source="avares://ImageGlass.Lib/UI/Styles/ControlStyle.axaml" />
 
     </Application.Styles>

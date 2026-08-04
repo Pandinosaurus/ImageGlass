@@ -65,11 +65,11 @@
             MinHeight="380"
             Padding="0">
 
-            <TabItem x:Name="PART_TabInfo">
+            <TabItem x:Name="PART_TabInfo" Padding="24,0,0,0">
                 <!--  Scrollable metadata  -->
                 <ScrollViewer
                     MaxHeight="440"
-                    Padding="24,20"
+                    Padding="24,12,24,20"
                     HorizontalContentAlignment="Stretch"
                     HorizontalScrollBarVisibility="Disabled"
                     VerticalScrollBarVisibility="Auto">
@@ -167,11 +167,11 @@
             </TabItem>
 
 
-            <TabItem x:Name="PART_TabFormats">
+            <TabItem x:Name="PART_TabFormats" Padding="0,0,24,0">
                 <!--  Per-extension decode/encode picker (rows built in code-behind)  -->
                 <ScrollViewer
                     MaxHeight="440"
-                    Padding="24,20"
+                    Padding="24,12,24,20"
                     HorizontalContentAlignment="Stretch"
                     HorizontalScrollBarVisibility="Disabled"
                     VerticalScrollBarVisibility="Auto">
