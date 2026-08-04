@@ -34,8 +34,12 @@ public class PhButton : Button
 {
     protected override Type StyleKeyOverride => typeof(Button);
 
-    // text element of the default content, kept to toggle the link underline
+    // gap between the icon and the text of the default content
+    private static readonly Thickness ICON_GAP = new(0, 0, 4, 0);
+
+    // elements of the default content, kept to toggle the link underline and the icon gap
     private TextBlock? _textEl;
+    private PathIcon? _iconEl;
 
 
     // events
@@ -75,6 +79,18 @@ public class PhButton : Button
     }
     public static readonly StyledProperty<string> TextProperty =
         AvaloniaProperty.Register<PhButton, string>(nameof(Text));
+
+
+    /// <summary>
+    /// Gets, sets how the text is trimmed. Needs a width-constraining parent (e.g. a <c>*</c> column).
+    /// </summary>
+    public TextTrimming TextTrimming
+    {
+        get => GetValue(TextTrimmingProperty);
+        set => SetValue(TextTrimmingProperty, value);
+    }
+    public static readonly StyledProperty<TextTrimming> TextTrimmingProperty =
+        AvaloniaProperty.Register<PhButton, TextTrimming>(nameof(TextTrimming), TextTrimming.None);
 
 
     /// <summary>
@@ -213,6 +229,7 @@ public class PhButton : Button
         else if (e.Property == TextProperty)
         {
             RaisePropertyChanged(IsTextVisibleProperty, default, IsTextVisible);
+            UpdateContentSpacing();
         }
         else if (e.Property == IconDataProperty)
         {
@@ -414,9 +431,9 @@ public class PhButton : Button
     /// <summary>
     /// Creates default button content element with icon and text element.
     /// </summary>
-    private StackPanel CreateContentElement()
+    private DockPanel CreateContentElement()
     {
-        var pathEl = new PathIcon
+        var pathEl = _iconEl = new PathIcon
         {
             Width = 14,
             Height = 14,
@@ -424,26 +441,38 @@ public class PhButton : Button
             [!PathIcon.ForegroundProperty] = this[!ForegroundProperty],
             [!PathIcon.IsVisibleProperty] = this[!IsIconVisibleProperty],
         };
+        DockPanel.SetDock(pathEl, Dock.Left);
 
         var textEl = _textEl = new TextBlock
         {
             [!TextBlock.TextProperty] = this[!TextProperty],
             [!TextBlock.ForegroundProperty] = this[!ForegroundProperty],
             [!TextBlock.IsVisibleProperty] = this[!IsTextVisibleProperty],
+            [!TextBlock.TextTrimmingProperty] = this[!TextTrimmingProperty],
         };
 
 
-        var panel = new StackPanel
+        // DockPanel, not StackPanel: the filling text gets the leftover width, so it can trim
+        var panel = new DockPanel
         {
             // center the content by default (so it stays centered when the button is stretched)
             HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
             VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
-            Orientation = Avalonia.Layout.Orientation.Horizontal,
-            Spacing = 4,
         };
         panel.Children.AddRange([pathEl, textEl]);
 
         return panel;
+    }
+
+
+    /// <summary>
+    /// Puts the icon-to-text gap on the icon, only while there is text, so an icon-only button stays centered.
+    /// </summary>
+    private void UpdateContentSpacing()
+    {
+        if (_iconEl is null) return;
+
+        _iconEl.Margin = IsTextVisible ? ICON_GAP : default;
     }
 
 
