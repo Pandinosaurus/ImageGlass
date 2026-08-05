@@ -138,7 +138,16 @@ public partial class AppStatusInfo : PhDisposable
                 }
                 else if (!_viewer.BitmapSize.IsEmpty)
                 {
-                    return $"{_viewer.BitmapSize.Width:n0}×{_viewer.BitmapSize.Height:n0}";
+                    var dimension = $"{_viewer.BitmapSize.Width:n0}×{_viewer.BitmapSize.Height:n0}";
+
+                    // the file is bigger than what could be decoded
+                    var scale = _viewer.Photo?.DecodeScale ?? 1;
+                    if (scale < 1 && Core.Photos.CurrentMetadata is { } meta)
+                    {
+                        dimension += $" ({meta.Width:n0}×{meta.Height:n0}) – {Math.Round(scale * 100):n0}%";
+                    }
+
+                    return dimension;
                 }
             }
 

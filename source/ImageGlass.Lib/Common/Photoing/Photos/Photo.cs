@@ -90,6 +90,12 @@ public partial class Photo : PhDisposable
     public uint Height => (uint)Size.Height;
 
     /// <summary>
+    /// Gets the linear scale this photo was decoded at. Below 1 when the full resolution
+    /// exceeded what the renderer can hold, so <see cref="Size"/> is smaller than the file.
+    /// </summary>
+    public double DecodeScale { get; private set; } = 1;
+
+    /// <summary>
     /// Gets the current frame index of this photo.
     /// </summary>
     public int FrameIndex => _frameIndex;
@@ -386,6 +392,7 @@ public partial class Photo : PhDisposable
 
         _width = (uint)Metadata.Width;
         _height = (uint)Metadata.Height;
+        DecodeScale = 1;
 
         State = state;
     }
@@ -410,6 +417,7 @@ public partial class Photo : PhDisposable
 
         _width = (uint)result.Size.Width;
         _height = (uint)result.Size.Height;
+        DecodeScale = result.DecodeScale;
 
         if (result.VectorSource is not null)
         {

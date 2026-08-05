@@ -39,6 +39,18 @@ namespace ImageGlass.Common.Photoing;
 public static partial class SkiaCodec
 {
     /// <summary>
+    /// Skia refuses a single pixel buffer over this size, however much memory is free.
+    /// </summary>
+    private const long MAX_PIXEL_BUFFER_BYTES = int.MaxValue;
+
+    /// <summary>
+    /// JPEG scales natively in the IDCT at eighths; largest-first to lose the least detail.
+    /// </summary>
+    private static readonly float[] NATIVE_DECODE_SCALES =
+        [7 / 8f, 6 / 8f, 5 / 8f, 4 / 8f, 3 / 8f, 2 / 8f, 1 / 8f];
+
+
+    /// <summary>
     /// Loads photo metadata from file path.
     /// </summary>
     public static async Task<PhotoMetadata> LoadMetadataAsync(string? filePath,
@@ -213,11 +225,16 @@ public static partial class SkiaCodec
 
 
         // 2. read single-frame formats
-        using var bmpFrame = new SKBitmap(codec.Info);
+        // images past Skia's pixel-buffer ceiling decode at the largest native reduction that fits
+        var decodeInfo = GetDecodableImageInfo(codec, out var decodeScale);
+        result.DecodeScale = decodeScale;
+        result.Size = new Size(decodeInfo.Width, decodeInfo.Height);
+
+        using var bmpFrame = new SKBitmap(decodeInfo);
         var frameIndex = Math.Min(0, options.FrameIndex);
         var codecOption = new SKCodecOptions(frameIndex);
 
-        if (codec.GetPixels(codec.Info, bmpFrame.GetPixels(), codecOption) == SKCodecResult.Success)
+        if (codec.GetPixels(decodeInfo, bmpFrame.GetPixels(), codecOption) == SKCodecResult.Success)
         {
             // 2.1 correct rotation
             if (options.CorrectRotation)
@@ -226,20 +243,23 @@ public static partial class SkiaCodec
                 {
                     if (bmpOriented is not null)
                     {
-                        result.Size = new Size(bmpOriented.Width, bmpOriented.Height);
-                        result.SingleFrame = ToSKImage(bmpOriented);
+                        using (bmpOriented)
+                        {
+                            result.Size = new Size(bmpOriented.Width, bmpOriented.Height);
+                            result.SingleFrame = ToSKImageNoCopy(bmpOriented);
+                        }
                         bmpFrame.Dispose();
                     }
                 }
 
                 if (bmpOriented is null)
                 {
-                    result.SingleFrame = ToSKImage(bmpFrame);
+                    result.SingleFrame = ToSKImageNoCopy(bmpFrame);
                 }
             }
             else
             {
-                result.SingleFrame = ToSKImage(bmpFrame);
+                result.SingleFrame = ToSKImageNoCopy(bmpFrame);
             }
         }
 
@@ -247,6 +267,49 @@ public static partial class SkiaCodec
         codec = null;
 
         return result;
+    }
+
+
+    /// <summary>
+    /// Picks the largest info the codec can decode into one pixel buffer, stepping down
+    /// through native scales when the full size does not fit. <paramref name="scale"/> is 1 if unreduced.
+    /// </summary>
+    /// <exception cref="NotSupportedException">Over the ceiling and the codec cannot scale.</exception>
+    private static SKImageInfo GetDecodableImageInfo(SKCodec codec, out double scale)
+    {
+        scale = 1;
+        var fullInfo = codec.Info;
+        if (FitsInPixelBuffer(fullInfo)) return fullInfo;
+
+        foreach (var candidate in NATIVE_DECODE_SCALES)
+        {
+            var size = codec.GetScaledDimensions(candidate);
+
+            // codecs without native scaling just echo the full size back
+            if (size.Width >= fullInfo.Width || size.Width <= 0 || size.Height <= 0) continue;
+
+            var scaledInfo = fullInfo.WithSize(size.Width, size.Height);
+            if (!FitsInPixelBuffer(scaledInfo)) continue;
+
+            scale = (double)size.Width / fullInfo.Width;
+            return scaledInfo;
+        }
+
+        var megaPixels = (double)fullInfo.Width * fullInfo.Height / 1_000_000;
+        throw new NotSupportedException(
+            $"The image is too large to open: {fullInfo.Width:n0}x{fullInfo.Height:n0} "
+            + $"({megaPixels:n0} MP) needs {(double)fullInfo.Width * fullInfo.Height * fullInfo.BytesPerPixel / 1024 / 1024 / 1024:n2} GB "
+            + $"in one buffer, but the renderer cannot address more than 2 GB per image. "
+            + $"This format cannot be decoded at a reduced size.");
+    }
+
+
+    /// <summary>
+    /// Checks whether a full pixel buffer for the info stays within Skia's byte-size ceiling.
+    /// </summary>
+    private static bool FitsInPixelBuffer(SKImageInfo info)
+    {
+        return (long)info.Width * info.Height * info.BytesPerPixel <= MAX_PIXEL_BUFFER_BYTES;
     }
 
 
@@ -1177,6 +1240,19 @@ public static partial class SkiaCodec
 
         var img = SKImage.FromBitmap(bmp);
         return img;
+    }
+
+
+    /// <summary>
+    /// Converts a finished bitmap to an image without copying its pixels; the image keeps
+    /// the buffer alive. Only call once nothing will draw into <paramref name="bmp"/> again.
+    /// </summary>
+    public static SKImage? ToSKImageNoCopy(SKBitmap? bmp)
+    {
+        if (bmp.IsDisposed()) return null;
+
+        bmp.SetImmutable();
+        return SKImage.FromBitmap(bmp);
     }
 
 
