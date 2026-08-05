@@ -41,6 +41,8 @@ ImageGlass is a fast, modern, open-source image viewer built for Windows, macOS,
 
 Prefer the classic installer? Grab it from **[imageglass.org/download](https://imageglass.org/download)**.
 
+[📢 Official: ImageGlass 10 Release Plans, Pricing, Features, and Privacy](https://github.com/d2phap/ImageGlass/discussions/2396)
+
 </div>
 
 
@@ -53,8 +55,7 @@ Prefer the classic installer? Grab it from **[imageglass.org/download](https://i
 
 <br/>
 
-> [!Important]
-> ### ImageGlass 10 [Release Plans](https://github.com/d2phap/ImageGlass/discussions/2358): Classic Stays Free, Pro Is Coming
+
 
 ## Download
 ### Why the Microsoft Store?
