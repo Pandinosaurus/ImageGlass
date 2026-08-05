@@ -212,14 +212,16 @@ public partial class PhotoRenderer : ICustomDrawOperation
                     _isFirstDraw = false;
                     Dispatcher.UIThread.Post(() => _onDrawFirstTime(imageRender), DispatcherPriority.Send);
                 }
-                else if (_tileCache is not null)
+                else if (_tileCache?.AcquireProxy() is { } proxyLease)
                 {
-                    // tiled rendering for large images
-                    RenderTiled(lease.SkCanvas);
+                    using (proxyLease)
+                    {
+                        RenderTiled(lease.SkCanvas, proxyLease.Image);
+                    }
                 }
                 else
                 {
-                    // direct rendering for small / animated images
+                    // direct rendering for small / animated images, and until the proxy is ready
                     imageLease = _imgRender?.Acquire() ?? _imgSource?.Acquire();
                     imageRender = imageLease?.Image;
 
@@ -248,9 +250,9 @@ public partial class PhotoRenderer : ICustomDrawOperation
 
 
     /// <summary>
-    /// Renders visible tiles from the tile cache.
+    /// Renders the proxy image followed by available detail tiles.
     /// </summary>
-    private void RenderTiled(SKCanvas canvas)
+    private void RenderTiled(SKCanvas canvas, SKImage proxy)
     {
         var tileCache = _tileCache!;
         var mipLevel = MipmapTileCache.GetMipLevel(_zoomFactor);
@@ -271,13 +273,19 @@ public partial class PhotoRenderer : ICustomDrawOperation
 
         canvas.Save();
 
+        var proxyScaleX = (float)proxy.Width / tileCache.SourceWidth;
+        var proxyScaleY = (float)proxy.Height / tileCache.SourceHeight;
+        var proxySrc = new SKRect(
+            _srcRect.Left * proxyScaleX,
+            _srcRect.Top * proxyScaleY,
+            _srcRect.Right * proxyScaleX,
+            _srcRect.Bottom * proxyScaleY);
+        canvas.DrawImage(proxy, proxySrc, _destRect, _samplingOptions);
+
         for (var ty = tileStartY; ty < tileEndY; ty++)
         {
             for (var tx = tileStartX; tx < tileEndX; tx++)
             {
-                var imgTile = tileCache.GetTile(tx, ty, mipLevel);
-                if (imgTile.IsDisposed()) continue;
-
                 // tile bounds in original image coordinates
                 float tileSrcLeft = tx * sourceTileSize;
                 float tileSrcTop = ty * sourceTileSize;
@@ -291,6 +299,10 @@ public partial class PhotoRenderer : ICustomDrawOperation
                 var clippedBottom = Math.Min(tileSrcTop + tileSrcH, _srcRect.Bottom);
 
                 if (clippedLeft >= clippedRight || clippedTop >= clippedBottom) continue;
+
+                using var tileLease = tileCache.GetOrQueueTile(tx, ty, mipLevel);
+                var imgTile = tileLease?.Image;
+                if (imgTile.IsDisposed()) continue;
 
                 // map clipped region to tile bitmap coordinates
                 var tileBitmapSrc = new SKRect(

@@ -457,7 +457,7 @@ public partial class ViewerControl
         if (_animator is not null) return;
 
         // use the processed (color-managed) image if available, otherwise the source
-        _mipmapCache = MipmapTileCache.Create(_imgRender ?? _imgSource);
+        _mipmapCache = MipmapTileCache.Create(_imgRender ?? _imgSource, InvalidateVisual);
 
         PhotoTrace.Mark("render:mipmap-cache", Photo?.FilePath,
             _mipmapCache is null ? "not created (image too small)" : "created");
