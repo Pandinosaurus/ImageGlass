@@ -126,38 +126,103 @@ public partial class PluginsSettingsView : SettingsPageView
         if (paths.Count == 0) return;
 
         var pluginsDir = BHelper.ConfigDir(Dir.Plugins);
-        var installed = await Task.Run(() =>
+        var installedIds = await Task.Run(() =>
         {
-            var count = 0;
+            var ids = new List<string>();
             foreach (var file in paths)
             {
                 if (!File.Exists(file)) continue;
-                if (InstallPackage(file, pluginsDir)) count++;
+
+                var id = InstallPackage(file, pluginsDir);
+                if (id is not null) ids.Add(id);
             }
-            return count;
+            return ids;
         });
 
         ReloadPlugins();
+
+        // Wait out startup discovery: loading one library twice frees the codec table the first
+        // load's proxies still point at.
+        try { await Core.PluginDiscoveryTask; } catch { }
+
+        var reconciled = await ReconcileInstalledAsync(installedIds);
         RebuildTable();
 
-        // Newly installed plugins land untrusted (disabled); the user must review and enable them.
-        // Enabling hot-loads the plugin (no restart needed).
-        if (installed > 0)
+        // trust survives a reinstall, so only ask about the ones that are not already running
+        if (installedIds.Count > 0)
         {
-            PART_InstallHint.Text = Core.Lang[LangId.Settings_Plugins_InstallSuccess]
-                + ". " + Core.Lang[LangId.Settings_Plugins_EnableToLoad];
-            PART_HintContainer.IsVisible = true;
+            var hint = Core.Lang[LangId.Settings_Plugins_InstallSuccess];
+            if (reconciled.LoadError is not null) hint += ". " + reconciled.LoadError;
+            else if (reconciled.Pending > 0) hint += ". " + Core.Lang[LangId.Settings_Plugins_EnableToLoad];
+
+            ShowHint(hint, isWarning: reconciled.LoadError is not null);
         }
     }
 
 
     /// <summary>
-    /// Safely installs one <c>*.igplugin.zip</c>: extracts to a temp staging folder, validates the
-    /// manifest, then moves the plugin into its own <c>_plugins/&lt;id&gt;/</c> folder. Extracting to
-    /// staging first prevents a malformed or hostile archive from scattering files across the
-    /// <c>_plugins</c> root or overwriting sibling plugins.
+    /// Reconciles just-installed plugins with their persisted trust: hot-loads one whose library
+    /// still matches its pin, and unloads a running copy the installed bytes no longer match.
     /// </summary>
-    private static bool InstallPackage(string packageFile, string pluginsDir)
+    private async Task<(int Pending, string? LoadError)> ReconcileInstalledAsync(List<string> pluginIds)
+    {
+        var pending = 0;
+        string? loadError = null;
+
+        foreach (var pluginId in pluginIds)
+        {
+            var index = _plugins.FindIndex(p => string.Equals(p.Manifest.Id, pluginId, StringComparison.Ordinal));
+            if (index < 0) continue;
+
+            var plugin = _plugins[index];
+            var state = PluginTrustPolicy.GetState(plugin.Manifest, plugin.Dir);
+            var wasLoaded = Core.PluginRegistry.IsLoaded(pluginId);
+
+            if (state == PluginTrustPolicy.TrustState.Trusted)
+            {
+                if (!wasLoaded) await Core.EnablePluginAsync(plugin.Manifest, plugin.Dir);
+                loadError ??= LoadErrorOf(pluginId);
+                continue;
+            }
+
+            // the installed library is not the one that was approved: stop running the old copy
+            if (wasLoaded) Core.DisablePlugin(pluginId);
+            pending++;
+        }
+
+        return (pending, loadError);
+    }
+
+
+    /// <summary>
+    /// The loader's own message for a plugin that is not running, or <c>null</c> when it is.
+    /// </summary>
+    private static string? LoadErrorOf(string pluginId)
+    {
+        if (Core.PluginRegistry.IsLoaded(pluginId)) return null;
+
+        return Core.PluginRegistry.GetLoadError(pluginId) ?? "IGE_PLUGIN_LOAD_FAILED";
+    }
+
+
+    /// <summary>
+    /// Shows the message bar above the table, tinted info or warning.
+    /// </summary>
+    private void ShowHint(string text, bool isWarning = false)
+    {
+        PART_InstallHint.Text = text;
+        PART_HintContainer[!Border.BackgroundProperty] = Resx.CreateBinding(isWarning
+            ? ResxId.IG_BackgroundWarningBrush
+            : ResxId.IG_BackgroundInfoBrush);
+        PART_HintContainer.IsVisible = true;
+    }
+
+
+    /// <summary>
+    /// Installs one <c>*.igplugin.zip</c> through a temp staging folder, so a malformed or hostile
+    /// archive cannot escape into <c>_plugins</c>. Returns the plugin id, <c>null</c> if not installed.
+    /// </summary>
+    private static string? InstallPackage(string packageFile, string pluginsDir)
     {
         var staging = Path.Combine(Path.GetTempPath(), "ig_plugin_" + Guid.NewGuid().ToString("N"));
         try
@@ -167,20 +232,20 @@ public partial class PluginsSettingsView : SettingsPageView
 
             // locate + validate the manifest (archive root, or one directory below)
             var manifestPath = FindManifest(staging);
-            if (manifestPath is null) return false;
+            if (manifestPath is null) return null;
 
             var manifest = ReadManifest(manifestPath);
-            if (manifest is null || string.IsNullOrWhiteSpace(manifest.Id)) return false;
+            if (manifest is null || string.IsNullOrWhiteSpace(manifest.Id)) return null;
 
             var srcDir = Path.GetDirectoryName(manifestPath)!;
             var destDir = Path.Combine(pluginsDir, MakeSafeFolderName(manifest.Id));
 
             ReplaceInstall(srcDir, destDir, pluginsDir);
-            return true;
+            return manifest.Id;
         }
         catch
         {
-            return false;
+            return null;
         }
         finally
         {
@@ -456,7 +521,7 @@ public partial class PluginsSettingsView : SettingsPageView
     /// Trusts + enables the plugin, then hot-loads it so its codecs take effect without a restart.
     /// Returns <c>true</c> if the trust state changed.
     /// </summary>
-    private static async Task<bool> EnablePluginAsync((PluginManifest Manifest, string Dir) plugin,
+    private async Task<bool> EnablePluginAsync((PluginManifest Manifest, string Dir) plugin,
         PluginInfoWindow? win = null)
     {
         // Persist any choices in the same write, so the plugin's first load already honors them.
@@ -469,6 +534,10 @@ public partial class PluginsSettingsView : SettingsPageView
         }
 
         await Core.EnablePluginAsync(plugin.Manifest, plugin.Dir);
+
+        // consent is recorded either way, so report the loader's own error
+        if (LoadErrorOf(plugin.Manifest.Id) is { } error) ShowHint(error, isWarning: true);
+
         return true;
     }
 
@@ -490,6 +559,7 @@ public partial class PluginsSettingsView : SettingsPageView
         {
             var m = plugin.Manifest;
             var state = PluginTrustPolicy.GetState(m, plugin.Dir);
+            var notLoaded = state == PluginTrustPolicy.TrustState.Trusted && IsEnabledButNotLoaded(m.Id);
 
             return new PhTableRow
             {
@@ -499,7 +569,7 @@ public partial class PluginsSettingsView : SettingsPageView
                     ToggleCell(plugin, state),
                     NameCell(plugin),
                     PhTableControl.TextCell(m.Kind.ToString()),
-                    StatusCell(state),
+                    StatusCell(state, notLoaded, m.Id),
                 ],
                 Actions = BuildActions(plugin),
             };
@@ -572,10 +642,13 @@ public partial class PluginsSettingsView : SettingsPageView
     /// Builds the trust-status chip, colored by state via <see cref="PhChip"/>
     /// Returns <c>null</c> when there is nothing to show (missing/broken plugin).
     /// </summary>
-    private static PhChip? StatusChip(PluginTrustPolicy.TrustState state)
+    private static PhChip? StatusChip(PluginTrustPolicy.TrustState state, bool notLoaded)
     {
         var (key, variant) = state switch
         {
+            // enabled and the pin matches, yet nothing is running: the library failed to load
+            PluginTrustPolicy.TrustState.Trusted when notLoaded
+                => (LangId.Settings_Plugins_StatusNotLoaded, PhChipVariant.Warning),
             PluginTrustPolicy.TrustState.Trusted => (LangId.Settings_Plugins_StatusEnabled, PhChipVariant.Success),
             PluginTrustPolicy.TrustState.Changed => (LangId.Settings_Plugins_StatusChanged, PhChipVariant.Warning),
             PluginTrustPolicy.TrustState.Disabled => (LangId.Settings_Plugins_StatusDisabled, PhChipVariant.Neutral),
@@ -596,12 +669,23 @@ public partial class PluginsSettingsView : SettingsPageView
     /// <summary>
     /// The status cell: the trust-status chip (left-aligned), or an empty cell for a missing plugin.
     /// </summary>
-    private static Control StatusCell(PluginTrustPolicy.TrustState state)
+    private static Control StatusCell(PluginTrustPolicy.TrustState state, bool notLoaded, string pluginId)
     {
-        return StatusChip(state) is { } chip
-            ? PhTableControl.WrapCell(chip)
-            : PhTableControl.TextCell(string.Empty);
+        if (StatusChip(state, notLoaded) is not { } chip) return PhTableControl.TextCell(string.Empty);
+
+        // the loader's own message, so the failure is readable without retrying the load
+        if (notLoaded && LoadErrorOf(pluginId) is { } error) ToolTip.SetTip(chip, error);
+
+        return PhTableControl.WrapCell(chip);
     }
+
+
+    /// <summary>
+    /// Whether the config says the plugin is enabled but no library is running, i.e. the load
+    /// failed (quarantined, ABI mismatch, ...). Ignored while startup discovery is still in flight.
+    /// </summary>
+    private static bool IsEnabledButNotLoaded(string pluginId)
+        => Core.PluginDiscoveryTask.IsCompleted && !Core.PluginRegistry.IsLoaded(pluginId);
 
 
     #region Table cell builders

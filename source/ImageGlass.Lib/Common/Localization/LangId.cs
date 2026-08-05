@@ -730,6 +730,7 @@ public enum LangId
     Settings_Plugins_StatusDisabled,
     Settings_Plugins_StatusUntrusted,
     Settings_Plugins_StatusChanged,
+    Settings_Plugins_StatusNotLoaded,
     Settings_Plugins_TrustTitle,
     Settings_Plugins_TrustPrompt,
     Settings_Plugins_TrustChangedWarning,

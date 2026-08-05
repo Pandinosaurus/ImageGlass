@@ -1166,6 +1166,7 @@ public class Lang
         new(LangId.Settings_Plugins_StatusDisabled, "Disabled"),
         new(LangId.Settings_Plugins_StatusUntrusted, "Not enabled"),
         new(LangId.Settings_Plugins_StatusChanged, "File changed"),
+        new(LangId.Settings_Plugins_StatusNotLoaded, "Not loaded"),
         new(LangId.Settings_Plugins_TrustTitle, "Enable this plugin?"),
         new(LangId.Settings_Plugins_TrustPrompt, "\"{0}\" is a native plugin that runs inside ImageGlass with full access to your files and system. Only enable plugins you obtained from a source you trust."),
         new(LangId.Settings_Plugins_TrustChangedWarning, "This plugin's file has changed since it was last enabled. Only re-enable it if you updated the plugin yourself."),

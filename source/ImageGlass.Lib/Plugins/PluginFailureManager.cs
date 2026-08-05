@@ -43,7 +43,8 @@ public sealed class PluginFailureManager
 
     private readonly string _quarantineDir;
     private readonly ConcurrentDictionary<string, int> _softFailureCounts = new(StringComparer.Ordinal);
-    private readonly ConcurrentDictionary<string, byte> _sessionDisabled = new(StringComparer.Ordinal);
+    // plugin id -> why it was disabled, so the UI can show the real reason
+    private readonly ConcurrentDictionary<string, string> _sessionDisabled = new(StringComparer.Ordinal);
 
 
     public PluginFailureManager()
@@ -64,12 +65,35 @@ public sealed class PluginFailureManager
 
 
     /// <summary>
+    /// Why the plugin is quarantined (session state, else the marker file), or <c>null</c>.
+    /// </summary>
+    public string? GetQuarantineReason(string pluginId)
+    {
+        if (_sessionDisabled.TryGetValue(pluginId, out var sessionReason)) return sessionReason;
+
+        try
+        {
+            var markerPath = GetMarkerPath(pluginId);
+            if (!File.Exists(markerPath)) return null;
+
+            // marker layout: timestamp on the first line, reason on the second
+            var lines = File.ReadAllLines(markerPath);
+            return lines.Length > 1 && !string.IsNullOrWhiteSpace(lines[1]) ? lines[1] : null;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+
+    /// <summary>
     /// Disables the plugin for the rest of the current session only.
     /// Used for managed exceptions where a full quarantine would be too aggressive.
     /// </summary>
     public void DisableForSession(string pluginId, string reason)
     {
-        _sessionDisabled[pluginId] = 1;
+        _sessionDisabled[pluginId] = reason;
         Debug.WriteLine($"[PluginFailureManager] Session-disabled '{pluginId}': {reason}");
     }
 
@@ -95,7 +119,7 @@ public sealed class PluginFailureManager
     /// </summary>
     public void Quarantine(string pluginId, string reason)
     {
-        _sessionDisabled[pluginId] = 1;
+        _sessionDisabled[pluginId] = reason;
         try
         {
             Directory.CreateDirectory(_quarantineDir);
