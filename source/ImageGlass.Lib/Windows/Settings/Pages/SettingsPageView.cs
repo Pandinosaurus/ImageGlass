@@ -202,13 +202,31 @@ public abstract class SettingsPageView : PhControl
     /// <summary>
     /// Binds a text box to a double config id (staged on valid change).
     /// </summary>
-    protected void BindDoubleInput(PhTextBox box, ConfigId id, LangId label, LangId? section, double defaultValue = 0)
+    protected void BindDoubleInput(PhTextBox box, ConfigId id, LangId label, LangId? section,
+        double defaultValue = 0, double minValue = double.NegativeInfinity)
     {
-        box.Text = VM.GetValue(id, defaultValue).ToString(CultureInfo.InvariantCulture);
+        var initial = Math.Max(minValue, VM.GetValue(id, defaultValue));
+        box.Text = initial.ToString(CultureInfo.InvariantCulture);
+
         box.TextChanged += (_, _) =>
         {
             if (double.TryParse(box.Text, NumberStyles.Float, CultureInfo.InvariantCulture, out var v))
-                VM.SetValue(id, v);
+                VM.SetValue(id, Math.Max(minValue, v));
+        };
+
+        if (double.IsNegativeInfinity(minValue))
+        {
+            RegisterSearchKey(box, label, id, section);
+            return;
+        }
+
+        // show the clamped value instead of leaving the box reading something that won't be used
+        box.LostFocus += (_, _) =>
+        {
+            var isValid = double.TryParse(box.Text, NumberStyles.Float, CultureInfo.InvariantCulture, out var v);
+            if (isValid && v >= minValue) return;
+
+            box.Text = minValue.ToString(CultureInfo.InvariantCulture);
         };
 
         RegisterSearchKey(box, label, id, section);

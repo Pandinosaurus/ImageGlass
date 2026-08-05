@@ -17,6 +17,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 using ImageGlass.Common.Localization;
+using ImageGlass.Common.ServiceProviders;
 using System;
 using System.Globalization;
 
@@ -24,6 +25,12 @@ namespace ImageGlass.Common.Windows;
 
 public partial class SlideshowSettingsView : SettingsPageView
 {
+    /// <summary>
+    /// Smallest interval the slideshow timer honors, in seconds.
+    /// </summary>
+    private const double MIN_INTERVAL = SlideshowProvider.MIN_INTERVAL_MS / 1000.0;
+
+
     public SlideshowSettingsView()
     {
         InitializeComponent();
@@ -56,9 +63,9 @@ public partial class SlideshowSettingsView : SettingsPageView
             LangId.Settings_EnableSlideshowRandomInterval, LangId.Settings_Slideshow_Playback);
 
         BindDoubleInput(PART_SlideshowInterval, ConfigId.SlideshowInterval,
-            LangId.Settings_SlideshowInterval, LangId.Settings_Slideshow_Playback, 5d);
+            LangId.Settings_SlideshowInterval, LangId.Settings_Slideshow_Playback, 5d, MIN_INTERVAL);
         BindDoubleInput(PART_SlideshowIntervalTo, ConfigId.SlideshowIntervalTo,
-            LangId.Settings_SlideshowInterval, LangId.Settings_Slideshow_Playback, 5d);
+            LangId.Settings_SlideshowInterval, LangId.Settings_Slideshow_Playback, 5d, MIN_INTERVAL);
 
         // the "to" interval + the heading range only apply when random interval is on
         PART_RandomInterval.IsCheckedChanged += (_, _) => UpdateIntervalUI();
@@ -111,7 +118,9 @@ public partial class SlideshowSettingsView : SettingsPageView
     private static string FormatInterval(string? secondsText)
     {
         _ = double.TryParse(secondsText, NumberStyles.Float, CultureInfo.InvariantCulture, out var seconds);
-        return TimeSpan.FromSeconds(seconds).ToString(@"mm\:ss\.fff", CultureInfo.InvariantCulture);
+        var clamped = Math.Max(MIN_INTERVAL, seconds);
+
+        return TimeSpan.FromSeconds(clamped).ToString(@"mm\:ss\.fff", CultureInfo.InvariantCulture);
     }
 
 }

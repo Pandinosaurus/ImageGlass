@@ -29,6 +29,12 @@ namespace ImageGlass.Common.ServiceProviders;
 /// </summary>
 public sealed class SlideshowProvider : PhDisposable
 {
+    /// <summary>
+    /// Interval floor. A configured <c>0</c> (or invalid value) must still wait once per cycle,
+    /// otherwise the loop spins without yielding and floods the UI thread with advance requests.
+    /// </summary>
+    public const double MIN_INTERVAL_MS = 50;
+
     private CancellationTokenSource? _cts;
     private CancellationTokenSource? _intervalCts;
     private SemaphoreSlim? _pauseGate;
@@ -254,11 +260,11 @@ public sealed class SlideshowProvider : PhDisposable
                 var intervalToken = intervalCts.Token;
 
 
-                // 3. count down in small ticks
+                // 3. count down in small ticks; always wait at least once so the loop cannot spin
                 try
                 {
                     var remaining = intervalMs;
-                    while (remaining > 0 && !intervalToken.IsCancellationRequested)
+                    do
                     {
                         var delay = Math.Max(1, (int)Math.Ceiling(Math.Min(tickMs, remaining)));
                         await Task.Delay(delay, intervalToken).ConfigureAwait(false);
@@ -266,6 +272,7 @@ public sealed class SlideshowProvider : PhDisposable
                         remaining -= delay;
                         SetCountdown(Math.Max(0, remaining / 1000.0));
                     }
+                    while (remaining > 0 && !intervalToken.IsCancellationRequested);
                 }
                 catch (OperationCanceledException) when (!token.IsCancellationRequested)
                 {
@@ -327,6 +334,7 @@ public sealed class SlideshowProvider : PhDisposable
     {
         var intervalFrom = Core.Config.SlideshowInterval;
         var intervalTo = Core.Config.SlideshowIntervalTo;
+        var intervalMs = intervalFrom * 1000.0;
 
         if (Core.Config.EnableSlideshowRandomInterval && intervalTo > intervalFrom)
         {
@@ -334,10 +342,13 @@ public sealed class SlideshowProvider : PhDisposable
             var range = intervalTo - intervalFrom;
             var randomOffset = Random.Shared.NextDouble() * range;
 
-            return (intervalFrom + randomOffset) * 1000.0;
+            intervalMs = (intervalFrom + randomOffset) * 1000.0;
         }
 
-        return intervalFrom * 1000.0;
+        // Math.Max would propagate NaN, so reject it explicitly
+        if (double.IsNaN(intervalMs)) return MIN_INTERVAL_MS;
+
+        return Math.Max(MIN_INTERVAL_MS, intervalMs);
     }
 
     #endregion // Private Methods
