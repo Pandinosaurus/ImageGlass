@@ -1125,11 +1125,15 @@ public static partial class MagickCodec
 
         var w = (int)imgM.Width;
         var h = (int)imgM.Height;
-        var pixelCount = w * h;
+        var pixelCount = (long)w * h;
+        var byteCount = pixelCount * 4 * sizeof(float);
+
+        // callers shrink oversized images first; refuse rather than overflow if that was skipped
+        if (pixelCount <= 0 || byteCount > int.MaxValue) return null;
 
         // Derive source channel count from the actual array size.
         // EXR files may have extra channels (depth, normals, etc.) beyond RGB(A).
-        var srcChannels = area.Length / pixelCount;
+        var srcChannels = (int)(area.Length / pixelCount);
 
         // Discover actual channel positions in Magick's internal order.
         var chR = (int)(pixels.GetChannelIndex(PixelChannel.Red) ?? 0);
@@ -1137,8 +1141,7 @@ public static partial class MagickCodec
         var chB = (int)(pixels.GetChannelIndex(PixelChannel.Blue) ?? 2);
         var chA = hasAlpha ? (int)(pixels.GetChannelIndex(PixelChannel.Alpha) ?? 0u) : -1;
 
-        var floatCount = pixelCount * 4; // always RGBA for Skia
-        var nativeBuffer = new NativeMemoryArray<byte>(floatCount * sizeof(float), skipZeroClear: true, addMemoryPressure: true);
+        var nativeBuffer = new NativeMemoryArray<byte>(byteCount, skipZeroClear: true, addMemoryPressure: true);
         var dst = MemoryMarshal.Cast<byte, float>(nativeBuffer.AsSpan());
 
         const float quantumScale = 1f / 65535f;

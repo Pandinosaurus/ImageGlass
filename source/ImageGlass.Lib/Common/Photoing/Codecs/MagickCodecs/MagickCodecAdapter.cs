@@ -96,13 +96,15 @@ public sealed class MagickCodecAdapter : PhDisposable, ICodec
             null,
             cancellationToken).ConfigureAwait(false);
 
-        var image = SkiaCodec.FromMagick(output.SingleFrame, metadata.SkiaColorSpace, metadata.IsHdr);
+        var image = SkiaCodec.FromMagick(output.SingleFrame, metadata.SkiaColorSpace,
+            metadata.IsHdr, out var decodeScale);
 
         return new CodecDecodeResult
         {
             CodecId = CodecId,
             ContentKind = image is not null ? CodecContentKind.StaticRaster : CodecContentKind.None,
             Size = new Size(image?.Width ?? 0, image?.Height ?? 0),
+            DecodeScale = decodeScale,
             SingleFrame = image,
             IsHdr = metadata.IsHdr,
             HasEmbeddedColorProfile = metadata.SkiaColorSpace is not null || metadata.MagickColorProfile is not null,

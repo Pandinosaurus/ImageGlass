@@ -314,6 +314,20 @@ public static partial class SkiaCodec
 
 
     /// <summary>
+    /// Returns the linear scale that brings a <c>width * height * bytesPerPixel</c> buffer
+    /// under the ceiling, or 1 when it already fits.
+    /// </summary>
+    private static double GetPixelBufferFitScale(long width, long height, int bytesPerPixel)
+    {
+        var bytes = width * height * bytesPerPixel;
+        if (bytes <= 0 || bytes <= MAX_PIXEL_BUFFER_BYTES) return 1;
+
+        // area grows with the square of the linear scale; trim slightly to absorb rounding up
+        return Math.Sqrt((double)MAX_PIXEL_BUFFER_BYTES / bytes) * 0.999;
+    }
+
+
+    /// <summary>
     /// Loads a thumbnail using native scaled decoding.
     /// For JPEG, this uses libjpeg-turbo's IDCT scaling to decode at
     /// a reduced resolution (1/2, 1/4, 1/8) without processing the full image data.
@@ -1022,12 +1036,36 @@ public static partial class SkiaCodec
     /// (<see cref="SKColorType.RgbaF32"/>) to preserve super-white HDR values from Q16-HDRI.
     /// </summary>
     public static unsafe SKImage? FromMagick(MagickImage? imgM, SKColorSpace? srcColorSpace = null, bool isHdr = false)
+        => FromMagick(imgM, srcColorSpace, isHdr, out _);
+
+
+    /// <summary>
+    /// Converts Magick image to SKImage and reports any reduction in <paramref name="decodeScale"/>.
+    /// An image past the pixel ceiling is resized down IN PLACE first, because no
+    /// <see cref="SKImage"/> can exceed it regardless of how the pixels are supplied.
+    /// </summary>
+    public static unsafe SKImage? FromMagick(MagickImage? imgM, SKColorSpace? srcColorSpace,
+        bool isHdr, out double decodeScale)
     {
+        decodeScale = 1;
         if (imgM is null) return null;
 
         // prepare image info
         var alphaType = imgM.HasAlpha ? SKAlphaType.Unpremul : SKAlphaType.Opaque;
         var colorType = isHdr ? SKColorType.RgbaF32 : SKColorType.Rgba8888;
+
+        // shrink to fit before converting; callers hand over images they are about to discard
+        var srcWidth = imgM.Width;
+        var bpp = new SKImageInfo(1, 1, colorType).BytesPerPixel;
+        var fitScale = GetPixelBufferFitScale(srcWidth, imgM.Height, bpp);
+        if (fitScale < 1)
+        {
+            var fitW = Math.Max(1u, (uint)(srcWidth * fitScale));
+            var fitH = Math.Max(1u, (uint)(imgM.Height * fitScale));
+            imgM.Resize(fitW, fitH);
+            decodeScale = (double)imgM.Width / srcWidth;
+        }
+
         var info = new SKImageInfo((int)imgM.Width, (int)imgM.Height, colorType, alphaType);
         if (srcColorSpace is not null)
         {

@@ -35,12 +35,14 @@ ImageGlass v10 is a complete rewrite in **C# with .NET 10**, using **Avalonia 12
 ### 3. Memory Leak Prevention
 - Use `try/finally` or `using` statements for all `SKObject` acquisitions.
 - Override `OnDisposing()` in `PhDisposable` subclasses to clean up unmanaged resources.
-- Example: `MipmapTileCache.GetTile()` disposes evicted tiles and double-checks for race conditions.
+- Example: `MipmapTileCache` evicts with `RequestDispose()` (never `Dispose()`) so an in-flight render lease stays valid.
 - Always dispose `SKImageRef` leases when done; use `KeepAlive()` pattern in `MipmapTileCache`.
 
 ### 4. Memory Usage Control
 - Respect cache limits: `MipmapTileCache` caps 100 tiles; `PhotoManager_Caching` honors `Config.MaxMemoryCacheInMb`, `Config.MaxFileSizeCacheInMb`, `Config.MaxDimensionCache`.
 - LRU eviction is mandatory in tile and photo caches to prevent unbounded growth.
+- **Hard decode ceiling**: no `SKBitmap` or raster `SKImage` may exceed `int.MaxValue` bytes, whatever the free RAM. That is ~536 MP at 4 bpp, ~268 MP at `RgbaF16`, ~134 MP at `RgbaF32`. There is no bypass: `SKImage.FromPixels` from an `SKData`, a raw pointer, or an `SKPixmap` all fail at the same boundary, so host-owned-buffer tricks do not help. Both codecs shrink to fit instead of failing (see "Oversized image decode").
+- Mark a finished bitmap `SetImmutable()` before `SKImage.FromBitmap` (`SkiaCodec.ToSKImageNoCopy`), otherwise Skia duplicates the entire pixel buffer and doubles peak memory.
 - Profile memory with large images and GIF animations to ensure caches don't leak.
 
 ### 5. Cross-Platform Design
@@ -330,11 +332,19 @@ App.Initialize()
     → PhotoManager.Add/SearchAsync()
     → ViewerControl.LoadPhotoAsync(photoPath)
       → Codec.DecodeAsync() (SkiaCodec or MagickCodec with fallback)
+      → shrink to fit the pixel ceiling if needed → Photo.DecodeScale
       → PhotoRenderer.RenderAsync()
       → AnimatorImpl for GIF/WEBP animation
     → PhotoLoading/PhotoAnimatorFrameChanged events
     → MipmapTileCache.Create() if image > 8192×8192
 ```
+
+### Oversized image decode
+- Images past the `int.MaxValue`-byte ceiling are decoded smaller rather than refused.
+- **Skia** (`SkiaCodec.GetDecodableImageInfo`): steps down through the codec's native scales, JPEG eighths largest-first. Non-JPEG codecs cannot scale and throw a readable `NotSupportedException`.
+- **Magick** (`SkiaCodec.FromMagick`): resizes in place to fit, so it lands closer to the ceiling than Skia can. Callers must be handing over an image they are about to discard.
+- The reduction flows `SkiaDecoderOutput`/`MagickCodecAdapter` → `CodecDecodeResult.DecodeScale` → `Photo.DecodeScale`, and `AppStatusInfo.Dimension` shows it.
+- `Photo.Size` and `ViewerControl.BitmapSize` follow the DECODED size so zoom, selection, crop, and the color picker stay consistent; only `Photo.Metadata.Width/Height` keep the true file dimensions.
 
 ### 2. Theme/Localization Changes
 - Change language: `Core.LanguageChanged?.Invoke()`
@@ -403,6 +413,8 @@ Occurs in `Program.cs` before Avalonia app setup (Linux/Mac have equivalent regi
 - **Always dispose**: SKImage, SKPaint, SKCanvas, SKMatrix (use try/finally or `using`)
 - **No pooling in hot paths**: Allocation is fast; premature pooling hurts readability
 - **Pixel formats**: `SKColorType.Rgba8888` for sRGB; consider `ColorSpace` for ICC
+- **Bitmap to image**: use `SkiaCodec.ToSKImageNoCopy()` when the bitmap is finished (shares pixels); plain `ToSKImage()` copies the whole buffer
+- **Size ceiling**: check `width * height * bytesPerPixel` against `int.MaxValue` before allocating any full-image buffer
 - **Filtering**: `SKFilterQuality.High` for thumbnails; `Medium` for interactive zoom
 - **Mipmap strategy**: Precompute at load time; cache tiles on-demand; preserve zoom-aware LRU
 
@@ -473,6 +485,8 @@ Occurs in `Program.cs` before Avalonia app setup (Linux/Mac have equivalent regi
 - **Admin-locked setting still editable or saved?** The admin settings-lock (`igconfig.admin.json` keys → `Config.AdminLockedConfigs`/`IsConfigLocked`) enforces at three points, all required: `SettingsViewModel.CommitAsync` (skip locked ids), `Config.ApplyCliOverrides` (skip locked ids), and the settings UI (`SettingsRegistry.DisableLockedControls` for `Bind*` controls + `SettingsPageView.DisableIfLocked` for composite editors). Capture runs in `Config.LoadAdminLockedConfigs()` independently of the user-config read (a corrupt `igconfig.json` must not empty the lock set). Plugins page is UI-disable-only (`PluginTrust` applies live via `PluginTrustPolicy`, never staged).
 - **Whole admin layer ignored?** It is Pro-gated in `ReadAdminConfigDocument()`, so `Core.AppLicense` must be loaded before `Config.Load()` (`App.axaml.cs`). Also check the lookup order: startup dir wins, config dir is only a fallback, and the two files are never merged together.
 - **Locked feature (`LockedFeatures`) still triggerable?** Only `AppAPIProvider.RunApiAsync` (both overloads) and the hotkey handler are auto-gated by `FeatureManager.IsLocked`. Any path that skips them must self-guard: context-menu items (bound via `GetApiCommand`) go through the `LockAwareApiCommand` wrapper; viewer wheel/drag/touch zoom-pan self-checks `FeatureManager.IsZoomLocked()`/`IsPanLocked()`. A new input path or a direct command execution without one of these is a bypass.
+- **"Unable to allocate pixels for the bitmap" on a huge image?** Not an out-of-memory problem, so do not chase RAM or fragmentation. Skia refuses any pixel buffer over `int.MaxValue` bytes; the decode must shrink to fit first (`GetDecodableImageInfo` on the Skia path, the in-place resize in `FromMagick` on the Magick path). A new code path that allocates a full-image buffer without that check reintroduces the crash.
+- **Huge image opens smaller than the file?** Expected: `Photo.DecodeScale < 1` and the status bar shows the reduction. `Photo.Metadata.Width/Height` keep the true size; everything else follows the decoded size.
 - **Serialization fails?** Validate JSON converter exists in `Common/Types/JsonTypeConverters/`
 - **Cache not evicting?** Check `MipmapTileCache.MAX_CACHED_TILES` (100) and LRU promotion logic
 - **AOT trimming errors?** Review trimmer warnings; add `[DynamicallyAccessedMembers]` annotations or custom converters
