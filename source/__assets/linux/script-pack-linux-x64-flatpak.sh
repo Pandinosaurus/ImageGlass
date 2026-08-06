@@ -66,6 +66,12 @@ dotnet publish "$WORKSPACE_DIR/ImageGlass.Linux/ImageGlass.Linux.csproj" \
 	-o "$PUBLISH_DIR" --self-contained true
 cp -r "$WORKSPACE_DIR/__assets/__app/." "$PUBLISH_DIR/"
 
+# Windows-only assets from __assets/__app/. _ext_icons holds file-type association
+# icons read by Win32DefaultAppApi; dead weight on Linux.
+for win_only_dir in _ext_icons; do
+	rm -rf "$PUBLISH_DIR/$win_only_dir"
+done
+
 if [[ ! -x "$PUBLISH_DIR/ImageGlass" ]]; then
 	echo "Error: publish did not produce $PUBLISH_DIR/ImageGlass" >&2
 	exit 1

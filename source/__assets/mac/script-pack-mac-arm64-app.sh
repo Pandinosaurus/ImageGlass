@@ -51,6 +51,12 @@ mkdir -p "$CONTENTS_DIR/MacOS" "$CONTENTS_DIR/Resources"
 cp -R "$PUBLISH_DIR/." "$CONTENTS_DIR/MacOS/"
 cp "$ICON_SOURCE_FILE" "$ICON_TARGET_FILE"
 
+# Windows-only assets the publish step copies in from __assets/__app/. _ext_icons
+# holds file-type association icons read by Win32DefaultAppApi; dead weight on macOS.
+for win_only_dir in _ext_icons; do
+	rm -rf "$CONTENTS_DIR/MacOS/$win_only_dir"
+done
+
 INFO_PLIST_TEMPLATE="$WORKSPACE_DIR/__assets/mac/Info.plist"
 
 sed -e "s/\${IG_VERSION}/$IG_VERSION/g" \
@@ -66,8 +72,14 @@ chmod +x "$CONTENTS_DIR/MacOS/ImageGlass"
 # all / In subcomponent ..."). Resources must live under Contents/Resources/.
 # The symlinks keep AppDomain.CurrentDomain.BaseDirectory (Contents/MacOS) lookups
 # working at runtime, so no app code changes are needed.
-for data_dir in _themes _credits; do
-	if [[ -d "$CONTENTS_DIR/MacOS/$data_dir" ]]; then
+# The list is derived from __assets/__app/ so a newly added asset folder is
+# relocated automatically instead of silently breaking codesign.
+for data_src in "$WORKSPACE_DIR/__assets/__app/"*/; do
+	[[ -d "$data_src" ]] || continue
+	data_dir="$(basename "$data_src")"
+
+	if [[ -d "$CONTENTS_DIR/MacOS/$data_dir" && ! -L "$CONTENTS_DIR/MacOS/$data_dir" ]]; then
+		rm -rf "$CONTENTS_DIR/Resources/$data_dir"
 		mv "$CONTENTS_DIR/MacOS/$data_dir" "$CONTENTS_DIR/Resources/$data_dir"
 		ln -s "../Resources/$data_dir" "$CONTENTS_DIR/MacOS/$data_dir"
 	fi

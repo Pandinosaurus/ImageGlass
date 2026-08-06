@@ -82,6 +82,18 @@ echo "==> Removing debug artifacts from bundle"
 find "$APP_DIR" -type f -name "*.pdb" -delete
 find "$APP_DIR" -type d -name "*.dSYM" -exec rm -rf {} +
 
+# codesign rejects loose resource files nested under Contents/MacOS/ with an
+# unhelpful "code object is not signed at all". The app script relocates data
+# folders to Contents/Resources/ and symlinks them back; anything left as a real
+# directory here slipped through, so fail with an actionable message instead.
+stray_dirs="$(find "$APP_DIR/Contents/MacOS" -mindepth 1 -maxdepth 1 -type d)"
+if [[ -n "$stray_dirs" ]]; then
+	echo "Error: unsigned data folder(s) left in Contents/MacOS:" >&2
+	echo "$stray_dirs" | sed 's:^:       :' >&2
+	echo "       Move them to Contents/Resources/ in script-pack-mac-arm64-app.sh." >&2
+	exit 1
+fi
+
 # ---------------------------------------------------------------------------
 # 2. Codesign nested Mach-O binaries first (inside-out), then the bundle.
 # ---------------------------------------------------------------------------
