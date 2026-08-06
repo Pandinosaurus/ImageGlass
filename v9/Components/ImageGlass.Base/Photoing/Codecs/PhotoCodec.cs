@@ -1062,6 +1062,11 @@ public static class PhotoCodec
         // read all frames
         if (imgColl.Count > 1 && readFirstFrameOnly is false)
         {
+            // issue: https://github.com/dlemstra/Magick.NET/issues/2077
+            // ReadAsync() appends to the collection instead of replacing it
+            // so we need to manually clear
+            imgColl.Clear();
+
             await imgColl.ReadAsync(filePath, settings, cancelToken);
 
             var i = 0;
