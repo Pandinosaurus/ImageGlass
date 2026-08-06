@@ -391,6 +391,17 @@ public partial class ToolbarItemModel : PhReactive, IJsonOnDeserialized
 
 
     /// <summary>
+    /// Re-raises the computed localized properties, which read <see cref="Core.Lang"/> directly and
+    /// therefore need an explicit notification when the app language changes.
+    /// </summary>
+    public void RefreshLanguage()
+    {
+        _ = OnPropertyChanged(nameof(DisplayText));
+        _ = OnPropertyChanged(nameof(Tooltip));
+    }
+
+
+    /// <summary>
     /// <inheritdoc/>
     /// </summary>
     public override string ToString()

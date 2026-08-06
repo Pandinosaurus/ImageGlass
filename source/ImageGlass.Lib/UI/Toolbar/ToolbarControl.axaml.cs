@@ -156,6 +156,14 @@ public partial class ToolbarControl : PhControl
     }
 
 
+    protected override void OnIgLanguageChanged()
+    {
+        base.OnIgLanguageChanged();
+
+        RefreshLanguage();
+    }
+
+
     private void Config_PropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         // 1. Toolbar buttons
@@ -546,6 +554,47 @@ public partial class ToolbarControl : PhControl
         if (!configBindingValueEqual) isChecked = !isChecked;
 
         return isChecked;
+    }
+
+
+    /// <summary>
+    /// Re-resolves every localized string owned by the toolbar after the app language changed:
+    /// item texts/tooltips, the menu buttons, and the main-menu items. The menu items are localized
+    /// explicitly because they self-localize only while loaded, and their popup may never have been
+    /// opened (always the case on macOS, where the menu is shown through the native menu bar).
+    /// </summary>
+    private void RefreshLanguage()
+    {
+        foreach (var vm in ItemsSource)
+        {
+            vm.RefreshLanguage();
+        }
+
+        if (DataContext is ToolbarControlModel model) model.RefreshLanguage();
+
+        LocalizeMenuText(PART_MainMenu.Items);
+
+        // push the new text onto the macOS menu bar (no-op on other platforms)
+        SyncNativeStates();
+    }
+
+
+    /// <summary>
+    /// Re-localizes menu items and their submenus.
+    /// </summary>
+    private static void LocalizeMenuText(ItemCollection items)
+    {
+        foreach (var item in items)
+        {
+            if (item is not PhMenuItem mnuItem) continue;
+
+            mnuItem.LocalizeText();
+
+            if (mnuItem.Items.Count > 0)
+            {
+                LocalizeMenuText(mnuItem.Items);
+            }
+        }
     }
 
 

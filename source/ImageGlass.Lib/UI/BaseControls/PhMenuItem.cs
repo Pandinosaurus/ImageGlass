@@ -140,9 +140,10 @@ public class PhMenuItem : MenuItem
 
 
     /// <summary>
-    /// Localize menu item text.
+    /// Localize menu item text. Public so an owner can re-localize items whose popup has never been
+    /// opened (they are not in the visual tree, so they never receive the language-changed event).
     /// </summary>
-    private void LocalizeText()
+    public void LocalizeText()
     {
         var localizedText = Core.Lang[LangKey, LangParams];
         if (string.IsNullOrWhiteSpace(localizedText)) return;
