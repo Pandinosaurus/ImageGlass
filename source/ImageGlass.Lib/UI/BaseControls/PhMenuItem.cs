@@ -35,6 +35,9 @@ public class PhMenuItem : MenuItem
 {
     protected override Type StyleKeyOverride => typeof(MenuItem);
 
+    // whether the current disabled state came from a gate, not from the owner
+    private bool _disabledByGate;
+
 
     #region Public properties
 
@@ -152,10 +155,9 @@ public class PhMenuItem : MenuItem
         if (FeatureManager.IsLocked(LangKey))
         {
             Header = $"{localizedText} 🔒";
-            IsEnabled = false;
-            ToolTip.SetTip(this, null);
+            Disable();
         }
-        // Pro feature not yet unlocked: keep it clickable so it routes to the upgrade prompt
+        // Pro feature not yet unlocked: badged and disabled
         else if (FeatureManager.IsProGated(LangKey))
         {
             Header = new TextBlock
@@ -166,14 +168,36 @@ public class PhMenuItem : MenuItem
                     new Run(" ✦") { Foreground = new SolidColorBrush(Core.AccentColor) },
                 },
             };
-            IsEnabled = true;
-            ToolTip.SetTip(this, Core.Lang[LangId.Settings_ProFeatureHint]);
+            Disable();
         }
         else
         {
             Header = localizedText;
-            ToolTip.SetTip(this, null);
+            RestoreEnabled();
         }
+    }
+
+
+    /// <summary>
+    /// Disables the item because of a gate (admin lock or Pro), remembering that we did it.
+    /// </summary>
+    private void Disable()
+    {
+        _disabledByGate = true;
+        IsEnabled = false;
+    }
+
+
+    /// <summary>
+    /// Re-enables the item only if a gate disabled it, so an owner-driven disabled state
+    /// (e.g. a menu item turned off for the current photo) is never clobbered.
+    /// </summary>
+    private void RestoreEnabled()
+    {
+        if (!_disabledByGate) return;
+
+        _disabledByGate = false;
+        IsEnabled = true;
     }
 
     #endregion // Control Methods

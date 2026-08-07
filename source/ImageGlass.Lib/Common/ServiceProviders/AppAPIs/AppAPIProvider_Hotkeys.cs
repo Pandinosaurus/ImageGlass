@@ -335,6 +335,13 @@ public partial class AppAPIProvider
             return;
         }
 
+        // Pro feature gate
+        if (FeatureManager.IsProGated(Lang.GetKey(action.LangKey)))
+        {
+            e.Handled = true;
+            return;
+        }
+
         var isHotkeyPressMultiTimes = hotkey.IsSame(_lastHotkeyPressed);
         var executable = action.Executable ?? string.Empty;
 
