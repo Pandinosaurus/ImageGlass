@@ -79,6 +79,8 @@ public partial class HdrToneMapperToolControl : PhControl, IToolControl
         PART_SldSaturation.ValueChanged += Slider_ValueChanged;
         PART_BtnReset.Click += PART_BtnReset_Click;
         SizeChanged += HdrTool_SizeChanged;
+
+        if (Viewer is not null) Viewer.PhotoLoading += Viewer_PhotoLoading;
     }
 
 
@@ -92,6 +94,8 @@ public partial class HdrToneMapperToolControl : PhControl, IToolControl
         PART_BtnReset.Click -= PART_BtnReset_Click;
         SizeChanged -= HdrTool_SizeChanged;
 
+        if (Viewer is not null) Viewer.PhotoLoading -= Viewer_PhotoLoading;
+
         // stop retaining the raw HDR frame
         Viewer?.EndLiveHdrToneMapping();
 
@@ -102,6 +106,12 @@ public partial class HdrToneMapperToolControl : PhControl, IToolControl
     private void HdrTool_SizeChanged(object? sender, SizeChangedEventArgs e)
     {
         UpdateResponsiveColumns(e.NewSize.Width);
+    }
+
+
+    private void Viewer_PhotoLoading(ViewerControl sender, PhotoLoadingEventArgs e)
+    {
+        UpdateControlsState();
     }
 
 
@@ -211,7 +221,7 @@ public partial class HdrToneMapperToolControl : PhControl, IToolControl
             PART_SldSaturation.Value = cfg.Saturation;
 
             UpdateValueLabels();
-            UpdateModeState();
+            UpdateControlsState();
         }
         finally
         {
@@ -221,11 +231,14 @@ public partial class HdrToneMapperToolControl : PhControl, IToolControl
 
 
     /// <summary>
-    /// Disables the value sliders when Mode is <see cref="HdrToneMappingMode.None"/>
-    /// (pass-through ignores exposure/white-point/compression/saturation).
+    /// Disables the whole tool when the current photo cannot be tone-mapped, and the value sliders
+    /// when Mode is <see cref="HdrToneMappingMode.None"/> (pass-through ignores them).
     /// </summary>
-    private void UpdateModeState()
+    private void UpdateControlsState()
     {
+        // disabling the root panel cascades to every child, labels included
+        PART_RootPanel.IsEnabled = Viewer?.CanReapplyHdrToneMapping() ?? false;
+
         var idx = PART_CmbMode.SelectedIndex;
         var mode = idx >= 0 ? _modes[idx] : HdrToneMappingMode.BT2408;
         var enabled = mode != HdrToneMappingMode.None;
@@ -254,7 +267,7 @@ public partial class HdrToneMapperToolControl : PhControl, IToolControl
         Core.Config.EnableHdrToneMapping = cfg.Mode != HdrToneMappingMode.None;
 
         UpdateValueLabels();
-        UpdateModeState();
+        UpdateControlsState();
         ToolRegistry.SaveToolSettings(this);
 
         Viewer?.ReapplyHdrToneMapping();

@@ -243,6 +243,26 @@ public partial class ViewerControl
 
 
     /// <summary>
+    /// Whether the current photo can be tone-mapped, i.e. <see cref="ReapplyHdrToneMapping"/> has
+    /// any effect on it. Mirrors the guards in <see cref="DoOneHdrToneMapPassAsync"/>.
+    /// </summary>
+    public bool CanReapplyHdrToneMapping()
+    {
+        if (!Core.IsProEnabled) return false;
+
+        lock (_lock)
+        {
+            if (_animator is not null || IsVectorSource()) return false;
+            if (Photo is not { State: PhotoState.Loaded }) return false;
+            if (Photo.Metadata?.IsHdr != true) return false;
+
+            // a gain-map base layer is already SDR, so tone mapping is a no-op
+            return Photo.Metadata.HdrTransferFn != HdrTransferFunction.GainMap;
+        }
+    }
+
+
+    /// <summary>
     /// Requests a live HDR re-tone-map with the latest <see cref="Core.HdrToneMappingConfig"/>,
     /// keeping zoom and pan. Coalesced and run on a background thread: rapid slider changes collapse
     /// to back-to-back passes over the retained raw HDR frame (no disk decode), always using the
