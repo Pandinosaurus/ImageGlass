@@ -18,6 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
+using Avalonia;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
 using ImageGlass.Common;
@@ -44,6 +45,15 @@ public partial class HdrToneMapperToolControl : PhControl, IToolControl
     // Mode ComboBox items follow this enum order (index maps to the value)
     private static readonly HdrToneMappingMode[] _modes = Enum.GetValues<HdrToneMappingMode>();
 
+    // layout steps, widest first
+    private static readonly (int Columns, Orientation RowOrientation)[] _layoutSteps =
+    [
+        (4, Orientation.Horizontal), // sliders 1x4 | buttons 1x2
+        (2, Orientation.Horizontal), // sliders 2x2 | buttons 1x2
+        (2, Orientation.Vertical),   // sliders 2x2 | buttons 2x1
+        (1, Orientation.Vertical),   // sliders 4x1 | buttons 2x1
+    ];
+
 
     public static string TOOL_ID => "Tool_HdrToneMapper";
     public string ToolId => TOOL_ID;
@@ -67,7 +77,6 @@ public partial class HdrToneMapperToolControl : PhControl, IToolControl
 
         PopulateModeItems();
         LoadConfigToUI();
-        UpdateResponsiveColumns(Bounds.Width);
 
         // retain the raw HDR frame so slider changes re-apply instantly (no disk re-decode)
         Viewer?.BeginLiveHdrToneMapping();
@@ -78,7 +87,6 @@ public partial class HdrToneMapperToolControl : PhControl, IToolControl
         PART_SldHighlightCompression.ValueChanged += Slider_ValueChanged;
         PART_SldSaturation.ValueChanged += Slider_ValueChanged;
         PART_BtnReset.Click += PART_BtnReset_Click;
-        SizeChanged += HdrTool_SizeChanged;
 
         if (Viewer is not null) Viewer.PhotoLoading += Viewer_PhotoLoading;
     }
@@ -92,7 +100,6 @@ public partial class HdrToneMapperToolControl : PhControl, IToolControl
         PART_SldHighlightCompression.ValueChanged -= Slider_ValueChanged;
         PART_SldSaturation.ValueChanged -= Slider_ValueChanged;
         PART_BtnReset.Click -= PART_BtnReset_Click;
-        SizeChanged -= HdrTool_SizeChanged;
 
         if (Viewer is not null) Viewer.PhotoLoading -= Viewer_PhotoLoading;
 
@@ -103,9 +110,13 @@ public partial class HdrToneMapperToolControl : PhControl, IToolControl
     }
 
 
-    private void HdrTool_SizeChanged(object? sender, SizeChangedEventArgs e)
+    protected override Size MeasureOverride(Size availableSize)
     {
-        UpdateResponsiveColumns(e.NewSize.Width);
+        // unconstrained first, so the steps key off natural content widths
+        base.MeasureOverride(new Size(double.PositiveInfinity, availableSize.Height));
+        ApplyResponsiveLayout(availableSize.Width);
+
+        return base.MeasureOverride(availableSize);
     }
 
 
@@ -191,16 +202,49 @@ public partial class HdrToneMapperToolControl : PhControl, IToolControl
 
 
     /// <summary>
-    /// Reflows by available width: sliders grid 4 columns (1x4) -> 2 (2x2) -> 1 (4x1),
-    /// and the combo+reset row horizontal -> vertical at the narrowest size.
+    /// Applies the widest <see cref="_layoutSteps"/> entry that fits <paramref name="availableWidth"/>.
+    /// Only valid right after an unconstrained measure.
     /// </summary>
-    private void UpdateResponsiveColumns(double width)
+    private void ApplyResponsiveLayout(double availableWidth)
     {
-        var cols = width >= 900 ? 4 : width >= 560 ? 2 : 1;
-        if (PART_SlidersGrid.Columns != cols) PART_SlidersGrid.Columns = cols;
+        // UniformGrid sizes every cell to the largest one
+        var columnWidth = 0d;
+        foreach (var column in PART_SlidersGrid.Children)
+        {
+            columnWidth = Math.Max(columnWidth, column.DesiredSize.Width);
+        }
 
-        var orientation = cols == 1 ? Orientation.Vertical : Orientation.Horizontal;
-        if (PART_ModeResetRow.Orientation != orientation) PART_ModeResetRow.Orientation = orientation;
+        // not measured yet; keep the current step
+        if (columnWidth <= 0) return;
+
+        var comboWidth = PART_CmbMode.DesiredSize.Width;
+        var resetWidth = PART_BtnReset.DesiredSize.Width;
+        var modeLabelWidth = PART_LblMode.DesiredSize.Width;
+        var groupRowWidth = comboWidth + PART_ModeResetRow.Spacing + resetWidth;
+
+        // group width = its widest line, label included
+        var groupHorizontalWidth = Math.Max(modeLabelWidth, groupRowWidth);
+        var groupVerticalWidth = Math.Max(modeLabelWidth, Math.Max(comboWidth, resetWidth));
+
+        var contentWidth = availableWidth - Padding.Left - Padding.Right;
+        var columns = _layoutSteps[^1].Columns;
+        var rowOrientation = _layoutSteps[^1].RowOrientation;
+
+        foreach (var step in _layoutSteps)
+        {
+            var groupWidth = step.RowOrientation == Orientation.Horizontal
+                ? groupHorizontalWidth
+                : groupVerticalWidth;
+            var stepWidth = (step.Columns * columnWidth) + PART_RootPanel.Spacing + groupWidth;
+            if (stepWidth > contentWidth) continue;
+
+            columns = step.Columns;
+            rowOrientation = step.RowOrientation;
+            break;
+        }
+
+        if (PART_SlidersGrid.Columns != columns) PART_SlidersGrid.Columns = columns;
+        if (PART_ModeResetRow.Orientation != rowOrientation) PART_ModeResetRow.Orientation = rowOrientation;
     }
 
 

@@ -9,8 +9,9 @@
     d:DesignHeight="450"
     d:DesignWidth="800"
     x:Name="Root"
-    Padding="6,12">
+    Padding="6,12,36,12">
 
+    <!--  Right padding keeps the content clear of the tool host's floating close button  -->
     <StackPanel
         x:Name="PART_RootPanel"
         HorizontalAlignment="Center"
@@ -99,7 +100,10 @@
             x:Name="PART_ModeResetGroup"
             VerticalAlignment="Top"
             Spacing="2">
-            <ui:PhTextBlock LangKey="Tool_Hdr_LblMode" Opacity="0.6" />
+            <ui:PhTextBlock
+                x:Name="PART_LblMode"
+                LangKey="Tool_Hdr_LblMode"
+                Opacity="0.6" />
 
             <!--  combo + reset: side-by-side, stacks vertically when narrow (set in code)  -->
             <StackPanel
