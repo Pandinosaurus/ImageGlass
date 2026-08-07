@@ -143,7 +143,7 @@ internal class LinuxShellProvider : PhDisposable, IShellProvider
     /// </summary>
     public Task OpenDefaultEditingAppAsync(string filePath, Action? callbackFn = null)
     {
-        // Open the file in its associated application via the OpenURI portal.
+        // Open the file in its associated application.
         XdgPortal.OpenPath(filePath);
         callbackFn?.Invoke();
 
@@ -176,8 +176,8 @@ internal class LinuxShellProvider : PhDisposable, IShellProvider
         }
         catch { }
 
-        // Open the folder in the default file manager via the OpenURI portal.
-        XdgPortal.OpenPath(dirPath);
+        // Open the folder in the default file manager.
+        XdgPortal.ShowFolders(dirPath);
     }
 
 
