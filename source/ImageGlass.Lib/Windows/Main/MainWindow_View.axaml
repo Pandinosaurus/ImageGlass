@@ -40,7 +40,7 @@
                 CheckerboardMode="{CompiledBinding CheckerboardMode, Source={x:Static cm:Core.Config}}"
                 EnableDebug="{CompiledBinding EnableDebug, Source={x:Static cm:Core.Config}}"
                 EnableFreePan="{CompiledBinding EnableFreePan, Source={x:Static cm:Core.Config}, Converter={x:Static cm:ProGate.Bool}}"
-                EnableHdrRendering="{CompiledBinding EnableHdrToneMapping, Source={x:Static cm:Core.Config}, Converter={x:Static cm:ProGate.Bool}}"
+                EnableHdrRendering="{CompiledBinding EnableHdrToneMapping, Source={x:Static cm:Core.Config}}"
                 EnableNavButtons="{CompiledBinding EnableNavigationButtons, Source={x:Static cm:Core.Config}}"
                 InterpolationScaleDown="{CompiledBinding ImageInterpolationScaleDown, Source={x:Static cm:Core.Config}}"
                 InterpolationScaleUp="{CompiledBinding ImageInterpolationScaleUp, Source={x:Static cm:Core.Config}}"

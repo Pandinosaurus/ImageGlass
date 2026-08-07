@@ -34,8 +34,7 @@ namespace ImageGlass.UI.Viewer;
 public partial class ViewerControl
 {
     /// <summary>
-    /// Gets, sets whether HDR tone mapping is rendered. The owner sets this from the
-    /// HDR setting, gated by the Pro license.
+    /// Gets, sets whether HDR tone mapping is rendered. The owner sets this from the HDR setting.
     /// </summary>
     public bool EnableHdrRendering
     {
@@ -165,7 +164,9 @@ public partial class ViewerControl
         // snapshot UI-thread-affine state: the pass must not touch Photo or styled properties
         var isHdr = EnableHdrRendering && meta?.IsHdr == true;
         var transferFn = meta?.HdrTransferFn ?? HdrTransferFunction.None;
-        var options = Core.HdrToneMappingConfig;
+
+        // tuning the options is Pro-only
+        var options = Core.IsProEnabled ? Core.HdrToneMappingConfig : new HdrToneMappingOptions();
         var destProfile = CanApplySkiaColorSpace() ? Core.DestColorProfile : null;
 
         // nothing to do: skip the thread hop entirely
