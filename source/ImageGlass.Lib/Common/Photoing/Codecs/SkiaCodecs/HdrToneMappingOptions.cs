@@ -46,7 +46,8 @@ public sealed record HdrToneMappingOptions
     public double Exposure { get; set; } = 0d;
 
     /// <summary>
-    /// The luminance level (in nits) that maps to SDR white (1.0).
+    /// The luminance level (in nits) treated as HDR reference white; absolute for PQ, relative to
+    /// the default for HLG and scene-referred sources, which carry no nit scale.
     /// Lower values produce brighter output; higher values retain more highlights.
     /// Default: <c>203</c> (ITU-R BT.2408 reference white).
     /// Typical range: <c>100</c> to <c>400</c>.

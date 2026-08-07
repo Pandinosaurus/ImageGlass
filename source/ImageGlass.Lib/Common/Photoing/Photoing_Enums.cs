@@ -92,9 +92,8 @@ public enum HdrToneMappingMode
     None,
 
     /// <summary>
-    /// BT.2408-style knee curve (default, closest to Chrome).
-    /// SDR content preserved; only super-white highlights are compressed
-    /// with a tight exponential shoulder starting at 0.9.
+    /// BT.2408 reference white with a smooth roll-off across the whole range (default).
+    /// Reference white lands near half SDR peak, matching how HDR photos are rendered to SDR.
     /// </summary>
     BT2408,
 

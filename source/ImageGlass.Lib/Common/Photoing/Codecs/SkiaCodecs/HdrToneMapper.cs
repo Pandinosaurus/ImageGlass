@@ -19,6 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 using ImageGlass.Common.Extensions;
 using SkiaSharp;
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ImageGlass.Common.Photoing;
@@ -43,6 +44,17 @@ public static class HdrToneMapper
     /// PQ EOTF peak luminance in nits (SMPTE ST 2084).
     /// </summary>
     private const float PqPeakNits = 10_000f;
+
+    /// <summary>
+    /// Input level, in reference-white units, that the default tone curve maps to SDR white.
+    /// Covers a 1000-nit grade with margin so HDR highlights roll off instead of clipping.
+    /// </summary>
+    private const float ToneCurveWhiteLevel = 6f;
+
+    /// <summary>
+    /// ITU-R BT.2408 HDR reference white, and the default <see cref="HdrToneMappingOptions.WhitePointNits"/>.
+    /// </summary>
+    private const float Bt2408ReferenceWhiteNits = 203f;
 
     // Rec.2020 luminance coefficients (ITU-R BT.2020) — used by luminance-based path
     private const float Lum2020R = 0.2627f;
@@ -87,7 +99,7 @@ public static class HdrToneMapper
 
             if (!IsHdrColorSpace(source.ColorSpace))
             {
-                if (transferFn is HdrTransferFunction.None)
+                if (transferFn is HdrTransferFunction.None or HdrTransferFunction.Linear)
                 {
                     // Linear scene-referred HDR (EXR, Radiance HDR, JXR):
                     // pixels are already linear but the source may have no color
@@ -120,7 +132,7 @@ public static class HdrToneMapper
             var saturation = Math.Clamp((float)options.Saturation, 0f, 2f);
             Func<float, float> toneCurve = options.Mode switch
             {
-                HdrToneMappingMode.BT2408 => v => Bt2408KneeToneMap(v, compression),
+                HdrToneMappingMode.BT2408 => v => ReferenceWhiteToneMap(v, compression),
                 HdrToneMappingMode.Reinhard => v => ExtendedReinhardToneMap(v, compression),
                 HdrToneMappingMode.ACES => v => AcesToneMap(v, compression),
                 _ => null!,
@@ -158,7 +170,7 @@ public static class HdrToneMapper
     /// Tone mapping pipeline with two strategies:
     /// <para><b>PQ/HLG path</b> (wide-gamut Rec.2020):</para>
     /// 1. Linearize via Skia color-space conversion to linear Rec.2020.
-    /// 2. Normalize so 203 nits = 1.0 (PQ) or keep 1.0 (HLG).
+    /// 2. Normalize so reference white = 1.0 (PQ) or keep 1.0 (HLG).
     /// 3. Apply tone curve on <b>luminance</b>, scale RGB proportionally.
     /// 4. Gamut-map Rec.2020 -> sRGB via 3×3 matrix.
     /// 5. Encode to sRGB gamma.
@@ -181,11 +193,14 @@ public static class HdrToneMapper
         HdrTransferFunction transferFn, HdrToneMappingOptions options, float saturation,
         Func<float, float> toneCurve)
     {
-        var isLinearSceneReferred = transferFn == HdrTransferFunction.None;
+        var isLinearSceneReferred = transferFn is HdrTransferFunction.None or HdrTransferFunction.Linear;
 
         // ── Step 1: linearize source into float pixels ──
         using var linearBmp = LinearizeToFloat(source, isLinearSceneReferred);
         if (linearBmp is null) return null;
+
+        // nothing above diffuse white means no HDR range, so mapping it would only darken an SDR image
+        if (isLinearSceneReferred && !HasValuesAboveDiffuseWhite(linearBmp)) return null;
 
         var width = linearBmp.Width;
         var height = linearBmp.Height;
@@ -255,17 +270,49 @@ public static class HdrToneMapper
 
 
     /// <summary>
+    /// Whether any RGB sample exceeds diffuse white, which tells real HDR range from linear SDR.
+    /// </summary>
+    private static unsafe bool HasValuesAboveDiffuseWhite(SKBitmap linearBmp)
+    {
+        // tolerance absorbs rounding from the color-space conversion
+        const float threshold = 1.001f;
+
+        var basePtr = (nint)linearBmp.GetPixels();
+        var rowBytes = linearBmp.RowBytes;
+        var width = linearBmp.Width;
+        var found = 0;
+
+        Parallel.For(0, linearBmp.Height, (y, state) =>
+        {
+            var row = (float*)((byte*)basePtr + (long)y * rowBytes);
+
+            for (var x = 0; x < width; x++)
+            {
+                var i = x * 4;
+                if (row[i] > threshold || row[i + 1] > threshold || row[i + 2] > threshold)
+                {
+                    Interlocked.Exchange(ref found, 1);
+                    state.Stop();
+                    return;
+                }
+            }
+        });
+
+        return found != 0;
+    }
+
+
+    /// <summary>
     /// Computes the combined normalization scale from white point + exposure EV.
     /// </summary>
     private static float ComputeNormScale(HdrTransferFunction transferFn, HdrToneMappingOptions options)
     {
         var whiteNits = Math.Clamp((float)options.WhitePointNits, 50f, 1000f);
 
-        // PQ: after EOTF 1.0 = 10 000 nits. Scale so whiteNits -> 1.0.
-        // HLG/Linear: 1.0 ≈ reference white already.
+        // Both branches put reference white at 1.0; PQ is absolute nits, the rest are relative.
         var normScale = transferFn == HdrTransferFunction.PQ
             ? PqPeakNits / whiteNits
-            : 1f;
+            : Bt2408ReferenceWhiteNits / whiteNits;
 
         // Exposure in EV stops: 0 = no change, +1 = 2×, -1 = 0.5×.
         var exposure = (float)options.Exposure;
@@ -450,25 +497,19 @@ public static class HdrToneMapper
 
 
     /// <summary>
-    /// BT.2408-style knee curve (closest to Chrome).
-    /// Linear below the knee, exponential soft roll-off above.
-    /// SDR content (≤ 1.0) passes through unchanged.
+    /// Reference-white anchored roll-off (extended Reinhard) over the whole range.
+    /// Reference white lands near half SDR peak, so brighter content compresses instead of clipping.
     /// </summary>
-    /// <param name="compression">0 = default knee at 0.9, 1 = knee at 0.5 (max compression).</param>
-    private static float Bt2408KneeToneMap(float v, float compression)
+    /// <param name="compression">0 = white level at 6x reference white, 1 = 24x (max compression).</param>
+    private static float ReferenceWhiteToneMap(float v, float compression)
     {
         if (v <= 0f) return 0f;
 
-        // Knee slides from 0.9 (no compression) to 0.5 (max compression)
-        var kneeStart = 0.9f - 0.4f * compression;
-        const float maxOut = 1.0f;
-        var range = maxOut - kneeStart;
+        // A higher white level keeps more highlight detail at a lower peak brightness
+        var whiteLevel = ToneCurveWhiteLevel * (1f + 3f * compression);
+        var mapped = v * (1f + v / (whiteLevel * whiteLevel)) / (1f + v);
 
-        if (v <= kneeStart) return v;
-
-        // Soft exponential shoulder: asymptotically approaches maxOut
-        float excess = v - kneeStart;
-        return kneeStart + range * (1f - MathF.Exp(-excess / range));
+        return MathF.Min(1f, mapped);
     }
 
 
