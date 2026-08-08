@@ -79,6 +79,10 @@ public sealed class CodecRegistry : PhDisposable
     // Only codecs that can write; keeps decode-only codecs out of encode selection.
     private readonly List<ICodec> _encodeCodecs = [];
 
+    // Extensions declared for decoding by plugin codecs; answers "plugin-owned?" without a
+    // SelectDecodeCodec scan and the file probing it costs.
+    private readonly HashSet<string> _pluginDecodingExts = new(StringComparer.OrdinalIgnoreCase);
+
     // Registration order, used to break priority ties deterministically.
     private readonly Dictionary<string, long> _regSeqById = new(StringComparer.Ordinal);
     private long _regSeq;
@@ -137,6 +141,7 @@ public sealed class CodecRegistry : PhDisposable
 
             // the new codec may outrank a cached winner
             ClearSelectionCaches();
+            RebuildPluginDecodingExts();
         }
     }
 
@@ -176,6 +181,7 @@ public sealed class CodecRegistry : PhDisposable
 
             // the removed codec may be a cached winner
             ClearSelectionCaches();
+            RebuildPluginDecodingExts();
             return true;
         }
     }
@@ -210,6 +216,40 @@ public sealed class CodecRegistry : PhDisposable
         {
             return SelectWithCache(_decodeCodecByExt, _decodeCodecs, ext,
                 c => c.CanDecode(metadata, context), nameof(SelectDecodeCodec));
+        }
+    }
+
+
+    /// <summary>
+    /// Whether a plugin codec declares <paramref name="extension"/> for decoding. Callers use it to
+    /// keep a content-sniffing built-in decoder from pre-empting the codec that owns the format.
+    /// </summary>
+    public bool IsDecodingExtensionOwnedByPlugin(string? extension)
+    {
+        if (string.IsNullOrEmpty(extension)) return false;
+
+        lock (_lock)
+        {
+            return _pluginDecodingExts.Contains(extension);
+        }
+    }
+
+
+    /// <summary>
+    /// Rebuilds the plugin-owned decoding extensions. Caller holds <c>_lock</c>.
+    /// </summary>
+    private void RebuildPluginDecodingExts()
+    {
+        _pluginDecodingExts.Clear();
+
+        foreach (var codec in _decodeCodecs)
+        {
+            if (!IsPluginCodec(codec)) continue;
+
+            foreach (var ext in codec.DecodingExtensions)
+            {
+                _pluginDecodingExts.Add(ext);
+            }
         }
     }
 
@@ -356,6 +396,13 @@ public sealed class CodecRegistry : PhDisposable
     /// </summary>
     private static bool IsBuiltIn(ICodec codec)
         => codec is SvgCodecAdapter or SkiaCodecAdapter or MagickCodecAdapter;
+
+
+    /// <summary>
+    /// Whether the codec comes from a plugin instead of shipping with the host.
+    /// </summary>
+    public static bool IsPluginCodec(ICodec? codec)
+        => codec is not null && !IsBuiltIn(codec);
 
 
     /// <summary>

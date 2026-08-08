@@ -52,7 +52,7 @@ public static class Win32WindowApi
     /// Shows / hides the app icon on the window title bar. Only the caption (small) icon is
     /// swapped for a transparent one, so the taskbar and Alt+Tab icons are kept.
     /// </summary>
-    public static void SetTitleBarIconVisible(nint wndHandle, bool visible)
+    public unsafe static void SetTitleBarIconVisible(nint wndHandle, bool visible)
     {
         var hWnd = new HWND(wndHandle);
         if (hWnd.IsNull) return;

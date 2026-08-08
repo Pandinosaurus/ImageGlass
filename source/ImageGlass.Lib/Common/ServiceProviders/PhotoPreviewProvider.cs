@@ -17,6 +17,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 using ImageGlass.Common.Extensions;
+using ImageGlass.Common.Loggers;
 using ImageGlass.Common.Photoing;
 using SkiaSharp;
 using System;
@@ -41,10 +42,17 @@ public class PhotoPreviewProvider : IPhotoPreviewProvider
     public virtual async Task<SKImage?> GetPreviewAsync(PhotoMetadata meta, double? minHeight,
         CancellationToken token = default)
     {
-        // 1. fast path: native scaled decode via SkiaSharp
+        // 1. fast path: native scaled decode via SkiaSharp. Skipped for a plugin-owned format,
+        // which Skia does not know but can still mis-sniff into a garbage frame.
         var size = (int)(minHeight ?? double.MinValue);
-        var imgPreview = await Task.Run(() => SkiaCodec.LoadThumbnail(meta.FilePath, size), token)
-            .ConfigureAwait(false);
+        var isPluginFormat = IsPluginOwnedFormat(meta);
+        SKImage? imgPreview = null;
+
+        if (!isPluginFormat)
+        {
+            imgPreview = await Task.Run(() => SkiaCodec.LoadThumbnail(meta.FilePath, size), token)
+                .ConfigureAwait(false);
+        }
 
 
         // 2. try embedded EXIF preview
@@ -83,26 +91,46 @@ public class PhotoPreviewProvider : IPhotoPreviewProvider
         // 1. fast path: try to get the quick preview
         var imgPreview = await GetPreviewAsync(meta, minSize, token);
         var isPreviewLargeEnough = IsPreviewLargeEnough(imgPreview, meta, minSize);
+        PhotoTrace.Mark("thumb:preview", null, $"{meta.FilePath} -> {Describe(imgPreview)}, "
+            + $"meta={meta.Width}x{meta.Height}, largeEnough={isPreviewLargeEnough}");
 
 
-        // 2. slow path: use ImageMagick for unsupported formats, and for previews that came back
-        // smaller than the gallery cell (they would be scaled up and look blurry)
+        // 2. slow paths: preview missing, or too small for the gallery cell (it would be scaled
+        // up and look blurry). Selecting the codec probes the file, so do it once here.
         if (!isPreviewLargeEnough)
         {
-            using var imgM = await MagickCodec.QuickDecodeAsync(meta.FilePath, maxSize, maxSize, token: token);
-            var imgMagick = SkiaCodec.FromMagick(imgM, meta.SkiaColorSpace);
+            var codec = SelectDecodeCodec(meta);
+            var isPluginCodec = CodecRegistry.IsPluginCodec(codec);
+            PhotoTrace.Mark("thumb:codec", null,
+                $"{meta.FilePath} -> {codec?.CodecId ?? "none"} (plugin={isPluginCodec})");
 
-            // an undersized preview is still better than nothing if Magick did no better
-            _ = KeepLarger(ref imgPreview, imgMagick);
-        }
+            // 2a. the owning plugin codec decodes it. Magick is skipped: it cannot identify the
+            // format and may misread the bytes into a frame that wins KeepLarger.
+            if (isPluginCodec)
+            {
+                var imgPlugin = await DecodeViaCodecRegistryAsync(meta, maxSize, token, codec);
+                PhotoTrace.Mark("thumb:decode", null, $"{meta.FilePath} -> plugin {Describe(imgPlugin)}");
+                _ = KeepLarger(ref imgPreview, imgPlugin);
+            }
+
+            // 2b. built-in formats: let ImageMagick read what SkiaSharp could not
+            else
+            {
+                using var imgM = await MagickCodec.QuickDecodeAsync(meta.FilePath, maxSize, maxSize, token: token);
+                var imgMagick = SkiaCodec.FromMagick(imgM, meta.SkiaColorSpace);
+                PhotoTrace.Mark("thumb:decode", null, $"{meta.FilePath} -> magick {Describe(imgMagick)}");
+
+                // an undersized preview is still better than nothing if Magick did no better
+                _ = KeepLarger(ref imgPreview, imgMagick);
 
 
-        // 2b. slowest path: decode through the codec registry so that custom/plugin
-        //     codecs can supply a thumbnail for formats neither SkiaSharp nor
-        //     ImageMagick can decode on their own.
-        if (imgPreview.IsDisposed())
-        {
-            imgPreview = await DecodeViaCodecRegistryAsync(meta, maxSize, token);
+                // 2c. slowest path: decode through the codec registry, which reaches codecs
+                // (e.g. the SVG renderer) that neither quick path above covers
+                if (imgPreview.IsDisposed())
+                {
+                    imgPreview = await DecodeViaCodecRegistryAsync(meta, maxSize, token, codec);
+                }
+            }
         }
 
 
@@ -173,6 +201,13 @@ public class PhotoPreviewProvider : IPhotoPreviewProvider
 
 
     /// <summary>
+    /// Formats an image's size for the trace log.
+    /// </summary>
+    protected static string Describe(SKImage? img)
+        => img.IsDisposed() ? "none" : $"{img!.Width}x{img.Height}";
+
+
+    /// <summary>
     /// Gets the longest side of the image, or <c>0</c> if it is null or disposed.
     /// </summary>
     private static int GetLongestSide(SKImage? img)
@@ -184,6 +219,42 @@ public class PhotoPreviewProvider : IPhotoPreviewProvider
 
 
     /// <summary>
+    /// Whether a plugin codec claims this file's extension. The content-sniffing built-in decoders
+    /// can return a garbage frame instead of failing on such a file, so they must not run first.
+    /// </summary>
+    protected static bool IsPluginOwnedFormat(PhotoMetadata? meta)
+    {
+        return Core.CodecRegistry.IsDecodingExtensionOwnedByPlugin(meta?.FileExtension);
+    }
+
+
+    /// <summary>
+    /// Selects the codec that would decode <paramref name="meta"/>, or <c>null</c> when none
+    /// claims it. Not free: the built-in codecs answer by probing the file header.
+    /// </summary>
+    protected static ICodec? SelectDecodeCodec(PhotoMetadata meta)
+    {
+        var context = CreateCodecContext();
+        var codec = Core.CodecRegistry.SelectDecodeCodec(meta, context);
+
+        return codec;
+    }
+
+
+    /// <summary>
+    /// Builds the codec-selection context used by the thumbnail decode paths.
+    /// </summary>
+    private static CodecSelectionContext CreateCodecContext()
+    {
+        return new CodecSelectionContext
+        {
+            EnableVectorRenderer = Core.Config.EnableVectorRenderer,
+            IsDestColorProfileSupported = Core.IsDestColorProfileSupported,
+        };
+    }
+
+
+    /// <summary>
     /// Decodes the image through the codec registry and returns its raster frame.
     /// This lets custom/plugin codecs produce a thumbnail for formats that the
     /// built-in SkiaSharp/ImageMagick paths cannot decode. Orientation and color
@@ -191,15 +262,10 @@ public class PhotoPreviewProvider : IPhotoPreviewProvider
     /// path), so no further processing is applied here.
     /// </summary>
     protected static async Task<SKImage?> DecodeViaCodecRegistryAsync(PhotoMetadata meta,
-        int maxSize, CancellationToken token)
+        int maxSize, CancellationToken token, ICodec? selectedCodec = null)
     {
-        var context = new CodecSelectionContext
-        {
-            EnableVectorRenderer = Core.Config.EnableVectorRenderer,
-            IsDestColorProfileSupported = Core.IsDestColorProfileSupported,
-        };
-
-        var codec = Core.CodecRegistry.SelectDecodeCodec(meta, context);
+        var context = CreateCodecContext();
+        var codec = selectedCodec ?? Core.CodecRegistry.SelectDecodeCodec(meta, context);
         if (codec is null) return null;
 
         var options = new PhotoReadOptions

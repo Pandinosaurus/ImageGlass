@@ -18,6 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 using ImageGlass.Common;
 using ImageGlass.Common.Extensions;
+using ImageGlass.Common.Loggers;
 using ImageGlass.Common.Photoing;
 using ImageGlass.Common.ServiceProviders;
 using SkiaSharp;
@@ -52,15 +53,19 @@ public class Win32PhotoPreviewProvider : PhotoPreviewProvider
         // smaller than requested; keep it as a fallback but keep looking for a sharper source.
         var imgShellCached = await Task.Run(() => Win32ShellThumbnailApi.GetThumbnail(meta.FilePath, size, size, true))
             .ConfigureAwait(false);
+        PhotoTrace.Mark("preview:shell-cache", null, $"{meta.FilePath} -> {Describe(imgShellCached)}");
         _ = KeepLarger(ref imgPreview, imgShellCached); // Shell output needs no post-processing
 
 
-        // 2. fast path: native scaled decode via SkiaSharp
+        // 2. fast path: native scaled decode via SkiaSharp. Skipped for a plugin-owned format,
+        // which Skia does not know but can still mis-sniff into a garbage frame.
         var isLargeEnough = IsPreviewLargeEnough(imgPreview, meta, size);
-        if (!isLargeEnough)
+        var isPluginFormat = IsPluginOwnedFormat(meta);
+        if (!isLargeEnough && !isPluginFormat)
         {
             var imgDecoded = await Task.Run(() => SkiaCodec.LoadThumbnail(meta.FilePath, size), token)
                 .ConfigureAwait(false);
+            PhotoTrace.Mark("preview:skia", null, $"{meta.FilePath} -> {Describe(imgDecoded)}");
             var useDecoded = KeepLarger(ref imgPreview, imgDecoded);
             if (useDecoded) needPreprocess = true;
         }
@@ -73,6 +78,7 @@ public class Win32PhotoPreviewProvider : PhotoPreviewProvider
         {
             var imgShell = await Task.Run(() => Win32ShellThumbnailApi.GetThumbnail(meta.FilePath, size, size, false))
                 .ConfigureAwait(false);
+            PhotoTrace.Mark("preview:shell-disk", null, $"{meta.FilePath} -> {Describe(imgShell)}");
             var useShell = KeepLarger(ref imgPreview, imgShell);
             if (useShell) needPreprocess = false;
         }
