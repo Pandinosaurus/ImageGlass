@@ -156,6 +156,8 @@ public partial class PhWindow : Window
 
         // needs a live window handle, so it cannot be applied when the property is set
         OnIgTitleBarIconVisibilityChanged(ShowTitleBarIcon);
+
+        DetachImeWhenNotEditingText();
     }
 
 
@@ -194,6 +196,9 @@ public partial class PhWindow : Window
     private async void PhWindow_Activated(object? sender, EventArgs e)
     {
         OnIgActivated(e);
+
+        // another window may have re-attached the IME while we were inactive
+        DetachImeWhenNotEditingText();
 
 
         // handle built-in backdrop style
@@ -429,6 +434,20 @@ public partial class PhWindow : Window
 
 
     #region Internal Methods
+
+    /// <summary>
+    /// Detaches the OS IME while focus is outside a text field, so a CJK IME cannot swallow
+    /// single keys. Avalonia only detaches it after a text field has been focused once.
+    /// </summary>
+    protected void DetachImeWhenNotEditingText()
+    {
+        if (FocusManager?.GetFocusedElement() is TextBox
+            or NumericUpDown
+            or MaskedTextBox
+            or AutoCompleteBox) return;
+
+        Core.ShellProvider?.DetachIme(Handle);
+    }
 
 
     /// <summary>

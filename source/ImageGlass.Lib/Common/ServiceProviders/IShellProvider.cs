@@ -146,4 +146,11 @@ public interface IShellProvider : IDisposable
     /// Returns <c>false</c> for mouse wheel (discrete) events.
     /// </summary>
     bool HasPreciseScrollingDeltas() => false;
+
+
+    /// <summary>
+    /// Detaches the OS IME from the window so it stops claiming keystrokes. Avalonia attaches its
+    /// own context when a text field takes focus, so there is no attach counterpart.
+    /// </summary>
+    void DetachIme(nint windowHandle) { }
 }

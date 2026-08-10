@@ -376,6 +376,12 @@ public class Win32ShellProvider : PhDisposable, IShellProvider
         return Directory.Exists(container) || File.Exists(container) ? container : localAppDataPath;
     }
 
+
+    /// <summary>
+    /// <inheritdoc/>
+    /// </summary>
+    public void DetachIme(nint windowHandle) => Win32ImeApi.DetachIme(windowHandle);
+
     #endregion // Public Methods
 
 
