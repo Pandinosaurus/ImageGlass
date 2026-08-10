@@ -336,7 +336,7 @@ public partial class AppAPIProvider
         }
 
         // Pro feature gate
-        if (FeatureManager.IsProGated(Lang.GetKey(action.LangKey)))
+        if (FeatureManager.IsProBlocked(Lang.GetKey(action.LangKey)))
         {
             e.Handled = true;
             return;

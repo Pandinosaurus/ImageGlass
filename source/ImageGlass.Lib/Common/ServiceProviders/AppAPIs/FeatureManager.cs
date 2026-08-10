@@ -40,6 +40,10 @@ internal static class FeatureManager
     private static readonly FrozenSet<LangId> _proFeatureKeys =
         FrozenSet.ToFrozenSet(new[] { LangId.Menu_MnuHdrToneMapper });
 
+    // Gated features Classic can still open as a read-only preview.
+    private static readonly FrozenSet<LangId> _proPreviewKeys =
+        FrozenSet.ToFrozenSet(new[] { LangId.Menu_MnuHdrToneMapper });
+
 
     /// <summary>
     /// Rebuilds the lock and Pro-gate snapshots from the current license + config.
@@ -67,6 +71,13 @@ internal static class FeatureManager
     /// </summary>
     public static bool IsProGated(LangId? langKey)
         => langKey is LangId key && _proGated.Contains(key);
+
+
+    /// <summary>
+    /// Checks if a menu key is a Pro feature Classic must not run at all: gated and not previewable.
+    /// </summary>
+    public static bool IsProBlocked(LangId? langKey)
+        => IsProGated(langKey) && !_proPreviewKeys.Contains(langKey!.Value);
 
 
     /// <summary>

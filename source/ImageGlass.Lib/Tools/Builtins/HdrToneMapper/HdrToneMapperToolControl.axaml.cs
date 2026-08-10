@@ -58,6 +58,7 @@ public partial class HdrToneMapperToolControl : PhControl, IToolControl
     public static string TOOL_ID => "Tool_HdrToneMapper";
     public string ToolId => TOOL_ID;
     public bool HasSettingsUI => false;
+    public bool IsProPreview => !Core.IsProEnabled;
     public object? Settings => Core.HdrToneMappingConfig;
     public ViewerControl Viewer { get; set; } = null!;
 
@@ -79,7 +80,7 @@ public partial class HdrToneMapperToolControl : PhControl, IToolControl
         LoadConfigToUI();
 
         // retain the raw HDR frame so slider changes re-apply instantly (no disk re-decode)
-        Viewer?.BeginLiveHdrToneMapping();
+        if (!IsProPreview) Viewer?.BeginLiveHdrToneMapping();
 
         PART_CmbMode.SelectionChanged += Mode_SelectionChanged;
         PART_SldExposure.ValueChanged += Slider_ValueChanged;
@@ -277,16 +278,21 @@ public partial class HdrToneMapperToolControl : PhControl, IToolControl
     /// <summary>
     /// Disables the whole tool when the current photo cannot be tone-mapped, and the value sliders
     /// when Mode is <see cref="HdrToneMappingMode.None"/> (pass-through ignores them).
+    /// In Classic every input is dead but the labels stay readable.
     /// </summary>
     private void UpdateControlsState()
     {
+        var isProPreview = IsProPreview;
+
         // disabling the root panel cascades to every child, labels included
-        PART_RootPanel.IsEnabled = Viewer?.CanReapplyHdrToneMapping() ?? false;
+        PART_RootPanel.IsEnabled = isProPreview || (Viewer?.CanReapplyHdrToneMapping() ?? false);
 
         var idx = PART_CmbMode.SelectedIndex;
         var mode = idx >= 0 ? _modes[idx] : HdrToneMappingMode.BT2408;
-        var enabled = mode != HdrToneMappingMode.None;
+        var enabled = !isProPreview && mode != HdrToneMappingMode.None;
 
+        PART_CmbMode.IsEnabled = !isProPreview;
+        PART_BtnReset.IsEnabled = !isProPreview;
         PART_SldExposure.IsEnabled = enabled;
         PART_SldWhitePoint.IsEnabled = enabled;
         PART_SldHighlightCompression.IsEnabled = enabled;

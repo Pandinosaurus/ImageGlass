@@ -344,9 +344,9 @@ public partial class AppAPIProvider
         if (string.IsNullOrWhiteSpace(ac?.Executable)) return null;
 
 
-        // route a Pro-gated feature to the upgrade prompt instead of running it (hotkey and toolbar;
-        // the menu item is disabled outright, and startup-restore/IPC go through RunApiAsync)
-        if (FeatureManager.IsProGated(Lang.GetKey(ac.LangKey)))
+        // route a blocked Pro feature to the upgrade prompt instead of running it (hotkey, toolbar
+        // and menu; startup-restore/IPC go through RunApiAsync)
+        if (FeatureManager.IsProBlocked(Lang.GetKey(ac.LangKey)))
         {
             _ = await RunApiAsync(API.IG_ManageLicense);
             return null;

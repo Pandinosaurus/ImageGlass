@@ -78,6 +78,9 @@
                         Stroke="{DynamicResource IG_ThemeForegroundBrush}"
                         StrokeThickness="1" />
                 </ui:PhToolButton>
+
+                <!--  Pro badge  -->
+                <ui:PhProBadge IsVisible="{CompiledBinding #Root.IsProPreview}" />
             </StackPanel>
         </Grid>
     </ui:PhControl.Content>

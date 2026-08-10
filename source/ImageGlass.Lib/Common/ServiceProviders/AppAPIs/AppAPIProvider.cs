@@ -2913,9 +2913,6 @@ public partial class AppAPIProvider
         if (string.IsNullOrEmpty(toolId)) return;
         if (Core.ToolRegistry.Get(toolId) is not { } tool) return;
 
-        // HDR tone mapper is a Pro tool
-        if (toolId == HdrToneMapperToolControl.TOOL_ID && !Core.IsProEnabled) return;
-
         if (tool.IsHosted)
         {
             var currentToolId = ToolHost.Tool?.ToolId;
@@ -2963,9 +2960,6 @@ public partial class AppAPIProvider
     {
         if (string.IsNullOrEmpty(toolId)) return;
         if (Core.ToolRegistry.Get(toolId) is not { } tool) return;
-
-        // HDR tone mapper is a Pro tool
-        if (toolId == HdrToneMapperToolControl.TOOL_ID && !Core.IsProEnabled) return;
 
         if (tool.IsHosted)
         {

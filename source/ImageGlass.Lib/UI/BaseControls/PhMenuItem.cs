@@ -157,7 +157,7 @@ public class PhMenuItem : MenuItem
             Header = $"{localizedText} 🔒";
             Disable();
         }
-        // Pro feature not yet unlocked: badged and disabled
+        // Pro feature not yet unlocked: badged; disabled unless previewable
         else if (FeatureManager.IsProGated(LangKey))
         {
             Header = new TextBlock
@@ -168,7 +168,9 @@ public class PhMenuItem : MenuItem
                     new Run(" ✦") { Foreground = new SolidColorBrush(Core.AccentColor) },
                 },
             };
-            Disable();
+
+            if (FeatureManager.IsProBlocked(LangKey)) Disable();
+            else RestoreEnabled();
         }
         else
         {
