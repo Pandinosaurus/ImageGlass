@@ -23,8 +23,6 @@ using ImageGlass.Common.Localization;
 using ImageGlass.Common.ServiceProviders.Licensing;
 using ImageGlass.UI;
 using ImageGlass.UI.Windowing;
-using System;
-using System.IO;
 using System.Threading.Tasks;
 
 namespace ImageGlass.Common.Windows;
@@ -105,7 +103,7 @@ public partial class UpgradeToProControl : PhControl
 
         Localize();
 
-        PART_BtnViewFeatures.Click += (_, _) => OpenUrl("https://imageglass.org/pricing#comparison");
+        PART_BtnViewFeatures.Click += (_, _) => OpenUrl("https://imageglass.org/pro");
         PART_BtnBuyOnline.Click += (_, _) => OpenUrl("https://imageglass.org/pricing");
         PART_BtnRetrieveEmail.Click += (_, _) => OpenUrl("https://imageglass.org/pro/retrieve");
         PART_BtnImportLicense.Click += async (_, _) => await ImportAndShowResultAsync();
@@ -183,18 +181,12 @@ public partial class UpgradeToProControl : PhControl
             return null;
         }
 
-        // copy into the user config dir so LoadActive() picks it up next launch
-        try
+        // install into the config dir; the license it replaces is uninstalled
+        var isInstalled = LicenseService.TryInstall(path, lic, out var installError);
+        if (!isInstalled)
         {
-            var destPath = BHelper.ConfigDir(lic.LicenseId + LicenseService.LICENSE_FILE_EXTENSION);
-            if (!string.Equals(Path.GetFullPath(path), Path.GetFullPath(destPath), StringComparison.OrdinalIgnoreCase))
-            {
-                File.Copy(path, destPath, true);
-            }
-        }
-        catch
-        {
-            await ShowErrorAsync(owner, title, LangId.Menu_MnuManageLicense_ImportFailed);
+            await ShowErrorAsync(owner, title, LangId.Menu_MnuManageLicense_ImportFailed,
+                installError?.Message, installError?.ToString());
             return null;
         }
 

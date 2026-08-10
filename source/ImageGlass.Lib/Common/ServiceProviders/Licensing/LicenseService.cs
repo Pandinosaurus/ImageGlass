@@ -232,6 +232,72 @@ public static class LicenseService
 
 
     /// <summary>
+    /// Installs a verified license into the user config folder and uninstalls the ones it replaces.
+    /// </summary>
+    /// <param name="error">The failure when this returns false, so the caller can report it.</param>
+    /// <remarks>
+    /// The install folder is left alone: a license deployed there is the admin's, not the user's.
+    /// </remarks>
+    public static bool TryInstall(string sourcePath, LicenseInfo license, out Exception? error)
+    {
+        error = null;
+        string destPath;
+
+        try
+        {
+            destPath = BHelper.ConfigDir(license.LicenseId + LICENSE_FILE_EXTENSION);
+
+            // re-importing the installed file: nothing to copy, but still drop the others
+            var isAlreadyInstalled = ArePathsEqual(sourcePath, destPath);
+            if (!isAlreadyInstalled) File.Copy(sourcePath, destPath, true);
+        }
+        catch (Exception ex)
+        {
+            error = ex;
+            return false;
+        }
+
+        UninstallLicensesExcept(destPath);
+        return true;
+    }
+
+
+    /// <summary>
+    /// Deletes every license installed in the user config folder except <paramref name="keepPath"/>.
+    /// </summary>
+    private static void UninstallLicensesExcept(string keepPath)
+    {
+        // File.Copy keeps the source timestamp, so a leftover can still sort newest and win
+        var files = EnumerateLicenseFiles(BHelper.ConfigPath);
+
+        foreach (var path in files)
+        {
+            // the license is already installed, so a stale file left behind must not fail it
+            try
+            {
+                var isKeptFile = ArePathsEqual(path, keepPath);
+                if (isKeptFile) continue;
+
+                File.Delete(path);
+            }
+            catch { }
+        }
+    }
+
+
+    /// <summary>
+    /// True when both paths point at the same file.
+    /// </summary>
+    private static bool ArePathsEqual(string pathA, string pathB)
+    {
+        var fullPathA = Path.GetFullPath(pathA);
+        var fullPathB = Path.GetFullPath(pathB);
+
+        return string.Equals(fullPathA, fullPathB, StringComparison.OrdinalIgnoreCase);
+    }
+
+
+    /// <summary>
     /// Returns the newest authentic, in-validity license in a folder, and the path it came from.
     /// Version scope is left to the caller.
     /// </summary>
