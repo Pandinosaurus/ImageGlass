@@ -51,14 +51,14 @@ internal static class ThumbnailDiskCache
     /// <summary>
     /// Tries to load a cached thumbnail from disk.
     /// </summary>
-    public static async Task<SKImage?> TryGetAsync(string filePath, int thumbSize, CancellationToken token = default)
+    public static async Task<SKImage?> TryGetAsync(string filePath, int thumbSize, DateTime sourceLastWriteTimeUtc, CancellationToken token = default)
     {
         if (Core.Config.GalleryCacheSizeInMb == 0)
         {
             ScheduleCleanupOnce();
             return null;
         }
-        if (string.IsNullOrEmpty(filePath)) return null;
+        if (string.IsNullOrEmpty(filePath) || sourceLastWriteTimeUtc == default) return null;
 
         var cachePath = GetCacheFilePath(filePath, thumbSize);
 
@@ -70,8 +70,7 @@ internal static class ThumbnailDiskCache
 
                 // validate: cache must be newer than source file
                 var cacheTime = File.GetLastWriteTimeUtc(cachePath);
-                var sourceTime = File.GetLastWriteTimeUtc(filePath);
-                if (cacheTime < sourceTime) return null;
+                if (cacheTime < sourceLastWriteTimeUtc) return null;
 
                 // decode: force immediate rasterization so the image
                 // does not depend on the file-mapped data after this block

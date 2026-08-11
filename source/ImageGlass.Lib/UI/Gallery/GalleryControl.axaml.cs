@@ -148,6 +148,13 @@ public partial class GalleryControl : PhControl
     }
 
 
+    protected override void OnIgDpiChanged()
+    {
+        base.OnIgDpiChanged();
+        RefreshRealizedThumbnails();
+    }
+
+
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs e)
     {
         base.OnPropertyChanged(e);
@@ -156,6 +163,10 @@ public partial class GalleryControl : PhControl
         {
             RaisePropertyChanged(MinContentSizeProperty, default, MinContentSize);
             UpdateReservedSize();
+        }
+        else if (e.Property == IsContentVisibleProperty)
+        {
+            RefreshRealizedThumbnails();
         }
     }
 
@@ -166,6 +177,7 @@ public partial class GalleryControl : PhControl
         {
             RaisePropertyChanged(MinContentSizeProperty, default, MinContentSize);
             UpdateReservedSize();
+            RefreshRealizedThumbnails();
         }
     }
 
@@ -228,6 +240,16 @@ public partial class GalleryControl : PhControl
 
         var thumbSize = Core.Config.ThumbnailSize * Dpi * 2;
         _ = photo.LoadThumbnailAsync(thumbSize, useCache);
+    }
+
+
+    private void RefreshRealizedThumbnails()
+    {
+        foreach (var item in PART_ItemsControl.GetVisualDescendants().OfType<GalleryItem>())
+        {
+            if (IsContentVisible) item.LoadThumbnail();
+            else item.CancelThumbnailLoading();
+        }
     }
 
 

@@ -249,7 +249,7 @@ public partial class PhotoManager
                     // check dimension constraint (requires metadata)
                     if (maxDimension > 0)
                     {
-                        await photo.LoadMetadataAsync(useCache: true);
+                        await photo.LoadMetadataAsync(useCache: true, token: token);
                         if (token.IsCancellationRequested) return;
 
                         if (photo.Metadata.Width > maxDimension || photo.Metadata.Height > maxDimension)
@@ -263,7 +263,7 @@ public partial class PhotoManager
                     // a slideshow's forward look-ahead bypasses the caps (those images will
                     // be shown full-res momentarily anyway); metadata is still needed below
                     // for an accurate memory estimate
-                    await photo.LoadMetadataAsync(useCache: true);
+                    await photo.LoadMetadataAsync(useCache: true, token: token);
                     if (token.IsCancellationRequested) return;
                 }
 

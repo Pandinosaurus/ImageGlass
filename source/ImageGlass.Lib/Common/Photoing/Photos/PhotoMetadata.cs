@@ -17,6 +17,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 using ImageGlass.Common.Types;
+using ImageGlass.Common.ServiceProviders.FileSearchService;
 using ImageMagick;
 using SkiaSharp;
 using System;
@@ -34,17 +35,18 @@ public partial class PhotoMetadata : PhDisposable
     #region Public Properties
 
     #region File metadata
+    private string _filePath = string.Empty;
     public string FilePath
     {
-        get; set
+        get => _filePath;
+        set
         {
-            if (field == value) return;
-            var oldValue = field;
-            field = value;
+            if (_filePath == value) return;
+            _filePath = value;
 
             SetFilePath__(value);
         }
-    } = string.Empty;
+    }
 
     public string FileName { get; private set; } = string.Empty;
     /// <summary>
@@ -198,6 +200,20 @@ public partial class PhotoMetadata : PhDisposable
     }
 
 
+    public PhotoMetadata(FileSearchEntry entry)
+    {
+        // assigned directly to skip SetFilePath__, which re-stats the file from disk
+        _filePath = entry.FilePath;
+
+        FileName = Path.GetFileName(entry.FilePath);
+        FileExtension = Path.GetExtension(entry.FilePath).ToLowerInvariant();
+        FolderPath = Path.GetDirectoryName(entry.FilePath) ?? string.Empty;
+        FolderName = Path.GetFileName(FolderPath);
+        FileSizeInBytes = entry.FileSizeInBytes;
+        FileCreationTimeUtc = entry.FileCreationTimeUtc;
+        FileLastWriteTimeUtc = entry.FileLastWriteTimeUtc;
+        FileLastAccessTimeUtc = entry.FileLastAccessTimeUtc;
+    }
 
     #region Methods
 

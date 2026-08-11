@@ -22,6 +22,7 @@ using Avalonia.Threading;
 using ImageGlass.Common.Extensions;
 using ImageGlass.Common.Loggers;
 using ImageGlass.Common.ServiceProviders;
+using ImageGlass.Common.ServiceProviders.FileSearchService;
 using ImageGlass.Common.Types;
 using ImageMagick;
 using SkiaSharp;
@@ -50,6 +51,7 @@ public partial class Photo : PhDisposable
     // track pending tasks
     private ConcurrentDictionary<Guid, bool> _taskRefs = new();
     private CancellationTokenSource? _cancelThumbnailLoading;
+    private double _galleryThumbnailRequestSize;
 
     /// <summary>
     /// Prevents duplicate concurrent loads of the same photo's thumbnail.
@@ -280,6 +282,14 @@ public partial class Photo : PhDisposable
         ReadOptions = options ?? new();
     }
 
+    /// <summary>
+    /// Initializes a photo with filesystem data captured by folder enumeration.
+    /// </summary>
+    public Photo(FileSearchEntry entry, PhotoReadOptions? options = null)
+    {
+        Metadata = new PhotoMetadata(entry);
+        ReadOptions = options ?? new();
+    }
 
     /// <summary>
     /// Initializes a new single-frame photo using a bitmap source for rendering.
@@ -628,7 +638,7 @@ public partial class Photo : PhDisposable
             if (token.IsCancellationRequested) return;
 
             // load metadata
-            await LoadMetadataAsync(useCache);
+            await LoadMetadataAsync(useCache, token: token);
             PhotoTrace.Mark("metadata:loaded", FilePath, DescribeMetadata(Metadata));
 
             if (!skipLoadingEvent)
@@ -712,9 +722,10 @@ public partial class Photo : PhDisposable
     /// Loads <c><see cref="Metadata"/></c> for the photo.
     /// Returns the cached metadata if it's not null and up-to-date.
     /// </summary>
-    public async Task LoadMetadataAsync(bool useCache, PhotoReadOptions? newOptions = null)
+    public async Task LoadMetadataAsync(bool useCache, PhotoReadOptions? newOptions = null, CancellationToken token = default)
     {
-        var meta = await Task.Run(() => LoadMetadataAsync__(useCache, newOptions)).ConfigureAwait(false);
+        var task = Task.Run(() => LoadMetadataAsync__(useCache, newOptions));
+        var meta = await task.WaitAsync(token).ConfigureAwait(false);
 
         if (meta is not null)
         {
@@ -974,70 +985,79 @@ public partial class Photo : PhDisposable
     /// Uses a semaphore to ensure only one load per photo at a time,
     /// and caches the result on <see cref="GalleryThumbnail"/>.
     /// </summary>
-    public async Task LoadThumbnailAsync(double thumbSize, bool useCache)
+    public async Task LoadThumbnailAsync(double thumbSize, bool useCache, CancellationToken cancellationToken = default)
     {
         // 1. fast path: use cached thumbnail
-        if (useCache && GalleryThumbnail is not null) return;
+        if (useCache && GalleryThumbnail is not null && _galleryThumbnailRequestSize == thumbSize) return;
         if (IsDisposed || string.IsNullOrEmpty(FilePath)) return;
 
         // 2. acquire global throttle to avoid saturating the thread pool
         //    (prevents blocking the main image loading when many thumbnails load at once)
-        await _thumbnailThrottleLock.WaitAsync().ConfigureAwait(false);
+        await _thumbnailThrottleLock.WaitAsync(cancellationToken).ConfigureAwait(false);
 
         try
         {
-            await _thumbnailLock.WaitAsync().ConfigureAwait(false);
+            await _thumbnailLock.WaitAsync(cancellationToken).ConfigureAwait(false);
 
             try
             {
                 // 3. double-check after acquiring the lock
-                if (useCache && GalleryThumbnail is not null) return;
+                if (useCache && GalleryThumbnail is not null && _galleryThumbnailRequestSize == thumbSize) return;
                 if (IsDisposed) return;
 
                 // reset cancellation for this load
                 _cancelThumbnailLoading?.Dispose();
-                _cancelThumbnailLoading = new CancellationTokenSource();
+                _cancelThumbnailLoading = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
                 var token = _cancelThumbnailLoading.Token;
 
 
-                // 4. load metadata if needed
-                await LoadMetadataAsync(true).ConfigureAwait(false);
-                if (token.IsCancellationRequested) return;
+                // 4. try caches without reading the source file
+                using var diskThumb = useCache
+                    ? await ThumbnailDiskCache.TryGetAsync(
+                        FilePath, (int)thumbSize, Metadata.FileLastWriteTimeUtc, token)
+                        .ConfigureAwait(false)
+                    : null;
+                using var platformThumb = useCache && diskThumb.IsDisposed()
+                    ? await Core.PreviewProvider.TryGetCachedThumbnailAsync(
+                        FilePath, (int)thumbSize, token).ConfigureAwait(false)
+                    : null;
+                var cachedThumb = platformThumb ?? diskThumb;
 
-
-                // 4b. try disk cache
-                var diskThumb = await ThumbnailDiskCache.TryGetAsync(FilePath, (int)thumbSize, token)
-                    .ConfigureAwait(false);
-                if (token.IsCancellationRequested) return;
-
-                // drop entries written by an older, undersized source so they get regenerated
-                var isDiskThumbUsable = PhotoPreviewProvider.IsPreviewLargeEnough(diskThumb, Metadata, thumbSize);
-                if (diskThumb is not null && !isDiskThumbUsable)
+                if (!cachedThumb.IsDisposed())
                 {
-                    diskThumb.Dispose();
-                    diskThumb = null;
-                }
-
-                if (diskThumb is not null)
-                {
-                    PhotoTrace.Mark("thumb:disk-hit", null, $"{FilePath} @ {(int)thumbSize}px");
                     var avBitmapCached = await Task.Run(
-                        () => SkiaCodec.ToWritableBitmap(diskThumb), token)
+                        () => SkiaCodec.ToWritableBitmap(cachedThumb), token)
                         .ConfigureAwait(false);
-                    diskThumb.Dispose();
 
-                    if (token.IsCancellationRequested)
+                    if (avBitmapCached is null) return;
+                    if (!await ShowGalleryThumbnailAsync(avBitmapCached, token)) return;
+
+                    // The requested size includes a supersampling margin.
+                    // If the cached image is smaller than the displayed size,
+                    // show it now but keep looking for a sharper replacement.
+                    var cachedThumbMayBeTooSmall = thumbSize > 0
+                        && Math.Max(cachedThumb.Width, cachedThumb.Height)
+                            < thumbSize * PhotoPreviewProvider.MIN_PREVIEW_SIZE_RATIO;
+                    if (!cachedThumbMayBeTooSmall)
                     {
-                        avBitmapCached?.Dispose();
+                        _galleryThumbnailRequestSize = thumbSize;
                         return;
                     }
+                }
 
-                    GalleryThumbnail = avBitmapCached;
+                // 5. load metadata if needed
+                await LoadMetadataAsync(true, token: token).ConfigureAwait(false);
+                if (token.IsCancellationRequested) return;
+
+                // a small source cannot produce a larger thumbnail.
+                if (PhotoPreviewProvider.IsPreviewLargeEnough(cachedThumb, Metadata, thumbSize))
+                {
+                    _galleryThumbnailRequestSize = thumbSize;
                     return;
                 }
 
 
-                // 5. get thumbnail from platform provider
+                // 6. get thumbnail from platform provider
                 PhotoTrace.Mark("thumb:provider", null, $"{FilePath} @ {(int)thumbSize}px");
                 var swThumb = PhotoTrace.Enabled ? Stopwatch.StartNew() : null;
                 using var skThumb = await Task.Run(
@@ -1052,23 +1072,18 @@ public partial class Photo : PhDisposable
                 }
 
 
-                // 6. convert SKImage to Avalonia Bitmap
+                // 7. convert SKImage to Avalonia Bitmap
                 var avBitmap = await Task.Run(
                     () => SkiaCodec.ToWritableBitmap(skThumb), token)
                     .ConfigureAwait(false);
 
-                if (token.IsCancellationRequested)
-                {
-                    avBitmap?.Dispose();
-                    return;
-                }
+                // 8. update the gallery thumbnail (triggers UI binding update)
+                if (avBitmap is null) return;
+                if (!await ShowGalleryThumbnailAsync(avBitmap, token)) return;
+                _galleryThumbnailRequestSize = thumbSize;
 
 
-                // 7. update the gallery thumbnail (triggers UI binding update)
-                GalleryThumbnail = avBitmap;
-
-
-                // 8. write to disk cache last, so encoding never delays the thumbnail appearing.
+                // 9. write to disk cache last, so encoding never delays the thumbnail appearing.
                 // Awaited (not fire-and-forget) to keep skThumb alive until the encode is done.
                 await ThumbnailDiskCache.PutAsync(FilePath, (int)thumbSize, skThumb, token)
                     .ConfigureAwait(false);
@@ -1105,13 +1120,44 @@ public partial class Photo : PhDisposable
             _cancelThumbnailLoading?.Dispose();
             _cancelThumbnailLoading = null;
 
-            // the setter frees the outgoing bitmap once the binding has let go of it
-            GalleryThumbnail = null;
+            await ClearGalleryThumbnailAsync();
         }
         finally
         {
             _thumbnailLock.Release();
         }
+    }
+
+
+    private async Task<bool> ShowGalleryThumbnailAsync(Bitmap thumbnail, CancellationToken token)
+    {
+        if (token.IsCancellationRequested || IsDisposed)
+        {
+            thumbnail.Dispose();
+            return false;
+        }
+
+        return await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            if (token.IsCancellationRequested || IsDisposed)
+            {
+                thumbnail.Dispose();
+                return false;
+            }
+
+            GalleryThumbnail = thumbnail;
+            return true;
+        });
+    }
+
+
+    private async Task ClearGalleryThumbnailAsync()
+    {
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            GalleryThumbnail = null;
+            _galleryThumbnailRequestSize = 0;
+        });
     }
 
 
