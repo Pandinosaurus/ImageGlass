@@ -25,6 +25,6 @@
     <PackageVersion Include="NativeMemoryArray" Version="1.2.2" />
     <PackageVersion Include="SkiaSharp" Version="3.119.4" />
     <PackageVersion Include="Svg.Controls.Skia.Avalonia" Version="12.0.0.13" />
-    <PackageVersion Include="System.IO.Hashing" Version="10.0.10" />
+    <PackageVersion Include="System.IO.Hashing" Version="10.0.11" />
   </ItemGroup>
 </Project>

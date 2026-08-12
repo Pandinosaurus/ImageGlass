@@ -1,4 +1,9 @@
-# Windows MSIX packaging
+# Windows packaging
+
+Two deliverables are built from the same source: an **MSIX** (Store + sideload) and a **portable
+ZIP** (GitHub Releases). See [Portable ZIP](#portable-zip) for the archive.
+
+## MSIX
 
 Builds an MSIX of **ImageGlass.Win32** for `x64` and `arm64`, in two flavours:
 
@@ -14,6 +19,7 @@ every payload `.exe`/`.dll` *and* the package itself.
 ## Files
 
 - [`script-pack-win-msix.ps1`](script-pack-win-msix.ps1) — the packer (PowerShell 7+).
+- [`script-pack-win-zip.ps1`](script-pack-win-zip.ps1): the portable ZIP packer (PowerShell 7+).
 - [`script-generate-msix-assets.ps1`](script-generate-msix-assets.ps1) — renders the
   `Assets-signed` logo set from [`__assets/logo_c_512.png`](../logo_c_512.png).
 - [`appxmanifest/AppxManifest.xml`](appxmanifest/AppxManifest.xml) — manifest template
@@ -156,3 +162,41 @@ package, delete the signed copy, and remove the test certificate from `Cert:\Cur
   Windows refuses to launch it once the trial lapses, which is what makes "the process is
   running" equivalent to "the customer is licensed". If the listing ever becomes free, or gains
   an unlimited trial, that shortcut has to be replaced with a live Store license query.
+
+---
+
+## Portable ZIP
+
+The archive published on GitHub Releases for users who do not want an installer. Same self-contained
+AOT build as the MSIX, plus the shared app assets, packed under a single top-level folder named after
+the archive (so extracting it cannot scatter files into the current folder).
+
+```powershell
+# Signed portable ZIP per architecture (payload binaries are signed; a ZIP itself cannot be)
+pwsh __assets/win/script-pack-win-zip.ps1 -Platform x64   -Sign
+pwsh __assets/win/script-pack-win-zip.ps1 -Platform arm64 -Sign
+
+# Non-portable archive: settings go to %LocalAppData%\ImageGlass, like the MSIX build
+pwsh __assets/win/script-pack-win-zip.ps1 -Platform x64 -NoPortable
+```
+
+VS Code tasks: `pack-win-x64-zip`, `pack-win-arm64-zip` (both included in `pack-win-all`).
+Output: `__artifacts/bundle/ImageGlass_<version>_win-<arch>.zip`.
+
+### Portable mode
+
+The ZIP is **portable by default**: the packer writes an empty `.igportable` marker file next to
+`ImageGlass.exe`. On startup the app looks for that marker in its own folder and, when it is there,
+keeps everything it writes (`igconfig.json`, `_cache`, `_logs`, `_plugins`, `_lang`, ...) in that
+folder instead of `%LocalAppData%\ImageGlass`. The folder can then be moved, renamed, or carried on a
+removable drive without losing the settings.
+
+- The marker name is `Const.PORTABLE_MARKER_FILE`; the detection lives in
+  [`ConfigMode.cs`](../../ImageGlass.Lib/Common/Types/ConfigMode.cs) and `BHelper.ConfigPath` turns it
+  into the config dir.
+- **A portable folder must be writable.** If the marker is present but the app cannot create files
+  there (e.g. the folder was extracted into `Program Files`), the app reports the real error and
+  quits. It never falls back to `%LocalAppData%`, which would silently hide the portable settings
+  behind a second config.
+- **Never ship the marker in the MSIX.** A packaged payload folder is read-only, so every launch
+  would fail. It is written by the ZIP packer only, not by `__assets/__app`.

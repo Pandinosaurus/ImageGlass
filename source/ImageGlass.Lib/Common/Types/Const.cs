@@ -38,6 +38,13 @@ public static class Const
     /// </summary>
     public const string WEBSITE_HOST = "imageglass.org";
 
+
+    /// <summary>
+    /// Marker file that turns on portable mode when present in the startup dir: the config dir
+    /// becomes the startup dir. Shipped in the ZIP package only (see <see cref="ConfigMode"/>).
+    /// </summary>
+    public const string PORTABLE_MARKER_FILE = ".igportable";
+
     public static readonly string SIGN_POSITIVE = NumberFormatInfo.CurrentInfo.PositiveSign;
     public static readonly string SIGN_NEGATIVE = NumberFormatInfo.CurrentInfo.NegativeSign;
     public static readonly string DECIMAL_SEPARATOR = NumberFormatInfo.CurrentInfo.NumberDecimalSeparator;

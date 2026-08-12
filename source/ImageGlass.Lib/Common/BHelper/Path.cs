@@ -41,9 +41,12 @@ public partial class BHelper
 
 
     /// <summary>
-    /// Gets the config dir path.
+    /// Gets the config dir path: the base dir in portable mode (<see cref="ConfigMode"/>),
+    /// else the per-user app data dir.
     /// </summary>
-    public static string ConfigPath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), AppName);
+    public static string ConfigPath => ConfigMode.IsPortable
+        ? BasePath
+        : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), AppName);
 
 
 
@@ -84,7 +87,7 @@ public partial class BHelper
             if (isBuiltinDir)
             {
                 var builtinConfigPath = Path.Combine(ConfigPath, firstPath);
-                Directory.CreateDirectory(builtinConfigPath);
+                TryCreateDirectory(builtinConfigPath);
                 isDirCreated = true;
             }
         }
@@ -93,7 +96,7 @@ public partial class BHelper
         // 2. create the config directory if not exist
         if (!isDirCreated)
         {
-            Directory.CreateDirectory(ConfigPath);
+            TryCreateDirectory(ConfigPath);
         }
 
 
@@ -103,6 +106,20 @@ public partial class BHelper
         var path = Path.Combine([.. newPaths]);
 
         return path;
+    }
+
+
+    /// <summary>
+    /// Creates the directory, ignoring failures: a read-only config dir must not throw out of a
+    /// path getter, so the failing read/write reports it instead.
+    /// </summary>
+    private static void TryCreateDirectory(string dirPath)
+    {
+        try
+        {
+            Directory.CreateDirectory(dirPath);
+        }
+        catch { }
     }
 
 

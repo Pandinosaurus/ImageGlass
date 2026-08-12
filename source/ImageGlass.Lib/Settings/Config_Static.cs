@@ -855,6 +855,9 @@ public partial class Config
     /// </summary>
     public async Task SaveAsync()
     {
+        // portable mode could not claim its folder; the app is quitting, never write anywhere else
+        if (ConfigMode.PortableError is not null) return;
+
         var jsonFilePath = BHelper.ConfigDir(CONFIG_USER);
         var jsonOptions = BHelper.CreateJsonOptions();
         var jsonContext = new ConfigJsonContext(jsonOptions);

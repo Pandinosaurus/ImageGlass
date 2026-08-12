@@ -206,14 +206,54 @@
       "problemMatcher": [],
       "group": "build"
     },
-    // Convenience: build everything for a release — both signed .msix (self-host)
-    // and the .msixbundle (Microsoft Store).
+
+    // Windows portable ZIP pack tasks. Like the MSIX ones, the script publishes a fresh AOT
+    // build itself. The archive ships the .igportable marker, so it keeps its settings in its
+    // own folder; pass -NoPortable to build one that uses %LocalAppData% instead.
+    {
+      "label": "pack-win-x64-zip",
+      "type": "process",
+      "command": "pwsh",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/__assets/win/script-pack-win-zip.ps1",
+        "-Platform",
+        "x64",
+        "-Sign"
+      ],
+      "problemMatcher": [],
+      "group": "build"
+    },
+    {
+      "label": "pack-win-arm64-zip",
+      "type": "process",
+      "command": "pwsh",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/__assets/win/script-pack-win-zip.ps1",
+        "-Platform",
+        "arm64",
+        "-Sign"
+      ],
+      "problemMatcher": [],
+      "group": "build"
+    },
+    // Convenience: build everything for a release, the signed .msix + portable .zip
+    // (self-host) and the .msixbundle (Microsoft Store).
     {
       "label": "pack-win-all",
       "dependsOn": [
         "pack-win-x64-msix",
         "pack-win-arm64-msix",
-        "pack-win-msstore-msixbundle"
+        "pack-win-msstore-msixbundle",
+        "pack-win-x64-zip",
+        "pack-win-arm64-zip"
       ],
       "dependsOrder": "sequence",
       "problemMatcher": [],

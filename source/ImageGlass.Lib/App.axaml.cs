@@ -115,6 +115,15 @@ public partial class App : Application
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
+            // portable mode cannot use the startup dir: report and quit before anything else runs,
+            // so the app never falls back to the app data dir
+            if (ConfigMode.PortableError is not null)
+            {
+                await _taskUi.Task;
+                await ShowPortableModeErrorAsync();
+                return;
+            }
+
             // set shutdown mode
             desktop.ShutdownMode = ShutdownMode.OnMainWindowClose;
 
@@ -343,6 +352,9 @@ public partial class App : Application
         // 2. load app configs (merges default, user, CLI -p: args, and admin configs)
         Core.Args = Environment.GetCommandLineArgs();
 
+        // resolve the config dir first: the portable marker moves it to the startup dir
+        if (ConfigMode.IsPortable) StartupTrace.Mark("InitInstance:portableMode");
+
         // verify the Pro license before config (config-independent; admin locks need it)
         Core.AppLicense = LicenseService.LoadActive(out var outOfScopeLicense);
         Core.OutOfScopeLicense = outOfScopeLicense;
@@ -417,6 +429,25 @@ public partial class App : Application
         }
 
         return false;
+    }
+
+
+    /// <summary>
+    /// Reports the real error behind an unusable portable startup dir, then quits.
+    /// </summary>
+    private static async Task ShowPortableModeErrorAsync()
+    {
+        var error = ConfigMode.PortableError!;
+
+        _ = await ModalWindow.ShowErrorAsync(null, new ModalWindowOptions
+        {
+            Title = BHelper.AppDisplayName,
+            Heading = error.Message,
+            Details = BHelper.GetExceptionDetails(error),
+            ShowInTaskbar = true,
+        }, ModalWindowButton.Close);
+
+        BHelper.ExitApp(true);
     }
 
 
