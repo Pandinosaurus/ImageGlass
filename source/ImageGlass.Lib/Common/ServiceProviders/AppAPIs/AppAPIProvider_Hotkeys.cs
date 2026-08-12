@@ -108,11 +108,11 @@ public partial class AppAPIProvider
 
 
         // Image
-        new(LangId.Menu_MnuRefresh,              API.IG_Refresh,             Key.R),
-        new(LangId.Menu_MnuReload,               API.IG_Reload,              Hotkey.Ctrl, Key.R),
-        new(LangId.Menu_MnuReloadImageList,      API.IG_ReloadList,          Hotkey.Ctrl | MKeys.Shift, Key.R),
-        new(LangId.Menu_MnuUnload,               API.IG_Unload,              Key.U),
-        new(LangId.Settings_EnableExplorerSortOrder,  API.IG_ToggleExplorerSortOrder),
+        new(LangId.Menu_MnuRefresh,                     API.IG_Refresh),
+        new(LangId.Menu_MnuReload,                      API.IG_Reload,              Hotkey.Ctrl, Key.R),
+        new(LangId.Menu_MnuReloadImageList,             API.IG_ReloadList,          Hotkey.Ctrl | MKeys.Shift, Key.R),
+        new(LangId.Menu_MnuUnload,                      API.IG_Unload,              Key.U),
+        new(LangId.Settings_EnableExplorerSortOrder,    API.IG_ToggleExplorerSortOrder),
         new(LangId.ImageOrderBy_Name,               API.IG_SetLoadingOrderBy,   nameof(ImageOrderBy.Name)),
         new(LangId.ImageOrderBy_Random,             API.IG_SetLoadingOrderBy,   nameof(ImageOrderBy.Random)),
         new(LangId.ImageOrderBy_FileSize,           API.IG_SetLoadingOrderBy,   nameof(ImageOrderBy.FileSize)),
@@ -124,15 +124,15 @@ public partial class AppAPIProvider
         new(LangId.ImageOrderBy_ExifRating,         API.IG_SetLoadingOrderBy,   nameof(ImageOrderBy.ExifRating)),
         new(LangId.ImageOrderType_Asc,              API.IG_SetLoadingOrderType, nameof(ImageOrderType.Asc)),
         new(LangId.ImageOrderType_Desc,             API.IG_SetLoadingOrderType, nameof(ImageOrderType.Desc)),
-        new(LangId.Menu_MnuEdit,                 API.IG_OpenEditingApp,          Key.E),
-        new(LangId.Menu_MnuInvertColors,         API.IG_InvertColors,            Hotkey.Ctrl, Key.I),
-        new(LangId.Menu_MnuToggleImageAnimation, API.IG_ToggleImageAnimation,    Hotkey.Ctrl, Key.Space),
-        new(LangId.Menu_MnuRotateLeft,           API.IG_Rotate,              nameof(RotateOption.Left),          [new(Hotkey.Ctrl, Key.OemPeriod)]),
-        new(LangId.Menu_MnuRotateRight,          API.IG_Rotate,              nameof(RotateOption.Right),         [new(Hotkey.Ctrl, Key.OemQuestion)]),
-        new(LangId.Menu_MnuFlipHorizontal,       API.IG_FlipImage,           nameof(FlipOptions.Horizontal),     [new(Hotkey.Ctrl, Key.OemSemicolon)]),
-        new(LangId.Menu_MnuFlipVertical,         API.IG_FlipImage,           nameof(FlipOptions.Vertical),       [new(Hotkey.Ctrl, Key.OemQuotes)]),
-        new(LangId.Menu_MnuSetDesktopBackground, API.IG_SetDesktopBackground),
-        new(LangId.Menu_MnuSetLockScreen,        API.IG_SetLockScreenImage),
+        new(LangId.Menu_MnuEdit,                    API.IG_OpenEditingApp,          Key.E),
+        new(LangId.Menu_MnuInvertColors,            API.IG_InvertColors,            Hotkey.Ctrl, Key.I),
+        new(LangId.Menu_MnuToggleImageAnimation,    API.IG_ToggleImageAnimation,    Hotkey.Ctrl, Key.Space),
+        new(LangId.Menu_MnuRotateLeft,              API.IG_Rotate,              nameof(RotateOption.Left),          [new(Hotkey.Ctrl, Key.OemPeriod)]),
+        new(LangId.Menu_MnuRotateRight,             API.IG_Rotate,              nameof(RotateOption.Right),         [new(Hotkey.Ctrl, Key.OemQuestion)]),
+        new(LangId.Menu_MnuFlipHorizontal,          API.IG_FlipImage,           nameof(FlipOptions.Horizontal),     [new(Hotkey.Ctrl, Key.OemSemicolon)]),
+        new(LangId.Menu_MnuFlipVertical,            API.IG_FlipImage,           nameof(FlipOptions.Vertical),       [new(Hotkey.Ctrl, Key.OemQuotes)]),
+        new(LangId.Menu_MnuSetDesktopBackground,    API.IG_SetDesktopBackground),
+        new(LangId.Menu_MnuSetLockScreen,           API.IG_SetLockScreenImage),
 
 
         // Clipboard
@@ -145,10 +145,10 @@ public partial class AppAPIProvider
 
 
         // Window modes
-        new(LangId.Menu_MnuWindowFit,            API.IG_ToggleWindowFit,             Key.F9),
-        new(LangId.Menu_MnuFrameless,            API.IG_ToggleFrameless,             Key.F10),
-        new(LangId.Menu_MnuFullScreen,           API.IG_ToggleFullScreen,            Key.F11),
-        new(LangId.Menu_MnuSlideshow,            API.IG_ToggleSlideshow,             Key.F12),
+        new(LangId.Menu_MnuWindowFit,           API.IG_ToggleWindowFit,             Key.F9),
+        new(LangId.Menu_MnuFrameless,           API.IG_ToggleFrameless,             Key.F10),
+        new(LangId.Menu_MnuFullScreen,          API.IG_ToggleFullScreen,            Key.F11),
+        new(LangId.Menu_MnuSlideshow,           API.IG_ToggleSlideshow,             Key.F12),
         new(LangId._MnuPauseResumeSlideshow,    API.IG_ToggleSlideshowPlayback,     Key.Space),
 
 
@@ -161,28 +161,28 @@ public partial class AppAPIProvider
 
 
         // Plugins
-        new(LangId.Menu_MnuColorPicker,          API.IG_ToggleTool, ColorPickerToolControl.TOOL_ID,    [new(MKeys.Alt, Key.K)]),
-        new(LangId.Menu_MnuCropTool,             API.IG_ToggleTool, CropImageToolControl.TOOL_ID,      [new(MKeys.Alt, Key.C)]),
-        new(LangId.Menu_MnuFrameNav,             API.IG_ToggleTool, FrameNavToolControl.TOOL_ID,       [new(MKeys.Alt, Key.P)]),
-        new(LangId.Menu_MnuHdrToneMapper,        API.IG_ToggleTool, HdrToneMapperToolControl.TOOL_ID, [new(MKeys.Alt, Key.H)]),
-        new(LangId.Menu_MnuResizeTool,           API.IG_OpenTool, ImageResizerTool.TOOL_ID,            [new(MKeys.Alt, Key.R)]),
-        new(LangId.Menu_MnuLosslessCompression,  API.IG_OpenTool, LosslessCompressionTool.TOOL_ID,     [new(MKeys.Alt, Key.S)]),
-        new(LangId.Menu_MnuToolsSettings,        API.IG_OpenSettings, nameof(SettingsNavId.Tools)),
+        new(LangId.Menu_MnuColorPicker,         API.IG_ToggleTool, ColorPickerToolControl.TOOL_ID,      [new(Key.K)]),
+        new(LangId.Menu_MnuCropTool,            API.IG_ToggleTool, CropImageToolControl.TOOL_ID,        [new(Key.C)]),
+        new(LangId.Menu_MnuFrameNav,            API.IG_ToggleTool, FrameNavToolControl.TOOL_ID,         [new(Key.P)]),
+        new(LangId.Menu_MnuHdrToneMapper,       API.IG_ToggleTool, HdrToneMapperToolControl.TOOL_ID,    [new(Key.H)]),
+        new(LangId.Menu_MnuResizeTool,          API.IG_OpenTool, ImageResizerTool.TOOL_ID,              [new(Key.R)]),
+        new(LangId.Menu_MnuLosslessCompression, API.IG_OpenTool, LosslessCompressionTool.TOOL_ID,       [new(Key.S)]),
+        new(LangId.Menu_MnuToolsSettings,       API.IG_OpenSettings, nameof(SettingsNavId.Tools)),
 
 
         // Settings
-        new(LangId.Menu_MnuSettings,                     API.IG_OpenSettings,    Hotkey.Ctrl, Key.OemComma),
+        new(LangId.Menu_MnuSettings,            API.IG_OpenSettings,    Hotkey.Ctrl, Key.OemComma),
 
 
         // Help
-        new(LangId.Menu_MnuAbout,                        API.IG_OpenAboutWindow, Key.F1),
-        new(LangId.Menu_MnuUpgradeLicense,                 API.IG_ManageLicense),
-        new(LangId.Menu_MnuManageLicense,             API.IG_ManageLicense),
-        new(LangId._CheckForUpdate,                         API.IG_CheckForUpdate),
-        new(LangId.Menu_MnuReportIssue,                  API.IG_ReportIssue),
-        new(LangId.Menu_MnuQuickSetup,                   API.IG_QuickSetup),
-        new(LangId.Menu_MnuSetDefaultPhotoViewer,        API.IG_SetDefaultPhotoViewer),
-        new(LangId.Menu_MnuRemoveDefaultPhotoViewer,     API.IG_RemoveDefaultPhotoViewer),
+        new(LangId.Menu_MnuAbout,                       API.IG_OpenAboutWindow, Key.F1),
+        new(LangId.Menu_MnuUpgradeLicense,              API.IG_ManageLicense),
+        new(LangId.Menu_MnuManageLicense,               API.IG_ManageLicense),
+        new(LangId._CheckForUpdate,                     API.IG_CheckForUpdate),
+        new(LangId.Menu_MnuReportIssue,                 API.IG_ReportIssue),
+        new(LangId.Menu_MnuQuickSetup,                  API.IG_QuickSetup),
+        new(LangId.Menu_MnuSetDefaultPhotoViewer,       API.IG_SetDefaultPhotoViewer),
+        new(LangId.Menu_MnuRemoveDefaultPhotoViewer,    API.IG_RemoveDefaultPhotoViewer),
 
 
         // Exit

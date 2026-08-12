@@ -63,7 +63,7 @@ public static class PredefinedExternalTools
             Executable = exifGlassExe,
             Arguments = exifGlassArgs,
             IsIntegrated = true,
-            Hotkeys = [new Hotkey(KeyModifiers.Alt, Key.X)],
+            Hotkeys = [new Hotkey(Key.X)],
         };
     }
 
