@@ -74,20 +74,48 @@ public static class SavingExts
         foreach (var (ext, label) in BuiltInExtensions)
         {
             if (!seen.Add(ext)) continue;
-            list.Add(new FilePickerFileType(label) { Patterns = [$"*{ext}"] });
+            list.Add(NewChoice(ext, label));
         }
 
         foreach (var plugin in GetPluginExtensions())
         {
             // a built-in already owns this slot; who actually writes it is decided at save time
             if (!seen.Add(plugin.Ext)) continue;
-            list.Add(new FilePickerFileType(plugin.Ext.TrimStart('.').ToUpperInvariant())
-            {
-                Patterns = [$"*{plugin.Ext}"],
-            });
+            list.Add(NewChoice(plugin.Ext, plugin.Ext.TrimStart('.').ToUpperInvariant()));
         }
 
         return list.ToImmutableList();
+    }
+
+
+    /// <summary>
+    /// Builds one picker entry naming the codec that would write it, e.g. <c>JXL – WIC Codec
+    /// (*.jxl)</c>. The codec segment is dropped when nothing can write the format.
+    /// </summary>
+    private static FilePickerFileType NewChoice(string ext, string label)
+    {
+        var codecName = EncoderNameOf(ext);
+        var name = codecName.Length > 0
+            ? $"{label} – {codecName} (*{ext})"
+            : $"{label} (*{ext})";
+
+        return new FilePickerFileType(name) { Patterns = [$"*{ext}"] };
+    }
+
+
+    /// <summary>
+    /// Friendly name of the codec that would write <paramref name="ext"/>, empty when none can.
+    /// </summary>
+    private static string EncoderNameOf(string ext)
+    {
+        try
+        {
+            return Core.CodecRegistry.GetEncodeCodecInfo(ext)?.CodecName ?? string.Empty;
+        }
+        catch
+        {
+            return string.Empty;
+        }
     }
 
 
