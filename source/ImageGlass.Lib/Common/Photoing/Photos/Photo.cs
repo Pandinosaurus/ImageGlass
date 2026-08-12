@@ -18,6 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 using Avalonia;
 using Avalonia.Media.Imaging;
+using Avalonia.Threading;
 using ImageGlass.Common.Extensions;
 using ImageGlass.Common.Loggers;
 using ImageGlass.Common.ServiceProviders;
@@ -246,7 +247,10 @@ public partial class Photo : PhDisposable
                 var old = field;
                 field = value;
                 _ = OnPropertyChanged();
-                old?.Dispose();
+
+                // Disposal is the UI thread's job: this usually runs on a worker, where freeing
+                // the old bitmap races the gallery still measuring it as its Image.Source.
+                if (old is not null) Dispatcher.UIThread.Post(old.Dispose, DispatcherPriority.Background);
             }
             catch (Exception ex)
             {
@@ -1028,7 +1032,6 @@ public partial class Photo : PhDisposable
                         return;
                     }
 
-                    GalleryThumbnail?.Dispose();
                     GalleryThumbnail = avBitmapCached;
                     return;
                 }
@@ -1062,7 +1065,6 @@ public partial class Photo : PhDisposable
 
 
                 // 7. update the gallery thumbnail (triggers UI binding update)
-                GalleryThumbnail?.Dispose();
                 GalleryThumbnail = avBitmap;
 
 
@@ -1103,7 +1105,7 @@ public partial class Photo : PhDisposable
             _cancelThumbnailLoading?.Dispose();
             _cancelThumbnailLoading = null;
 
-            GalleryThumbnail?.Dispose();
+            // the setter frees the outgoing bitmap once the binding has let go of it
             GalleryThumbnail = null;
         }
         finally

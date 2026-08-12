@@ -165,7 +165,10 @@ public partial class PhTableControl : PhControl
         _headerCells = new Control?[totalCols];
         for (var c = 0; c < contentCols; c++)
         {
-            var cell = HeaderCell(columns[c].Header);
+            var column = columns[c];
+            Control cell = column.HeaderContent is { } content
+                ? WrapHeaderCell(content)
+                : HeaderCell(column.Header);
             cell.ZIndex = 1;
             _headerCells[c] = cell;
         }
@@ -572,8 +575,19 @@ public partial class PhTableControl : PhControl
         Text = text,
         FontWeight = FontWeight.SemiBold,
         Padding = CELL_PADDING,
-        VerticalAlignment = VerticalAlignment.Top,
+        VerticalAlignment = VerticalAlignment.Center,
     };
+
+
+    /// <summary>
+    /// Wraps a custom header control with the standard cell padding, centered so it lines up
+    /// with the plain text headers.
+    /// </summary>
+    private static Border WrapHeaderCell(Control content)
+    {
+        content.VerticalAlignment = VerticalAlignment.Center;
+        return new Border { Padding = CELL_PADDING, Child = content };
+    }
 
 
     /// <summary>
@@ -686,6 +700,12 @@ public sealed class PhTableColumn
     /// Gets, sets the (already localized) header text.
     /// </summary>
     public string Header { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets, sets a control rendered as the header instead of <see cref="Header"/>, for an
+    /// interactive header (e.g. a select-all checkbox). Measured like any cell.
+    /// </summary>
+    public Control? HeaderContent { get; set; }
 
     /// <summary>
     /// Gets, sets whether the column fills remaining width (<c>*</c>); otherwise it auto-fits its content.

@@ -46,6 +46,11 @@ public partial class PluginInfoWindowView : PhControl
     private string[] _declaredEncode = [];
     private readonly HashSet<string> _disabledDecode = new(StringComparer.OrdinalIgnoreCase);
     private readonly HashSet<string> _disabledEncode = new(StringComparer.OrdinalIgnoreCase);
+
+    // The two direction columns, wiring each exclusion set to its checkboxes.
+    private readonly DirectionColumn _decodeColumn;
+    private readonly DirectionColumn _encodeColumn;
+
     private bool _isEditable;
     private bool _isLoaded;
 
@@ -69,6 +74,9 @@ public partial class PluginInfoWindowView : PhControl
     public PluginInfoWindowView()
     {
         InitializeComponent();
+
+        _decodeColumn = new DirectionColumn(_disabledDecode);
+        _encodeColumn = new DirectionColumn(_disabledEncode);
 
         PART_Website.Click += (_, _) => _ = BHelper.OpenUrlAsync(this, _website, "from_plugin_settings");
         PART_OpenFolder.Click += (_, _) => BHelper.OpenFolderPath(_pluginDir);
@@ -190,13 +198,18 @@ public partial class PluginInfoWindowView : PhControl
             : Core.Lang[_isLoaded ? LangId.Settings_Plugins_NoFormats : LangId.Settings_Plugins_FormatsAfterEnable];
         PART_ExtensionsHint.IsVisible = !string.IsNullOrEmpty(PART_ExtensionsHint.Text);
 
+        // the controls of the outgoing table are about to be dropped either way
+        _decodeColumn.Reset();
+        _encodeColumn.Reset();
+
         if (rowExts.Count == 0) return;
 
+        // headers first: the direction ones are select-all boxes the rows then register with
         PhTableColumn[] columns =
         [
             new() { Header = Core.Lang[LangId._FileExtension], Star = true, MinWidth = 140 },
-            new() { Header = Core.Lang[LangId._Decoder] },
-            new() { Header = Core.Lang[LangId._Encoder] },
+            new() { HeaderContent = DirectionHeader(Core.Lang[LangId._Decoder], _decodeColumn) },
+            new() { HeaderContent = DirectionHeader(Core.Lang[LangId._Encoder], _encodeColumn) },
         ];
 
         var rows = rowExts.Select(ext => new PhTableRow
@@ -205,13 +218,38 @@ public partial class PluginInfoWindowView : PhControl
             Cells =
             [
                 PhTableControl.TextCell(ext, selectable: true, font: _codeFont),
-                DirectionCell(ext, _declaredDecode, _disabledDecode),
-                DirectionCell(ext, _declaredEncode, _disabledEncode),
+                DirectionCell(ext, _declaredDecode, _decodeColumn),
+                DirectionCell(ext, _declaredEncode, _encodeColumn),
             ],
         }).ToList();
 
         PART_ExtensionsTable.EmptyText = Core.Lang[LangId._Empty];
         PART_ExtensionsTable.Build(columns, rows);
+
+        SyncDirectionHeader(_decodeColumn);
+        SyncDirectionHeader(_encodeColumn);
+    }
+
+
+    /// <summary>
+    /// Builds a direction column's header: a tri-state checkbox that mirrors its rows
+    /// (mixed = indeterminate) and switches them all on or off when clicked.
+    /// </summary>
+    private CheckBox DirectionHeader(string text, DirectionColumn column)
+    {
+        var check = new SelectAllCheckBox
+        {
+            Content = text,
+            FontWeight = FontWeight.SemiBold,
+            IsThreeState = true,
+            MinWidth = 0,
+        };
+        column.Header = check;
+
+        // IsChecked still holds the state the user clicked on, since the box does not self-toggle
+        check.Click += (_, _) => SetDirection(column, check.IsChecked != true);
+
+        return check;
     }
 
 
@@ -219,7 +257,7 @@ public partial class PluginInfoWindowView : PhControl
     /// One direction cell: a checkbox when the plugin declares this extension for it, otherwise a
     /// muted dash meaning "not applicable" (a greyed checkbox would read as "off, could be on").
     /// </summary>
-    private Control DirectionCell(string ext, string[] declared, HashSet<string> disabled)
+    private Control DirectionCell(string ext, string[] declared, DirectionColumn column)
     {
         if (!declared.Contains(ext, StringComparer.OrdinalIgnoreCase))
         {
@@ -228,20 +266,54 @@ public partial class PluginInfoWindowView : PhControl
 
         var check = new CheckBox
         {
-            IsChecked = !disabled.Contains(ext),
+            IsChecked = !column.Disabled.Contains(ext),
             IsEnabled = _isEditable,
         };
+        column.Rows.Add((ext, check));
 
         // Click, not IsCheckedChanged, so the initial assignment above doesn't mark it dirty.
         check.Click += (_, _) =>
         {
-            if (check.IsChecked == true) disabled.Remove(ext);
-            else disabled.Add(ext);
-
+            column.SetExcluded(ext, check.IsChecked != true);
             ChoicesChanged = true;
+
+            SyncDirectionHeader(column);
         };
 
         return PhTableControl.WrapCell(check);
+    }
+
+
+    /// <summary>
+    /// Switches every checkbox of a direction column on or off, exclusion set included.
+    /// </summary>
+    private void SetDirection(DirectionColumn column, bool isChecked)
+    {
+        if (!_isEditable || column.Rows.Count == 0) return;
+
+        foreach (var (ext, check) in column.Rows)
+        {
+            check.IsChecked = isChecked;
+            column.SetExcluded(ext, !isChecked);
+        }
+
+        ChoicesChanged = true;
+        SyncDirectionHeader(column);
+    }
+
+
+    /// <summary>
+    /// Re-reads a direction column's rows into its header box: all on, all off, or indeterminate.
+    /// </summary>
+    private void SyncDirectionHeader(DirectionColumn column)
+    {
+        if (column.Header is not { } header) return;
+
+        var total = column.Rows.Count;
+        var ticked = column.Rows.Count(r => r.Check.IsChecked == true);
+
+        header.IsChecked = ticked == 0 ? false : ticked == total ? true : null;
+        header.IsEnabled = _isEditable && total > 0;
     }
 
 
@@ -252,6 +324,61 @@ public partial class PluginInfoWindowView : PhControl
     {
         value.Text = text ?? string.Empty;
         row.IsVisible = !string.IsNullOrWhiteSpace(text);
+    }
+
+
+    /// <summary>
+    /// One direction column of the format picker (Decoder or Encoder): the exclusion set it
+    /// edits, its per-extension checkboxes, and the header's select-all box.
+    /// </summary>
+    private sealed class DirectionColumn(HashSet<string> disabled)
+    {
+        /// <summary>
+        /// The working exclusion set for this direction, shared with the view's own field.
+        /// </summary>
+        public HashSet<string> Disabled { get; } = disabled;
+
+        /// <summary>
+        /// The checkbox of every extension the plugin declares for this direction.
+        /// </summary>
+        public List<(string Ext, CheckBox Check)> Rows { get; } = [];
+
+        /// <summary>
+        /// The header's tri-state select-all checkbox.
+        /// </summary>
+        public CheckBox? Header { get; set; }
+
+
+        /// <summary>
+        /// Adds or removes an extension from the exclusion set.
+        /// </summary>
+        public void SetExcluded(string ext, bool excluded)
+        {
+            if (excluded) Disabled.Add(ext);
+            else Disabled.Remove(ext);
+        }
+
+
+        /// <summary>
+        /// Drops the visuals of a table that is about to be rebuilt; the exclusions survive it.
+        /// </summary>
+        public void Reset()
+        {
+            Rows.Clear();
+            Header = null;
+        }
+    }
+
+
+    /// <summary>
+    /// A checkbox whose next state its owner derives from the whole column. The base cycling is
+    /// suppressed, otherwise a click lands on an intermediate state first and flashes.
+    /// </summary>
+    private sealed class SelectAllCheckBox : CheckBox
+    {
+        protected override Type StyleKeyOverride => typeof(CheckBox);
+
+        protected override void Toggle() { }
     }
 
 }

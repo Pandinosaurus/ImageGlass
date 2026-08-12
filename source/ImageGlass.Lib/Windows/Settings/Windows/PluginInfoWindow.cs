@@ -108,12 +108,15 @@ internal sealed class PluginInfoWindow : DialogWindow
 
         if (mode is PluginInfoWindowMode.Enable or PluginInfoWindowMode.Configure)
         {
-            // action prompt: [Trust and enable|Save] [Cancel], with Cancel as the safe default
             IsButton1Visible = true;
             IsButton2Visible = true;
             IsButton3Visible = false;
-            DefaultButton = DialogButton.Button2;
-            DefaultFocus = DialogFocus.Button2;
+
+            // Enable is a consent prompt, so Cancel stays the accented default; once the plugin is
+            // trusted this is just a format editor, where Save is the expected action.
+            var cta = mode == PluginInfoWindowMode.Configure ? DialogButton.Button1 : DialogButton.Button2;
+            DefaultButton = cta;
+            DefaultFocus = cta == DialogButton.Button1 ? DialogFocus.Button1 : DialogFocus.Button2;
         }
         else
         {
