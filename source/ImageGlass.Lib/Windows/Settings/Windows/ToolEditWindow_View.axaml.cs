@@ -56,15 +56,15 @@ public partial class ToolEditWindowView : PhControl
 
 
     /// <summary>
-    /// Loads the given tool into the fields (a null tool means "add new"), defaulting the argument to
-    /// the <see cref="Const.FILE_MACRO"/> for a new tool. <paramref name="takenIds"/> drives the
-    /// id-uniqueness check on submit.
+    /// Loads the given tool into the fields (null means "add new", defaulting the argument to
+    /// <see cref="Const.FILE_MACRO"/>). <paramref name="isIdLocked"/> disables the id field.
     /// </summary>
-    public void LoadData(ExternalTool? tool, ISet<string> takenIds)
+    public void LoadData(ExternalTool? tool, ISet<string> takenIds, bool isIdLocked = false)
     {
         _takenIds = takenIds;
 
         PART_Id.Text = tool?.ToolId ?? string.Empty;
+        PART_Id.IsEnabled = !isIdLocked;
         PART_Name.Text = tool?.ToolName ?? string.Empty;
         PART_Integrated.IsChecked = tool?.IsIntegrated ?? false;
 

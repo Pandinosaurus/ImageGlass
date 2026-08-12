@@ -92,7 +92,8 @@ public partial class ToolsSettingsView : SettingsPageView
     /// </summary>
     private async Task AddOrEditToolAsync(ExternalTool? existing)
     {
-        var win = new ToolEditWindow(existing, CollectTakenIds(except: existing));
+        var isIdLocked = existing is not null && PredefinedExternalTools.IsPredefined(existing.ToolId);
+        var win = new ToolEditWindow(existing, CollectTakenIds(except: existing), isIdLocked);
         if (await win.ShowAsync(TopLevel.GetTopLevel(this) as PhWindow) != DialogExitCode.OK) return;
         if (win.ResultTool is not { } tool) return;
 
@@ -106,23 +107,26 @@ public partial class ToolsSettingsView : SettingsPageView
 
 
     /// <summary>
-    /// Opens the edit dialog for the tool with the given id; when no such tool exists in the
-    /// working copy, opens the add dialog pre-seeded with the id (to recreate a missing tool).
+    /// Opens the edit dialog for the tool with the given id; when missing from the working copy,
+    /// opens the add dialog seeded from the pre-configured definition, else from the id alone.
     /// </summary>
     public Task EditToolAsync(string toolId)
     {
         if (string.IsNullOrEmpty(toolId)) return Task.CompletedTask;
 
         var existing = _tools.FirstOrDefault(t => string.Equals(t.ToolId, toolId, StringComparison.OrdinalIgnoreCase));
-        return AddOrEditToolAsync(existing ?? new ExternalTool { ToolId = toolId });
+        var seed = existing ?? PredefinedExternalTools.Find(toolId) ?? new ExternalTool { ToolId = toolId };
+
+        return AddOrEditToolAsync(seed);
     }
 
 
     /// <summary>
-    /// Removes a tool from the working copy and re-renders.
+    /// Removes a tool from the working copy and re-renders. Pre-configured tools are not removable.
     /// </summary>
     private void DeleteTool(ExternalTool tool)
     {
+        if (PredefinedExternalTools.IsPredefined(tool.ToolId)) return;
         if (!_tools.Remove(tool)) return;
 
         StageTools();
@@ -154,20 +158,30 @@ public partial class ToolsSettingsView : SettingsPageView
             new() { Header = Core.Lang[LangId._Hotkeys] },
         ];
 
-        var rows = _tools.Select(tool => new PhTableRow
+        var rows = _tools.Select(tool =>
         {
-            Cells =
-            [
-                NameCell(tool),
-                ExecutableCell(tool),
-                IntegratedCell(tool),
-                HotkeysCell(tool),
-            ],
-            Actions =
-            [
+            var actions = new List<PhTableAction>
+            {
                 new() { Icon = ResxIconId.IconEdit, Tooltip = Core.Lang[LangId._Edit], Click = () => _ = AddOrEditToolAsync(tool) },
-                new() { Icon = ResxIconId.IconClose, Tooltip = Core.Lang[LangId._Delete], Click = () => DeleteTool(tool) },
-            ],
+            };
+
+            // a pre-configured tool is editable but not removable
+            if (!PredefinedExternalTools.IsPredefined(tool.ToolId))
+            {
+                actions.Add(new() { Icon = ResxIconId.IconClose, Tooltip = Core.Lang[LangId._Delete], Click = () => DeleteTool(tool) });
+            }
+
+            return new PhTableRow
+            {
+                Cells =
+                [
+                    NameCell(tool),
+                    ExecutableCell(tool),
+                    IntegratedCell(tool),
+                    HotkeysCell(tool),
+                ],
+                Actions = actions,
+            };
         }).ToList();
 
         PART_Table.EmptyText = Core.Lang[LangId._Empty];

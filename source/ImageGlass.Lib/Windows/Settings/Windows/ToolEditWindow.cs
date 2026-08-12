@@ -45,9 +45,10 @@ internal sealed class ToolEditWindow : DialogWindow
 
 
     /// <summary>
-    /// Opens the window to register a new tool (when <paramref name="tool"/> is null) or edit an existing one.
+    /// Opens the window to register a new tool (when <paramref name="tool"/> is null) or edit an
+    /// existing one. <paramref name="isIdLocked"/> makes the tool id read-only (pre-configured tools).
     /// </summary>
-    public ToolEditWindow(ExternalTool? tool, ISet<string> takenIds)
+    public ToolEditWindow(ExternalTool? tool, ISet<string> takenIds, bool isIdLocked = false)
     {
         _isEditMode = tool is not null;
 
@@ -58,7 +59,7 @@ internal sealed class ToolEditWindow : DialogWindow
         DefaultFocus = DialogFocus.Default;
 
         _view = new ToolEditWindowView();
-        _view.LoadData(tool, takenIds);
+        _view.LoadData(tool, takenIds, isIdLocked);
         DialogContent = _view;
     }
 

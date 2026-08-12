@@ -600,7 +600,27 @@ public partial class Config
         }
 
         appConfig ??= new();
+
+        // seed pre-configured external tools; also runs on a failed load so they still work
+        EnsurePredefinedTools(appConfig);
+
         return appConfig;
+    }
+
+
+    /// <summary>
+    /// Seeds <see cref="PredefinedExternalTools"/> into <see cref="Tools"/>, keeping user edits.
+    /// Skipped when an admin defines the setting.
+    /// </summary>
+    private static void EnsurePredefinedTools(Config config)
+    {
+        if (IsConfigLocked(ConfigId.Tools)) return;
+
+        // the getter falls back to a throwaway collection when unset, so write the result back
+        var tools = config.Tools;
+        if (!PredefinedExternalTools.Seed(tools)) return;
+
+        config.Tools = tools;
     }
 
 
