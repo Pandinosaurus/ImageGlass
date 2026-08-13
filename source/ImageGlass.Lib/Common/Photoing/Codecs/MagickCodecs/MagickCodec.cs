@@ -597,24 +597,37 @@ public static partial class MagickCodec
         };
         var settings = ParseSettings(options, false, filePath);
 
+        // ping a throwaway image: reading into a pinged instance double-frees on teardown
         try
         {
-            var imgM = new MagickImage();
-            imgM.Ping(filePath, settings);
+            using var probeM = new MagickImage();
+            probeM.Ping(filePath, settings);
 
             // check the dimention constraint
-            if (imgM.Width < minSize
-                || imgM.Height < minSize
-                || imgM.Width > maxSize
-                || imgM.Height > maxSize) return null;
+            if (probeM.Width < minSize
+                || probeM.Height < minSize
+                || probeM.Width > maxSize
+                || probeM.Height > maxSize) return null;
+        }
+        catch { return null; }
 
-            await imgM.ReadAsync(filePath, settings, token);
+        if (token.IsCancellationRequested) return null;
+
+
+        var imgM = new MagickImage();
+        try
+        {
+            // token checked around the read, never inside: aborting it mid-flight double-frees
+            await imgM.ReadAsync(filePath, settings);
+            if (token.IsCancellationRequested) throw new OperationCanceledException(token);
 
             return imgM;
         }
-        catch { }
-
-        return null;
+        catch
+        {
+            imgM.Dispose();
+            return null;
+        }
     }
 
 
