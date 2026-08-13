@@ -36,12 +36,16 @@ public interface IPhotoPreviewProvider
     /// <summary>
     /// Retrieves an embedded thumbnail from either a RAW format or an EXIF profile if exists.
     /// </summary>
-    Task<SKImage?> GetPreviewAsync(PhotoMetadata meta, double? minHeight, CancellationToken token = default);
+    /// <param name="skipPlatformCache">The caller already probed the platform cache.</param>
+    Task<SKImage?> GetPreviewAsync(PhotoMetadata meta, double? minHeight,
+        CancellationToken token = default, bool skipPlatformCache = false);
 
 
     /// <summary>
     /// Gets thumbnail of the photo.
     /// </summary>
-    Task<SKImage?> GetThumbnailAsync(PhotoMetadata meta, double minHeight, CancellationToken token = default);
+    /// <param name="skipPlatformCache">The caller already probed the platform cache.</param>
+    Task<SKImage?> GetThumbnailAsync(PhotoMetadata meta, double minHeight,
+        CancellationToken token = default, bool skipPlatformCache = false);
 
 }

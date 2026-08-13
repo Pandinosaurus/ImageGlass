@@ -47,7 +47,7 @@ public class PhotoPreviewProvider : IPhotoPreviewProvider
     /// <inheritdoc/>
     /// </summary>
     public virtual async Task<SKImage?> GetPreviewAsync(PhotoMetadata meta, double? minHeight,
-        CancellationToken token = default)
+        CancellationToken token = default, bool skipPlatformCache = false)
     {
         // 1. fast path: native scaled decode via SkiaSharp. Skipped for a plugin-owned format,
         // which Skia does not know but can still mis-sniff into a garbage frame.
@@ -90,13 +90,13 @@ public class PhotoPreviewProvider : IPhotoPreviewProvider
     /// <inheritdoc/>
     /// </summary>
     public virtual async Task<SKImage?> GetThumbnailAsync(PhotoMetadata meta, double minHeight,
-        CancellationToken token = default)
+        CancellationToken token = default, bool skipPlatformCache = false)
     {
         var minSize = (int)minHeight;
         var maxSize = minSize * 2;
 
         // 1. fast path: try to get the quick preview
-        var imgPreview = await GetPreviewAsync(meta, minSize, token);
+        var imgPreview = await GetPreviewAsync(meta, minSize, token, skipPlatformCache);
         var isPreviewLargeEnough = IsPreviewLargeEnough(imgPreview, meta, minSize);
         PhotoTrace.Mark("thumb:preview", null, $"{meta.FilePath} -> {Describe(imgPreview)}, "
             + $"meta={meta.Width}x{meta.Height}, largeEnough={isPreviewLargeEnough}");

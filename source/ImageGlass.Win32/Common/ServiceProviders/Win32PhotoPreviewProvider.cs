@@ -37,8 +37,7 @@ public class Win32PhotoPreviewProvider : PhotoPreviewProvider
     {
         if (!Core.Config.EnableGalleryShellThumbnail) return null;
 
-        // no gate here: the caller already holds a thumbnail throttle slot, so serializing
-        // this would collapse the whole pipeline to one photo at a time
+        // no gate: the caller already holds a throttle slot, so this would serialize everything
         return await Task.Run(
             () => Win32ShellThumbnailApi.GetThumbnail(filePath, size, size, true), token)
             .ConfigureAwait(false);
@@ -48,12 +47,13 @@ public class Win32PhotoPreviewProvider : PhotoPreviewProvider
     /// <inheritdoc/>
     /// Tries to use native platform API to get the shell thumbnail if allowed.
     /// </summary>
-    public override async Task<SKImage?> GetPreviewAsync(PhotoMetadata meta, double? minHeight, CancellationToken token = default)
+    public override async Task<SKImage?> GetPreviewAsync(PhotoMetadata meta, double? minHeight,
+        CancellationToken token = default, bool skipPlatformCache = false)
     {
         // 0. if don't use shell thumbnail if not allowed
         if (!Core.Config.EnableGalleryShellThumbnail)
         {
-            return await base.GetPreviewAsync(meta, minHeight, token);
+            return await base.GetPreviewAsync(meta, minHeight, token, skipPlatformCache);
         }
 
 
@@ -65,10 +65,13 @@ public class Win32PhotoPreviewProvider : PhotoPreviewProvider
         // 1. fast path: try Shell cache only (instant, no decoding).
         // The Shell cache only holds discrete size tiers (96/256/768/1920), so a hit can be far
         // smaller than requested; keep it as a fallback but keep looking for a sharper source.
-        var imgShellCached = await Task.Run(() => Win32ShellThumbnailApi.GetThumbnail(meta.FilePath, size, size, true))
-            .ConfigureAwait(false);
-        PhotoTrace.Mark("preview:shell-cache", null, $"{meta.FilePath} -> {Describe(imgShellCached)}");
-        _ = KeepLarger(ref imgPreview, imgShellCached); // Shell output needs no post-processing
+        if (!skipPlatformCache)
+        {
+            var imgShellCached = await Task.Run(() => Win32ShellThumbnailApi.GetThumbnail(meta.FilePath, size, size, true))
+                .ConfigureAwait(false);
+            PhotoTrace.Mark("preview:shell-cache", null, $"{meta.FilePath} -> {Describe(imgShellCached)}");
+            _ = KeepLarger(ref imgPreview, imgShellCached); // Shell output needs no post-processing
+        }
 
 
         // 2. fast path: native scaled decode via SkiaSharp. Skipped for a plugin-owned format,

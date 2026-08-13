@@ -1017,7 +1017,8 @@ public partial class Photo : PhDisposable
                         FilePath, (int)thumbSize, Metadata.FileLastWriteTimeUtc, token)
                         .ConfigureAwait(false)
                     : null;
-                using var platformThumb = useCache && diskThumb.IsDisposed()
+                var didProbePlatformCache = useCache && diskThumb.IsDisposed();
+                using var platformThumb = didProbePlatformCache
                     ? await Core.PreviewProvider.TryGetCachedThumbnailAsync(
                         FilePath, (int)thumbSize, token).ConfigureAwait(false)
                     : null;
@@ -1068,7 +1069,8 @@ public partial class Photo : PhDisposable
                 PhotoTrace.Mark("thumb:provider", null, $"{FilePath} @ {(int)thumbSize}px");
                 var swThumb = PhotoTrace.Enabled ? Stopwatch.StartNew() : null;
                 using var skThumb = await Task.Run(
-                    () => Core.PreviewProvider.GetThumbnailAsync(Metadata, thumbSize, token), token)
+                    () => Core.PreviewProvider.GetThumbnailAsync(
+                        Metadata, thumbSize, token, didProbePlatformCache), token)
                     .ConfigureAwait(false);
                 if (token.IsCancellationRequested || skThumb.IsDisposed()) return;
 
