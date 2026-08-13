@@ -1025,8 +1025,15 @@ public partial class Photo : PhDisposable
 
                 if (!cachedThumb.IsDisposed())
                 {
+                    // the Shell hands back whole cache tiers; retaining one costs MBs per photo
+                    using var scaledThumb = thumbSize > 0
+                        && (cachedThumb.Width > thumbSize || cachedThumb.Height > thumbSize)
+                        ? await Task.Run(() => SkiaCodec.ScaleDown(cachedThumb, thumbSize), token)
+                            .ConfigureAwait(false)
+                        : null;
+
                     var avBitmapCached = await Task.Run(
-                        () => SkiaCodec.ToWritableBitmap(cachedThumb), token)
+                        () => SkiaCodec.ToWritableBitmap(scaledThumb ?? cachedThumb), token)
                         .ConfigureAwait(false);
 
                     if (avBitmapCached is null) return;
