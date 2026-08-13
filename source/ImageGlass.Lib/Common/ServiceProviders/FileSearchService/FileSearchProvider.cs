@@ -35,7 +35,6 @@ namespace ImageGlass.Common.ServiceProviders.FileSearchService;
 public partial class FileSearchProvider() : PhDisposable, IFileSearchProvider
 {
     protected CancellationTokenSource? _cancelSearching;
-    protected Action<FileSearchingEventArgs>? _progressFn;
 
 
     // Public Properties
@@ -45,12 +44,6 @@ public partial class FileSearchProvider() : PhDisposable, IFileSearchProvider
     /// <inheritdoc/>
     /// </summary>
     public FileSearchOptions Options { get; protected set; } = new();
-
-
-    /// <summary>
-    /// Gets a value indicating whether the search operation has completed.
-    /// </summary>
-    public bool IsSearchEnded { get; protected set; } = false;
 
 
     #endregion // Public Properties
@@ -64,12 +57,11 @@ public partial class FileSearchProvider() : PhDisposable, IFileSearchProvider
     /// </summary>
     public async virtual Task SearchAsync(IEnumerable<string> dirs, FileSearchOptions options, Action<FileSearchingEventArgs>? progressFn = null)
     {
-        _progressFn = progressFn;
         Options = options;
 
         // cancel ongoing search
         CancelSearching();
-        IsSearchEnded = false;
+        var token = _cancelSearching.Token;
 
         // snapshot the collection to avoid modification during enumeration
         var dirList = dirs.ToList();
@@ -81,14 +73,12 @@ public partial class FileSearchProvider() : PhDisposable, IFileSearchProvider
             {
                 foreach (var dirPath in dirList)
                 {
-                    if (_cancelSearching.Token.IsCancellationRequested) break;
-                    FindFiles(dirPath, _cancelSearching.Token);
+                    if (token.IsCancellationRequested) break;
+                    FindFiles(dirPath, options, progressFn, token);
                 }
-            }, _cancelSearching.Token);
+            }, token);
         }
         catch { }
-
-        IsSearchEnded = true;
     }
 
 
@@ -117,7 +107,6 @@ public partial class FileSearchProvider() : PhDisposable, IFileSearchProvider
     {
         base.OnDisposing();
 
-        _progressFn = null;
         CancelSearching();
     }
 
@@ -125,14 +114,14 @@ public partial class FileSearchProvider() : PhDisposable, IFileSearchProvider
     /// <summary>
     /// Filters a collection of strings and returns the filtered results.
     /// </summary>
-    protected virtual IEnumerable<string> OnFiltering(IEnumerable<string> fileList,
+    protected virtual IEnumerable<FileSearchEntry> OnFiltering(IEnumerable<FileSearchEntry> fileList,
         FileSearchOptions options)
     {
         if (options.AllowedExtensions is null) return fileList;
 
-        return fileList.Where(path =>
+        return fileList.Where(entry =>
         {
-            var ext = Path.GetExtension(path).ToLowerInvariant();
+            var ext = Path.GetExtension(entry.FilePath).ToLowerInvariant();
 
             return options.AllowedExtensions.Contains(ext);
         });
@@ -142,45 +131,106 @@ public partial class FileSearchProvider() : PhDisposable, IFileSearchProvider
     /// <summary>
     /// Sorts a collection of image file paths based on provided criteria.
     /// </summary>
-    protected virtual IOrderedEnumerable<string> OnSorting(IEnumerable<string> fileList,
+    protected virtual IOrderedEnumerable<FileSearchEntry> OnSorting(IEnumerable<FileSearchEntry> fileList,
         FileSearchOptions options)
     {
-        return SortFiles(fileList, options);
+        return SortEntries(fileList, options);
     }
 
 
     /// <summary>
     /// Finds files in the given directory, emits <see cref="FileSearching"/> event.
     /// </summary>
-    protected void FindFiles(string dirPath, CancellationToken token)
+    protected void FindFiles(string dirPath, FileSearchOptions options,
+        Action<FileSearchingEventArgs>? progressFn, CancellationToken token)
     {
         // cancel if requested
         if (token.IsCancellationRequested) return;
 
         // search files; hidden/system sub-folders are pruned from the recursion too
-        var filePaths = Directory.EnumerateFiles(dirPath, "*",
-            BHelper.GetEnumerationOptions(Options.IncludeHidden, Options.SearchSubDirectories));
+        var entries = EnumerateFileEntries(dirPath, options, options.SearchSubDirectories, token);
 
 
         // cancel if requested
         if (token.IsCancellationRequested) return;
 
         // filter list
-        filePaths = OnFiltering(filePaths, Options);
+        var filePaths = OnFiltering(entries, options);
 
 
         // cancel if requested
         if (token.IsCancellationRequested) return;
 
         // sort list
-        filePaths = OnSorting(filePaths, Options);
+        filePaths = OnSorting(filePaths, options);
 
 
         // cancel if requested
         if (token.IsCancellationRequested) return;
 
         // emits results
-        _progressFn?.Invoke(new FileSearchingEventArgs(filePaths, IsSearchEnded));
+        progressFn?.Invoke(new FileSearchingEventArgs(filePaths.ToList()));
+    }
+
+
+    /// <summary>
+    /// Enumerates files and captures their filesystem metadata.
+    /// </summary>
+    protected static List<FileSearchEntry> EnumerateFileEntries(string dirPath,
+        FileSearchOptions options, bool searchSubDirectories, CancellationToken token)
+    {
+        var entries = new List<FileSearchEntry>();
+        try
+        {
+            foreach (var file in new DirectoryInfo(dirPath).EnumerateFiles("*",
+                BHelper.GetEnumerationOptions(options.IncludeHidden, searchSubDirectories)))
+            {
+                if (token.IsCancellationRequested) break;
+
+                var ext = file.Extension.ToLowerInvariant();
+                if (options.AllowedExtensions is not null
+                    && !options.AllowedExtensions.Contains(ext)) continue;
+
+                entries.Add(FileSearchEntry.FromFileInfo(file));
+            }
+        }
+        catch { }
+
+        return entries;
+    }
+
+
+    /// <summary>
+    /// Sorts a collection of filesystem entries based on provided criteria.
+    /// </summary>
+    private static IOrderedEnumerable<FileSearchEntry> SortEntries(IEnumerable<FileSearchEntry> fileList, FileSearchOptions options)
+    {
+        var filePathComparer = new StringNaturalComparer(options.OrderType == ImageOrderType.Asc, StringComparison.OrdinalIgnoreCase);
+        var dirPathComparer = options.GroupByDir
+            ? new StringNaturalComparer(options.OrderType == ImageOrderType.Asc, StringComparison.OrdinalIgnoreCase)
+            : (IComparer<string?>)Comparer<string>.Create((a, b) => 0);
+        var query = fileList.OrderBy(f => Path.GetDirectoryName(f.FilePath), dirPathComparer);
+
+        if (options.OrderBy == ImageOrderBy.Random)
+        {
+            return query.ThenBy(_ => Guid.NewGuid());
+        }
+
+        var sorted = (options.OrderBy, options.OrderType) switch
+        {
+            (ImageOrderBy.FileSize, ImageOrderType.Desc) => query.ThenByDescending(f => f.FileSizeInBytes),
+            (ImageOrderBy.FileSize, _) => query.ThenBy(f => f.FileSizeInBytes),
+            (ImageOrderBy.DateCreated, ImageOrderType.Desc) => query.ThenByDescending(f => f.FileCreationTimeUtc),
+            (ImageOrderBy.DateCreated, _) => query.ThenBy(f => f.FileCreationTimeUtc),
+            (ImageOrderBy.Extension, _) => query.ThenBy(f => Path.GetExtension(f.FilePath), StringComparer.OrdinalIgnoreCase),
+            (ImageOrderBy.DateAccessed, ImageOrderType.Desc) => query.ThenByDescending(f => f.FileLastAccessTimeUtc),
+            (ImageOrderBy.DateAccessed, _) => query.ThenBy(f => f.FileLastAccessTimeUtc),
+            (ImageOrderBy.DateModified, ImageOrderType.Desc) => query.ThenByDescending(f => f.FileLastWriteTimeUtc),
+            (ImageOrderBy.DateModified, _) => query.ThenBy(f => f.FileLastWriteTimeUtc),
+            _ => query,
+        };
+
+        return sorted.ThenBy(f => Path.GetFileName(f.FilePath), filePathComparer);
     }
 
 

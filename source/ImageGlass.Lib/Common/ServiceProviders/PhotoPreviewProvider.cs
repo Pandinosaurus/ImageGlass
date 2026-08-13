@@ -33,7 +33,14 @@ public class PhotoPreviewProvider : IPhotoPreviewProvider
     /// Callers request 2x the size they display (supersampling margin), so half of it is still
     /// drawn without any upscaling; below that the preview visibly blurs.
     /// </summary>
-    private const double MIN_PREVIEW_SIZE_RATIO = 0.5;
+    internal const double MIN_PREVIEW_SIZE_RATIO = 0.5;
+
+
+    /// <summary>
+    /// <inheritdoc/>
+    /// </summary>
+    public virtual Task<SKImage?> TryGetCachedThumbnailAsync(string filePath, int size,
+        CancellationToken token = default) => Task.FromResult<SKImage?>(null);
 
 
     /// <summary>
