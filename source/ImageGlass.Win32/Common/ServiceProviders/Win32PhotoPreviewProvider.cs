@@ -29,9 +29,6 @@ namespace ImageGlass.Win32.Common.ServiceProviders;
 
 public class Win32PhotoPreviewProvider : PhotoPreviewProvider
 {
-    private static readonly SemaphoreSlim _shellCacheLock = new(1, 1);
-
-
     /// <summary>
     /// <inheritdoc/>
     /// </summary>
@@ -40,17 +37,11 @@ public class Win32PhotoPreviewProvider : PhotoPreviewProvider
     {
         if (!Core.Config.EnableGalleryShellThumbnail) return null;
 
-        await _shellCacheLock.WaitAsync(token).ConfigureAwait(false);
-        try
-        {
-            return await Task.Run(
-                () => Win32ShellThumbnailApi.GetThumbnail(filePath, size, size, true), token)
-                .ConfigureAwait(false);
-        }
-        finally
-        {
-            _shellCacheLock.Release();
-        }
+        // no gate here: the caller already holds a thumbnail throttle slot, so serializing
+        // this would collapse the whole pipeline to one photo at a time
+        return await Task.Run(
+            () => Win32ShellThumbnailApi.GetThumbnail(filePath, size, size, true), token)
+            .ConfigureAwait(false);
     }
 
     /// <summary>
