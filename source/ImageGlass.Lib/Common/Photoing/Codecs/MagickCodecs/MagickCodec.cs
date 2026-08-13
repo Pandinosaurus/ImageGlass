@@ -617,9 +617,8 @@ public static partial class MagickCodec
         var imgM = new MagickImage();
         try
         {
-            // token checked around the read, never inside: aborting it mid-flight double-frees
-            await imgM.ReadAsync(filePath, settings);
-            if (token.IsCancellationRequested) throw new OperationCanceledException(token);
+            await imgM.ReadAsync(filePath, settings, token);
+            token.ThrowIfCancellationRequested();
 
             return imgM;
         }

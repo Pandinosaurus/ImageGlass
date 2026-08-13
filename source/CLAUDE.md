@@ -188,6 +188,7 @@ Extension methods on framework types. Prefer these over re-implementing:
 - `Format.cs`: `FormatSize()`, `FormatDateTime()`, `SimplifyFractions()`, star-rating formatting
 - `General.cs`: `OS`, `GenerateWrappedIndexes()` (spiral cache order), `ComputeIndexInRange()`, `ResizeRatio()`, `GetInAppError()`
 - `Path.cs`: `ConfigDir()` / `BaseDir()`, `ResolvePath()`, `CheckPath()`, `OpenUrlAsync()`, `OpenFilePath()` / `OpenFolderPath()`, `DeleteFile()`
+  - `ResolvePath()` is the **single** public path normalizer: it unwraps `ig://`, strips quotes, expands env vars, follows `.lnk` and macOS `.app`, then makes the result absolute. Never add a second normalizer beside it; if a caller needs only part of that, make the missing piece a `private` helper *inside* `ResolvePath` rather than a parallel public API.
 - `ProcessHelper.cs`: `RunExeAsync()` / `RunExeCmd()`, `RunSync()`, `ExitApp()`
 - `JsonEx.cs`: `CreateJsonOptions()`, `ReadJsonFromFile()` / `WriteJsonToFileAsync()` (AOT-safe via `JsonTypeInfo<T>`)
 - `Task.cs`: `Debounce()`, `GcCollect()`
@@ -380,6 +381,22 @@ Occurs in `Program.cs` before Avalonia app setup (Linux/Mac have equivalent regi
 - **Tier 3**: LRU eviction when memory budget exhausted
 - Spiral pattern: right-1, left-1, right-2, left-2, ... to balance browsing directions
 
+### File search & captured file metadata
+- `FileSearchProvider.EnumerateFileEntries` captures `FileInfo` (size, timestamps, attributes) during enumeration into a `FileSearchEntry`, and `PhotoManager.Add(IEnumerable<FileSearchEntry>)` builds `Photo`/`PhotoMetadata` from it, so no per-file re-stat. On Windows those fields come free from `WIN32_FIND_DATA`; on Unix they cost one `stat`, still fewer than before.
+- `PhotoMetadata(FileSearchEntry)` deliberately skips `SetFilePath__` (which re-stats). It is a **partial** fill: `IsOutdated()` stays true until a codec loads real image metadata, so the capture *defers* the codec metadata load rather than replacing it.
+- Enumeration emits `FileInfo.FullName`, i.e. absolute paths, and `PhotoManager.IndexOf` is an exact-string `ConcurrentDictionary` lookup (`OrdinalIgnoreCase`). Every path entering `StartLoadingFiles` must therefore pass through `BHelper.ResolvePath` or the init photo never resolves to a list index (gallery shows nothing selected, navigation starts from -1).
+- `FileSearchingEventArgs.Results` is a materialized `IReadOnlyList`, and filtering/sorting now run on the background thread instead of lazily on the UI thread during `Add`.
+- The **Win32** override publishes progress through `Dispatcher.UIThread.Post` with a token re-check *inside* the posted lambda, which is what serializes a stale batch against `PhotoManager.Clear()`. The base provider (Linux/macOS) still invokes `progressFn` directly on the worker, so that race remains open there.
+
+### Gallery thumbnail pipeline (`Photo.LoadThumbnailAsync`)
+- Tiers in order, all skipped when `useCache` is false: in-memory `GalleryThumbnail`, `ThumbnailDiskCache`, `IPhotoPreviewProvider.TryGetCachedThumbnailAsync` (platform cache), then `GetThumbnailAsync` (decodes).
+- Both cache tiers run **before** `LoadMetadataAsync`; that ordering is the whole point, since neither may read the source file. `ThumbnailDiskCache.TryGetAsync` therefore validates against the `Metadata.FileLastWriteTimeUtc` captured at enumeration, not a fresh stat, so an out-of-band edit is corrected by the file watcher rather than by the cache check.
+- `_galleryThumbnailRequestSize` keys the in-memory thumbnail to the size it was produced for, so a DPI or `Config.ThumbnailSize` change reloads instead of serving a stale size.
+- **Shrink whatever a cache returns** to `thumbSize` via `SkiaCodec.ScaleDown` before `ToWritableBitmap`. The Windows Shell hands back whole cache tiers (96/256/768/1920), and retaining one costs MBs of gallery memory per photo. Keep the *original* cached image as the size authority for `IsPreviewLargeEnough` and the too-small check.
+- **Never nest a process-wide gate inside this call.** The caller already holds a `_thumbnailThrottleLock` slot (`clamp(ProcessorCount-1, 4, 16)`), so a second semaphore parks threads while they hold a slot and collapses the gallery to one photo at a time.
+- `TryGetCachedThumbnailAsync` must not decode: Win32 implements it with `SIIGBF_INCACHEONLY`, and the base returns `null`, so Linux/macOS have only the disk tier. Pass `skipPlatformCache` down to `GetThumbnailAsync`/`GetPreviewAsync` when the caller already probed, or the same shell query runs twice per photo.
+- `GalleryThumbnail` is assigned on the UI thread (`ShowGalleryThumbnailAsync`) because the compiled binding writes `Image.Source` on whichever thread raises `PropertyChanged`.
+
 ### 6. Color Management (`Config.ColorProfile`)
 - The display profile is applied at **two** points; never let both hit the same pixels:
   - **Decode-time (Magick only)**: `MagickCodec.ProcessMagickImage__()` bakes it via `TransformColorSpace`; runs only when `MagickCodecAdapter` decodes (Skia decode applies no profile).
@@ -394,7 +411,7 @@ Occurs in `Program.cs` before Avalonia app setup (Linux/Mac have equivalent regi
 ## Code Style & Best Practices
 
 ### General
-- **Comments**: Explain *why*, not what; only add if needed. Keep comments short and straight to the point — one line (two at most); never write long-winded/verbose comments. This applies to code comments and XAML comments alike.
+- **Comments**: Explain *why*, not what; only add if needed. **Write one line.** Two only when genuinely unavoidable, never three; that ceiling covers XML doc tags (`<param>`, `<summary>`) exactly as much as `//` and `<!-- -->`. If the reasoning does not fit on one line, it belongs in the commit message or the PR, not in the source.
 - **XML documentation comments**: For C# classes, methods, and public properties in infrastructure / coordination code (plugins, tools, host bridges, process managers, IPC handlers, similar files), keep XML docs present and current.
 - **XML summary format**: Never use single-line XML summaries like `/// <summary>Text</summary>`. Always use the multi-line form:
   ```csharp
@@ -425,6 +442,13 @@ Occurs in `Program.cs` before Avalonia app setup (Linux/Mac have equivalent regi
 - **Size ceiling**: check `width * height * bytesPerPixel` against `int.MaxValue` before allocating any full-image buffer
 - **Filtering**: `SKFilterQuality.High` for thumbnails; `Medium` for interactive zoom
 - **Mipmap strategy**: Precompute at load time; cache tiles on-demand; preserve zoom-aware LRU
+
+### Magick.NET-Specific (native heap safety)
+A cancelled gallery scroll once crashed the app with `0xc0000374`, bucket `BlockNotBusy DOUBLE_FREE` in `Magick.Native-*.dll`. Two rules fixed it; a third suspect was ruled out.
+- **Never `Ping` then `Read` into the same `MagickImage`.** `Ping` allocates a native image, and reading into that same wrapper leaves a second one to be freed twice. Probe with a throwaway `using var`, or `Dispose()` before re-reading (`MagickCodec.DecodeImageAsync` does the latter).
+- **Dispose the `MagickImage` on every failure path**, including early returns and `catch`. An abandoned partially-read image handed to the finalizer is what turns the above into a delayed crash that surfaces at an unrelated allocation, pointing nowhere near the read.
+- **Passing a `CancellationToken` to `ReadAsync` is fine** and was tested: it is NOT the cause. Cancellation only *exposed* the two bugs above, because a fast scroll cancels many in-flight reads at once. Do not remove tokens from Magick reads chasing this class of crash; look for an undisposed or double-allocated image instead.
+- Applies to any path a fast gallery scroll can cancel: `QuickDecodeAsync` is reached from `PhotoPreviewProvider.GetThumbnailAsync`, whose token is cancelled on every container recycle.
 
 ### Performance-Critical Code
 - **Mipmap caching**: Use `MipmapTileCache` for images > 8192×8192; reuse instance across frames
@@ -499,6 +523,9 @@ Occurs in `Program.cs` before Avalonia app setup (Linux/Mac have equivalent regi
 - **Huge image opens smaller than the file?** Expected: `Photo.DecodeScale < 1` and the status bar shows the reduction. `Photo.Metadata.Width/Height` keep the true size; everything else follows the decoded size.
 - **Plugin-owned format shows a garbage gallery thumbnail (thin line, blank) while the viewer renders it fine?** A content-sniffing built-in decoder (`SKCodec.Create`, Magick) succeeded with absurd dimensions instead of failing, and that satisfies `IsPreviewLargeEnough` (longest side only), so the plugin is never asked. Every preview/thumbnail source must gate on `CodecRegistry.IsDecodingExtensionOwnedByPlugin` (via `PhotoPreviewProvider.IsPluginOwnedFormat`); trace with `--ig-photo-trace` (`preview:*` = which source won, `thumb:preview`/`thumb:codec`/`thumb:decode` = whether the slow path ran).
 - **Settings not staying with the app folder (or the app quits at startup with "Cannot use portable mode")?** Portable mode is driven by the `.igportable` marker in the startup dir (`ConfigMode`). The marker must exist next to the exe AND that folder must be writable; an unwritable folder is a hard stop by design, not a fallback to `%LocalAppData%`. The ZIP packer writes the marker; the MSIX must never carry it.
+- **App vanishes with no error dialog (no in-app exception, nothing logged)?** That is a native crash, so `App.UIThread_UnhandledException` never runs. Do not hunt for a managed exception. Read the real fault first: `Get-WinEvent -FilterHashtable @{LogName='Application'}` filtered to `Application Error` gives the exception code (`0xc0000374` = heap corruption, `0xc0000005` = access violation). Then bucket it with `cdb.exe -z <dump> -c ".lastevent; !analyze -v; q"` (WinDbg installs via `winget install Microsoft.WinDbg`; `cdb.exe` sits in the package's `amd64` folder). Dumps land in `%LocalAppData%\CrashDumps`. `!analyze -v` names the faulting module and whether it was a double free, which is usually the whole answer. `dotnet-dump analyze <dump> -c "clrstack -all"` then shows which managed call was in flight on that thread.
+- **Gallery thumbnails load twice per item, or a wrong-size thumbnail flashes then gets replaced?** `PhVirtualizingUniformPanel.GetOrCreateElement` sets `DataContext` *before* `AddInternalChild`, so a brand-new `GalleryItem` is still detached when its `DataContextProperty` handler runs, `TopLevel.GetTopLevel(this)` is null, and `Dpi` silently falls back to `1`. Gate that handler on `IsLoaded`: `OnLoaded` covers the first attach, and recycled containers stay loaded (`RecycleElement` only sets `IsVisible = false`, it never removes the child) so the handler remains their only trigger.
+- **Gallery shows nothing selected after opening a file (and navigation starts from -1)?** The init photo path did not match the enumerated form. Enumeration emits absolute `FileInfo.FullName` and `IndexOf` is an exact-string lookup, so a relative launch path such as `dotnet run --project ImageGlass.Win32 -- pics\a.jpg` misses unless it went through `BHelper.ResolvePath`.
 - **Serialization fails?** Validate JSON converter exists in `Common/Types/JsonTypeConverters/`
 - **Cache not evicting?** Check `MipmapTileCache.MAX_CACHED_TILES` (100) and LRU promotion logic
 - **AOT trimming errors?** Review trimmer warnings; add `[DynamicallyAccessedMembers]` annotations or custom converters

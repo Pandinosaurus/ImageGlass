@@ -464,8 +464,11 @@ public partial class BHelper
             path = path[1..^1];
         }
 
-        // parse environment vars to absolute path
-        path = Environment.ExpandEnvironmentVariables(path);
+        // skip expansion when the literal path exists: a filename containing "%TEMP%" must survive
+        if (!File.Exists(path) && !Directory.Exists(path))
+        {
+            path = Environment.ExpandEnvironmentVariables(path);
+        }
 
         if (string.Equals(Path.GetExtension(inputPath), Win32ShortcutExtension, StringComparison.OrdinalIgnoreCase))
         {
@@ -485,8 +488,29 @@ public partial class BHelper
             if (File.Exists(innerExe)) path = innerExe;
         }
 
-        return path;
+        return ToAbsolutePath(path);
     }
+
+
+    /// <summary>
+    /// Expands a relative filesystem path against the current directory. Anything that is not an
+    /// existing file or folder is returned unchanged, so shell URIs survive.
+    /// </summary>
+    private static string ToAbsolutePath(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path)) return path ?? string.Empty;
+        if (Path.IsPathFullyQualified(path)) return path;
+
+        try
+        {
+            var fullPath = Path.GetFullPath(path);
+
+            // a shell URI expands into a nonsense path instead of throwing
+            return File.Exists(fullPath) || Directory.Exists(fullPath) ? fullPath : path;
+        }
+        catch { return path; }
+    }
+
 
 
     /// <summary>
