@@ -62,7 +62,9 @@ public partial class GalleryItem : PhToolButton
         if (e.Property == DataContextProperty)
         {
             _tooltipReadyPhoto = null;
-            if (DataContext is Photo) LoadThumbnail();
+
+            // a new container is still detached here (Dpi would be 1); OnLoaded covers it
+            if (DataContext is Photo && IsLoaded) LoadThumbnail();
             else CancelThumbnailLoading();
         }
     }
