@@ -386,12 +386,12 @@ public partial class App : Application
         }
 
 
-        // 5. handle single instance
-        if (!Core.Config.EnableMultiInstances)
+        // 5. handle single instance; keep starting if the running instance never took the args,
+        // otherwise a failed hand-off would exit here and the user would see nothing happen
+        if (!Core.Config.EnableMultiInstances && !Core.AppInstance.IsFirstInstance)
         {
-            if (!Core.AppInstance.IsFirstInstance)
+            if (Core.AppInstance.SendArgsToExistingInstances(AppCmds.SINGLE_INSTANCE, args))
             {
-                Core.AppInstance.SendArgsToExistingInstances(AppCmds.SINGLE_INSTANCE, args);
                 return true;
             }
         }
