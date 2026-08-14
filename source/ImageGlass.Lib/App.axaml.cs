@@ -317,6 +317,14 @@ public partial class App : Application
     {
         var ex = (Exception)e.ExceptionObject;
 
+        // When terminating, the runtime tears the process down as soon as we return, so the
+        // posted dialog below would never render: write synchronously or the crash is silent.
+        if (e.IsTerminating)
+        {
+            Console.Error.WriteLine($"Unhandled exception: {BHelper.GetExceptionDetails(ex)}");
+            return;
+        }
+
         Dispatcher.UIThread.Post(async () =>
         {
             _ = await ModalWindow.ShowUnhandledErrorAsync(ex);

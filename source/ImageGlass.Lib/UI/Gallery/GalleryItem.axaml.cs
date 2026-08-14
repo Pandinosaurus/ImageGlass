@@ -22,6 +22,7 @@ using Avalonia.Interactivity;
 using ImageGlass.Common;
 using ImageGlass.Common.Photoing;
 using System;
+using System.Diagnostics;
 using System.Threading;
 
 namespace ImageGlass.UI;
@@ -82,6 +83,11 @@ public partial class GalleryItem : PhToolButton
             await photo.LoadThumbnailAsync(thumbSize, useCache, _thumbnailCts.Token);
         }
         catch (OperationCanceledException) { }
+        // async void: a thumbnail failure must never FailFast the process from a worker thread
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"❌❌❌ {nameof(LoadThumbnail)}: {ex.Message}");
+        }
     }
 
 

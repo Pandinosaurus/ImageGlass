@@ -332,7 +332,16 @@ public partial class Photo : PhDisposable
     {
         base.OnDisposing();
 
-        await OnDisposing(true);
+        // async void: anything escaping here lands on a worker thread as an unhandled
+        // exception, which FailFasts the process with no dialog and nothing logged
+        try
+        {
+            await OnDisposing(true).ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"❌❌❌ {nameof(OnDisposing)}: {ex.Message}");
+        }
     }
 
 
@@ -366,16 +375,29 @@ public partial class Photo : PhDisposable
             // use WaitAsync/Release (never AvailableWaitHandle), so the SemaphoreSlim
             // holds no unmanaged handle and is reclaimed safely by the GC.
 
+            // only wait for it to settle; a faulted metadata load (e.g. a plugin codec
+            // throwing) must not turn disposal into an unhandled exception
             if (_taskMetadata is not null)
             {
-                await _taskMetadata;
+                try
+                {
+                    await _taskMetadata.ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"❌❌❌ {nameof(OnDisposing)}/metadata: {ex.Message}");
+                }
             }
 
             Metadata.Dispose();
             Metadata = new();
 
-            _cancelPhotoLoading?.Dispose();
-            _cancelPhotoLoading = null;
+            // same lock as CancelLoading, else it cancels a CTS we just disposed
+            lock (_lock)
+            {
+                _cancelPhotoLoading?.Dispose();
+                _cancelPhotoLoading = null;
+            }
         }
     }
 
@@ -540,18 +562,26 @@ public partial class Photo : PhDisposable
     /// </summary>
     public async void Unload()
     {
-        // wait for all pending tasks are done
-        while (!_taskRefs.IsEmpty)
+        // async void: an escaping exception here would FailFast the process from a worker thread
+        try
         {
-            await Task.Delay(10);
+            // wait for all pending tasks are done
+            while (!_taskRefs.IsEmpty)
+            {
+                await Task.Delay(10).ConfigureAwait(false);
+            }
+
+            // reset info
+            State = PhotoState.None;
+            Error = null;
+
+            // unload image
+            await OnDisposing(false).ConfigureAwait(false);
         }
-
-        // reset info
-        State = PhotoState.None;
-        Error = null;
-
-        // unload image
-        await OnDisposing(false);
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"❌❌❌ {nameof(Unload)}: {ex.Message}");
+        }
     }
 
 
@@ -966,7 +996,13 @@ public partial class Photo : PhDisposable
     /// </summary>
     public void CancelThumbnailLoading()
     {
-        _cancelThumbnailLoading?.Cancel();
+        // _thumbnailLock is deliberately not held here so the holder sees the cancel and
+        // releases sooner, which means it may be disposing this CTS right now
+        try
+        {
+            _cancelThumbnailLoading?.Cancel();
+        }
+        catch (ObjectDisposedException) { }
     }
 
 
@@ -1121,7 +1157,7 @@ public partial class Photo : PhDisposable
     {
         // Signal cancellation first so any in-progress load
         // can exit early and release the lock sooner.
-        _cancelThumbnailLoading?.Cancel();
+        CancelThumbnailLoading();
 
         await _thumbnailLock.WaitAsync().ConfigureAwait(false);
         try

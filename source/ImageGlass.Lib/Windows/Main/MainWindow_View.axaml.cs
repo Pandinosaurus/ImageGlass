@@ -35,6 +35,7 @@ using ImageGlass.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -889,12 +890,30 @@ public partial class MainWindowView : PhControl
     }
 
 
-    private async void Files_Searched(FileSearchingEventArgs e)
+    private void Files_Searched(FileSearchingEventArgs e)
+    {
+        // The Win32 provider posts progress to the UI thread, the base one (Linux/macOS) calls
+        // straight from its worker, so the whole body must marshal: Items is bound to the gallery.
+        Dispatcher.UIThread.Invoke(() =>
+        {
+            try
+            {
+                Files_Searched__(e);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"❌❌❌ {nameof(Files_Searched)}: {ex.Message}");
+            }
+        });
+    }
+
+
+    private void Files_Searched__(FileSearchingEventArgs e)
     {
         var isEmptyList = Core.Photos.Count == 0;
 
-        // add files to list on UI thread
-        Dispatcher.UIThread.Invoke(() => Core.Photos.Add(e.Results));
+        // add files to list
+        Core.Photos.Add(e.Results);
 
 
         // display the last file in a folder; re-applied on every batch, so it settles on the
@@ -912,11 +931,12 @@ public partial class MainWindowView : PhControl
             _ = Core.Photos.Select(Core.Photos.InitPhoto.FilePath);
 
             // save the init photo to the list
-            if (Core.Photos.CurrentIndex >= 0)
+            var initIndex = Core.Photos.CurrentIndex;
+            if (initIndex >= 0 && initIndex < Core.Photos.Items.Count)
             {
-                Core.Photos.Items[Core.Photos.CurrentIndex]?.Dispose();
-                Core.Photos.Items[Core.Photos.CurrentIndex] = Core.Photos.InitPhoto;
-                Core.Photos.Items[Core.Photos.CurrentIndex].IsCurrent = true;
+                Core.Photos.Items[initIndex]?.Dispose();
+                Core.Photos.Items[initIndex] = Core.Photos.InitPhoto;
+                Core.Photos.Items[initIndex].IsCurrent = true;
             }
         }
         // display the first file in a folder
@@ -933,7 +953,7 @@ public partial class MainWindowView : PhControl
             // set file watcher
             AppAPIProvider.SetFileWatcher(Core.Config.EnableFileWatcher);
 
-            Dispatcher.UIThread.Post(async () =>
+            Dispatcher.UIThread.Post(() =>
             {
                 // set photo to the viewer
                 PART_Gallery.ScrollToItem(Core.Photos.CurrentIndex);

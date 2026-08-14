@@ -66,6 +66,15 @@ public partial class FileSearchProvider() : PhDisposable, IFileSearchProvider
         // snapshot the collection to avoid modification during enumeration
         var dirList = dirs.ToList();
 
+        // Re-check the token at delivery, like the Win32 override does: a batch computed before
+        // the caller's Clear() must not repopulate the fresh list it raced.
+        Action<FileSearchingEventArgs>? publishFn = progressFn is null
+            ? null
+            : e =>
+            {
+                if (!token.IsCancellationRequested) progressFn(e);
+            };
+
         // get files from the given directories
         try
         {
@@ -74,7 +83,7 @@ public partial class FileSearchProvider() : PhDisposable, IFileSearchProvider
                 foreach (var dirPath in dirList)
                 {
                     if (token.IsCancellationRequested) break;
-                    FindFiles(dirPath, options, progressFn, token);
+                    FindFiles(dirPath, options, publishFn, token);
                 }
             }, token);
         }
