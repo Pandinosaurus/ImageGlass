@@ -50,35 +50,40 @@ public partial class AboutWindow : DialogWindow
 
 
     private const string _creditContent = $"""
-        ◍ Avalonia                                      MIT licence 
+        ◍ Avalonia                                         MIT licence 
           https://github.com/AvaloniaUI/Avalonia
           Copyright (c) AvaloniaUI OÜ All Rights Reserved
 
-        ◍ Magick.NET                             Apache-2.0 license
+        ◍ Magick.NET                                Apache-2.0 license
           https://github.com/dlemstra/Magick.NET
           Copyright (c) 2013-2026 Dirk Lemstra
 
-        ◍ SkiaSharp                                     MIT licence
+        ◍ SkiaSharp                                        MIT licence
           https://github.com/mono/SkiaSharp
           Copyright (c) 2015-2016 Xamarin, Inc
           Copyright (c) 2017-2018 Microsoft Corporation
 
-        ◍ Svg.Skia                                      MIT licence
+        ◍ Svg.Skia                                         MIT licence
           https://github.com/wieslawsoltes/Svg.Skia
           Copyright (c) 2020 Wiesław Šoltés
 
-        ◍ NativeMemoryArray                             MIT licence
+        ◍ NativeMemoryArray                                MIT licence
           https://github.com/Cysharp/NativeMemoryArray
           Copyright (c) 2021 Cysharp, Inc.
 
-        ◍ CsWin32                                       MIT licence
+        ◍ NetCoreAudio                                     MIT licence
+          https://github.com/mobiletechtracker/NetCoreAudio
+          Copyright (c) 2020-2024 Fiodar Sazanavets
+                                  (Scientific Programmer Ltd)
+
+        ◍ CsWin32                                          MIT licence
           https://github.com/microsoft/CsWin32
           Copyright (c) Microsoft Corporation
 
-        ◍ D2Phap.EggShell                        Apache-2.0 license
+        ◍ D2Phap.EggShell                           Apache-2.0 license
           Copyright (c) 2024-2026 Dương Diệu Pháp
 
-        ◍ D2Phap.FileWatcherEx                          MIT licence
+        ◍ D2Phap.FileWatcherEx                             MIT licence
           https://github.com/d2phap/FileWatcherEx
           Copyright (c) 2018-2026 Dương Diệu Pháp
 
