@@ -23,7 +23,7 @@
                 <CheckBox x:Name="PART_ShowGalleryFileName">
                     <ui:PhTextBlock LangKey="Settings_ShowGalleryFileName" TextWrapping="Wrap" />
                 </CheckBox>
-                <CheckBox x:Name="PART_ShellThumbnail">
+                <CheckBox x:Name="PART_ShellThumbnail" IsVisible="{OnPlatform False, Windows=True, x:TypeArguments=x:Boolean}">
                     <ui:PhTextBlock LangKey="Settings_EnableGalleryShellThumbnail" TextWrapping="Wrap" />
                 </CheckBox>
             </StackPanel>

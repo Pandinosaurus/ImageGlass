@@ -63,7 +63,7 @@ public partial class AppAPIProvider
         new(LangId.Menu_MnuExportFrames,         API.IG_ExportImageFrames,   Hotkey.Ctrl, Key.J),
         new(LangId.Menu_MnuPrint,                API.IG_Print,               Hotkey.Ctrl, Key.P),
         new(LangId.Menu_MnuOpenWith,             API.IG_OpenWith,            Key.D),
-        new(LangId.Menu_MnuShare,                API.IG_Share,               Key.S),
+        //new(LangId.Menu_MnuShare,                API.IG_Share,               Key.S),
         new(LangId.Menu_MnuOpenLocation,         API.IG_OpenLocation,        Key.L),
         new(LangId.Menu_MnuRename,               API.IG_Rename,              Key.F2),
         new(LangId.Menu_MnuMoveToRecycleBin,     API.IG_Delete, "true",      [new(Hotkey.Delete)]),
@@ -157,16 +157,16 @@ public partial class AppAPIProvider
         new(LangId.Menu_MnuToggleToolbar,            API.IG_ToggleToolbar,           Key.T),
         new(LangId.Menu_MnuToggleGallery,            API.IG_ToggleGallery,           Key.G),
         new(LangId.Menu_MnuToggleCheckerboard,       API.IG_ToggleCheckerboard,      Key.B),
-        new(LangId.Menu_MnuChangeBackgroundColor,    API.IG_SetBackgroundColor,      Key.M),
+        new(LangId.Menu_MnuChangeBackgroundColor,    API.IG_SetBackgroundColor,      Hotkey.Ctrl, Key.B),
 
 
-        // Plugins
+        // Tools
         new(LangId.Menu_MnuColorPicker,         API.IG_ToggleTool, ColorPickerToolControl.TOOL_ID,      [new(Key.K)]),
         new(LangId.Menu_MnuCropTool,            API.IG_ToggleTool, CropImageToolControl.TOOL_ID,        [new(Key.C)]),
         new(LangId.Menu_MnuFrameNav,            API.IG_ToggleTool, FrameNavToolControl.TOOL_ID,         [new(Key.P)]),
         new(LangId.Menu_MnuHdrToneMapper,       API.IG_ToggleTool, HdrToneMapperToolControl.TOOL_ID,    [new(Key.H)]),
         new(LangId.Menu_MnuResizeTool,          API.IG_OpenTool, ImageResizerTool.TOOL_ID,              [new(Key.R)]),
-        new(LangId.Menu_MnuLosslessCompression, API.IG_OpenTool, LosslessCompressionTool.TOOL_ID,       [new(Key.S)]),
+        new(LangId.Menu_MnuLosslessCompression, API.IG_OpenTool, LosslessCompressionTool.TOOL_ID,       [new(Key.M)]),
         new(LangId.Menu_MnuToolsSettings,       API.IG_OpenSettings, nameof(SettingsNavId.Tools)),
 
 
