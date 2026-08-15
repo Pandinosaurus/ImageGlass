@@ -562,7 +562,7 @@ public partial class Config : PhReactive
     /// </summary>
     public uint CacheMaxMemoryInMb
     {
-        get => Get(ConfigId.CacheMaxMemoryInMb, 0u);
+        get => Get(ConfigId.CacheMaxMemoryInMb, 1000u);
         set => Set(ConfigId.CacheMaxMemoryInMb, value);
     }
 
