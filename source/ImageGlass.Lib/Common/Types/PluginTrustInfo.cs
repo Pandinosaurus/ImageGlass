@@ -45,12 +45,12 @@ public sealed class PluginTrustInfo
     /// Extensions the user switched OFF for decoding; <c>null</c>/empty means all are active.
     /// Exclusions, not an allowlist, so a plugin update that adds a format is on by default.
     /// </summary>
-    [JsonConverter(typeof(JsonHashSetToArrayConverter))]
+    [JsonConverter(typeof(JsonHashSetToStringConverter))]
     public HashSet<string>? DisabledDecodeExtensions { get; set; }
 
     /// <summary>
     /// Extensions the user switched OFF for encoding. See <see cref="DisabledDecodeExtensions"/>.
     /// </summary>
-    [JsonConverter(typeof(JsonHashSetToArrayConverter))]
+    [JsonConverter(typeof(JsonHashSetToStringConverter))]
     public HashSet<string>? DisabledEncodeExtensions { get; set; }
 }
