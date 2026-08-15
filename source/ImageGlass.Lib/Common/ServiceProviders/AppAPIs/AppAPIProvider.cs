@@ -136,7 +136,7 @@ public partial class AppAPIProvider
                 App.SettingsWindow.NavigateToConfig(configId);
             }
 
-            App.SettingsWindow.Activate();
+            App.SettingsWindow.RestoreAndActivate();
             return;
         }
 
@@ -3083,7 +3083,7 @@ public partial class AppAPIProvider
         // reuse the already-open settings window
         if (App.SettingsWindow is not null)
         {
-            App.SettingsWindow.Activate();
+            App.SettingsWindow.RestoreAndActivate();
             App.SettingsWindow.NavigateToTool(toolId);
             return;
         }

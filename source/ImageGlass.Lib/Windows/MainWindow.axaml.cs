@@ -215,10 +215,8 @@ public partial class MainWindow : PhWindow
         // handle single instance command
         if (e.Command.Equals(AppCmds.SINGLE_INSTANCE))
         {
-            if (WindowState == Avalonia.Controls.WindowState.Minimized)
-            {
-                WindowState = Avalonia.Controls.WindowState.Normal;
-            }
+            // un-minimize back to the pre-minimize state, so a maximized window stays maximized
+            RestoreAndActivate();
 
             // set instance arguments
             var modulePath = Core.Args.ElementAtOrDefault(0) ?? string.Empty;

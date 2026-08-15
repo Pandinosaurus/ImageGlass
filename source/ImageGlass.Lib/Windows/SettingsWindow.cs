@@ -155,8 +155,8 @@ public partial class SettingsWindow : DialogWindow
         // capture bounds here (not OnClosed) — the native window is still alive,
         // so Position/ClientSize are valid; by OnClosed they read (0,0).
 
-        // save state regardless of how the dialog was closed
-        Core.Config.EnableSettingsWindowMaximized = WindowState == WindowState.Maximized;
+        // save state regardless of how the dialog was closed; the pre-minimize state keeps it maximized
+        Core.Config.EnableSettingsWindowMaximized = RestorableWindowState == WindowState.Maximized;
 
         // save window bounds only when in normal state (don't store maximized size as the restore size);
         // skip a degenerate size so a transient 0×0 on close can't reopen the window invisible

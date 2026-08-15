@@ -41,6 +41,9 @@ public partial class PhWindow : Window
 {
     protected bool _canUseBackdrop = false;
 
+    // the state to return to when the window is restored from minimized
+    private WindowState _stateBeforeMinimized = WindowState.Normal;
+
     protected static Color DefaultActivateBg => Core.Theme.Settings.IsDarkMode
         ? AppThemeColors.BackgroundActivateDark
         : AppThemeColors.BackgroundActivateLight;
@@ -63,6 +66,14 @@ public partial class PhWindow : Window
     /// Gets the DPI scale of this window.
     /// </summary>
     public double Dpi => TopLevel.GetTopLevel(this)?.RenderScaling ?? 1d;
+
+
+    /// <summary>
+    /// Gets the state to restore this window to, i.e. the pre-minimize state while minimized.
+    /// </summary>
+    public WindowState RestorableWindowState => WindowState == WindowState.Minimized
+        ? _stateBeforeMinimized
+        : WindowState;
 
 
     /// <summary>
@@ -269,6 +280,19 @@ public partial class PhWindow : Window
         else if (e.Property == IconProperty)
         {
             OnIgTitleBarIconVisibilityChanged(ShowTitleBarIcon);
+        }
+
+        // WindowState
+        else if (e.Property == WindowStateProperty)
+        {
+            var newState = (WindowState)e.NewValue!;
+            var oldState = (WindowState)e.OldValue!;
+
+            // capture the pre-minimize state, so the window can be restored to it later
+            if (newState == WindowState.Minimized && oldState != WindowState.Minimized)
+            {
+                _stateBeforeMinimized = oldState;
+            }
         }
     }
 
@@ -529,6 +553,21 @@ public partial class PhWindow : Window
 
 
     #region Public Methods
+
+    /// <summary>
+    /// Restores the window from the minimized state and brings it to the foreground.
+    /// </summary>
+    public void RestoreAndActivate()
+    {
+        // Activate() cannot un-minimize a window, and a plain Normal would drop the pre-minimize state
+        if (WindowState == WindowState.Minimized)
+        {
+            WindowState = _stateBeforeMinimized;
+        }
+
+        Activate();
+    }
+
 
     /// <summary>
     /// Scales the given number on the DPI scaling factor.
