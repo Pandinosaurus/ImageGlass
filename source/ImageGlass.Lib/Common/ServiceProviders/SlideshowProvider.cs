@@ -303,7 +303,7 @@ public sealed class SlideshowProvider : PhDisposable
                 if (notifyCount > 0 && _beepImageCount >= notifyCount)
                 {
                     _beepImageCount = 0;
-                    _ = Task.Run(static () => { try { Console.Beep(); } catch { } }, token);
+                    _ = Task.Run(BHelper.PlayNotificationSoundAsync, token);
                 }
             }
         }

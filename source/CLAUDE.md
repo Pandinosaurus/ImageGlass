@@ -100,7 +100,7 @@ ImageGlass.Lib/
 │   ├── Actions/                   # Action definitions
 │   ├── Commands/                  # Command definitions
 │   ├── AppThemes/                 # Theme system: IgTheme, IgThemeColors, AppThemeColors, IgThemeMetadata
-│   ├── BHelper/                   # Static helper methods (see "Reusing Shared Code"): Color, Format, General, JsonEx, Path, ProcessHelper, Task
+│   ├── BHelper/                   # Static helper methods (see "Reusing Shared Code"): Color, Format, General, JsonEx, Path, ProcessHelper, Sound, Task
 │   ├── Extensions/                # Extension methods (see "Reusing Shared Code"): Color_Exts, DrawingContext_Exts, ISolidColorBrush_Exts, Point_Exts, Rect_Exts, Size_Exts, SKObject_Exts
 │   ├── Localization/              # Lang.cs, LangId enum
 │   ├── Photoing/                  # Photo management, codecs, animators
@@ -190,6 +190,7 @@ Extension methods on framework types. Prefer these over re-implementing:
 - `Path.cs`: `ConfigDir()` / `BaseDir()`, `ResolvePath()`, `CheckPath()`, `OpenUrlAsync()`, `OpenFilePath()` / `OpenFolderPath()`, `DeleteFile()`
   - `ResolvePath()` is the **single** public path normalizer: it unwraps `ig://`, strips quotes, expands env vars, follows `.lnk` and macOS `.app`, then makes the result absolute. Never add a second normalizer beside it; if a caller needs only part of that, make the missing piece a `private` helper *inside* `ResolvePath` rather than a parallel public API.
 - `ProcessHelper.cs`: `RunExeAsync()` / `RunExeCmd()`, `RunSync()`, `ExitApp()`
+- `Sound.cs`: `PlayNotificationSoundAsync()` (extracts the bundled `Assets/Sounds/beep.wav` to `_temp`, then plays it via NetCoreAudio)
 - `JsonEx.cs`: `CreateJsonOptions()`, `ReadJsonFromFile()` / `WriteJsonToFileAsync()` (AOT-safe via `JsonTypeInfo<T>`)
 - `Task.cs`: `Debounce()`, `GcCollect()`
 
@@ -529,6 +530,7 @@ A cancelled gallery scroll once crashed the app with `0xc0000374`, bucket `Block
 - **Works on Windows but crashes on macOS/Linux in the file-search path?** Only `Win32FileSearchProvider` overrides `SearchAsync` to publish through `Dispatcher.UIThread.Post` with a token re-check; the base provider invokes `progressFn` straight from its `Task.Run` worker. So a search callback that touches `Core.Photos.Items` (bound to the gallery) or any control runs off-thread on macOS/Linux only. Marshal the *whole* callback body, not just the `Add`.
 - **Gallery thumbnails load twice per item, or a wrong-size thumbnail flashes then gets replaced?** `PhVirtualizingUniformPanel.GetOrCreateElement` sets `DataContext` *before* `AddInternalChild`, so a brand-new `GalleryItem` is still detached when its `DataContextProperty` handler runs, `TopLevel.GetTopLevel(this)` is null, and `Dpi` silently falls back to `1`. Gate that handler on `IsLoaded`: `OnLoaded` covers the first attach, and recycled containers stay loaded (`RecycleElement` only sets `IsVisible = false`, it never removes the child) so the handler remains their only trigger.
 - **Gallery shows nothing selected after opening a file (and navigation starts from -1)?** The init photo path did not match the enumerated form. Enumeration emits absolute `FileInfo.FullName` and `IndexOf` is an exact-string lookup, so a relative launch path such as `dotnet run --project ImageGlass.Win32 -- pics\a.jpg` misses unless it went through `BHelper.ResolvePath`.
+- **No slideshow notification sound?** `BHelper.PlayNotificationSoundAsync()` plays the bundled `Assets/Sounds/beep.wav` via NetCoreAudio, never a system beep. That package needs winmm MCI on Windows, `afplay` on macOS, and `/bin/bash` + `aplay` (alsa-utils) on Linux, so a distro without alsa-utils is silent by design.
 - **Serialization fails?** Validate JSON converter exists in `Common/Types/JsonTypeConverters/`
 - **Cache not evicting?** Check `MipmapTileCache.MAX_CACHED_TILES` (100) and LRU promotion logic
 - **AOT trimming errors?** Review trimmer warnings; add `[DynamicallyAccessedMembers]` annotations or custom converters
