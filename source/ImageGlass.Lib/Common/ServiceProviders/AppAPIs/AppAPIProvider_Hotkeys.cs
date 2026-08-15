@@ -63,7 +63,7 @@ public partial class AppAPIProvider
         new(LangId.Menu_MnuExportFrames,         API.IG_ExportImageFrames,   Hotkey.Ctrl, Key.J),
         new(LangId.Menu_MnuPrint,                API.IG_Print,               Hotkey.Ctrl, Key.P),
         new(LangId.Menu_MnuOpenWith,             API.IG_OpenWith,            Key.D),
-        //new(LangId.Menu_MnuShare,                API.IG_Share,               Key.S),
+        new(LangId.Menu_MnuShare,                API.IG_Share,               Key.S),
         new(LangId.Menu_MnuOpenLocation,         API.IG_OpenLocation,        Key.L),
         new(LangId.Menu_MnuRename,               API.IG_Rename,              Key.F2),
         new(LangId.Menu_MnuMoveToRecycleBin,     API.IG_Delete, "true",      [new(Hotkey.Delete)]),

@@ -57,6 +57,10 @@
     <!-- AOT support for GeneratedComInterface and LibraryImport -->
     <CsWin32RunAsBuildTask>true</CsWin32RunAsBuildTask>
     <DisableRuntimeMarshalling>true</DisableRuntimeMarshalling>
+
+    <!-- WinRT CCW vtables for AOT: the default 'true' means OptIn outside WinUI, which emits nothing -->
+    <CsWinRTAotOptimizerEnabled>Auto</CsWinRTAotOptimizerEnabled>
+    <CsWinRTAotExportsEnabled>true</CsWinRTAotExportsEnabled>
   </PropertyGroup>
 
   

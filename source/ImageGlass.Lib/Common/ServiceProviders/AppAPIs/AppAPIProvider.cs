@@ -655,6 +655,11 @@ public partial class AppAPIProvider
     /// </summary>
     public static async Task IG_ShareAsync()
     {
+        if (BHelper.OS != OSType.Windows)
+        {
+            throw new NotSupportedException($"IGE: This feature is not supported on {BHelper.OS}.");
+        }
+
         var filePath = Core.Photos.CurrentFilePath;
 
         // print clipboard image
