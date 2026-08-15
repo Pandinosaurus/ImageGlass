@@ -31,6 +31,7 @@ using ImageGlass.Common.Extensions;
 using ImageGlass.Common.Photoing;
 using ImageGlass.Common.Types;
 using System;
+using System.ComponentModel;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -152,8 +153,11 @@ public partial class PhWindow : Window
             UpdateBackground(true);
         }
 
+        Topmost = Core.Config.EnableWindowTopMost;
+
         Core.ThemeChanged += Core_ThemeChanged;
         Core.LanguageChanged += Core_LanguageChanged;
+        Core.Config.PropertyChanged += Config_PropertyChanged;
     }
 
 
@@ -192,6 +196,7 @@ public partial class PhWindow : Window
 
         Core.ThemeChanged -= Core_ThemeChanged;
         Core.LanguageChanged -= Core_LanguageChanged;
+        Core.Config.PropertyChanged -= Config_PropertyChanged;
     }
 
 
@@ -251,6 +256,16 @@ public partial class PhWindow : Window
     private void Core_LanguageChanged(object? sender, EventArgs e)
     {
         OnIgLanguageChanged();
+    }
+
+
+    private void Config_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        // the setting can be toggled while this window is open (main menu, or the Settings window itself)
+        if (e.PropertyName == nameof(Config.EnableWindowTopMost))
+        {
+            Topmost = Core.Config.EnableWindowTopMost;
+        }
     }
 
 
