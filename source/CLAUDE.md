@@ -64,7 +64,7 @@ ImageGlass v10 is a complete rewrite in **C# with .NET 10**, using **Avalonia 12
    - `Core.Config`: Global configuration state
    - `Core.Photos`: Photo collection and file searching
    - Events: `LanguageChanged`, `ThemeChanged`, `PhotoUnloaded`, `PhotoSaved`, `ColorProfileChanged`
-   - Service provider slots: `ShellProvider`, `PreviewProvider`, `FileSearchProvider`, `ShareProvider`, `PrintProvider`, `API`
+   - Service provider slots: `ShellProvider`, `PreviewProvider`, `FileSearchProvider`, `PrintProvider`, `API`
 
 2. **Service Providers** (Plug-in Pattern)
    - Platform-agnostic interfaces in `ImageGlass.Lib/Common/ServiceProviders/*`
@@ -73,7 +73,7 @@ ImageGlass v10 is a complete rewrite in **C# with .NET 10**, using **Avalonia 12
      - Linux: `ImageGlass.Linux/Common/ServiceProviders/*`
      - macOS: `ImageGlass.Mac/Common/ServiceProviders/*`
    - Shared concrete providers in library: `PhotoPreviewProvider`, `SlideshowProvider`, `UpdateProvider`
-   - Examples: `IFileSearchProvider`, `IShareProvider`, `IShellProvider`, `IPrintProvider`, `IWindowColorProfileProvider`, `IPhotoPreviewProvider`
+   - Examples: `IFileSearchProvider`, `IShellProvider`, `IPrintProvider`, `IWindowColorProfileProvider`, `IPhotoPreviewProvider`
    - Registered at startup in each platform's `Program.cs`; initialized in `App.xaml.cs`
 
 3. **Photo & Codec Abstraction**
@@ -356,8 +356,7 @@ App.Initialize()
 ### 3. Win32 Service Registration
 Occurs in `Program.cs` before Avalonia app setup (Linux/Mac have equivalent registrations):
 - `FileSearchProvider` (native shell enumeration with Explorer sort order support)
-- `ShareProvider` (Windows Share API)
-- `ShellProvider` (context menu, file properties)
+- `ShellProvider` (context menu, file properties, Windows Share API)
 - `PrintProvider` (Windows Print API)
 - `ColorProfileProvider` (Monitor color profile retrieval via Win32 APIs)
 - `PreviewProvider` (thumbnail cache via Windows shell)

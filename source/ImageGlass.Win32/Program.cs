@@ -48,7 +48,6 @@ sealed class Program
             Core.FileSearchProvider = new Win32FileSearchProvider();
             Core.PreviewProvider = new Win32PhotoPreviewProvider();
             Core.ShellProvider = new Win32ShellProvider();
-            Core.ShareProvider = new Win32ShareProvider();
             Core.PrintProvider = new Win32PrintProvider();
             Core.PipeSecurityProvider = new Win32PipeSecurityProvider();
         });

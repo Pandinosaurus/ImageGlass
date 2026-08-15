@@ -101,12 +101,6 @@ public static class Core
 
 
     /// <summary>
-    /// Provides a singleton instance to manage Share dialog.
-    /// </summary>
-    public static IShareProvider ShareProvider { get; set; } = null!;
-
-
-    /// <summary>
     /// Provides an optional OS-level verifier for the identity of a tool process connecting
     /// to the host IPC pipe. Windows-only; <c>null</c> elsewhere (the pipe's
     /// <c>CurrentUserOnly</c> restriction is the cross-platform baseline).

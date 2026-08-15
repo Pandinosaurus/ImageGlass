@@ -79,6 +79,12 @@ public interface IShellProvider : IDisposable
 
 
     /// <summary>
+    /// Shows the OS Share dialog for the given files.
+    /// </summary>
+    void ShowShare(nint windowHandle, string[] filePaths);
+
+
+    /// <summary>
     /// Sets the desktop wallpaper.
     /// </summary>
     void SetWallpaper(string filePath);

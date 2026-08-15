@@ -111,16 +111,21 @@ public static class Win32ShareApi
     /// </summary>
     private static void ShowShareError(Exception ex)
     {
-        Dispatcher.UIThread.Post(() =>
+        // the caller is an async void, so the reporter itself must not throw
+        try
         {
-            _ = ModalWindow.ShowErrorAsync(null, new ModalWindowOptions
+            Dispatcher.UIThread.Post(() =>
             {
-                Title = Core.Lang[LangId.Menu_MnuShare],
-                Heading = Core.Lang[LangId.Menu_MnuShare_Error],
-                Description = ex.Message,
-                Details = BHelper.GetExceptionDetails(ex),
+                _ = ModalWindow.ShowErrorAsync(null, new ModalWindowOptions
+                {
+                    Title = Core.Lang[LangId.Menu_MnuShare],
+                    Heading = Core.Lang[LangId.Menu_MnuShare_Error],
+                    Description = ex.Message,
+                    Details = BHelper.GetExceptionDetails(ex),
+                });
             });
-        });
+        }
+        catch { }
     }
 
 }

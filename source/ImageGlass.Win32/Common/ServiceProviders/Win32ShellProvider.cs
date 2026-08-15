@@ -205,6 +205,15 @@ public class Win32ShellProvider : PhDisposable, IShellProvider
     /// <summary>
     /// <inheritdoc/>
     /// </summary>
+    public void ShowShare(nint windowHandle, string[] filePaths)
+    {
+        Win32ShareApi.ShowShare(windowHandle, filePaths);
+    }
+
+
+    /// <summary>
+    /// <inheritdoc/>
+    /// </summary>
     public void SetWallpaper(string filePath)
     {
         Win32DesktopApi.SetWallpaper(filePath, WallpaperStyle.Current);

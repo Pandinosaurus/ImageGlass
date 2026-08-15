@@ -22,6 +22,7 @@ using ImageGlass.Common.Types;
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
@@ -217,6 +218,32 @@ internal partial class MacShellProvider : PhDisposable, IShellProvider
         RunAppleScript(
             "tell application \"Finder\" to open information window of " +
             $"(POSIX file \"{filePath}\" as alias)");
+    }
+
+
+    /// <summary>
+    /// <inheritdoc/>
+    /// </summary>
+    public void ShowShare(nint windowHandle, string[] filePaths)
+    {
+        ArgumentNullException.ThrowIfNull(filePaths);
+        if (filePaths.Length == 0) return;
+
+        // build a comma-separated list of POSIX file references for AppleScript
+        var fileList = string.Join(", ",
+            filePaths.Select(f => $"(POSIX file \"{f}\" as alias)"));
+
+        // reveal and select the files in Finder, then trigger the Share menu
+        RunAppleScript(
+            "tell application \"Finder\"\n" +
+            $"select {{{fileList}}}\n" +
+            "activate\n" +
+            "end tell\n" +
+            "tell application \"System Events\"\n" +
+            "tell process \"Finder\"\n" +
+            "click menu item \"Share…\" of menu \"File\" of menu bar 1\n" +
+            "end tell\n" +
+            "end tell");
     }
 
 

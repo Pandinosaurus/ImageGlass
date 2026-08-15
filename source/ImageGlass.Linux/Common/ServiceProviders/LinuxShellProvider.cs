@@ -232,6 +232,19 @@ internal class LinuxShellProvider : PhDisposable, IShellProvider
     }
 
 
+    /// <summary>
+    /// <inheritdoc/>
+    /// </summary>
+    public void ShowShare(nint windowHandle, string[] filePaths)
+    {
+        // Sharing is disabled on Linux for now (the Share button is hidden in the UI).
+        // Linux has no general "share" sheet; the closest target is the XDG Email
+        // portal, but it accepts attachments only as file descriptors (attachment_fds),
+        // which the gdbus CLI cannot pass. Re-enable here once a managed D-Bus client
+        // that can pass FDs is wired up.
+    }
+
+
 
     #region Private helpers
 

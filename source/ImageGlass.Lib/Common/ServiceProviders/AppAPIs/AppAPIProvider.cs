@@ -685,7 +685,7 @@ public partial class AppAPIProvider
         {
             try
             {
-                Core.ShareProvider.ShowShare(App.MainWindow.Handle, [filePath]);
+                Core.ShellProvider?.ShowShare(App.MainWindow.Handle, [filePath]);
             }
             catch (Exception ex)
             {
