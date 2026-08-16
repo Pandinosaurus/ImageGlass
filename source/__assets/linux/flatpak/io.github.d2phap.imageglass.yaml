@@ -11,6 +11,8 @@ finish-args:
   - --device=dri
   - --filesystem=host
   - --socket=cups
+  # Notification sound; also covers PipeWire hosts via pipewire-pulse.
+  - --socket=pulseaudio
   - --talk-name=org.freedesktop.FileManager1
   # Allow launching external tools on the host via flatpak-spawn --host.
   - --talk-name=org.freedesktop.Flatpak
@@ -30,8 +32,8 @@ modules:
       - install -Dm644 io.github.d2phap.imageglass.png ${FLATPAK_DEST}/share/icons/hicolor/512x512/apps/io.github.d2phap.imageglass.png
     sources:
       - type: archive
-        url: https://github.com/d2phap/ImageGlass/releases/download/10.0.2.714-beta-2/ImageGlass_10.0.2.714-beta-2_linux-x64.tar.gz
-        sha256: 73d78662bbaa3b6cb7a63a125314591093bbd9ba42eaeddb78ba6a6c9a5f6963
+        url: https://github.com/d2phap/ImageGlass/releases/download/10.0.3.810-rc/ImageGlass_10.0.3.810-rc_linux-x64.tar.gz
+        sha256: a4fb9801c1912cd8c46586f406713e3a111c97ebca88f97124b49215fc5d7f97
         strip-components: 1
       - type: file
         path: io.github.d2phap.imageglass.desktop
