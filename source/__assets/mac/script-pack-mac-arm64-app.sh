@@ -66,22 +66,18 @@ sed -e "s/\${IG_VERSION}/$IG_VERSION/g" \
 
 chmod +x "$CONTENTS_DIR/MacOS/ImageGlass"
 
-# Relocate non-code data folders into Contents/Resources/ and symlink them back
-# into Contents/MacOS/. codesign treats Contents/MacOS/ as the executable dir and
-# rejects loose resource files in nested subfolders ("code object is not signed at
-# all / In subcomponent ..."). Resources must live under Contents/Resources/.
-# The symlinks keep AppDomain.CurrentDomain.BaseDirectory (Contents/MacOS) lookups
-# working at runtime, so no app code changes are needed.
-# The list is derived from __assets/__app/ so a newly added asset folder is
-# relocated automatically instead of silently breaking codesign.
-for data_src in "$WORKSPACE_DIR/__assets/__app/"*/; do
-	[[ -d "$data_src" ]] || continue
-	data_dir="$(basename "$data_src")"
+# codesign rejects any non-Mach-O file or folder left in Contents/MacOS/ ("code object is
+# not signed at all"), so stage every __assets/__app/ item — loose files included — under
+# Contents/Resources/ and symlink it back so BaseDir() lookups still resolve at runtime.
+for data_src in "$WORKSPACE_DIR/__assets/__app/"*; do
+	[[ -e "$data_src" ]] || continue
+	data_name="$(basename "$data_src")"
+	staged_path="$CONTENTS_DIR/MacOS/$data_name"
 
-	if [[ -d "$CONTENTS_DIR/MacOS/$data_dir" && ! -L "$CONTENTS_DIR/MacOS/$data_dir" ]]; then
-		rm -rf "$CONTENTS_DIR/Resources/$data_dir"
-		mv "$CONTENTS_DIR/MacOS/$data_dir" "$CONTENTS_DIR/Resources/$data_dir"
-		ln -s "../Resources/$data_dir" "$CONTENTS_DIR/MacOS/$data_dir"
+	if [[ -e "$staged_path" && ! -L "$staged_path" ]]; then
+		rm -rf "$CONTENTS_DIR/Resources/$data_name"
+		mv "$staged_path" "$CONTENTS_DIR/Resources/$data_name"
+		ln -s "../Resources/$data_name" "$staged_path"
 	fi
 done
 
