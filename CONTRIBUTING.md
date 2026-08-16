@@ -79,7 +79,7 @@ Large or architectural changes are best discussed first in an [issue](https://gi
 
 ## Translations
 
-Translations for both ImageGlass 10 and ImageGlass 9 are managed on [Crowdin](https://crowdin.com/project/imageglass/invite). Join the project there, pick your language, and translate in the browser. No build tools needed, and no pull request to open.
+Translations for both ImageGlass 10 and ImageGlass 9 are managed on [Crowdin](https://crowdin.com/project/imageglass). Join the project there, pick your language, and translate in the browser. No build tools needed, and no pull request to open.
 
 ImageGlass 10 uses language packs (`*.iglang.json`), so you can also work on a pack locally and test it before it goes to Crowdin:
 
