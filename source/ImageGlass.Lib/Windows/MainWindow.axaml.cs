@@ -39,6 +39,11 @@ public partial class MainWindow : PhWindow
     private readonly AppStatusInfo _status;
     private bool _isClosingHandled; // to handle closing for saving configs
 
+    private const double DEFAULT_WIDTH = 800;
+    private const double DEFAULT_HEIGHT = 500;
+    private const double MIN_RESTORE_WIDTH = 200;
+    private const double MIN_RESTORE_HEIGHT = 100;
+
     public MainWindowModel VM => (MainWindowModel)DataContext!;
 
 
@@ -51,9 +56,9 @@ public partial class MainWindow : PhWindow
 
 
         // load window size & position
-        Width = Core.Config.MainWindowBounds.Width;
-        Height = Core.Config.MainWindowBounds.Height;
-        Position = new((int)Core.Config.MainWindowBounds.X, (int)Core.Config.MainWindowBounds.Y);
+        RestoreWindowBounds(Core.Config.MainWindowBounds,
+            new(DEFAULT_WIDTH, DEFAULT_HEIGHT),
+            new(MIN_RESTORE_WIDTH, MIN_RESTORE_HEIGHT));
 
         if (!Core.Config.EnableWindowFit)
         {
@@ -269,13 +274,17 @@ public partial class MainWindow : PhWindow
         Core.Config.EnableMainWindowMaximized = WindowState == Avalonia.Controls.WindowState.Maximized;
         Core.Config.EnableFullScreen = WindowState == WindowState.FullScreen;
 
-        // 2. save window bounds
+        // 2. save window bounds; skip a degenerate size so a transient 0×0 on close
+        // can't reopen the window invisible
         if (WindowState == Avalonia.Controls.WindowState.Normal)
         {
             var size = ClientSize;
-            Core.Config.MainWindowBounds = new(Position.X, Position.Y,
-                (int)size.Width,
-                (int)size.Height);
+            if (size.Width >= MIN_RESTORE_WIDTH && size.Height >= MIN_RESTORE_HEIGHT)
+            {
+                Core.Config.MainWindowBounds = new(Position.X, Position.Y,
+                    (int)size.Width,
+                    (int)size.Height);
+            }
         }
 
 

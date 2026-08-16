@@ -23,6 +23,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
+using Avalonia.Platform;
 using Avalonia.Styling;
 using Avalonia.Threading;
 using ImageGlass.Common;
@@ -44,6 +45,9 @@ public partial class PhWindow : Window
 
     // the state to return to when the window is restored from minimized
     private WindowState _stateBeforeMinimized = WindowState.Normal;
+
+    // how much of a restored window must land on a screen to count as reachable (DIP)
+    private const double MIN_VISIBLE_SIZE = 64;
 
     protected static Color DefaultActivateBg => Core.Theme.Settings.IsDarkMode
         ? AppThemeColors.BackgroundActivateDark
@@ -561,6 +565,70 @@ public partial class PhWindow : Window
 
         Background = toBrush;
         await animation.RunAsync(toBrush);
+    }
+
+
+    /// <summary>
+    /// Restores the window size &amp; position from the saved bounds: a size under
+    /// <paramref name="minSize"/> falls back to <paramref name="defaultSize"/>, and a position that
+    /// no longer lands on a connected screen falls back to the center of the nearest live screen.
+    /// </summary>
+    protected void RestoreWindowBounds(Rect savedBounds, Size defaultSize, Size minSize)
+    {
+        // 1. size: a degenerate saved size (a transient 0×0 on close, a hand-edited config) would
+        // open the window too small to be seen
+        var size = savedBounds.Width >= minSize.Width && savedBounds.Height >= minSize.Height
+            ? savedBounds.Size
+            : defaultSize;
+        var pos = new PixelPoint((int)savedBounds.X, (int)savedBounds.Y);
+
+        // position it ourselves either way: WindowStartupLocation.CenterScreen is a no-op when the
+        // saved position lies outside every screen, which is the case we have to recover from
+        WindowStartupLocation = WindowStartupLocation.Manual;
+
+        // 2. position: keep it while enough of the window still lands on a connected screen;
+        // with no screen info to validate against, trust it rather than move the window
+        var screens = Screens;
+        if (screens is null || screens.All.Count == 0 || IsVisibleOnAnyScreen(screens, pos, size))
+        {
+            Width = size.Width;
+            Height = size.Height;
+            Position = pos;
+            return;
+        }
+
+        // 3. off-screen (unplugged monitor, hand-edited config): center on the nearest live screen,
+        // shrinking to its work area since the saved size may come from a bigger monitor
+        var screen = screens.ScreenFromPoint(pos) ?? screens.Primary ?? screens.All[0];
+        var workArea = screen.WorkingArea;
+        var maxSize = workArea.Size.ToSize(screen.Scaling);
+
+        size = new Size(Math.Min(size.Width, maxSize.Width), Math.Min(size.Height, maxSize.Height));
+        Width = size.Width;
+        Height = size.Height;
+        Position = workArea.CenterRect(new PixelRect(PixelSize.FromSize(size, screen.Scaling))).Position;
+    }
+
+
+    /// <summary>
+    /// Checks whether a window of the given size at the given position lands on a connected screen
+    /// with enough of it inside the work area to be seen and dragged.
+    /// </summary>
+    private static bool IsVisibleOnAnyScreen(Screens screens, PixelPoint pos, Size size)
+    {
+        foreach (var screen in screens.All)
+        {
+            // Position shares the screen coordinate space while the size is in DIP, so scale it
+            var winRect = new PixelRect(pos, PixelSize.FromSize(size, screen.Scaling));
+            var visible = screen.WorkingArea.Intersect(winRect);
+            var minVisible = PixelSize.FromSize(new Size(
+                Math.Min(MIN_VISIBLE_SIZE, size.Width),
+                Math.Min(MIN_VISIBLE_SIZE, size.Height)), screen.Scaling);
+
+            if (visible.Width >= minVisible.Width && visible.Height >= minVisible.Height) return true;
+        }
+
+        return false;
     }
 
     #endregion // Internal Methods

@@ -67,19 +67,9 @@ public partial class SettingsWindow : DialogWindow
         // no min size: let the window be resized as small as the OS allows
 
         // restore window size & position
-        var bounds = Core.Config.SettingsWindowBounds;
-        var hasValidBounds = bounds.Width >= MIN_RESTORE_WIDTH && bounds.Height >= MIN_RESTORE_HEIGHT;
-        Width = hasValidBounds ? bounds.Width : DEFAULT_WIDTH;
-        Height = hasValidBounds ? bounds.Height : DEFAULT_HEIGHT;
-        if (hasValidBounds)
-        {
-            WindowStartupLocation = WindowStartupLocation.Manual;
-            Position = new((int)bounds.X, (int)bounds.Y);
-        }
-        else
-        {
-            WindowStartupLocation = WindowStartupLocation.CenterScreen;
-        }
+        RestoreWindowBounds(Core.Config.SettingsWindowBounds,
+            new(DEFAULT_WIDTH, DEFAULT_HEIGHT),
+            new(MIN_RESTORE_WIDTH, MIN_RESTORE_HEIGHT));
 
         // restore window maximized state
         if (Core.Config.EnableSettingsWindowMaximized) WindowState = WindowState.Maximized;
