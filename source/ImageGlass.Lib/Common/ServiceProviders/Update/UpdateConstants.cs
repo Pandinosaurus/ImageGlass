@@ -1,0 +1,61 @@
+/*
+ImageGlass - A Fast, Seamless Photo Viewer
+Copyright (C) 2010 - 2026 DUONG DIEU PHAP
+Project homepage: https://imageglass.org
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+using System;
+
+namespace ImageGlass.Common.ServiceProviders.Update;
+
+internal static class UpdateConstants
+{
+    /// <summary>
+    /// Update metadata endpoint (HTTPS only).
+    /// </summary>
+    public const string MetadataUrl = "https://imageglass.org/url/update";
+
+    /// <summary>
+    /// Fallback URL when update check fails.
+    /// </summary>
+    public const string FallbackReleasesUrl = "https://github.com/d2phap/ImageGlass/releases";
+
+    /// <summary>
+    /// Microsoft Store product page. The Store owns updating for that package, so its build sends
+    /// the user here instead of to the download/changelog page.
+    /// </summary>
+    public const string MsStoreProductUrl = "ms-windows-store://pdp/?productid=9N33VZK3C7TH";
+
+    /// <summary>
+    /// Maximum metadata response size (1 MB).
+    /// </summary>
+    public const long MaxMetadataSize = 1 * 1024 * 1024;
+
+    /// <summary>
+    /// Metadata fetch timeout.
+    /// </summary>
+    public static readonly TimeSpan MetadataTimeout = TimeSpan.FromSeconds(30);
+
+    /// <summary>
+    /// Default background check interval (7 days).
+    /// </summary>
+    public static readonly TimeSpan BackgroundCheckInterval = TimeSpan.FromDays(7);
+
+    /// <summary>
+    /// Upper bound of the random offset added to <see cref="BackgroundCheckInterval"/> (24 hours),
+    /// so same-cadence installs do not all check on the same day.
+    /// </summary>
+    public const int CheckJitterMinutes = 24 * 60;
+}

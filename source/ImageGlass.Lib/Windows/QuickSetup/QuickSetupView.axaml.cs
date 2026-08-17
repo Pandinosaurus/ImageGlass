@@ -1,0 +1,397 @@
+/*
+ImageGlass - A Fast, Seamless Photo Viewer
+Copyright (C) 2010 - 2026 DUONG DIEU PHAP
+Project homepage: https://imageglass.org
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+using Avalonia;
+using Avalonia.Animation;
+using Avalonia.Animation.Easings;
+using Avalonia.Controls;
+using Avalonia.Interactivity;
+using Avalonia.Media;
+using Avalonia.Media.Imaging;
+using Avalonia.Media.Transformation;
+using Avalonia.Svg.Skia;
+using Avalonia.Threading;
+using ImageGlass.Common;
+using ImageGlass.Common.AppThemes;
+using ImageGlass.Common.Extensions;
+using ImageGlass.Common.Localization;
+using ImageGlass.Common.Types;
+using ImageGlass.UI;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace ImageGlass.Windows;
+
+public partial class QuickSetupView : PhControl
+{
+    private const string NEWS_URL = "https://imageglass.org/news";
+
+    private readonly List<Control> _stepPanels;
+    private readonly List<Border> _dots = [];
+
+    private bool _isPopulatingLangs;
+    private string _selectedLangValue = "English";
+    private readonly Action _loadLangAction;
+
+    // local language used to preview the wizard only; the app is untouched until Save
+    private Lang _previewLang = Core.Lang;
+
+
+    /// <summary>
+    /// Gets the language currently previewed in the wizard (not applied to the app until Save).
+    /// </summary>
+    public Lang PreviewLang => _previewLang;
+
+
+    /// <summary>
+    /// Raised when the previewed language changes, so the host window can re-localize its footer.
+    /// </summary>
+    public event EventHandler? PreviewLanguageChanged;
+
+
+    /// <summary>
+    /// Gets the total number of steps (3 on Classic, 2 on Pro).
+    /// </summary>
+    public int StepCount => _stepPanels.Count;
+
+
+    /// <summary>
+    /// Gets the current 1-based step index.
+    /// </summary>
+    public int CurrentStep { get; private set; } = 1;
+
+
+    /// <summary>
+    /// Gets the selected display-language config value (a pack file name, or "English").
+    /// </summary>
+    public string SelectedLanguageValue => _selectedLangValue;
+
+
+    /// <summary>
+    /// Gets whether the "Professional user" profile is selected.
+    /// </summary>
+    public bool IsProfessional { get; private set; }
+
+
+    public QuickSetupView()
+    {
+        InitializeComponent();
+
+        _loadLangAction = () => _ = LoadSelectedLanguageAsync();
+
+        // step 3 pitches Pro, so there is nothing to show once it is active
+        _stepPanels = [PART_Step1, PART_Step2];
+        if (!Core.IsProEnabled)
+        {
+            _stepPanels.Add(PART_Step3);
+        }
+        else
+        {
+            PART_Step3.IsVisible = false;
+        }
+
+        BuildStepDots();
+
+        // step 1: language
+        PART_LanguageList.SelectionChanged += Language_SelectionChanged;
+        PART_SeeWhatNew.Click += async (_, _) => await BHelper.OpenUrlAsync(this, NEWS_URL, "from_quick_setup");
+
+        // step 2: profile
+        PART_BtnStandard.Click += (_, _) => SelectProfile(false);
+        PART_BtnProfessional.Click += (_, _) => SelectProfile(true);
+        SelectProfile(false);
+
+        UpdateLogo();
+        LocalizeAll();
+        SetStep(1);
+        _ = LoadLanguagesAsync();
+    }
+
+
+
+    #region Overrides
+
+    protected override void OnIgThemeChanged(ThemePackChangedEventArgs e)
+    {
+        base.OnIgThemeChanged(e);
+
+        UpdateLogo();
+        UpdateStepDots();
+    }
+
+
+    protected override void OnLoaded(RoutedEventArgs e)
+    {
+        base.OnLoaded(e);
+
+        // stronger entrance animation on first open
+        AnimateStepIn(_stepPanels[CurrentStep - 1], isFirstOpen: true);
+    }
+
+    #endregion // Overrides
+
+
+
+    #region Public methods
+
+    /// <summary>
+    /// Shows the given 1-based step with a soft slide/fade transition.
+    /// </summary>
+    public void ShowStep(int step)
+    {
+        SetStep(step);
+        AnimateStepIn(_stepPanels[CurrentStep - 1], isFirstOpen: false);
+    }
+
+    #endregion // Public methods
+
+
+
+    #region Step display
+
+    /// <summary>
+    /// Sets the visible step and refreshes the progress header (no animation).
+    /// </summary>
+    private void SetStep(int step)
+    {
+        CurrentStep = Math.Clamp(step, 1, StepCount);
+
+        for (var i = 0; i < _stepPanels.Count; i++)
+        {
+            _stepPanels[i].IsVisible = i == CurrentStep - 1;
+        }
+
+        UpdateStepInfo();
+        UpdateStepDots();
+    }
+
+
+    /// <summary>
+    /// Fades and slides a step panel into view. The first open uses a larger, longer motion;
+    /// step navigation uses a softer one.
+    /// </summary>
+    private static void AnimateStepIn(Control panel, bool isFirstOpen)
+    {
+        var duration = TimeSpan.FromMilliseconds(isFirstOpen ? 420 : 260);
+        var offset = isFirstOpen ? 26 : 12;
+        var easing = new CubicEaseOut();
+
+        // apply the start state instantly (transitions off), then animate to rest
+        panel.Transitions = null;
+        panel.Opacity = 0;
+        panel.RenderTransform = TransformOperations.Parse($"translateY({offset}px)");
+
+        panel.Transitions =
+        [
+            new DoubleTransition { Property = OpacityProperty, Duration = duration, Easing = easing },
+            new TransformOperationsTransition { Property = RenderTransformProperty, Duration = duration, Easing = easing },
+        ];
+
+        Dispatcher.UIThread.Post(() =>
+        {
+            panel.Opacity = 1;
+            panel.RenderTransform = TransformOperations.Parse("translateY(0px)");
+        }, DispatcherPriority.Render);
+    }
+
+    #endregion // Step display
+
+
+
+    #region Language
+
+    private void Language_SelectionChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        if (_isPopulatingLangs || PART_LanguageList.SelectedItem is not Lang lang) return;
+
+        _selectedLangValue = ToConfigValue(lang);
+        BHelper.Debounce(120, _loadLangAction);
+    }
+
+
+    /// <summary>
+    /// Loads the selected language pack and previews it in the wizard only (the running app is
+    /// not affected until Save).
+    /// </summary>
+    private async Task LoadSelectedLanguageAsync()
+    {
+        var path = Lang.ResolveFilePath(_selectedLangValue);
+        var lang = new Lang(path);
+        await lang.LoadAsync();
+
+        Dispatcher.UIThread.Post(() =>
+        {
+            _previewLang = lang;
+            LocalizeAll();
+            PreviewLanguageChanged?.Invoke(this, EventArgs.Empty);
+        });
+    }
+
+
+    /// <summary>
+    /// Loads installed language packs and selects the current one.
+    /// </summary>
+    private async Task LoadLanguagesAsync()
+    {
+        var packs = await Lang.LoadAllLanguagePacksAsync();
+
+        // built-in English first (so users can revert)
+        List<Lang> langs = [new(string.Empty), .. packs];
+
+        _isPopulatingLangs = true;
+        PART_LanguageList.ItemsSource = langs;
+
+        var current = Core.Config.Language;
+        PART_LanguageList.SelectedItem = langs
+            .FirstOrDefault(l => ToConfigValue(l).Equals(current, StringComparison.OrdinalIgnoreCase))
+            ?? langs[0];
+
+        _selectedLangValue = current;
+        _isPopulatingLangs = false;
+    }
+
+
+    private static string ToConfigValue(Lang lang) => lang.IsBuiltIn ? "English" : lang.FileName;
+
+    #endregion // Language
+
+
+
+    #region Profile
+
+    /// <summary>
+    /// Selects a setting profile and refreshes the "will be applied" checklist.
+    /// </summary>
+    private void SelectProfile(bool professional)
+    {
+        IsProfessional = professional;
+
+        PART_BtnStandard.IsChecked = !professional;
+        PART_BtnProfessional.IsChecked = professional;
+
+        PART_ChkColorManagement.IsChecked = professional;
+        PART_ChkExplorerSortOrder.IsChecked = professional;
+        PART_ChkRawThumbnail.IsChecked = !professional;
+    }
+
+    #endregion // Profile
+
+
+
+    #region Header
+
+    /// <summary>
+    /// Loads the theme app logo (SVG), falling back to the default window icon.
+    /// </summary>
+    private void UpdateLogo()
+    {
+        try
+        {
+            var iconPath = Core.Theme.GetIconPath(IgThemeIcon.AppLogo);
+            PART_Logo.Source = new SvgImage { Source = SvgSource.Load(iconPath) };
+        }
+        catch { }
+
+        if (PART_Logo.Source is null)
+        {
+            using var stream = Resx.GetDefaultWindowIconAsStream();
+            if (stream is not null)
+            {
+                PART_Logo.Source = Bitmap.DecodeToHeight(stream, 256);
+            }
+        }
+    }
+
+
+    /// <summary>
+    /// Creates one progress dot per step.
+    /// </summary>
+    private void BuildStepDots()
+    {
+        for (var i = 0; i < StepCount; i++)
+        {
+            var dot = new Border
+            {
+                Height = 8,
+                CornerRadius = new CornerRadius(4),
+                VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
+            };
+            _dots.Add(dot);
+            PART_StepDots.Children.Add(dot);
+        }
+    }
+
+
+    /// <summary>
+    /// Colors/sizes the dots to reflect the current step (active dot is a wider accent pill).
+    /// </summary>
+    private void UpdateStepDots()
+    {
+        var accent = Core.AccentColor.ToBrush();
+        var inactive = Resx.Get<IBrush>(ResxId.IG_BorderNeutralBrush);
+
+        for (var i = 0; i < _dots.Count; i++)
+        {
+            var isActive = i == CurrentStep - 1;
+            _dots[i].Width = isActive ? 22 : 8;
+            _dots[i].Background = isActive ? accent : inactive;
+        }
+    }
+
+
+    private void UpdateStepInfo()
+    {
+        PART_StepInfo.Text = _previewLang[LangId.QuickSetup_StepInfo, CurrentStep, StepCount];
+    }
+
+    #endregion // Header
+
+
+
+    #region Localization
+
+    /// <summary>
+    /// Localizes every wizard string from the local preview language.
+    /// </summary>
+    private void LocalizeAll()
+    {
+        var lang = _previewLang;
+
+        PART_LblLanguage.Text = lang[LangId.QuickSetup_SelectLanguage];
+        PART_SeeWhatNew.Text = lang[LangId.QuickSetup_SeeWhatNew];
+
+        PART_LblSelectProfile.Text = lang[LangId.QuickSetup_SelectProfile];
+        PART_LblStandard.Text = lang[LangId.QuickSetup_StandardUser];
+        PART_LblProfessional.Text = lang[LangId.QuickSetup_ProfessionalUser];
+        PART_LblApplied.Text = lang[LangId.QuickSetup_SettingsWillBeApplied];
+        PART_LblColorManagement.Text = lang[LangId.Settings_ColorManagement];
+        PART_LblExplorerSort.Text = lang[LangId.Settings_EnableExplorerSortOrder];
+        PART_LblRawThumbnail.Text = lang[LangId.Settings_EnableOnlyLoadRawPreview];
+        PART_LblProfileNote.Text = lang[LangId.QuickSetup_SettingProfileDescription];
+
+        PART_LblUpgradePro.Text = lang[LangId.Menu_MnuUpgradeLicense];
+        PART_UpgradePro.PreviewLang = lang;
+
+        UpdateStepInfo();
+    }
+
+    #endregion // Localization
+
+}
