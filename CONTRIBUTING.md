@@ -86,7 +86,6 @@ ImageGlass 10 uses language packs (`*.iglang.json`), so you can also work on a p
 1. Open **Settings > Language** in ImageGlass 10 and export the built-in English pack.
 2. Translate the values in the exported `.iglang.json` file.
 3. Import it back through the same page to see it live in the app.
-4. Share it: attach it to a [discussion](https://github.com/d2phap/ImageGlass/discussions) or open a pull request.
 
 Published packs are listed at [imageglass.org/languages](https://imageglass.org/languages).
 

@@ -18,32 +18,27 @@ ImageGlass is a fast, modern, open-source image viewer built for Windows, macOS,
 <br/>
 
 [**🌐 Website**](https://imageglass.org) &nbsp;•&nbsp;
-[**📥 Download**](https://imageglass.org/download) &nbsp;•&nbsp;
+[**📥 Pricing**](https://imageglass.org/pricing) &nbsp;•&nbsp;
 [**📚 Docs**](https://imageglass.org/docs) &nbsp;•&nbsp;
 [**💬 Discord**](https://discord.gg/tWjbynH2X8) &nbsp;•&nbsp;
 [**💖 Donate**](https://imageglass.org/donate)
 
 <br/>
 
-[![ImageGlass 10 RC](https://github.com/user-attachments/assets/ca49c1be-4ab6-4714-b23b-8b094b5eda90)](https://imageglass.org/news/announcing-imageglass-10-rc-102)
+[![ImageGlass 10](https://github.com/user-attachments/assets/ca49c1be-4ab6-4714-b23b-8b094b5eda90)](https://imageglass.org/news/introducing-imageglass-10-rebuilt-for-speed-and-cross-platform-support-107)
 
 </div>
 
-<br/>
 
 <div align="center">
 
-<a href="https://apps.microsoft.com/detail/9N33VZK3C7TH?launch=true&cid=GitHubRelease&mode=full">
-  <img height="58" src="https://github.com/d2phap/ImageGlass/assets/3154213/08a071bb-a6ae-420c-b53b-2317004570d4" alt="Download ImageGlass from the Microsoft Store" />
+<a href="https://imageglass.org/download">
+  <img width="225" height="37" alt="Get ImageGlass" src="https://github.com/user-attachments/assets/a44993c4-8fbb-4209-8341-be6996059b5a" />
 </a>
 
-<br/>
-
-Prefer the classic installer? Grab it from **[imageglass.org/download](https://imageglass.org/download)**.
-
-[📢 Official: ImageGlass 10 Release Plans, Pricing, Features, and Privacy](https://github.com/d2phap/ImageGlass/discussions/2396)
-
 </div>
+
+<br/>
 
 
 > [!Caution]
@@ -56,36 +51,39 @@ Prefer the classic installer? Grab it from **[imageglass.org/download](https://i
 <br/>
 
 
+## Features
+Primarily a photo viewer, ImageGlass offers a wide array of features geared toward image viewing, along with some focused editing capabilities. Here are some of the key features:
+- Supports [90+ image formats](https://imageglass.org/docs/supported-formats) out of the box
+- Hardware-aware smart caching
+- Super-fast image browsing with Turbo mode
+- Slideshow with random interval and sound notification
+- Native SVG and SVGZ vector rendering
+- Animated GIF, WEBP, and SVG playback
+- Color management and basic HDR support
+- Different cursor-precise zoom modes with flexible image interpolations
+- Different window modes: Frameless, Window Fit, Full screen
+- Built-in Tools: Rotate, Flip, Crop, Resize, Color Picker, Frame Navigation, Lossless compression...
+- EXIF metadata viewing through the [ExifGlass tool](https://github.com/d2phap/ExifGlass)
+- Touch gestures for zoom and pan
+- Themes, layouts, and custom hotkeys
+- Custom action binding for toolbar, mouse...
+- [Plugins](https://imageglass.org/plugins) and [external tools](https://imageglass.org/tools) support via [ImageGlass.SDK](https://github.com/ImageGlass/SDK)
+- Windows: Explorer sort order support
+- Windows: Custom file type icon pack (Not available for Store release)
 
-## Download
-### Why the Microsoft Store?
-
-- Support the development of ImageGlass directly by purchasing it from the Microsoft Store.
-- The Store version offers fast, easy installation across all your Windows devices, with fully automatic, behind-the-scenes updates that deliver the newest features, improvements, and fixes.
-
-### Classic vs. Store
-
-|  | ImageGlass Classic | [ImageGlass Store](https://apps.microsoft.com/detail/9N33VZK3C7TH?launch=true&cid=GitHubRelease&mode=full) |
-| -- | -- | -- |
-| [All features](https://imageglass.org/docs/features), including Explorer sort order | ✅ | ✅ |
-| [Advanced configs for power users](https://imageglass.org/docs/app-configs) | ✅ | ✅ |
-| Distribution | 🌐 [ImageGlass.org](https://imageglass.org) & various sources | 🛍️ [Microsoft Store](https://apps.microsoft.com/detail/9N33VZK3C7TH?launch=true&cid=GitHubRelease&mode=full) only |
-| Price | 🆓 Free | 🪙 Fee, with a 7-day trial |
-| Commercial use | ✅ Recommended to [register](https://imageglass.org/license) | ✅ |
-| Auto-update | ❌ User-managed | ✅ Seamless auto-updates |
-| Hotfix update | ❌ Official releases only | ✅ As soon as fixes land |
+👉 Visit https://imageglass.org/docs/features to explore all features of ImageGlass.
 
 <br/>
 
 
 ## System Requirements
 **Version 10**
-- Windows 10/11 64-bit, version 1809 (build 17763) or later
-- macOS Apple Silicon, version 12 or later
-- Linux distros with Flatpak installer
+- Windows 10/11 x64 or arm64, version 1809 (build 17763) or later
+- macOS 14+, Apple Silicon arm64
+- Linux Desktop X11 x64
 
 **Version 9**
-- Windows 10/11 64-bit, version 1809 (build 17763) or later
+- Windows 10/11 x64 or arm64, version 1809 (build 17763) or later
 - Optional: [WebView2 Runtime 64-bit v119.0.2151 or later](https://go.microsoft.com/fwlink/p/?LinkId=2124703)
 
 <br/>
@@ -105,23 +103,16 @@ The `develop` branch contains the latest commits, while the `prod` branch holds 
 <br/>
 
 
-## Roadmap 2026
+## Roadmap
 
 [![ImageGlass 2026 roadmap](https://github.com/user-attachments/assets/9cf2a8a4-18f4-4852-ad83-5df79239d93f)](https://github.com/d2phap/ImageGlass/discussions/2287)
 
 <br/>
 
 
-## License
-
-ImageGlass is free for both personal and commercial use, except for the Store version. If you intend to use ImageGlass at your place of business or for commercial purposes, registering at [imageglass.org/license](https://imageglass.org/license) is recommended but not enforced.
-
-<br/>
-
-
 ## This project needs your help!
 
-If you find ImageGlass useful and would like to support its ongoing development, please consider making a donation. Your support — whether financial or simply sharing ImageGlass with others — means the world to me. Every bit helps keep the project alive and free for everyone.
+If you find ImageGlass useful and would like to support its ongoing development, please consider making a donation or purchase Pro edition. Your support — whether financial or simply sharing ImageGlass with others — means the world to me. Every bit helps keep the project alive for everyone.
 
 #### 👉 Explore the ways to support at [imageglass.org/donate](https://imageglass.org/donate).
 
