@@ -119,12 +119,34 @@ public static class Win32DefaultAppApi
 
     /// <summary>
     /// Gets the app executable file path for command launch.
-    /// For MSIX, use alias, otherwise, use real path.
+    /// For MSIX, use the execution alias, otherwise, use real path.
     /// </summary>
-    private static string LaunchCommandExe => Win32AppIdentity.IsPackaged
-        ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "Microsoft", "WindowsApps", $"{BHelper.AppName}.exe")
-        : BHelper.AppExePath;
+    private static string LaunchCommandExe
+    {
+        get
+        {
+            if (!Win32AppIdentity.IsPackaged) return BHelper.AppExePath;
+
+            var windowsAppsDir = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "Microsoft", "WindowsApps");
+
+            // the per-family alias folder is the only unambiguous one: the bare alias name is a
+            // single slot, so another package declaring "ImageGlass.exe" (the v9 Store package)
+            // can own it and would then receive every file opened through our registration
+            var familyName = Win32AppIdentity.PackageFamilyName;
+            if (!string.IsNullOrEmpty(familyName))
+            {
+                var scopedAlias = Path.Combine(windowsAppsDir, familyName, $"{BHelper.AppName}.exe");
+                if (File.Exists(scopedAlias)) return scopedAlias;
+            }
+
+            // no per-family alias (older Windows): the bare alias still beats the versioned
+            // install path, which breaks on the next package update
+            var bareAlias = Path.Combine(windowsAppsDir, $"{BHelper.AppName}.exe");
+            return File.Exists(bareAlias) ? bareAlias : BHelper.AppExePath;
+        }
+    }
 
 
     /// <summary>
@@ -148,7 +170,7 @@ public static class Win32DefaultAppApi
         // <root>\Software\ImageGlass\Capabilities
         using (var key = root.CreateSubKey(capabilitiesPath, writable: true))
         {
-            key.SetValue("ApplicationName", BHelper.AppDisplayName);
+            key.SetValue("ApplicationName", BHelper.AppName);
             // the real exe has the embedded icon; the execution alias is a 0-byte reparse point (blank)
             key.SetValue("ApplicationIcon", $"\"{BHelper.AppExePath}\", 0");
             key.SetValue("ApplicationDescription", "A Fast, Seamless Photo Viewer");
@@ -182,35 +204,47 @@ public static class Win32DefaultAppApi
 
         // <root>\Software\Classes\ImageGlass.AssocFile.<EXT>
         using var progIdKey = classesKey.CreateSubKey(progId, writable: true);
-        progIdKey.SetValue("", BHelper.AppDisplayName);
+        progIdKey.SetValue("", BHelper.AppName);
 
-        // 1. DefaultIcon — resolve to the real path (MSIX may redirect the config dir)
-        var iconPath = BHelper.GetRealPlatformConfigDir(Dir.ExtIcons, $"{extNoDot}.ico");
-        // bundled fallback only when unpackaged (a packaged install-dir path is version-specific)
-        if (!File.Exists(iconPath) && !Win32AppIdentity.IsPackaged)
-        {
-            iconPath = BHelper.BaseDir(Dir.ExtIcons, $"{extNoDot}.ico");
-        }
-        if (!File.Exists(iconPath)) iconPath = string.Empty;
-
-        // set extension icon
+        // 1. HKCU\Software\Classes\ImageGlass.AssocFile.<EXT>\DefaultIcon
+        var iconPath = ResolveExtIconPath(extNoDot);
         if (!string.IsNullOrEmpty(iconPath))
         {
-            // HKCU\Software\Classes\ImageGlass.AssocFile.<EXT>\DefaultIcon
             using var iconKey = progIdKey.CreateSubKey("DefaultIcon", writable: true);
             iconKey.SetValue("", iconPath);
+        }
+        else
+        {
+            // no icon on disk any more: drop the one a previous registration left behind
+            progIdKey.DeleteSubKeyTree("DefaultIcon", throwOnMissingSubKey: false);
         }
 
 
         // 2. HKCU\Software\Classes\ImageGlass.AssocFile.<EXT>\shell\open
         using var shellKey = progIdKey.CreateSubKey("shell", writable: true);
         using var openKey = shellKey.CreateSubKey("open", writable: true);
-        openKey.SetValue("FriendlyAppName", BHelper.AppDisplayName);
+        openKey.SetValue("FriendlyAppName", BHelper.AppName);
 
 
         // 3. HKCU\Software\Classes\ImageGlass.AssocFile.<EXT>\shell\open\command
         using var commandKey = openKey.CreateSubKey("command", writable: true);
         commandKey.SetValue("", $"\"{LaunchCommandExe}\" \"%1\"");
+    }
+
+
+    /// <summary>
+    /// Resolves the icon file of an extension: a user icon in the config dir wins, else the
+    /// bundled one in the base dir. Returns <c>null</c> when neither exists.
+    /// </summary>
+    private static string? ResolveExtIconPath(string extNoDot)
+    {
+        // MSIX may redirect the config dir, so resolve it to the real physical path
+        var userIcon = BHelper.GetRealPlatformConfigDir(Dir.ExtIcons, $"{extNoDot}.ico");
+        if (File.Exists(userIcon)) return userIcon;
+
+        // bundled fallback next to the exe; a packaged install dir is version-specific, so an MSIX update needs re-registering
+        var bundledIcon = BHelper.BaseDir(Dir.ExtIcons, $"{extNoDot}.ico");
+        return File.Exists(bundledIcon) ? bundledIcon : null;
     }
 
 

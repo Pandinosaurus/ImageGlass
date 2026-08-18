@@ -47,6 +47,7 @@ public static class Win32AppIdentity
     private static readonly Lazy<bool> _isPackaged = new(DetectPackaged);
     private static readonly Lazy<bool> _isUnvirtualizedResources = new(DetectUnvirtualizedResources);
     private static readonly Lazy<string?> _packageFullName = new(ReadPackageFullName);
+    private static readonly Lazy<string?> _packageFamilyName = new(ReadPackageFamilyName);
     private static readonly Lazy<bool> _isMsStorePackage = new(DetectMsStorePackage);
 
 
@@ -66,6 +67,13 @@ public static class Win32AppIdentity
     /// Full name of the current package, or <c>null</c> when the process has no package identity.
     /// </summary>
     public static string? PackageFullName => _packageFullName.Value;
+
+
+    /// <summary>
+    /// Family name of the current package (<c>Name_PublisherId</c>), or <c>null</c> when the
+    /// process has no package identity.
+    /// </summary>
+    public static string? PackageFamilyName => _packageFamilyName.Value;
 
 
     /// <summary>
@@ -112,6 +120,28 @@ public static class Win32AppIdentity
 
             var buffer = new char[length];
             var read = PInvoke.GetCurrentPackageFullName(ref length, buffer);
+            if ((int)read != ERROR_SUCCESS) return null;
+
+            return new string(buffer, 0, (int)length - 1);
+        }
+        catch { return null; }
+    }
+
+
+    private static string? ReadPackageFamilyName()
+    {
+        if (!_isPackaged.Value) return null;
+
+        try
+        {
+            // first call reports the buffer size needed, in chars, including the null terminator
+            uint length = 0;
+            var probe = PInvoke.GetCurrentPackageFamilyName(ref length, default);
+            if ((int)probe != ERROR_INSUFFICIENT_BUFFER) return null;
+            if (length < 2) return null;
+
+            var buffer = new char[length];
+            var read = PInvoke.GetCurrentPackageFamilyName(ref length, buffer);
             if ((int)read != ERROR_SUCCESS) return null;
 
             return new string(buffer, 0, (int)length - 1);

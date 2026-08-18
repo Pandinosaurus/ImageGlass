@@ -23,6 +23,12 @@
             identity/artwork) but left UNSIGNED — sign it later before publishing.
             Output: __artifacts/bundle/ImageGlass_<label>_win-<arch>.msix
 
+    File type associations differ per flavour, because Windows takes the file icon from the
+    package manifest for every type the package claims, outranking the classic DefaultIcon:
+    -UnvirtualizedResources (sideload) declares NO association, leaving the app's own HKCU
+    registration and the _ext_icons folder in charge; the Store flavour, where that registration
+    is virtualized away, declares one association per format with its own uap:Logo.
+
     Both flavours share the same package version: Major.Minor (from
     <IgBundleShortVersion>) . <IgBundleBuild> . 0 — e.g. 10.0.535.0. The 4th
     (revision) part is 0 because the Microsoft Store reserves it.
@@ -121,7 +127,8 @@ param(
     [switch]$Bundle,
 
     # Opt out of resources virtualization (unvirtualizedResources) so classic file-association
-    # registration + custom ext icons reach the real HKCU. Sideload/GitHub only; NOT the Store.
+    # registration + custom ext icons reach the real HKCU, and drop the manifest file type
+    # associations that would otherwise own the icon. Sideload/GitHub only; NOT the Store.
     [switch]$UnvirtualizedResources,
 
     # Signed license bundled into the msstore payload so a Store customer can export it for their
@@ -175,6 +182,121 @@ function Get-BuildProp([string]$Tag) {
     $m = Select-String -Path $BuildProps -Pattern "<$Tag>(.*?)</$Tag>" | Select-Object -First 1
     if ($m) { return $m.Matches[0].Groups[1].Value.Trim() }
     return ''
+}
+
+# Explorer's file-icon sizes, emitted as MRT "targetsize-N" variants of each extension logo.
+$ExtIconSizes = @(16, 32, 48, 96, 256)
+
+# Read the supported file extensions from Const.IMAGE_FORMATS so the manifest cannot drift
+# from the formats the app actually opens.
+function Get-SupportedExtensions {
+    $constFile = Join-Path $WorkspaceDir 'ImageGlass.Lib\Common\Types\Const.cs'
+    $m = Select-String -Path $constFile -Pattern 'IMAGE_FORMATS\s*=\s*"([^"]+)"' | Select-Object -First 1
+    if (-not $m) { throw "Could not read IMAGE_FORMATS from $constFile" }
+
+    return $m.Matches[0].Groups[1].Value.Split(';', [StringSplitOptions]::RemoveEmptyEntries)
+}
+
+# Write one .ico as the PNG variants MRT resolves a uap:Logo against. A 256px frame is stored
+# PNG-compressed inside the .ico, so it is copied out verbatim instead of re-encoded.
+function Export-ExtIconPngs([string]$IcoPath, [string]$OutDir, [string]$BaseName) {
+    $bytes = [System.IO.File]::ReadAllBytes($IcoPath)
+    $count = [BitConverter]::ToUInt16($bytes, 4)
+
+    foreach ($size in $ExtIconSizes) {
+        $outFile = Join-Path $OutDir "$BaseName.targetsize-$size.png"
+        $rawPng = $null
+
+        for ($i = 0; $i -lt $count; $i++) {
+            $entry = 6 + $i * 16
+            $width = $bytes[$entry]
+            if ($width -eq 0) { $width = 256 }
+            if ($width -ne $size) { continue }
+
+            $length = [BitConverter]::ToUInt32($bytes, $entry + 8)
+            $offset = [BitConverter]::ToUInt32($bytes, $entry + 12)
+            if ($bytes[$offset] -eq 0x89 -and $bytes[$offset + 1] -eq 0x50) {
+                $rawPng = New-Object byte[] $length
+                [Array]::Copy($bytes, $offset, $rawPng, 0, $length)
+            }
+            break
+        }
+
+        if ($rawPng) {
+            [System.IO.File]::WriteAllBytes($outFile, $rawPng)
+            continue
+        }
+
+        # BMP-encoded frame (or no exact size): let GDI+ pick the closest frame and re-encode
+        $icon = [System.Drawing.Icon]::new($IcoPath, $size, $size)
+        try {
+            $bmp = $icon.ToBitmap()
+            try { $bmp.Save($outFile, [System.Drawing.Imaging.ImageFormat]::Png) }
+            finally { $bmp.Dispose() }
+        }
+        finally { $icon.Dispose() }
+    }
+
+    # MRT needs one candidate without a targetsize qualifier to fall back on
+    Copy-Item (Join-Path $OutDir "$BaseName.targetsize-256.png") (Join-Path $OutDir "$BaseName.png") -Force
+}
+
+# Build the <uap:Extension> file-type-association blocks and stage their logos.
+#
+# Windows serves the file icon of any type a package claims from that package's association, which
+# outranks the classic HKCU DefaultIcon the app writes. So the flavours differ:
+#   * sideload (-UnvirtualizedResources): claim nothing, leaving the classic registration (and the
+#     user's own _ext_icons pack) in charge, exactly as in the portable ZIP build;
+#   * Store: classic registration is virtualized away, so declare one association per format, each
+#     carrying its own uap:Logo built from the bundled .ico.
+function New-FileTypeAssociationXml([string]$StagingDir) {
+    if ($UnvirtualizedResources) { return '' }
+
+    Add-Type -AssemblyName System.Drawing
+
+    $iconSrcDir = Join-Path $AppExtras '_ext_icons'
+    $iconOutDir = Join-Path $StagingDir 'Assets\ExtIcons'
+    New-Item -ItemType Directory -Path $iconOutDir -Force | Out-Null
+
+    $extensions = Get-SupportedExtensions
+    $blocks = [System.Text.StringBuilder]::new()
+    $unbranded = [System.Collections.Generic.List[string]]::new()
+    $indent = ' ' * 8
+
+    foreach ($ext in $extensions) {
+        $baseName = $ext.TrimStart('.').ToUpperInvariant()
+        $icoPath = Join-Path $iconSrcDir "$baseName.ico"
+
+        # no bundled icon for this format: collect it into one logo-less group at the end
+        if (-not (Test-Path $icoPath)) { $unbranded.Add($ext); continue }
+
+        Export-ExtIconPngs -IcoPath $icoPath -OutDir $iconOutDir -BaseName $baseName
+
+        [void]$blocks.AppendLine("$indent<uap:Extension Category=`"windows.fileTypeAssociation`" EntryPoint=`"Windows.FullTrustApplication`" Executable=`"ImageGlass\ImageGlass.exe`">")
+        [void]$blocks.AppendLine("$indent  <uap:FileTypeAssociation Name=`"imageglass$ext`">")
+        [void]$blocks.AppendLine("$indent    <uap:Logo>Assets\ExtIcons\$baseName.png</uap:Logo>")
+        [void]$blocks.AppendLine("$indent    <uap:SupportedFileTypes>")
+        [void]$blocks.AppendLine("$indent      <uap:FileType>$ext</uap:FileType>")
+        [void]$blocks.AppendLine("$indent    </uap:SupportedFileTypes>")
+        [void]$blocks.AppendLine("$indent  </uap:FileTypeAssociation>")
+        [void]$blocks.AppendLine("$indent</uap:Extension>")
+    }
+
+    if ($unbranded.Count -gt 0) {
+        [void]$blocks.AppendLine("$indent<uap:Extension Category=`"windows.fileTypeAssociation`" EntryPoint=`"Windows.FullTrustApplication`" Executable=`"ImageGlass\ImageGlass.exe`">")
+        [void]$blocks.AppendLine("$indent  <uap:FileTypeAssociation Name=`"imageglass.assocfiles`">")
+        [void]$blocks.AppendLine("$indent    <uap:SupportedFileTypes>")
+        foreach ($ext in $unbranded) {
+            [void]$blocks.AppendLine("$indent      <uap:FileType>$ext</uap:FileType>")
+        }
+        [void]$blocks.AppendLine("$indent    </uap:SupportedFileTypes>")
+        [void]$blocks.AppendLine("$indent  </uap:FileTypeAssociation>")
+        [void]$blocks.AppendLine("$indent</uap:Extension>")
+    }
+
+    Write-Host "    file type associations: $($extensions.Count) format(s), $($unbranded.Count) without a bundled icon"
+
+    return $blocks.ToString().TrimEnd()
 }
 
 # Locate the signed license to bundle into the msstore payload. -StoreLicenseFile wins; otherwise
@@ -323,6 +445,8 @@ function New-MsixPackage([string]$Platform, [string]$OutMsixPath) {
     $regVirt   = if ($UnvirtualizedResources) { '<desktop6:RegistryWriteVirtualization>disabled</desktop6:RegistryWriteVirtualization>' } else { '' }
     $unvirtCap = if ($UnvirtualizedResources) { '<rescap:Capability Name="unvirtualizedResources" />' } else { '' }
 
+    $fileTypes = New-FileTypeAssociationXml -StagingDir $stagingDir
+
     $manifest = Get-Content -Path $ManifestTpl -Raw
     $manifest = $manifest.Replace('{{IDENTITY_NAME}}', $identityName).
                           Replace('{{PUBLISHER}}', $publisher).
@@ -330,7 +454,8 @@ function New-MsixPackage([string]$Platform, [string]$OutMsixPath) {
                           Replace('{{VERSION}}', $pkgVersion).
                           Replace('{{ARCH}}', $Platform).
                           Replace('{{REGISTRY_VIRTUALIZATION}}', $regVirt).
-                          Replace('{{UNVIRTUALIZED_CAPABILITY}}', $unvirtCap)
+                          Replace('{{UNVIRTUALIZED_CAPABILITY}}', $unvirtCap).
+                          Replace('        {{FILE_TYPE_ASSOCIATIONS}}', $fileTypes)
     $utf8Bom = [System.Text.UTF8Encoding]::new($true)
     [System.IO.File]::WriteAllText((Join-Path $stagingDir 'AppxManifest.xml'), $manifest, $utf8Bom)
 
