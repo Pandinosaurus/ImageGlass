@@ -22,7 +22,7 @@
       <Namespace ParameterType="System.String" Required="true" />
       <Version ParameterType="System.String" Required="true" />
       <FullVersion ParameterType="System.String" Required="true" />
-      <ReleaseType ParameterType="System.String" Required="true" />
+      <ReleaseType ParameterType="System.String" Required="false" />
       <UpdateChannel ParameterType="System.String" Required="true" />
     </ParameterGroup>
     <Task>

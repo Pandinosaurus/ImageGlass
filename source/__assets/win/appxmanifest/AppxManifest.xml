@@ -30,7 +30,7 @@
     <Application Id="IMAGEGLASS" Executable="ImageGlass\ImageGlass.exe" EntryPoint="Windows.FullTrustApplication">
       <uap:VisualElements
         BackgroundColor="transparent"
-        DisplayName="ImageGlass 10"
+        DisplayName="ImageGlass"
         Square150x150Logo="Assets\IMAGEGLASS-Square150x150Logo.png"
         Square44x44Logo="Assets\IMAGEGLASS-Square44x44Logo.png"
         Description="A Fast, Seamless Photo Viewer">
@@ -48,7 +48,6 @@
               <uap:FileType>.ari</uap:FileType>
               <uap:FileType>.arw</uap:FileType>
               <uap:FileType>.avif</uap:FileType>
-              <uap:FileType>.b64</uap:FileType>
               <uap:FileType>.bay</uap:FileType>
               <uap:FileType>.bmp</uap:FileType>
               <uap:FileType>.cap</uap:FileType>
