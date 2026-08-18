@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+﻿#Requires -Version 7.0
 <#
 .SYNOPSIS
     Build (and optionally sign) an MSIX of ImageGlass.Win32 — one .msix per
@@ -187,8 +187,7 @@ function Get-BuildProp([string]$Tag) {
 # Explorer's file-icon sizes, emitted as MRT "targetsize-N" variants of each extension logo.
 $ExtIconSizes = @(16, 32, 48, 96, 256)
 
-# Read the supported file extensions from Const.IMAGE_FORMATS so the manifest cannot drift
-# from the formats the app actually opens.
+# Read the extensions from Const.IMAGE_FORMATS so the manifest cannot drift from the app.
 function Get-SupportedExtensions {
     $constFile = Join-Path $WorkspaceDir 'ImageGlass.Lib\Common\Types\Const.cs'
     $m = Select-String -Path $constFile -Pattern 'IMAGE_FORMATS\s*=\s*"([^"]+)"' | Select-Object -First 1
@@ -241,14 +240,8 @@ function Export-ExtIconPngs([string]$IcoPath, [string]$OutDir, [string]$BaseName
     Copy-Item (Join-Path $OutDir "$BaseName.targetsize-256.png") (Join-Path $OutDir "$BaseName.png") -Force
 }
 
-# Build the <uap:Extension> file-type-association blocks and stage their logos.
-#
-# Windows serves the file icon of any type a package claims from that package's association, which
-# outranks the classic HKCU DefaultIcon the app writes. So the flavours differ:
-#   * sideload (-UnvirtualizedResources): claim nothing, leaving the classic registration (and the
-#     user's own _ext_icons pack) in charge, exactly as in the portable ZIP build;
-#   * Store: classic registration is virtualized away, so declare one association per format, each
-#     carrying its own uap:Logo built from the bundled .ico.
+# Build the <uap:Extension> file-type-association blocks and stage their logos. A claimed type takes
+# its icon from the package, outranking the classic DefaultIcon, so only the Store flavour claims any.
 function New-FileTypeAssociationXml([string]$StagingDir) {
     if ($UnvirtualizedResources) { return '' }
 

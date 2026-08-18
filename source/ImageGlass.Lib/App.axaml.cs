@@ -1,4 +1,4 @@
-/*
+﻿/*
 ImageGlass - A Fast, Seamless Photo Viewer
 Copyright (C) 2010 - 2026 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
@@ -550,6 +550,9 @@ public partial class App : Application
 
         // initialize update provider and auto-check
         _ = InitializeUpdateProviderAsync();
+
+        // an app update can invalidate the launch path baked into an existing registration
+        if (Core.ShellProvider is { } shell) _ = Task.Run(shell.RepairDefaultViewerRegistration);
     }
 
 

@@ -1,4 +1,4 @@
-/*
+﻿/*
 ImageGlass - A Fast, Seamless Photo Viewer
 Copyright (C) 2010 - 2026 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
@@ -333,6 +333,12 @@ public class Win32ShellProvider : PhDisposable, IShellProvider
     {
         return await Win32DefaultAppApi.SetDefaultPhotoViewerAsync(extensions, enable);
     }
+
+
+    /// <summary>
+    /// <inheritdoc/>
+    /// </summary>
+    public void RepairDefaultViewerRegistration() => Win32DefaultAppApi.RepairDefaultViewerRegistration();
 
 
     /// <summary>

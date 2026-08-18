@@ -110,6 +110,12 @@ public interface IShellProvider : IDisposable
 
 
     /// <summary>
+    /// Rewrites a default-photo-viewer registration whose launch path an app update deleted.
+    /// </summary>
+    void RepairDefaultViewerRegistration() { }
+
+
+    /// <summary>
     /// Gets the registry scope (per-user vs per-machine) that would be used to register
     /// the app as the default photo viewer, based on where the app is installed.
     /// </summary>

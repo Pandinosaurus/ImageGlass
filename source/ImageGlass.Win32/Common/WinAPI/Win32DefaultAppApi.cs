@@ -21,6 +21,7 @@ using ImageGlass.Common.Types;
 using Microsoft.Win32;
 using System;
 using System.IO;
+using System.Linq;
 using System.Security;
 using System.Security.Principal;
 using System.Threading.Tasks;
@@ -118,34 +119,98 @@ public static class Win32DefaultAppApi
 
 
     /// <summary>
-    /// Gets the app executable file path for command launch.
-    /// For MSIX, use the execution alias, otherwise, use real path.
+    /// Gets the exe to register as the launch command; never the MSIX alias, which has no icon.
     /// </summary>
-    private static string LaunchCommandExe
+    private static string LaunchCommandExe => BHelper.AppExePath;
+
+
+    /// <summary>
+    /// Rewrites a registration whose launch path an app update deleted (an MSIX dir is versioned).
+    /// </summary>
+    public static void RepairDefaultViewerRegistration()
     {
-        get
+        try
         {
-            if (!Win32AppIdentity.IsPackaged) return BHelper.AppExePath;
+            // virtualized (Store) MSIX: writes never reach the shell
+            if (Win32AppIdentity.IsPackaged && !Win32AppIdentity.IsUnvirtualizedResources) return;
 
-            var windowsAppsDir = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "Microsoft", "WindowsApps");
+            // a per-machine hive needs elevation, and a silent UAC prompt at startup is worse
+            if (GetScope() != DefaultAppScope.CurrentUser) return;
 
-            // the per-family alias folder is the only unambiguous one: the bare alias name is a
-            // single slot, so another package declaring "ImageGlass.exe" (the v9 Store package)
-            // can own it and would then receive every file opened through our registration
-            var familyName = Win32AppIdentity.PackageFamilyName;
-            if (!string.IsNullOrEmpty(familyName))
-            {
-                var scopedAlias = Path.Combine(windowsAppsDir, familyName, $"{BHelper.AppName}.exe");
-                if (File.Exists(scopedAlias)) return scopedAlias;
-            }
+            var root = Registry.CurrentUser;
+            var extensions = GetRegisteredExtensions(root);
+            if (extensions.Length == 0) return;
 
-            // no per-family alias (older Windows): the bare alias still beats the versioned
-            // install path, which breaks on the next package update
-            var bareAlias = Path.Combine(windowsAppsDir, $"{BHelper.AppName}.exe");
-            return File.Exists(bareAlias) ? bareAlias : BHelper.AppExePath;
+            // only a dead path is ours to fix, or a portable copy would steal a live registration
+            if (IsRegisteredCommandAlive(root, extensions[0])) return;
+
+            RefreshRegisteredPaths(root, extensions);
+            NotifyShellAssocChanged();
         }
+        catch { }
+    }
+
+
+    /// <summary>
+    /// Rewrites the registered paths only, never the extension defaults or the user's UserChoice.
+    /// </summary>
+    private static void RefreshRegisteredPaths(RegistryKey root, string[] extensions)
+    {
+        using (var key = root.OpenSubKey($@"Software\{BHelper.AppName}\Capabilities", writable: true))
+        {
+            key?.SetValue("ApplicationIcon", $"\"{BHelper.AppExePath}\", 0");
+        }
+
+        using var classesKey = root.OpenSubKey(@"Software\Classes", writable: true);
+        if (classesKey is null) return;
+
+        foreach (var ext in extensions)
+        {
+            var extNoDot = ext.TrimStart('.').ToUpperInvariant();
+            RegisterProgId(classesKey, $"{BHelper.AppName}.AssocFile.{extNoDot}", extNoDot);
+        }
+    }
+
+
+    /// <summary>
+    /// Reads the extensions a previous registration recorded under Capabilities.
+    /// </summary>
+    private static string[] GetRegisteredExtensions(RegistryKey root)
+    {
+        using var faKey = root.OpenSubKey($@"Software\{BHelper.AppName}\Capabilities\FileAssociations");
+        if (faKey is null) return [];
+
+        return faKey.GetValueNames().Where(name => name.StartsWith('.')).ToArray();
+    }
+
+
+    /// <summary>
+    /// Whether the exe recorded in an extension's open command still exists.
+    /// </summary>
+    private static bool IsRegisteredCommandAlive(RegistryKey root, string ext)
+    {
+        var extNoDot = ext.TrimStart('.').ToUpperInvariant();
+        var progId = $"{BHelper.AppName}.AssocFile.{extNoDot}";
+
+        using var cmdKey = root.OpenSubKey($@"Software\Classes\{progId}\shell\open\command");
+        if (cmdKey?.GetValue("") is not string command) return false;
+
+        var exePath = ExtractCommandExePath(command);
+
+        return exePath.Length > 0 && File.Exists(exePath);
+    }
+
+
+    /// <summary>
+    /// Pulls the executable out of a registered open command (<c>"&lt;exe&gt;" "%1"</c>).
+    /// </summary>
+    private static string ExtractCommandExePath(string command)
+    {
+        if (!command.StartsWith('"')) return string.Empty;
+
+        var closingQuote = command.IndexOf('"', 1);
+
+        return closingQuote > 1 ? command[1..closingQuote] : string.Empty;
     }
 
 
@@ -233,16 +298,15 @@ public static class Win32DefaultAppApi
 
 
     /// <summary>
-    /// Resolves the icon file of an extension: a user icon in the config dir wins, else the
-    /// bundled one in the base dir. Returns <c>null</c> when neither exists.
+    /// Resolves an extension's icon: a user icon in the config dir wins, else the bundled one.
     /// </summary>
     private static string? ResolveExtIconPath(string extNoDot)
     {
-        // MSIX may redirect the config dir, so resolve it to the real physical path
+        // MSIX may redirect the config dir, so resolve the real physical path
         var userIcon = BHelper.GetRealPlatformConfigDir(Dir.ExtIcons, $"{extNoDot}.ico");
         if (File.Exists(userIcon)) return userIcon;
 
-        // bundled fallback next to the exe; a packaged install dir is version-specific, so an MSIX update needs re-registering
+        // bundled fallback; a packaged install dir is versioned, so an update needs re-registering
         var bundledIcon = BHelper.BaseDir(Dir.ExtIcons, $"{extNoDot}.ico");
         return File.Exists(bundledIcon) ? bundledIcon : null;
     }

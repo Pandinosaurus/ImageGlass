@@ -50,4 +50,3 @@ GetNamedPipeClientProcessId
 
 GetCurrentPackageFullName
 
-GetCurrentPackageFamilyName
