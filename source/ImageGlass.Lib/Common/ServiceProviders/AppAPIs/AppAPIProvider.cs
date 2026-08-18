@@ -50,13 +50,8 @@ public partial class AppAPIProvider
     // wallpaper formats
     private static FrozenSet<string> _desktopNativeFormats => [".bmp", ".jpg", ".jpeg", ".png", ".gif"];
 
-    // variable to back up / restore window layout when changing window mode
-    private bool _isFramelessBeforeFullscreen;
-    private bool _isWindowFitBeforeFullscreen;
-    private bool _showToolbar = true;
-    private bool _showGallery = true;
-    private Rect _windowBound;
-    private bool _windowMaximized = false;
+    // windowed layout captured on entering full screen; null when not in full screen
+    private WindowLayoutSnapshot? _preFullScreenLayout;
 
     // slideshow state backup
     private bool _isFullScreenBeforeSlideshow;
@@ -64,7 +59,6 @@ public partial class AppAPIProvider
     private bool _isWindowFitBeforeSlideshow;
     private bool _showToolbarBeforeSlideshow = true;
     private bool _showGalleryBeforeSlideshow = true;
-    private Rect _windowBoundBeforeSlideshow;
     private bool _windowMaximizedBeforeSlideshow;
     private DispatcherTimer? _slideshowCountdownTimer;
     private bool _slideshowIsAdvancing;
@@ -72,6 +66,13 @@ public partial class AppAPIProvider
     // set once the user runs a check-for-update with UI; the startup silent check then completes
     // its work without popping its own window on top of what the user already asked for
     private static InterlockedBool _hasManualUpdateCheck;
+
+
+    /// <summary>
+    /// Gets the windowed layout captured on entering full screen, so a session that ends in full
+    /// screen still persists the layout to return to; <c>null</c> when not in full screen.
+    /// </summary>
+    public WindowLayoutSnapshot? PreFullScreenLayout => _preFullScreenLayout;
 
 
     private static ViewerControl Viewer => App.MainWindow.PART_MainView.PART_Viewer;
@@ -2468,25 +2469,12 @@ public partial class AppAPIProvider
         // enable full screen mode
         if (enabled)
         {
-            // exit window fit
-            if (Core.Config.EnableWindowFit)
-            {
-                _isWindowFitBeforeFullscreen = true;
-                IG_ToggleWindowFit(false);
-            }
+            // back up the windowed layout before anything below writes over it in Config
+            _preFullScreenLayout ??= CapturePreFullScreenLayout__();
 
-            // exit frameless
-            if (Core.Config.EnableFrameless)
-            {
-                _isFramelessBeforeFullscreen = true;
-                SetFramelessMode__(false, false);
-            }
-
-            // back up layout & window state
-            _windowBound = App.MainWindow.Bounds;
-            _windowMaximized = App.MainWindow.WindowState == WindowState.Maximized;
-            _showToolbar = Core.Config.ShowToolbar;
-            _showGallery = Core.Config.ShowGallery;
+            // exit window fit & frameless; the backup brings them back
+            if (Core.Config.EnableWindowFit) IG_ToggleWindowFit(false);
+            if (Core.Config.EnableFrameless) SetFramelessMode__(false, false);
 
 
             // enable fullscreen
@@ -2501,23 +2489,61 @@ public partial class AppAPIProvider
         // disable full screen mode
         else
         {
+            // with no backup, full screen was never entered in this process, so the saved config
+            // is still the windowed layout
+            var layout = _preFullScreenLayout ?? ReadWindowLayoutFromConfig__();
+            _preFullScreenLayout = null;
+
             // restore layout
-            IG_ToggleToolbar(_showToolbar);
-            _ = IG_ToggleGalleryAsync(_showGallery);
+            IG_ToggleToolbar(layout.ShowToolbar);
+            _ = IG_ToggleGalleryAsync(layout.ShowGallery);
 
 
             // restore window state, size, position
-            Core.Config.EnableMainWindowMaximized = _windowMaximized;
-            App.MainWindow.WindowState = _windowMaximized
+            Core.Config.EnableMainWindowMaximized = layout.IsMaximized;
+            App.MainWindow.WindowState = layout.IsMaximized
                 ? WindowState.Maximized
                 : WindowState.Normal;
 
 
             // restore frameless, window fit mode when exiting full screen
-            if (_isFramelessBeforeFullscreen) SetFramelessMode__(true, false);
-            if (_isWindowFitBeforeFullscreen) IG_ToggleWindowFit(true);
+            if (layout.IsFrameless) SetFramelessMode__(true, false);
+
+            // window fit measures the toolbar & gallery, whose visibility change is still queued
+            if (layout.IsWindowFit) Dispatcher.UIThread.Post(() => IG_ToggleWindowFit(true));
         }
     }
+
+
+    /// <summary>
+    /// Captures the layout to return to when full screen mode is turned off. A running slideshow
+    /// has already hidden the toolbar &amp; gallery in Config, so take its backup of them instead.
+    /// </summary>
+    private WindowLayoutSnapshot CapturePreFullScreenLayout__()
+    {
+        var layout = App.MainWindow.CaptureWindowLayout();
+        if (!Core.Config.EnableSlideshow) return layout;
+
+        return layout with
+        {
+            ShowToolbar = _showToolbarBeforeSlideshow,
+            ShowGallery = _showGalleryBeforeSlideshow,
+        };
+    }
+
+
+    /// <summary>
+    /// Reads the windowed layout from the saved config, which is where it survives between sessions.
+    /// </summary>
+    private static WindowLayoutSnapshot ReadWindowLayoutFromConfig__() => new()
+    {
+        IsMaximized = Core.Config.EnableMainWindowMaximized,
+        Bounds = Core.Config.MainWindowBounds,
+        ShowToolbar = Core.Config.ShowToolbar,
+        ShowGallery = Core.Config.ShowGallery,
+        IsFrameless = Core.Config.EnableFrameless,
+        IsWindowFit = Core.Config.EnableWindowFit,
+    };
 
 
     /// <summary>
@@ -2558,13 +2584,16 @@ public partial class AppAPIProvider
         _isWindowFitBeforeSlideshow = Core.Config.EnableWindowFit;
         _showToolbarBeforeSlideshow = Core.Config.ShowToolbar;
         _showGalleryBeforeSlideshow = Core.Config.ShowGallery;
-        _windowBoundBeforeSlideshow = App.MainWindow.Bounds;
         _windowMaximizedBeforeSlideshow = App.MainWindow.WindowState == WindowState.Maximized;
 
 
         // 2. enter full screen if configured
         if (Core.Config.EnableFullscreenSlideshow && !Core.Config.EnableFullScreen)
         {
+            // back it up like a normal full screen entry, so leaving full screen mid-slideshow
+            // (or quitting from it) still has a windowed layout to return to
+            _preFullScreenLayout = CapturePreFullScreenLayout__();
+
             // exit window fit and frameless first
             if (Core.Config.EnableWindowFit) IG_ToggleWindowFit(false);
             if (Core.Config.EnableFrameless) SetFramelessMode__(false, false);
@@ -2621,6 +2650,7 @@ public partial class AppAPIProvider
         if (Core.Config.EnableFullscreenSlideshow && !_isFullScreenBeforeSlideshow)
         {
             Core.Config.EnableFullScreen = false;
+            _preFullScreenLayout = null;
 
             Core.Config.EnableMainWindowMaximized = _windowMaximizedBeforeSlideshow;
             App.MainWindow.WindowState = _windowMaximizedBeforeSlideshow

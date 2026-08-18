@@ -1,4 +1,4 @@
-/*
+﻿/*
 ImageGlass - A Fast, Seamless Photo Viewer
 Copyright (C) 2010 - 2026 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
@@ -16,6 +16,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
@@ -86,15 +87,16 @@ public partial class MainWindow : PhWindow
         StartupTrace.Mark("MainWindow:opened");
         base.OnOpened(e);
 
-        if (Core.Config.EnableWindowFit)
+        // load full screen; it wins over window fit, which the backup brings back on leaving it
+        if (Core.Config.EnableFullScreen)
+        {
+            // through the API, so the saved windowed layout is backed up as the state to return to
+            _ = await Core.API.RunApiAsync(API.IG_ToggleFullScreen, "true");
+        }
+        else if (Core.Config.EnableWindowFit)
         {
             // load Window fit
             _ = await Core.API.RunApiAsync(API.IG_ToggleWindowFit, "true");
-        }
-        else
-        {
-            // load full screen
-            if (Core.Config.EnableFullScreen) WindowState = WindowState.FullScreen;
         }
 
         // load color profile
@@ -268,33 +270,48 @@ public partial class MainWindow : PhWindow
 
 
 
+    /// <summary>
+    /// Captures the current windowed layout, i.e. the state full screen mode returns to.
+    /// </summary>
+    public WindowLayoutSnapshot CaptureWindowLayout()
+    {
+        Rect? bounds = null;
+
+        // the LIVE state, not RestorableWindowState: a minimized window reports an off-screen position
+        if (WindowState == WindowState.Normal
+            && ClientSize.Width >= MIN_RESTORE_WIDTH
+            && ClientSize.Height >= MIN_RESTORE_HEIGHT)
+        {
+            bounds = new Rect(Position.X, Position.Y, (int)ClientSize.Width, (int)ClientSize.Height);
+        }
+
+        return new WindowLayoutSnapshot
+        {
+            IsMaximized = RestorableWindowState == WindowState.Maximized,
+            Bounds = bounds,
+            ShowToolbar = Core.Config.ShowToolbar,
+            ShowGallery = Core.Config.ShowGallery,
+            IsFrameless = Core.Config.EnableFrameless,
+            IsWindowFit = Core.Config.EnableWindowFit,
+        };
+    }
+
+
     private async Task SaveConfigOnClosingAsync()
     {
-        // 1. save window maximized state
-        Core.Config.EnableMainWindowMaximized = WindowState == Avalonia.Controls.WindowState.Maximized;
-        Core.Config.EnableFullScreen = WindowState == WindowState.FullScreen;
+        // 1. save full screen mode; a minimized window reports the state it will restore to
+        Core.Config.EnableFullScreen = RestorableWindowState == WindowState.FullScreen;
 
-        // 2. save window bounds; skip a degenerate size so a transient 0×0 on close
-        // can't reopen the window invisible
-        if (WindowState == Avalonia.Controls.WindowState.Normal)
-        {
-            var size = ClientSize;
-            if (size.Width >= MIN_RESTORE_WIDTH && size.Height >= MIN_RESTORE_HEIGHT)
-            {
-                Core.Config.MainWindowBounds = new(Position.X, Position.Y,
-                    (int)size.Width,
-                    (int)size.Height);
-            }
-        }
+        // 2. save the windowed layout: while in full screen that is the backup taken on entry,
+        // never the live values, which full screen has already overwritten in Config
+        var layout = Core.API.PreFullScreenLayout ?? CaptureWindowLayout();
 
-
-        // fullscreen mode: use the backup value
-        if (Core.Config.EnableFullScreen)
-        {
-            // TODO:
-            //Core.Config.ShowToolbar = _showToolbar;
-            //Core.Config.ShowGallery = _showGallery;
-        }
+        Core.Config.EnableMainWindowMaximized = layout.IsMaximized;
+        Core.Config.ShowToolbar = layout.ShowToolbar;
+        Core.Config.ShowGallery = layout.ShowGallery;
+        Core.Config.EnableFrameless = layout.IsFrameless;
+        Core.Config.EnableWindowFit = layout.IsWindowFit;
+        if (layout.Bounds is { } bounds) Core.Config.MainWindowBounds = bounds;
 
 
         Core.Config.LastSeenImagePath = Core.Photos.CurrentFilePath;
