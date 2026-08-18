@@ -1,4 +1,4 @@
-/*
+﻿/*
 ImageGlass - A Fast, Seamless Photo Viewer
 Copyright (C) 2010 - 2026 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
@@ -61,11 +61,11 @@ public partial class AppAPIProvider
         new(LangId.Menu_MnuSave,                 API.IG_Save,                Hotkey.Ctrl, Key.S),
         new(LangId.Menu_MnuSaveAs,               API.IG_SaveAs,              Hotkey.Ctrl | MKeys.Shift, Key.S),
         new(LangId.Menu_MnuExportFrames,         API.IG_ExportImageFrames,   Hotkey.Ctrl, Key.J),
-#if WINDOWS
-        new(LangId.Menu_MnuPrint,                API.IG_Print,               Hotkey.Ctrl, Key.P),
-        new(LangId.Menu_MnuOpenWith,             API.IG_OpenWith,            Key.D),
-        new(LangId.Menu_MnuShare,                API.IG_Share,               Key.S),
-#endif
+        .. SupportedOn(BHelper.OS == OSType.Windows, [
+            new(LangId.Menu_MnuPrint,            API.IG_Print,               Hotkey.Ctrl, Key.P),
+            new(LangId.Menu_MnuOpenWith,         API.IG_OpenWith,            Key.D),
+            new(LangId.Menu_MnuShare,            API.IG_Share,               Key.S),
+        ]),
         new(LangId.Menu_MnuOpenLocation,         API.IG_OpenLocation,        Key.L),
         new(LangId.Menu_MnuRename,               API.IG_Rename,              Key.F2),
         new(LangId.Menu_MnuMoveToRecycleBin,     API.IG_Delete, "true",      [new(Hotkey.Delete)]),
@@ -148,9 +148,9 @@ public partial class AppAPIProvider
 
         // Window modes
         new(LangId.Menu_MnuWindowFit,           API.IG_ToggleWindowFit,             Key.F9),
-#if WINDOWS || MACOS
-        new(LangId.Menu_MnuFrameless,           API.IG_ToggleFrameless,             Key.F10),
-#endif
+        .. SupportedOn(BHelper.OS != OSType.Linux, [
+            new(LangId.Menu_MnuFrameless,       API.IG_ToggleFrameless,             Key.F10),
+        ]),
         new(LangId.Menu_MnuFullScreen,          API.IG_ToggleFullScreen,            Key.F11),
         new(LangId.Menu_MnuSlideshow,           API.IG_ToggleSlideshow,             Key.F12),
         new(LangId._MnuPauseResumeSlideshow,    API.IG_ToggleSlideshowPlayback,     Key.Space),
@@ -192,6 +192,14 @@ public partial class AppAPIProvider
         // Exit
         new(LangId.Menu_MnuExit,                         API.IG_Exit,            [new(Key.Escape), new(Hotkey.Ctrl, Key.W)]),
     ];
+
+
+    /// <summary>
+    /// Returns <paramref name="actions"/> only on a supporting OS,
+    /// so a platform-specific menu action never registers a hotkey that throws.
+    /// </summary>
+    private static HotkeySingleAction[] SupportedOn(bool isSupported, HotkeySingleAction[] actions)
+        => isSupported ? actions : [];
 
 
     // a map of menu and its action.
