@@ -416,6 +416,13 @@ function New-MsixPackage([string]$Platform, [string]$OutMsixPath) {
     Get-ChildItem -Path $payloadDir -Recurse -Include '*.pdb' -File -ErrorAction SilentlyContinue |
         Remove-Item -Force
 
+    # Without the virtualization opt-out the app can never register these, so its file icons come
+    # from the manifest logos instead and the .ico set is dead weight.
+    if (-not $UnvirtualizedResources) {
+        $payloadExtIcons = Join-Path $payloadDir '_ext_icons'
+        if (Test-Path $payloadExtIcons) { Remove-Item $payloadExtIcons -Recurse -Force }
+    }
+
     # Store only: stage the exportable license in _store\, a subfolder the app's license scan never
     # looks in, so it can only leave the package deliberately.
     $storeLicenseDir = Join-Path $payloadDir '_store'
