@@ -1,4 +1,4 @@
-/*
+﻿/*
 ImageGlass - A Fast, Seamless Photo Viewer
 Copyright (C) 2010 - 2026 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
@@ -298,7 +298,7 @@ public partial class AppAPIProvider
             {
                 Title = Core.Lang[LangId.Menu_MnuSave],
                 Heading = Core.Lang[LangId.Menu_MnuSave_Confirm],
-                Description = srcFilePath,
+                Description = BHelper.GetRealPlatformPath(srcFilePath),
                 Note = Core.Lang[LangId.Menu_MnuSave_ConfirmDescription],
                 IsRememberOptionVisible = true,
                 Thumbnail = Core.Photos.Current?.GalleryThumbnail,
@@ -375,7 +375,7 @@ public partial class AppAPIProvider
                 Title = Core.Lang[LangId.Menu_MnuSaveAs],
                 Heading = Core.Lang[LangId.Menu_MnuSave_Confirm],
                 Description = $"""
-                {destFilePath}
+                {BHelper.GetRealPlatformPath(destFilePath)}
                 {BHelper.FormatSize(fi.Length)}
                 """,
                 Note = Core.Lang[LangId.Menu_MnuSave_ConfirmDescription],
@@ -411,7 +411,10 @@ public partial class AppAPIProvider
         var hasSrcPath = !string.IsNullOrEmpty(Core.Photos.CurrentFilePath);
         Exception? error = null;
 
-        _ = Message.ShowAsync(destFilePath, Core.Lang[LangId.Menu_MnuSave_Saving]);
+        // saving keeps destFilePath; every message about it shows the path the user can find
+        var displayPath = BHelper.GetRealPlatformPath(destFilePath);
+
+        _ = Message.ShowAsync(displayPath, Core.Lang[LangId.Menu_MnuSave_Saving]);
 
 
         // 1. save photo
@@ -476,7 +479,7 @@ public partial class AppAPIProvider
                 {error.Source}:
                 {error.Message}
 
-                {destFilePath}
+                {displayPath}
                 """
             });
 
@@ -508,7 +511,7 @@ public partial class AppAPIProvider
         }
 
 
-        _ = Message.ShowAsync(destFilePath, Core.Lang[LangId.Menu_MnuSave_Success]);
+        _ = Message.ShowAsync(displayPath, Core.Lang[LangId.Menu_MnuSave_Success]);
 
 
         // 4. emits saved event
@@ -2116,7 +2119,9 @@ public partial class AppAPIProvider
 
         try
         {
-            await App.MainWindow.Clipboard.SetTextAsync(Core.Photos.CurrentFilePath);
+            // the user pastes this outside the app, so it must be the real path
+            await App.MainWindow.Clipboard.SetTextAsync(
+                BHelper.GetRealPlatformPath(Core.Photos.CurrentFilePath));
 
             // show message
             _ = Message.ShowAsync(Core.Lang[LangId.Menu_MnuCopyPath_Success]);

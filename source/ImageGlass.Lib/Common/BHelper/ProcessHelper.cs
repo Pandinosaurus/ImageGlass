@@ -125,8 +125,11 @@ public partial class BHelper
         var exe = executable.Trim();
         var isAppProtocol = exe.EndsWith(':');
 
+        // the receiving program is outside this process, so it needs the real path
+        var realPath = GetRealPlatformPath(currentFilePath);
+
         // exclude the double quotes if the executable is app protocol
-        var filePath = isAppProtocol ? currentFilePath : $"\"{currentFilePath}\"";
+        var filePath = isAppProtocol ? realPath : $"\"{realPath}\"";
 
         var args = arguments.Replace(Const.FILE_MACRO, filePath);
 
@@ -145,7 +148,8 @@ public partial class BHelper
         // app protocol: the tail is an opaque URI remainder, not argv
         if (exe.EndsWith(':'))
         {
-            var tail = (arguments ?? string.Empty).Replace(Const.FILE_MACRO, currentFilePath);
+            var tail = (arguments ?? string.Empty)
+                .Replace(Const.FILE_MACRO, GetRealPlatformPath(currentFilePath));
             var protocolArgs = new List<string>();
             if (tail.Length > 0) protocolArgs.Add(tail);
             return (exe, protocolArgs);
@@ -163,6 +167,9 @@ public partial class BHelper
     {
         var result = new List<string>();
         if (string.IsNullOrEmpty(argsTemplate)) return result;
+
+        // the receiving program is outside this process, so it needs the real path
+        filePath = GetRealPlatformPath(filePath);
 
         var token = new StringBuilder();
         var inQuotes = false;
