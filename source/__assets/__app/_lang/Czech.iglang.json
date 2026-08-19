@@ -1,9 +1,9 @@
 ﻿{
   "_Metadata": {
-    "Code": "cz-CZ",
-    "EnglishName": "<Your_language_name_in_English>",
-    "LocalName": "<Local_name_of_your_language>",
-    "Author": "<Your_name_here>",
+    "Code": "cs-CZ",
+    "EnglishName": "Czech",
+    "LocalName": "Čeština",
+    "Author": "Opicka",
     "MinVersion": 10
   },
   "Items": {
