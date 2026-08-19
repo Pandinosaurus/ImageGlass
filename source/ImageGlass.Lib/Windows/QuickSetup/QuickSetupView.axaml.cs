@@ -287,6 +287,7 @@ public partial class QuickSetupView : PhControl
         PART_BtnProfessional.IsChecked = professional;
 
         PART_ChkColorManagement.IsChecked = professional;
+        PART_ChkHdrToneMapping.IsChecked = professional;
         PART_ChkExplorerSortOrder.IsChecked = professional;
         PART_ChkRawThumbnail.IsChecked = !professional;
     }
@@ -382,6 +383,7 @@ public partial class QuickSetupView : PhControl
         PART_LblProfessional.Text = lang[LangId.QuickSetup_ProfessionalUser];
         PART_LblApplied.Text = lang[LangId.QuickSetup_SettingsWillBeApplied];
         PART_LblColorManagement.Text = lang[LangId.Settings_ColorManagement];
+        PART_LblHdrToneMapping.Text = lang[LangId.Settings_EnableHdrToneMapping];
         PART_LblExplorerSort.Text = lang[LangId.Settings_EnableExplorerSortOrder];
         PART_LblRawThumbnail.Text = lang[LangId.Settings_EnableOnlyLoadRawPreview];
         PART_LblProfileNote.Text = lang[LangId.QuickSetup_SettingProfileDescription];

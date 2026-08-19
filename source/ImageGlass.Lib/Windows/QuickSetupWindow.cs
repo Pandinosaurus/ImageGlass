@@ -212,6 +212,7 @@ public partial class QuickSetupWindow : DialogWindow
         Core.Config.ColorProfile = _view.IsProfessional
             ? nameof(ColorProfileOption.CurrentMonitorProfile)
             : nameof(ColorProfileOption.None);
+        Core.Config.EnableHdrToneMapping = _view.IsProfessional;
         Core.Config.EnableExplorerSortOrder = _view.IsProfessional;
         Core.Config.EnableOnlyLoadRawPreview = !_view.IsProfessional;
     }

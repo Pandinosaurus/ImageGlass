@@ -144,10 +144,20 @@
                                 <ui:PhTextBlock x:Name="PART_LblColorManagement" />
                             </CheckBox>
                             <CheckBox
-                                x:Name="PART_ChkExplorerSortOrder"
+                                x:Name="PART_ChkHdrToneMapping"
                                 Focusable="False"
                                 IsEnabled="False"
                                 IsHitTestVisible="False">
+                                <ui:PhTextBlock x:Name="PART_LblHdrToneMapping" />
+                            </CheckBox>
+                            <CheckBox
+                                x:Name="PART_ChkExplorerSortOrder"
+                                Focusable="False"
+                                IsEnabled="False"
+                                IsHitTestVisible="False"
+                                IsVisible="{OnPlatform False,
+                                            Windows=True,
+                                            x:TypeArguments=x:Boolean}">
                                 <ui:PhTextBlock x:Name="PART_LblExplorerSort" />
                             </CheckBox>
                             <CheckBox
