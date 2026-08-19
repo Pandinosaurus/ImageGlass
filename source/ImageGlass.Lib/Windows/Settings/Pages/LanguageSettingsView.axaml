@@ -67,11 +67,11 @@
                                         <!--  full path  -->
                                         <TextBlock
                                             FontSize="{x:Static types:Const.FONT_SIZE_SMALL}"
-                                            IsVisible="{CompiledBinding FilePath, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}"
+                                            IsVisible="{CompiledBinding DisplayFilePath, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}"
                                             Opacity="0.6"
-                                            Text="{CompiledBinding FilePath}"
+                                            Text="{CompiledBinding DisplayFilePath}"
                                             TextTrimming="CharacterEllipsis"
-                                            ToolTip.Tip="{CompiledBinding FilePath}" />
+                                            ToolTip.Tip="{CompiledBinding DisplayFilePath}" />
                                     </StackPanel>
                                 </StackPanel>
                             </DataTemplate>

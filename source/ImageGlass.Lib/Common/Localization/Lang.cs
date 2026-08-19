@@ -76,6 +76,14 @@ public class Lang
 
 
     /// <summary>
+    /// Gets <see cref="FilePath"/> as the OS sees it, for display: a pack ships in the app dir or is
+    /// installed into the config dir, and either can be reached through a platform indirection.
+    /// </summary>
+    [JsonIgnore]
+    public string DisplayFilePath => BHelper.GetRealPlatformPath(FilePath);
+
+
+    /// <summary>
     /// Gets the name of language file.
     /// Example: <c>Vietnameses.iglang.json</c>
     /// </summary>

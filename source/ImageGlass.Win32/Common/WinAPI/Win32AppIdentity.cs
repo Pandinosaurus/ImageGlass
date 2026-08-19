@@ -91,7 +91,7 @@ public static class Win32AppIdentity
         try
         {
             // deployed manifest is one level above the app dir (<packageRoot>\AppxManifest.xml)
-            var manifest = Path.GetFullPath(Path.Combine(BHelper.BasePath, "..", "AppxManifest.xml"));
+            var manifest = Path.GetFullPath(BHelper.BaseDir("..", "AppxManifest.xml"));
             return File.Exists(manifest)
                 && File.ReadAllText(manifest).Contains("unvirtualizedResources", StringComparison.OrdinalIgnoreCase);
         }

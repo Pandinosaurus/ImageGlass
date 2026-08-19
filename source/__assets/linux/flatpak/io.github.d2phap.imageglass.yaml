@@ -22,7 +22,9 @@ modules:
     buildsystem: simple
     build-commands:
       - install -d ${FLATPAK_DEST}/imageglass
-      - cp -a ImageGlass libSkiaSharp.so libHarfBuzzSharp.so Magick.Native-*.so _themes _credits ${FLATPAK_DEST}/imageglass/
+      # Copy the whole payload: an explicit file list silently drops assets added later
+      # (that is how _lang and default.webp went missing). The tarball is already pruned.
+      - cp -a payload/. ${FLATPAK_DEST}/imageglass/
       - chmod +x ${FLATPAK_DEST}/imageglass/ImageGlass
       - install -d ${FLATPAK_DEST}/bin
       - ln -s ../imageglass/ImageGlass ${FLATPAK_DEST}/bin/imageglass
@@ -32,9 +34,11 @@ modules:
       - install -Dm644 io.github.d2phap.imageglass.png ${FLATPAK_DEST}/share/icons/hicolor/512x512/apps/io.github.d2phap.imageglass.png
     sources:
       - type: archive
-        url: https://github.com/d2phap/ImageGlass/releases/download/10.0.3.810-rc/ImageGlass_10.0.3.810-rc_linux-x64.tar.gz
-        sha256: a4fb9801c1912cd8c46586f406713e3a111c97ebca88f97124b49215fc5d7f97
+        url: https://github.com/d2phap/ImageGlass/releases/download/10.0.4.820/ImageGlass_10.0.4.820_linux-x64.tar.gz
+        sha256: 59618e684e7f14fd1fd8a37617ebf17884d9907e228099ab1df1ab48abfe69f8
         strip-components: 1
+        # own subdir so the blanket copy above cannot pick up the metadata files below
+        dest: payload
       - type: file
         path: io.github.d2phap.imageglass.desktop
       - type: file

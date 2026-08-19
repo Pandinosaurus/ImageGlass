@@ -41,6 +41,16 @@ public class Win32ShellProvider : PhDisposable, IShellProvider
 
     private static string Win32SearchFileExtension => ".search-ms";
 
+    /// <summary>
+    /// Package container that <c>%LocalAppData%</c> writes are redirected into,
+    /// or <c>null</c> when unpackaged (<c>LocalCacheFolder</c> throws without MSIX identity).
+    /// </summary>
+    private static readonly Lazy<string?> _localCacheDir = new(() =>
+    {
+        try { return ApplicationData.Current.LocalCacheFolder.Path; }
+        catch { return null; }
+    });
+
 
 
     /// <summary>
@@ -370,25 +380,24 @@ public class Win32ShellProvider : PhDisposable, IShellProvider
     /// <summary>
     /// <inheritdoc/>
     /// </summary>
-    public string GetActualConfigDirPath(string localAppDataPath)
+    public string GetActualPath(string path)
     {
-        if (string.IsNullOrEmpty(localAppDataPath)) return localAppDataPath;
+        if (string.IsNullOrEmpty(path)) return path;
 
-        // LocalCacheFolder throws when unpackaged (no MSIX identity) -> no virtualization
-        string localCache;
-        try { localCache = ApplicationData.Current.LocalCacheFolder.Path; }
-        catch { return localAppDataPath; }
+        // BHelper.BasePath resolves through here on every call, so keep the WinRT probe cached
+        var localCache = _localCacheDir.Value;
+        if (localCache is null) return path;
 
         // only %LocalAppData% is virtualized
         var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-        if (!BHelper.IsPathContainedIn(localAppDataPath, localAppData)) return localAppDataPath;
+        if (!BHelper.IsPathContainedIn(path, localAppData)) return path;
 
         // MSIX redirects newly-created AppData\Local writes to <pkg>\LocalCache\Local and reads it
         // first; point at that copy when it physically exists, else the real (write-through) path
-        var rel = Path.GetRelativePath(localAppData, localAppDataPath);
+        var rel = Path.GetRelativePath(localAppData, path);
         var container = Path.Combine(localCache, "Local", rel);
 
-        return Directory.Exists(container) || File.Exists(container) ? container : localAppDataPath;
+        return Directory.Exists(container) || File.Exists(container) ? container : path;
     }
 
 

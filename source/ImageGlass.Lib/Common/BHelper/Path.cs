@@ -35,9 +35,16 @@ public partial class BHelper
 
 
     /// <summary>
-    /// Gets the base dir path.
+    /// Where this process reads the app dir vs. where it really is; <c>null</c> when they are the same.
     /// </summary>
-    public static string BasePath => AppDomain.CurrentDomain.BaseDirectory;
+    private static readonly Lazy<(string Mounted, string Real)?> _appDirMount = new(ReadAppDirMount);
+
+
+    /// <summary>
+    /// Gets the full, real dir path of the app binary. Use <see cref="BaseDir(string[])"/> to reach a
+    /// file in it: a sandboxed app reads its own dir through a mount, so this path is display-only.
+    /// </summary>
+    public static string BasePath => GetRealPlatformPath(AppDomain.CurrentDomain.BaseDirectory);
 
 
     /// <summary>
@@ -45,13 +52,13 @@ public partial class BHelper
     /// else the per-user app data dir.
     /// </summary>
     public static string ConfigPath => ConfigMode.IsPortable
-        ? BasePath
+        ? BaseDir()
         : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), AppName);
 
 
 
     /// <summary>
-    /// Computes the full path based on the installed folder.
+    /// Computes the full path based on the installed folder, as this process must address it.
     /// </summary>
     public static string BaseDir(params string[] paths)
     {
@@ -59,7 +66,7 @@ public partial class BHelper
         newPaths.Insert(0, BasePath);
         var path = Path.Combine([.. newPaths]);
 
-        return path;
+        return ToProcessPath(path);
     }
 
 
@@ -124,13 +131,93 @@ public partial class BHelper
 
 
     /// <summary>
-    /// Like <see cref="ConfigDir(string[])"/> but resolves to the real physical path (MSIX may
-    /// redirect config to the package container); use it to show/open config in the file explorer.
+    /// Like <see cref="ConfigDir(string[])"/> but resolves to the real physical path;
+    /// use it to show/open config in the file explorer.
     /// </summary>
     public static string GetRealPlatformConfigDir(params string[] paths)
     {
-        var configPath = ConfigDir(paths);
-        return Core.ShellProvider?.GetActualConfigDirPath(configPath) ?? configPath;
+        return GetRealPlatformPath(ConfigDir(paths));
+    }
+
+
+    /// <summary>
+    /// Reads the Flatpak app-dir mount from <c>/.flatpak-info</c> (<c>app-path</c> is the real dir
+    /// behind <c>/app</c>); <c>null</c> on every other platform and outside the sandbox.
+    /// </summary>
+    private static (string Mounted, string Real)? ReadAppDirMount()
+    {
+        if (!IsFlatpakSandbox) return null;
+
+        try
+        {
+            const string key = "app-path=";
+
+            foreach (var line in File.ReadLines("/.flatpak-info"))
+            {
+                if (!line.StartsWith(key, StringComparison.Ordinal)) continue;
+
+                var realPath = line[key.Length..].Trim().TrimEnd('/');
+                return string.IsNullOrEmpty(realPath) ? null : ("/app", realPath);
+            }
+        }
+        catch { }
+
+        return null;
+    }
+
+
+    /// <summary>
+    /// Resolves an app-owned path to where it physically lives, as the OS and the user see it: this
+    /// process may reach its own folders through a container mount or a redirected copy.
+    /// </summary>
+    /// <remarks>
+    /// Two platform indirections, neither visible outside the process: a sandboxed Linux app (Flatpak)
+    /// mounts its install dir elsewhere, and a packaged Windows app (MSIX) may redirect
+    /// <c>%LocalAppData%</c> writes into the package container. Use this wherever a path is shown to
+    /// the user or handed to something outside the process (file manager, another app), and NEVER to
+    /// read or write - the real path is not reachable from in here. <see cref="ToProcessPath"/> is the
+    /// inverse.
+    /// </remarks>
+    public static string GetRealPlatformPath(string? path)
+    {
+        if (string.IsNullOrEmpty(path)) return path ?? string.Empty;
+
+        var appDir = _appDirMount.Value;
+        var realPath = appDir is null
+            ? path
+            : SwapPathPrefix(path, appDir.Value.Mounted, appDir.Value.Real);
+
+        return Core.ShellProvider?.GetActualPath(realPath) ?? realPath;
+    }
+
+
+    /// <summary>
+    /// Inverse of <see cref="GetRealPlatformPath"/>: maps a real app-dir path back to the mount this
+    /// process reads through. Only the mount is undone; a redirected copy is already readable.
+    /// </summary>
+    private static string ToProcessPath(string path)
+    {
+        var appDir = _appDirMount.Value;
+
+        return appDir is null
+            ? path
+            : SwapPathPrefix(path, appDir.Value.Real, appDir.Value.Mounted);
+    }
+
+
+    /// <summary>
+    /// Replaces the <paramref name="from"/> dir prefix of <paramref name="path"/> with
+    /// <paramref name="to"/>, matching whole segments only. Both prefixes carry no trailing separator.
+    /// </summary>
+    private static string SwapPathPrefix(string path, string from, string to)
+    {
+        if (!path.StartsWith(from, StringComparison.Ordinal)) return path;
+
+        // a sibling such as "/appdata" must not match the "/app" prefix
+        var rest = path[from.Length..];
+        if (rest.Length > 0 && rest[0] != Path.DirectorySeparatorChar) return path;
+
+        return to + rest;
     }
 
 

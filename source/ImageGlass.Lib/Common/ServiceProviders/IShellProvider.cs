@@ -144,12 +144,12 @@ public interface IShellProvider : IDisposable
 
 
     /// <summary>
-    /// Resolves a config dir path to where this process physically reads/writes it. On a
-    /// packaged (MSIX) Windows build, per-package write virtualization may redirect the content to
+    /// Resolves an app-owned file or dir path to where it physically lives. On a packaged (MSIX)
+    /// Windows build, per-package write virtualization may redirect <c>%LocalAppData%</c> content to
     /// the package container; returns that real path when it exists. Default (non-Windows /
-    /// unpackaged): returns <paramref name="localAppDataPath"/> unchanged.
+    /// unpackaged): returns <paramref name="path"/> unchanged.
     /// </summary>
-    string GetActualConfigDirPath(string localAppDataPath) => localAppDataPath;
+    string GetActualPath(string path) => path;
 
 
     /// <summary>

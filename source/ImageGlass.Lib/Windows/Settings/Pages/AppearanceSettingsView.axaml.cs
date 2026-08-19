@@ -301,13 +301,13 @@ public partial class AppearanceSettingsView : SettingsPageView
         // full folder path: selectable so the user can copy it
         var pathText = new SelectableTextBlock
         {
-            Text = theme.FolderPath,
+            Text = theme.DisplayFolderPath,
             FontFamily = new FontFamily(Const.FONT_CODE),
             FontSize = Const.FONT_SIZE_SMALL,
             Opacity = 0.75,
             TextTrimming = TextTrimming.CharacterEllipsis,
         };
-        ToolTip.SetTip(pathText, theme.FolderPath);
+        ToolTip.SetTip(pathText, theme.DisplayFolderPath);
 
         // author / version / mode badges below the path (mode text is localized in ApplyThemeCardTexts)
         var modeBadge = BadgeText(string.Empty);

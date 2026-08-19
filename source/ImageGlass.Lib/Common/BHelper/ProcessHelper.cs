@@ -60,8 +60,13 @@ public partial class BHelper
             return;
         }
 
-        var hostArgs = new List<string>(psi.ArgumentList.Count + 2) { "--host", psi.FileName };
-        hostArgs.AddRange(psi.ArgumentList);
+        // the host resolves none of our mounts, so every app-dir path crossing over must be real
+        var hostArgs = new List<string>(psi.ArgumentList.Count + 2)
+        {
+            "--host",
+            GetRealPlatformPath(psi.FileName),
+        };
+        foreach (var arg in psi.ArgumentList) hostArgs.Add(GetRealPlatformPath(arg));
 
         // Sandbox working dir is meaningless on the host; use the host default.
         psi.FileName = "flatpak-spawn";

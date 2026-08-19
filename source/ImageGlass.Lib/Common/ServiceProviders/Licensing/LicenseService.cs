@@ -104,7 +104,7 @@ public static class LicenseService
             }
 
             // install folder wins, so a machine-wide deployed license takes precedence
-            foreach (var dir in new[] { BHelper.BasePath, BHelper.ConfigPath })
+            foreach (var dir in new[] { BHelper.BaseDir(), BHelper.ConfigPath })
             {
                 var files = EnumerateLicenseFiles(dir);
 

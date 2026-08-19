@@ -46,7 +46,7 @@ public static class ConfigMode
     /// <summary>
     /// Full path of the portable marker file, whether or not it exists.
     /// </summary>
-    public static string PortableMarkerPath => Path.Combine(BHelper.BasePath, Const.PORTABLE_MARKER_FILE);
+    public static string PortableMarkerPath => BHelper.BaseDir(Const.PORTABLE_MARKER_FILE);
 
 
     /// <summary>
@@ -68,7 +68,7 @@ public static class ConfigMode
         // probe a new per-process file, not the marker: no collision between instances, and a backup
         // tool holding the marker open cannot fail the launch
         var probeName = $"{Const.PORTABLE_MARKER_FILE}.{Environment.ProcessId}.tmp";
-        var probePath = Path.Combine(BHelper.BasePath, probeName);
+        var probePath = BHelper.BaseDir(probeName);
 
         try
         {

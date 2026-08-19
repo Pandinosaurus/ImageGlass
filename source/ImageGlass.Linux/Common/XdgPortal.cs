@@ -80,7 +80,7 @@ internal static class XdgPortal
             proc.StartInfo.FileName = "xdg-open";
             proc.StartInfo.UseShellExecute = false;
             proc.StartInfo.CreateNoWindow = true;
-            proc.StartInfo.ArgumentList.Add(Path.GetFullPath(path));
+            proc.StartInfo.ArgumentList.Add(BHelper.GetRealPlatformPath(Path.GetFullPath(path)));
 
             // the sandbox's own xdg-open would just call the broken OpenURI portal
             BHelper.ApplyFlatpakHostSpawn(proc.StartInfo);
@@ -124,11 +124,12 @@ internal static class XdgPortal
 
 
     /// <summary>
-    /// Builds a percent-encoded <c>file://</c> URI for <paramref name="path"/>.
+    /// Builds a percent-encoded <c>file://</c> URI for <paramref name="path"/>, mapped to its host
+    /// location first because the backends run outside the sandbox.
     /// </summary>
     private static string ToFileUri(string path)
     {
-        return new Uri(Path.GetFullPath(path)).AbsoluteUri;
+        return new Uri(BHelper.GetRealPlatformPath(Path.GetFullPath(path))).AbsoluteUri;
     }
 
 
