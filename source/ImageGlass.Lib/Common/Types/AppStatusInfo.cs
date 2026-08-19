@@ -1,4 +1,4 @@
-﻿/*
+/*
 ImageGlass - A Fast, Seamless Photo Viewer
 Copyright (C) 2010 - 2026 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
@@ -495,10 +495,9 @@ public partial class AppStatusInfo : PhDisposable
     {
         if (e.PropertyName == nameof(Core.Photos.CurrentFilePath))
         {
-            // the user reads and copies this, so map it here: Text is rebuilt on every zoom frame
-            _filePath = BHelper.GetRealPlatformPath(string.IsNullOrEmpty(Core.Photos.CurrentFilePath)
+            _filePath = string.IsNullOrEmpty(Core.Photos.CurrentFilePath)
                 ? Core.Photos.GetFilePath(Core.Photos.CurrentIndex)
-                : BHelper.ResolvePath(Core.Photos.CurrentFilePath));
+                : BHelper.ResolvePath(Core.Photos.CurrentFilePath);
         }
 
 

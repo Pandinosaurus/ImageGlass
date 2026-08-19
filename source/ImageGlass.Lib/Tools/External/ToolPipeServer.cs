@@ -1,4 +1,4 @@
-﻿/*
+/*
 ImageGlass - A Fast, Seamless Photo Viewer
 Copyright (C) 2010 - 2026 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
@@ -239,7 +239,7 @@ internal sealed class ToolPipeServer : IDisposable
             // Return the mapping metadata the tool needs to open and interpret the buffer.
             SendResponse(msg.RequestId, new GetPixelBufferResponse
             {
-                MmfPath = BHelper.GetRealPlatformPath(tempPath),
+                MmfPath = tempPath,
                 Width = bitmap.Width,
                 Height = bitmap.Height,
                 Stride = bitmap.RowBytes,
@@ -317,10 +317,10 @@ internal sealed class ToolPipeServer : IDisposable
             var m = photo.Metadata;
             return new ToolPhotoMetadata
             {
-                FilePath = BHelper.GetRealPlatformPath(photo.FilePath),
+                FilePath = photo.FilePath,
                 FileName = m?.FileName ?? string.Empty,
                 FileExtension = m?.FileExtension ?? string.Empty,
-                FolderPath = BHelper.GetRealPlatformPath(m?.FolderPath),
+                FolderPath = m?.FolderPath ?? string.Empty,
                 FolderName = m?.FolderName ?? string.Empty,
                 FileSizeInBytes = m?.FileSizeInBytes ?? 0,
                 FileCreationTimeUtc = m?.FileCreationTimeUtc ?? default,
@@ -368,7 +368,7 @@ internal sealed class ToolPipeServer : IDisposable
 
             var photos = pm.Items.Select(p => new ToolPhotoListItem
             {
-                FilePath = BHelper.GetRealPlatformPath(p.FilePath),
+                FilePath = p.FilePath,
                 Width = (int?)p.Metadata?.OriginalWidth,
                 Height = (int?)p.Metadata?.OriginalHeight,
                 Format = p.Metadata?.FileExtension,

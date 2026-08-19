@@ -60,13 +60,14 @@ public partial class BHelper
             return;
         }
 
-        // the host resolves none of our mounts, so every app-dir path crossing over must be real
+        // the host cannot resolve our mounts, so an app-dir executable must be handed over as real;
+        // arguments are passed through, so a tool sees the same paths whether it is integrated or not
         var hostArgs = new List<string>(psi.ArgumentList.Count + 2)
         {
             "--host",
             GetRealPlatformPath(psi.FileName),
         };
-        foreach (var arg in psi.ArgumentList) hostArgs.Add(GetRealPlatformPath(arg));
+        hostArgs.AddRange(psi.ArgumentList);
 
         // Sandbox working dir is meaningless on the host; use the host default.
         psi.FileName = "flatpak-spawn";
@@ -125,11 +126,8 @@ public partial class BHelper
         var exe = executable.Trim();
         var isAppProtocol = exe.EndsWith(':');
 
-        // the receiving program is outside this process, so it needs the real path
-        var realPath = GetRealPlatformPath(currentFilePath);
-
         // exclude the double quotes if the executable is app protocol
-        var filePath = isAppProtocol ? realPath : $"\"{realPath}\"";
+        var filePath = isAppProtocol ? currentFilePath : $"\"{currentFilePath}\"";
 
         var args = arguments.Replace(Const.FILE_MACRO, filePath);
 
@@ -148,8 +146,7 @@ public partial class BHelper
         // app protocol: the tail is an opaque URI remainder, not argv
         if (exe.EndsWith(':'))
         {
-            var tail = (arguments ?? string.Empty)
-                .Replace(Const.FILE_MACRO, GetRealPlatformPath(currentFilePath));
+            var tail = (arguments ?? string.Empty).Replace(Const.FILE_MACRO, currentFilePath);
             var protocolArgs = new List<string>();
             if (tail.Length > 0) protocolArgs.Add(tail);
             return (exe, protocolArgs);
@@ -167,9 +164,6 @@ public partial class BHelper
     {
         var result = new List<string>();
         if (string.IsNullOrEmpty(argsTemplate)) return result;
-
-        // the receiving program is outside this process, so it needs the real path
-        filePath = GetRealPlatformPath(filePath);
 
         var token = new StringBuilder();
         var inQuotes = false;

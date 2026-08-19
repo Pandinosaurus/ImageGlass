@@ -1,4 +1,4 @@
-﻿/*
+/*
 ImageGlass - A Fast, Seamless Photo Viewer
 Copyright (C) 2010 - 2026 DUONG DIEU PHAP
 Project homepage: https://imageglass.org
@@ -1120,7 +1120,7 @@ public static class Core
 
         ToolRegistry.ExternalTools.BroadcastToAll(MessageTypes.PHOTO_CHANGED, new PhotoChangedEventArgs
         {
-            FilePath = BHelper.GetRealPlatformPath(photo.FilePath),
+            FilePath = photo.FilePath,
             Width = (int)(photo.Metadata?.OriginalWidth ?? 0),
             Height = (int)(photo.Metadata?.OriginalHeight ?? 0),
             Format = photo.Metadata?.FileExtension,

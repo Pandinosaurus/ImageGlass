@@ -35,7 +35,7 @@ modules:
     sources:
       - type: archive
         url: https://github.com/d2phap/ImageGlass/releases/download/10.0.4.819/ImageGlass_10.0.4.819_linux-x64.tar.gz
-        sha256: 84f3d224de29aef15dad5b45f631abe17c164ec823fcb0c3911c050b0b6f69fa
+        sha256: 668b41d964c1e551de19d830918d558bbc9825d5d6c1f381fe486e97c2d79930
         strip-components: 1
         # own subdir so the blanket copy above cannot pick up the metadata files below
         dest: payload
