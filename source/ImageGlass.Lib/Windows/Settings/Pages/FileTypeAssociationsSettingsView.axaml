@@ -96,7 +96,8 @@
                 <ui:PhButton
                     x:Name="PART_AddFormat"
                     MinWidth="100"
-                    HorizontalContentAlignment="Center" />
+                    HorizontalContentAlignment="Center"
+                    Variant="Outline" />
                 <ui:PhButton
                     x:Name="PART_ResetFormats"
                     VerticalAlignment="Center"

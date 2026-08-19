@@ -69,7 +69,8 @@
                 <ui:PhButton
                     x:Name="PART_InstallTheme"
                     MinWidth="100"
-                    HorizontalContentAlignment="Center" />
+                    HorizontalContentAlignment="Center"
+                    Variant="Outline" />
                 <ui:PhButton x:Name="PART_RefreshThemes" HorizontalContentAlignment="Center" />
                 <ui:PhButton x:Name="PART_OpenThemeFolder" HorizontalContentAlignment="Center" />
                 <ui:PhButton x:Name="PART_GetMoreThemes" Variant="Link" />

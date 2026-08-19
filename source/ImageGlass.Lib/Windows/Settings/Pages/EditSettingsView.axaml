@@ -71,7 +71,8 @@
                 MinWidth="100"
                 Margin="0,14,0,0"
                 HorizontalAlignment="Left"
-                HorizontalContentAlignment="Center" />
+                HorizontalContentAlignment="Center"
+                Variant="Outline" />
 
             <!--  apps table (rows built in code-behind)  -->
             <ui:PhTableControl

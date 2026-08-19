@@ -17,7 +17,8 @@
             <ui:PhButton
                 x:Name="PART_AddPlugin"
                 MinWidth="100"
-                HorizontalContentAlignment="Center" />
+                HorizontalContentAlignment="Center"
+                Variant="Outline" />
             <ui:PhButton x:Name="PART_OpenFolder" />
             <ui:PhButton
                 x:Name="PART_GetMorePlugins"

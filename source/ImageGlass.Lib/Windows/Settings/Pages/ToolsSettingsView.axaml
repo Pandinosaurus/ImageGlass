@@ -17,7 +17,8 @@
             <ui:PhButton
                 x:Name="PART_AddTool"
                 MinWidth="100"
-                HorizontalContentAlignment="Center" />
+                HorizontalContentAlignment="Center"
+                Variant="Outline" />
             <ui:PhButton
                 x:Name="PART_GetMoreTools"
                 VerticalAlignment="Center"
