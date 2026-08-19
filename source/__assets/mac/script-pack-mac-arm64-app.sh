@@ -51,6 +51,9 @@ mkdir -p "$CONTENTS_DIR/MacOS" "$CONTENTS_DIR/Resources"
 cp -R "$PUBLISH_DIR/." "$CONTENTS_DIR/MacOS/"
 cp "$ICON_SOURCE_FILE" "$ICON_TARGET_FILE"
 
+# Finder's .DS_Store / ._* files are not Mach-O, so codesign later rejects Contents/MacOS.
+find "$CONTENTS_DIR" -type f \( -name ".DS_Store" -o -name "._*" \) -delete
+
 # Windows-only assets the publish step copies in from __assets/__app/. _ext_icons
 # holds file-type association icons read by Win32DefaultAppApi; dead weight on macOS.
 for win_only_dir in _ext_icons; do

@@ -82,6 +82,9 @@ echo "==> Removing debug artifacts from bundle"
 find "$APP_DIR" -type f -name "*.pdb" -delete
 find "$APP_DIR" -type d -name "*.dSYM" -exec rm -rf {} +
 
+# Finder can drop .DS_Store / ._* into the bundle at any point after it was built.
+find "$APP_DIR" -type f \( -name ".DS_Store" -o -name "._*" \) -delete
+
 # Any real file or folder here that is not Mach-O fails the bundle signing below with an
 # unhelpful "code object is not signed at all", so name the culprit up front instead.
 strays="$(find "$APP_DIR/Contents/MacOS" -mindepth 1 -maxdepth 1 \
