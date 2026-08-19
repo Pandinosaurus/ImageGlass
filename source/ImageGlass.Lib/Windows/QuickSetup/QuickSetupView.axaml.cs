@@ -30,8 +30,10 @@ using ImageGlass.Common;
 using ImageGlass.Common.AppThemes;
 using ImageGlass.Common.Extensions;
 using ImageGlass.Common.Localization;
+using ImageGlass.Common.ServiceProviders;
 using ImageGlass.Common.Types;
 using ImageGlass.UI;
+using ImageGlass.UI.Windowing;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -53,6 +55,10 @@ public partial class QuickSetupView : PhControl
     // local language used to preview the wizard only; the app is untouched until Save
     private Lang _previewLang = Core.Lang;
 
+    // registration scope (per-user vs per-machine), derived from where the app is installed
+    private static DefaultAppScope DefaultViewerScope
+        => Core.ShellProvider?.GetDefaultViewerScope() ?? DefaultAppScope.CurrentUser;
+
 
     /// <summary>
     /// Gets the language currently previewed in the wizard (not applied to the app until Save).
@@ -67,9 +73,18 @@ public partial class QuickSetupView : PhControl
 
 
     /// <summary>
-    /// Gets the total number of steps (3 on Classic, 2 on Pro).
+    /// Gets the total number of steps (language + profile, plus the optional default-viewer and
+    /// upgrade-to-Pro steps).
     /// </summary>
     public int StepCount => _stepPanels.Count;
+
+
+    /// <summary>
+    /// Whether the default-photo-viewer step applies: Windows only, and only where the shell honors
+    /// our associations (excludes the virtualized Store build).
+    /// </summary>
+    private static bool CanSetDefaultViewer => BHelper.OS == OSType.Windows
+        && Core.ShellProvider?.IsDefaultViewerConfigurable != false;
 
 
     /// <summary>
@@ -96,16 +111,15 @@ public partial class QuickSetupView : PhControl
 
         _loadLangAction = () => _ = LoadSelectedLanguageAsync();
 
-        // step 3 pitches Pro, so there is nothing to show once it is active
         _stepPanels = [PART_Step1, PART_Step2];
-        if (!Core.IsProEnabled)
-        {
-            _stepPanels.Add(PART_Step3);
-        }
-        else
-        {
-            PART_Step3.IsVisible = false;
-        }
+
+        // the default-viewer step is Windows-only and unreachable from the Store build
+        if (CanSetDefaultViewer) _stepPanels.Add(PART_Step3);
+        else PART_Step3.IsVisible = false;
+
+        // step 4 pitches Pro, so there is nothing to show once it is active
+        if (!Core.IsProEnabled) _stepPanels.Add(PART_Step4);
+        else PART_Step4.IsVisible = false;
 
         BuildStepDots();
 
@@ -117,6 +131,10 @@ public partial class QuickSetupView : PhControl
         PART_BtnStandard.Click += (_, _) => SelectProfile(false);
         PART_BtnProfessional.Click += (_, _) => SelectProfile(true);
         SelectProfile(false);
+
+        // step 3: default photo viewer (applied immediately, it is not a config setting)
+        PART_BtnRegisterViewer.Click += async (_, _) => await AppAPIProvider.SetDefaultPhotoViewerAsync(
+            true, TopLevel.GetTopLevel(this) as PhWindow, _previewLang);
 
         UpdateLogo();
         LocalizeAll();
@@ -387,6 +405,14 @@ public partial class QuickSetupView : PhControl
         PART_LblExplorerSort.Text = lang[LangId.Settings_EnableExplorerSortOrder];
         PART_LblRawThumbnail.Text = lang[LangId.Settings_EnableOnlyLoadRawPreview];
         PART_LblProfileNote.Text = lang[LangId.QuickSetup_SettingProfileDescription];
+
+        PART_LblDefaultViewer.Text = lang[LangId.Settings_DefaultPhotoViewer];
+        PART_LblDefaultViewerDesc.Text = lang[LangId.QuickSetup_RegisterImageFormats];
+        PART_LblDefaultViewerWarning.Text = lang[LangId.Settings_UnmanagedSettingReminder];
+        PART_LblDefaultViewerScope.Text = lang[DefaultViewerScope == DefaultAppScope.LocalMachine
+            ? LangId.Settings_DefaultPhotoViewer_ScopePerMachine
+            : LangId.Settings_DefaultPhotoViewer_ScopePerUser];
+        PART_BtnRegisterViewer.Text = lang[LangId._Register];
 
         PART_LblUpgradePro.Text = lang[LangId.Menu_MnuUpgradeLicense];
         PART_UpgradePro.PreviewLang = lang;

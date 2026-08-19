@@ -3264,9 +3264,14 @@ public partial class AppAPIProvider
     /// <summary>
     /// Sets or removes the app as the default photo viewer for supported file formats.
     /// </summary>
-    public static async Task SetDefaultPhotoViewerAsync(bool enable)
+    /// <param name="owner">Modal owner</param>
+    /// <param name="lang">Language for the result dialog</param>
+    public static async Task SetDefaultPhotoViewerAsync(bool enable, PhWindow? owner = null, Lang? lang = null)
     {
         if (Core.ShellProvider is null) return;
+
+        owner ??= App.MainWindow;
+        lang ??= Core.Lang;
 
         var extensions = Core.GetSupportedFileExtensions().ToArray();
 
@@ -3278,31 +3283,31 @@ public partial class AppAPIProvider
             if (scope is null) return;
 
             // let the user know whether the change is per-machine (all users) or per-user
-            var scopeText = Core.Lang[scope == DefaultAppScope.LocalMachine
+            var scopeText = lang[scope == DefaultAppScope.LocalMachine
                 ? LangId.Settings_DefaultPhotoViewer_ScopePerMachine
                 : LangId.Settings_DefaultPhotoViewer_ScopePerUser];
 
-            await ModalWindow.ShowInfoAsync(App.MainWindow, new ModalWindowOptions
+            await ModalWindow.ShowInfoAsync(owner, new ModalWindowOptions
             {
-                Title = Core.Lang[enable
+                Title = lang[enable
                     ? LangId.Menu_MnuSetDefaultPhotoViewer
                     : LangId.Menu_MnuRemoveDefaultPhotoViewer],
-                Heading = Core.Lang[enable
+                Heading = lang[enable
                     ? LangId.Menu_MnuSetDefaultPhotoViewer_Success
                     : LangId.Menu_MnuRemoveDefaultPhotoViewer_Success],
                 Description = scopeText,
-                Note = enable ? Core.Lang[LangId.Settings_UnmanagedSettingReminder] : null,
+                Note = enable ? lang[LangId.Settings_UnmanagedSettingReminder] : null,
                 NoteStyle = InfoBarSeverity.Warning,
             });
         }
         catch (Exception ex)
         {
-            await ModalWindow.ShowErrorAsync(App.MainWindow, new ModalWindowOptions
+            await ModalWindow.ShowErrorAsync(owner, new ModalWindowOptions
             {
-                Title = Core.Lang[enable
+                Title = lang[enable
                     ? LangId.Menu_MnuSetDefaultPhotoViewer
                     : LangId.Menu_MnuRemoveDefaultPhotoViewer],
-                Heading = Core.Lang[enable
+                Heading = lang[enable
                     ? LangId.Menu_MnuSetDefaultPhotoViewer_Error
                     : LangId.Menu_MnuRemoveDefaultPhotoViewer_Error],
                 Description = ex.Message,

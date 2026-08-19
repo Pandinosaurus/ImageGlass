@@ -159,7 +159,7 @@ public partial class FileTypeAssociationsSettingsView : SettingsPageView
         PART_OpenExtIconFolder.Click += (_, _) =>
             BHelper.OpenFolderPath(BHelper.GetRealPlatformConfigDir(Dir.ExtIcons));
 
-        // the description references the 'Make default' button name via its {0} placeholder
+        // the description references the 'Register' button name via its {0} placeholder
         AddLangRefresher(() => PART_ExtIconsDesc.LangParams = Core.Lang[LangId._Register]);
 
         SetLocalizedText(PART_GetExtIconPacks, LangId.Settings_GetExtensionIconPacks);

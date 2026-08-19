@@ -851,9 +851,7 @@ public enum LangId
     QuickSetup_ProfessionalUser,
     QuickSetup_SettingsWillBeApplied,
     QuickSetup_SettingProfileDescription,
-
     QuickSetup_RegisterImageFormats,
-    QuickSetup_RegisterImageFormats_Description,
 
     QuickSetup_ConfirmCloseProcess,
     QuickSetup_ConfirmCloseProcess_Description,
