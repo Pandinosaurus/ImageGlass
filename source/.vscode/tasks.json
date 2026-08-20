@@ -244,8 +244,34 @@
       "problemMatcher": [],
       "group": "build"
     },
-    // Convenience: build everything for a release, the signed .msix + portable .zip
-    // (self-host) and the .msixbundle (Microsoft Store).
+    // Windows MSI installer pack task. Like the MSIX/ZIP ones the script publishes a fresh AOT
+    // build itself, so it does NOT depend on the publish-win-* tasks.
+    //
+    //   x64 only. The package is dual-scope: the wizard asks per-user or per-machine, and both
+    //   work under msiexec /qn. Installing it removes ImageGlass 9. Uninstalling cleans up the
+    //   file-type registration unless IGREMOVEFILEASSOC=0.
+    //
+    // Needs the pinned WiX 5.0.2 dotnet tool + UI extension; the script fails with the exact
+    // install commands if they are missing (or pass -BootstrapWix). See __assets/win/README.md.
+    {
+      "label": "pack-win-x64-msi",
+      "type": "process",
+      "command": "pwsh",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/__assets/win/script-pack-win-msi.ps1",
+        "-Platform",
+        "x64",
+        "-Sign"
+      ],
+      "problemMatcher": [],
+      "group": "build"
+    },
+    // Convenience: build everything for a release, the signed .msix + .msi installer +
+    // portable .zip (self-host) and the .msixbundle (Microsoft Store).
     {
       "label": "pack-win-all",
       "dependsOn": [
@@ -253,7 +279,8 @@
         "pack-win-arm64-msix",
         "pack-win-msstore-msixbundle",
         "pack-win-x64-zip",
-        "pack-win-arm64-zip"
+        "pack-win-arm64-zip",
+        "pack-win-x64-msi"
       ],
       "dependsOrder": "sequence",
       "problemMatcher": [],

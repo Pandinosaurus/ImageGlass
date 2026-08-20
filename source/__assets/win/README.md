@@ -1,7 +1,8 @@
 # Windows packaging
 
-Two deliverables are built from the same source: an **MSIX** (Store + sideload) and a **portable
-ZIP** (GitHub Releases). See [Portable ZIP](#portable-zip) for the archive.
+Three deliverables are built from the same source: an **MSIX** (Store + sideload), an **MSI
+installer**, and a **portable ZIP** (both GitHub Releases). See [MSI installer](#msi-installer)
+and [Portable ZIP](#portable-zip).
 
 ## MSIX
 
@@ -20,6 +21,12 @@ every payload `.exe`/`.dll` *and* the package itself.
 
 - [`script-pack-win-msix.ps1`](script-pack-win-msix.ps1) — the packer (PowerShell 7+).
 - [`script-pack-win-zip.ps1`](script-pack-win-zip.ps1): the portable ZIP packer (PowerShell 7+).
+- [`script-pack-win-msi.ps1`](script-pack-win-msi.ps1) — the MSI installer packer (PowerShell 7+).
+- [`msi/Package.wxs`](msi/Package.wxs), [`msi/UI.wxs`](msi/UI.wxs) — WiX authoring: the package
+  itself and the four-screen wizard. [`msi/Variables.wxi`](msi/Variables.wxi) holds the GUIDs,
+  [`msi/en-us.wxl`](msi/en-us.wxl) the wizard strings.
+- [`msi/script-generate-msi-art.ps1`](msi/script-generate-msi-art.ps1) — renders the wizard
+  banner/dialog bitmaps in `msi/assets/` from [`__assets/logo_c_512.png`](../logo_c_512.png).
 - [`script-generate-msix-assets.ps1`](script-generate-msix-assets.ps1) — renders the
   `Assets-signed` logo set from [`__assets/logo_c_512.png`](../logo_c_512.png).
 - [`appxmanifest/AppxManifest.xml`](appxmanifest/AppxManifest.xml) — manifest template
@@ -34,6 +41,16 @@ every payload `.exe`/`.dll` *and* the package itself.
 - **.NET 10 SDK** — for `dotnet publish`.
 - **Code-signing certificate** (signed flavour only) — installed in
   `CurrentUser\My` / `LocalMachine\My` with its private key, or supplied as a PFX.
+- **WiX Toolset 5.0.2** (MSI only) — a .NET global tool plus its UI extension:
+
+  ```powershell
+  dotnet tool install --global wix --version 5.0.2
+  wix extension add -g WixToolset.UI.wixext/5.0.2
+  ```
+
+  The version is **pinned**. WiX 6 and 7 are the same tool relicensed under a FireGiant Open
+  Source Maintenance Fee, and a bare `dotnet tool install --global wix` installs the newest one,
+  so the packer refuses to run on anything else. `-BootstrapWix` installs both for you.
 - **A signed Pro license** (msstore flavour only) — issue one from the website admin dashboard with
   `channel: msstore`, `versionScope: 10`, `initVersion: <current release>`, no email, no expiry, then
   drop the downloaded `<licenseId>.iglicense.json` into `__artifacts\store-license\` (git-ignored)
@@ -162,6 +179,106 @@ package, delete the signed copy, and remove the test certificate from `Cert:\Cur
   Windows refuses to launch it once the trial lapses, which is what makes "the process is
   running" equivalent to "the customer is licensed". If the listing ever becomes free, or gains
   an unlimited trial, that shortcut has to be replaced with a live Store license query.
+
+---
+
+## MSI installer
+
+The Windows Installer package published on GitHub Releases for users who want a real setup
+program. Same self-contained AOT build as the MSIX and the ZIP, harvested into an MSI by WiX 5.
+
+```powershell
+# Signed x64 installer for GitHub Releases (payload binaries + the .msi itself)
+pwsh __assets/win/script-pack-win-msi.ps1 -Sign
+
+# Install the pinned wix tool + UI extension first, then pack
+pwsh __assets/win/script-pack-win-msi.ps1 -Sign -BootstrapWix
+
+# Faster local iteration: reuse the publish dir, skip the ICE pass, cheap cabinet
+pwsh __assets/win/script-pack-win-msi.ps1 -SkipPublish -SkipValidation -CompressionLevel mszip
+```
+
+VS Code task: `pack-win-x64-msi` (included in `pack-win-all`).
+Output: `__artifacts/bundle/ImageGlass_<version>_win-x64.msi`.
+**x64 only** for now: `-Platform` accepts nothing else.
+
+### The wizard
+
+Four screens: **Terms and Privacy** (a hyperlink to <https://imageglass.org/terms> plus an
+"I agree" checkbox that gates Next), **Installation type** (per-user or per-machine, with the
+install folder defaulting to match and a Browse button), **progress**, and **complete** with an
+optional "Launch ImageGlass".
+
+`WixUI_Advanced` is deliberately not used: it predates per-user/per-machine switching packages,
+sets only `WixAppFolder`/`ALLUSERS` and never `MSIINSTALLPERUSER`, and its per-machine default
+resolves to the per-user folder. Both custom dialogs live in `msi/UI.wxs`.
+
+### Install scopes and elevation
+
+| Choice | Target | Elevation |
+|---|---|---|
+| Only me | `%LocalAppData%\Programs\ImageGlass` | none |
+| All users | `%ProgramFiles%\ImageGlass` | UAC at the start of the install |
+
+```powershell
+msiexec /i ImageGlass_<version>_win-x64.msi /qn ALLUSERS=2 MSIINSTALLPERUSER=1     # per-user
+msiexec /i ImageGlass_<version>_win-x64.msi /qn ALLUSERS=2 MSIINSTALLPERUSER=""    # per-machine
+msiexec /i ImageGlass_<version>_win-x64.msi /qn /l*v "%TEMP%\ig.log"               # with a log
+msiexec /x {PRODUCT-CODE} /qn                                                      # uninstall
+```
+
+Per-machine needs an already-elevated caller under `/qn`, because a silent install cannot show a
+UAC prompt (`MSI_LUA: Installation UI level is silent, no credential elevation is possible`).
+
+Public properties, all settable on the command line: `MSIINSTALLPERUSER`, `INSTALLFOLDER`,
+`IGDESKTOPSHORTCUT`, `IGSTARTMENUSHORTCUT`, `IGREMOVEFILEASSOC`, `IGAGREETOTERMS`. `IGINSTALLSCOPE`
+only drives the radio button in the UI; it does **not** change the install context.
+
+### Notes
+
+- **The package must NOT be marked "UAC compliant".** Word Count summary bit 3 ("elevated
+  privileges are not required") turns an MSI into a per-user-only package: Windows Installer then
+  logs *"MSIINSTALLPERUSER property is not valid for UAC compliant package"*, deletes `ALLUSERS`,
+  and the per-machine option silently stops working while the install still reports success. WiX
+  leaves the bit clear for `Scope="perUserOrMachine"`, which is correct, and the packer asserts it
+  stays clear. Elevation is decided later, from the resolved context, so per-user never prompts.
+- **Version.** `ProductVersion` is `<IgVersion>` verbatim, all four fields, so Apps & features
+  shows the real build. Windows Installer compares only the first three and ignores the fourth,
+  which is why the authoring sets `MajorUpgrade/@AllowSameVersionUpgrades`; without it two builds
+  differing only in the 4th field would be the same product and no upgrade would ever trigger.
+  `ProductCode` is a deterministic UUIDv5 of the version, so `msiexec /x {GUID}` keeps working for
+  a released build. Override with `-ProductVersion`.
+- **Uninstall cleans up the file-type registration** by running
+  `ImageGlass.exe --ig-remove-default-viewer` before removing the files. Pass
+  `IGREMOVEFILEASSOC=0` to skip it. It is skipped automatically during a major upgrade, or every
+  update would strip the associations. Two known gaps: under a per-machine uninstall the action
+  runs as SYSTEM, so the interactive user's `UserChoice` is not cleared (Explorer self-heals on
+  the next choice), and plugin-added extensions are not covered.
+- **Installing removes ImageGlass 9** (UpgradeCode `{877DB994-AB03-4025-B99D-41CE565E810B}`).
+  The removal is best-effort: a per-user v10 install has no privileges to uninstall a per-machine
+  v9, and failing that must not roll the whole install back. Note v9's per-user install used the
+  same `%LocalAppData%\Programs\ImageGlass` folder and kept `igconfig.json` inside it, so those
+  settings do not survive; v10 reads `%LocalAppData%\ImageGlass`.
+- **Not portable.** The `.igportable` marker must never reach the payload: an installed copy
+  carrying it cannot start, because the folder is not writable and the app reports the error and
+  quits rather than falling back. The packer refuses to build if it finds one, and likewise
+  refuses if a `_store` folder is present.
+- **`_ext_icons` is kept**, like the portable ZIP: this is an unpackaged install, so the app's
+  classic HKCU/HKLM registration supplies the file icons.
+- **Signing order is forced.** Payload `.exe`/`.dll` are signed **before** the harvest, because
+  `wix build` records their sizes and `MsiFileHash` rows and compresses them into the embedded
+  cabinet. The `.msi` is signed last, after validation; nothing may touch it afterwards.
+- **ICE validation runs as a separate step** (`wix build` in v5 does none and has no ICE
+  switches). Three suppressions, each unavoidable for a dual-scope package: **ICE57** (shortcut
+  components carry per-user data with an `HKMU` keypath, the only correct root here), **ICE61**
+  (`AllowSameVersionUpgrades`), **ICE105** (the deferred no-impersonate uninstall action). The
+  packer re-asserts ICE105's other checks by hand: no HKLM registry rows, no services, no ODBC or
+  assembly rows, no system directories.
+- **Artwork.** `msi/assets/banner.bmp` (493x58) and `dialog.bmp` (493x312) are generated from the
+  app logo; re-run `msi/script-generate-msi-art.ps1` after changing it. 24-bit BMP on purpose, as
+  the MSI Bitmap control resolves images through `LoadImage`.
+- **Faster iteration.** `-SkipPublish` reuses `__artifacts/publish/win-x64`. Never for a release:
+  the version is compiled into the binary.
 
 ---
 

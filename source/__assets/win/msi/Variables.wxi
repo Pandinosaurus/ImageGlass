@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Include xmlns="http://wixtoolset.org/schemas/v4/wxs">
+
+  <!-- Stable for the whole v10 line. Never reuse v9's code below, or upgrades break both ways. -->
+  <?define IgUpgradeCode = "E89561C1-5B73-481B-86F4-109283B7B230" ?>
+
+  <!-- ImageGlass 9 shipped as an Advanced Installer MSI; installing v10 removes it. -->
+  <?define Ig9UpgradeCode = "877DB994-AB03-4025-B99D-41CE565E810B" ?>
+
+  <!-- Version-qualified, so Apps & features and the wizard title name the exact build. The install
+       folder deliberately stays unversioned: an upgrade must land on top of the previous one. -->
+  <?define IgProductName  = "ImageGlass $(var.ProductVersion)" ?>
+  <?define IgFolderName   = "ImageGlass" ?>
+  <?define IgManufacturer = "DuongDieuPhap" ?>
+
+  <!-- Vendor\Product on purpose: the app deletes all of Software\ImageGlass when unregistering. -->
+  <?define IgSetupRegKey = "Software\DuongDieuPhap\ImageGlass" ?>
+
+  <!-- Must match the -arch passed to wix build; selects WixUIValidatePath_<arch>. -->
+  <?define WixUiArch = "X64" ?>
+
+  <?ifndef Cabinet ?>
+    <?define Cabinet = "high" ?>
+  <?endif?>
+
+</Include>
