@@ -9,6 +9,8 @@
 
   <String Id="IgDlgTitle"              Value="[ProductName] Setup" />
   <String Id="IgBannerBitmap"          Value="WixUI_Bmp_Banner" />
+  <!-- Binary-table icon shipped by the WixUI extension, used in place of a warning emoji. -->
+  <String Id="IgWarnIcon"              Value="WixUI_Ico_Exclam" />
 
   <!-- Screen 1: agreement -->
   <String Id="IgAgreementTitle"        Value="Terms and Privacy" />
@@ -32,9 +34,10 @@
   <String Id="IgElevationNote"         Value="Windows will ask for administrator approval when the installation starts." />
   <String Id="IgReplaceNote"           Value="An existing ImageGlass installation was found and will be replaced." />
 
-  <!-- Pro advert, shown on the agreement and complete screens. -->
-  <String Id="IgProPitch"              Value="Upgrade to ImageGlass Pro for advanced features and priority support." />
-  <String Id="IgProLink"               Value="&lt;a href=&quot;https://imageglass.org/pricing?utm_source=ig_installer_[ProductVersion]&amp;utm_medium=ig_installer_click&amp;utm_campaign=ig_installer&quot;&gt;Compare ImageGlass Pro&lt;/a&gt;" />
+  <!-- Shown on the agreement and complete screens. No emoji: MSI stores strings in an ANSI
+       codepage, so anything outside CP1252 fails the build; the warning icon is a control. -->
+  <String Id="IgProPitch"              Value="WARNING: This MSI installer is intended exclusively for Pro Business license holders. If you do not have a Pro Business subscription, please download the standard MSIX or ZIP package instead." />
+  <String Id="IgProLink"               Value="&lt;a href=&quot;https://imageglass.org/pricing?utm_source=ig_installer_[ProductVersion]&amp;utm_medium=ig_installer_click&amp;utm_campaign=ig_installer&quot;&gt;See Plans and Pricing&lt;/a&gt;" />
 
   <!-- Screen 4: complete -->
   <String Id="IgDialogBitmap"          Value="WixUI_Bmp_Dialog" />

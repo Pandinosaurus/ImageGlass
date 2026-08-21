@@ -58,9 +58,15 @@
                  Property="IGAGREETOTERMS" CheckBoxValue="1"
                  Text="!(loc.IgAgreementAgree)" />
 
-        <Control Id="ProPitch" Type="Text" X="20" Y="188" Width="330" Height="16"
+        <!-- Icon control rather than an emoji: MSI string columns are ANSI, so anything outside
+             CP1252 fails the build. WixUI_Ico_Exclam is already in the Binary table. -->
+        <!-- FixedSize="no" so the icon scales with the dialog instead of staying 16px on a
+             high-DPI monitor; IconSize picks the largest frame to scale from. -->
+        <Control Id="WarnIcon" Type="Icon" X="20" Y="172" Width="24" Height="24"
+                 TabSkip="yes" FixedSize="no" IconSize="48" Text="!(loc.IgWarnIcon)" />
+        <Control Id="ProPitch" Type="Text" X="50" Y="172" Width="300" Height="38"
                  Text="!(loc.IgProPitch)" />
-        <Control Id="ProLink" Type="Hyperlink" X="20" Y="204" Width="330" Height="16"
+        <Control Id="ProLink" Type="Hyperlink" X="50" Y="212" Width="300" Height="14"
                  Text="!(loc.IgProLink)" />
 
         <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" />
@@ -214,10 +220,13 @@
                  Transparent="yes" NoPrefix="yes" Text="!(loc.IgCompleteDescription)" />
 
         <!-- Install only: neither the pitch nor the launch box makes sense after a removal. -->
-        <Control Id="ProPitch" Type="Text" X="135" Y="120" Width="220" Height="30"
+        <Control Id="WarnIcon" Type="Icon" X="135" Y="110" Width="24" Height="24"
+                 TabSkip="yes" FixedSize="no" IconSize="48" Text="!(loc.IgWarnIcon)"
+                 ShowCondition="NOT Installed" HideCondition="Installed" />
+        <Control Id="ProPitch" Type="Text" X="165" Y="110" Width="190" Height="64"
                  Transparent="yes" NoPrefix="yes" Text="!(loc.IgProPitch)"
                  ShowCondition="NOT Installed" HideCondition="Installed" />
-        <Control Id="ProLink" Type="Hyperlink" X="135" Y="152" Width="220" Height="16"
+        <Control Id="ProLink" Type="Hyperlink" X="165" Y="176" Width="190" Height="14"
                  Text="!(loc.IgProLink)"
                  ShowCondition="NOT Installed" HideCondition="Installed" />
 
