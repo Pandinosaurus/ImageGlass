@@ -314,8 +314,11 @@ public partial class MainWindow : PhWindow
         if (layout.Bounds is { } bounds) Core.Config.MainWindowBounds = bounds;
 
 
-        Core.Config.LastSeenImagePath = Core.Photos.CurrentFilePath;
         Core.Config.ZoomLockValue = PART_MainView.PART_Viewer.ZoomFactor * 100f;
+        Core.Config.LastSeenImagePath = Core.Config.EnableLastSeenImage
+            ? Core.Photos.CurrentFilePath
+            : string.Empty;
+        
 
         // persist the current hosted tool's settings, but keep LastOpenedTool intact
         // (IG_CloseTool clears it) so the tool is re-opened on next launch
