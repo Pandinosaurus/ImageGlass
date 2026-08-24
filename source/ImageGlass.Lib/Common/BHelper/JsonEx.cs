@@ -45,6 +45,7 @@ public partial class BHelper
             Converters =
             {
                 new JsonDateTimeConverter(),
+                new JsonHotkeyArrayConverter(),
             },
 
             // ignoring policy
