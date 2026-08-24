@@ -30,6 +30,8 @@ DwmSetWindowAttribute
 SendMessage
 WM_SETICON
 WM_GETICON
+WM_NCACTIVATE
+GetForegroundWindow
 CreateIconIndirect
 CreateBitmap
 

@@ -165,4 +165,11 @@ public interface IShellProvider : IDisposable
     /// own context when a text field takes focus, so there is no attach counterpart.
     /// </summary>
     void DetachIme(nint windowHandle) { }
+
+
+    /// <summary>
+    /// Draws the window title bar in dark or light colors. Only platforms whose title bar follows
+    /// the app theme implement this.
+    /// </summary>
+    void SetTitleBarDarkMode(nint windowHandle, bool isDark) { }
 }

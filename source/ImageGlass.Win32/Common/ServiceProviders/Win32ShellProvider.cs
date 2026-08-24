@@ -406,6 +406,12 @@ public class Win32ShellProvider : PhDisposable, IShellProvider
     /// </summary>
     public void DetachIme(nint windowHandle) => Win32ImeApi.DetachIme(windowHandle);
 
+
+    /// <summary>
+    /// <inheritdoc/>
+    /// </summary>
+    public void SetTitleBarDarkMode(nint windowHandle, bool isDark) => Win32WindowApi.SetTitleBarDarkMode(windowHandle, isDark);
+
     #endregion // Public Methods
 
 

@@ -16,6 +16,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
+using System;
 using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.Graphics.Dwm;
@@ -31,6 +32,13 @@ public static class Win32WindowApi
     private const int BLANK_ICON_SIZE = 16;
     private const int BLANK_ICON_BYTES = BLANK_ICON_SIZE * BLANK_ICON_SIZE / 8; // 1bpp
 
+    // DWMWA_USE_IMMERSIVE_DARK_MODE, before it moved to 20 in Windows 10 build 18985
+    private const int DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1 = 19;
+
+    // the first Windows 10 build that can draw a dark title bar, and the one the attribute moved on
+    private const int BUILD_DARK_TITLE_BAR = 17763;
+    private const int BUILD_DARK_TITLE_BAR_MOVED = 18985;
+
     private static HICON _blankIcon;
 
 
@@ -45,6 +53,43 @@ public static class Win32WindowApi
                DWMWINDOWATTRIBUTE.DWMWA_SYSTEMBACKDROP_TYPE,
                &type, sizeof(uint));
         }
+    }
+
+
+    /// <summary>
+    /// Draws the window title bar in dark or light colors. Avalonia only applies this on
+    /// Windows 11, so a Windows 10 title bar stays light without it.
+    /// </summary>
+    public unsafe static void SetTitleBarDarkMode(nint wndHandle, bool isDark)
+    {
+        var hWnd = new HWND(wndHandle);
+        if (hWnd.IsNull) return;
+
+        var build = Environment.OSVersion.Version.Build;
+        if (build < BUILD_DARK_TITLE_BAR) return;
+
+        var attribute = build >= BUILD_DARK_TITLE_BAR_MOVED
+            ? DWMWINDOWATTRIBUTE.DWMWA_USE_IMMERSIVE_DARK_MODE
+            : (DWMWINDOWATTRIBUTE)DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1;
+
+        var value = isDark ? 1 : 0;
+        var result = PInvoke.DwmSetWindowAttribute(hWnd, attribute, &value, sizeof(int));
+        if (result.Failed) return;
+
+        RedrawTitleBar(hWnd);
+    }
+
+
+    /// <summary>
+    /// Repaints the title bar: on Windows 10 a dark mode change only reaches the non-client area on
+    /// the next activation change, so re-assert the current one.
+    /// </summary>
+    private static void RedrawTitleBar(HWND hWnd)
+    {
+        nuint isActive = PInvoke.GetForegroundWindow() == hWnd ? 1u : 0u;
+
+        _ = PInvoke.SendMessage(hWnd, PInvoke.WM_NCACTIVATE, isActive ^ 1u, 0);
+        _ = PInvoke.SendMessage(hWnd, PInvoke.WM_NCACTIVATE, isActive, 0);
     }
 
 

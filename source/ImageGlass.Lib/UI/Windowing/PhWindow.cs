@@ -197,6 +197,9 @@ public partial class PhWindow : Window
         // needs a live window handle, so it cannot be applied when the property is set
         OnIgTitleBarIconVisibilityChanged(ShowTitleBarIcon);
 
+        // still inside Show(), and the theme pack is loaded by now, unlike in the ctor
+        UpdateTitleBarDarkMode();
+
         DetachImeWhenNotEditingText();
 
         // seed the windowed bounds, in case the window is never moved nor resized
@@ -292,6 +295,7 @@ public partial class PhWindow : Window
         }
 
         UpdateBackground(IsActive);
+        UpdateTitleBarDarkMode();
         OnIgThemeChanged(e);
     }
 
@@ -529,6 +533,16 @@ public partial class PhWindow : Window
             or AutoCompleteBox) return;
 
         Core.ShellProvider?.DetachIme(Handle);
+    }
+
+
+    /// <summary>
+    /// Draws the title bar in the colors of the current theme. Avalonia only does this on
+    /// Windows 11, so a Windows 10 title bar would stay light whatever the theme.
+    /// </summary>
+    protected void UpdateTitleBarDarkMode()
+    {
+        Core.ShellProvider?.SetTitleBarDarkMode(Handle, Core.Theme.Settings.IsDarkMode);
     }
 
 
