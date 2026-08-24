@@ -167,7 +167,7 @@ public static class Win32DefaultAppApi
         foreach (var ext in extensions)
         {
             var extNoDot = ext.TrimStart('.').ToUpperInvariant();
-            RegisterProgId(classesKey, $"{BHelper.AppName}.AssocFile.{extNoDot}", extNoDot);
+            RegisterProgId(classesKey, GetProgId(extNoDot), extNoDot);
         }
     }
 
@@ -190,7 +190,7 @@ public static class Win32DefaultAppApi
     private static bool IsRegisteredCommandAlive(RegistryKey root, string ext)
     {
         var extNoDot = ext.TrimStart('.').ToUpperInvariant();
-        var progId = $"{BHelper.AppName}.AssocFile.{extNoDot}";
+        var progId = GetProgId(extNoDot);
 
         using var cmdKey = root.OpenSubKey($@"Software\Classes\{progId}\shell\open\command");
         if (cmdKey?.GetValue("") is not string command) return false;
@@ -246,7 +246,7 @@ public static class Win32DefaultAppApi
             foreach (var ext in extensions)
             {
                 var extNoDot = ext.TrimStart('.').ToUpperInvariant();
-                var progId = $"{BHelper.AppName}.AssocFile.{extNoDot}";
+                var progId = GetProgId(extNoDot);
                 faKey.SetValue(ext, progId);
 
                 // HKCU\Software\Classes\...
@@ -261,6 +261,18 @@ public static class Win32DefaultAppApi
 
 
     /// <summary>
+    /// Builds the ProgId of an extension, e.g. <c>ImageGlass.AssocFile.JPG</c>.
+    /// </summary>
+    private static string GetProgId(string extNoDot) => $"{BHelper.AppName}.AssocFile.{extNoDot}";
+
+
+    /// <summary>
+    /// Builds the file type name Explorer shows for an extension, e.g. <c>ImageGlass JPG File</c>.
+    /// </summary>
+    private static string GetFriendlyTypeName(string extNoDot) => $"{BHelper.AppName} {extNoDot} File";
+
+
+    /// <summary>
     /// Registers a ProgId under the <c>Software\Classes</c> subkey of the active hive.
     /// </summary>
     private static void RegisterProgId(RegistryKey? classesKey, string progId, string extNoDot)
@@ -269,7 +281,13 @@ public static class Win32DefaultAppApi
 
         // <root>\Software\Classes\ImageGlass.AssocFile.<EXT>
         using var progIdKey = classesKey.CreateSubKey(progId, writable: true);
-        progIdKey.SetValue("", BHelper.AppName);
+
+        // Explorer's Type column: per-format, since a bare app name labels every format the same
+        var friendlyTypeName = GetFriendlyTypeName(extNoDot);
+        progIdKey.SetValue("", friendlyTypeName);
+
+        // shell verbs resolve ASSOCSTR_FRIENDLYDOCNAME from here first, the default value second
+        progIdKey.SetValue("FriendlyTypeName", friendlyTypeName);
 
         // 1. HKCU\Software\Classes\ImageGlass.AssocFile.<EXT>\DefaultIcon
         var iconPath = ResolveExtIconPath(extNoDot);
@@ -381,7 +399,7 @@ public static class Win32DefaultAppApi
         foreach (var ext in extensions)
         {
             var extNoDot = ext.TrimStart('.').ToUpperInvariant();
-            var progId = $"{BHelper.AppName}.AssocFile.{extNoDot}";
+            var progId = GetProgId(extNoDot);
 
             // remove HKCU\Software\Classes\ImageGlass.AssocFile.<EXT>\*
             classesKey.DeleteSubKeyTree(progId, throwOnMissingSubKey: false);
