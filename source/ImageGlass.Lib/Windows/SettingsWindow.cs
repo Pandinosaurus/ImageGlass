@@ -148,17 +148,13 @@ public partial class SettingsWindow : DialogWindow
         // save state regardless of how the dialog was closed; the pre-minimize state keeps it maximized
         Core.Config.EnableSettingsWindowMaximized = RestorableWindowState == WindowState.Maximized;
 
-        // save window bounds only when in normal state (don't store maximized size as the restore size);
-        // skip a degenerate size so a transient 0×0 on close can't reopen the window invisible
-        if (WindowState == WindowState.Normal)
+        // the tracked windowed bounds, so a maximized size is never stored as the restore size,
+        // while a session that ends maximized still records the monitor it was on
+        if (WindowedBounds is { } bounds
+            && bounds.Width >= MIN_RESTORE_WIDTH
+            && bounds.Height >= MIN_RESTORE_HEIGHT)
         {
-            var size = ClientSize;
-            if (size.Width >= MIN_RESTORE_WIDTH && size.Height >= MIN_RESTORE_HEIGHT)
-            {
-                Core.Config.SettingsWindowBounds = new(Position.X, Position.Y,
-                    (int)size.Width,
-                    (int)size.Height);
-            }
+            Core.Config.SettingsWindowBounds = bounds;
         }
 
         _ = Core.Config.SaveAsync();

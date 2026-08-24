@@ -46,6 +46,12 @@ public partial class PhWindow : Window
     // the state to return to when the window is restored from minimized
     private WindowState _stateBeforeMinimized = WindowState.Normal;
 
+    // the bounds to return to when the window is restored from maximized/full screen
+    private Rect? _windowedBounds;
+
+    // whether a windowed-bounds capture is queued, waiting for the window state to settle
+    private bool _isWindowedBoundsQueued;
+
     // how much of a restored window must land on a screen to count as reachable (DIP)
     private const double MIN_VISIBLE_SIZE = 64;
 
@@ -79,6 +85,21 @@ public partial class PhWindow : Window
     public WindowState RestorableWindowState => WindowState == WindowState.Minimized
         ? _stateBeforeMinimized
         : WindowState;
+
+
+    /// <summary>
+    /// Gets the last size &amp; position this window had while windowed, i.e. the bounds it
+    /// returns to from maximized or full screen; <see langword="null"/> until it has been windowed.
+    /// </summary>
+    public Rect? WindowedBounds
+    {
+        get
+        {
+            // while windowed the live values are the answer, and a queued capture may not have run
+            CommitWindowedBounds();
+            return _windowedBounds;
+        }
+    }
 
 
     /// <summary>
@@ -177,6 +198,9 @@ public partial class PhWindow : Window
         OnIgTitleBarIconVisibilityChanged(ShowTitleBarIcon);
 
         DetachImeWhenNotEditingText();
+
+        // seed the windowed bounds, in case the window is never moved nor resized
+        TrackWindowedBounds();
     }
 
 
@@ -187,6 +211,7 @@ public partial class PhWindow : Window
         ActualThemeVariantChanged += PhWindow_ActualThemeVariantChanged;
         Activated += PhWindow_Activated;
         Deactivated += PhWindow_Deactivated;
+        PositionChanged += PhWindow_PositionChanged;
     }
 
 
@@ -197,10 +222,24 @@ public partial class PhWindow : Window
         ActualThemeVariantChanged -= PhWindow_ActualThemeVariantChanged;
         Activated -= PhWindow_Activated;
         Deactivated -= PhWindow_Deactivated;
+        PositionChanged -= PhWindow_PositionChanged;
 
         Core.ThemeChanged -= Core_ThemeChanged;
         Core.LanguageChanged -= Core_LanguageChanged;
         Core.Config.PropertyChanged -= Config_PropertyChanged;
+    }
+
+
+    private void PhWindow_PositionChanged(object? sender, PixelPointEventArgs e)
+    {
+        TrackWindowedBounds();
+    }
+
+
+    protected override void OnResized(WindowResizedEventArgs e)
+    {
+        base.OnResized(e);
+        TrackWindowedBounds();
     }
 
 
@@ -565,6 +604,40 @@ public partial class PhWindow : Window
 
         Background = toBrush;
         await animation.RunAsync(toBrush);
+    }
+
+
+    /// <summary>
+    /// Queues a capture of the current bounds, so the layout to restore to survives a session that
+    /// ends maximized, in full screen or minimized.
+    /// </summary>
+    private void TrackWindowedBounds()
+    {
+        // maximizing, full screen and minimizing all move & resize the window BEFORE WindowState
+        // catches up, so capturing here would record that layout; let the state settle first
+        if (_isWindowedBoundsQueued || !IsVisible || WindowState != WindowState.Normal) return;
+        _isWindowedBoundsQueued = true;
+
+        Dispatcher.UIThread.Post(() =>
+        {
+            _isWindowedBoundsQueued = false;
+            CommitWindowedBounds();
+        }, DispatcherPriority.Background);
+    }
+
+
+    /// <summary>
+    /// Captures the current bounds as the windowed ones, if the window is windowed right now.
+    /// </summary>
+    private void CommitWindowedBounds()
+    {
+        // a hidden or non-windowed window reports the bounds of another layout, or none at all
+        if (!IsVisible || WindowState != WindowState.Normal) return;
+
+        var size = ClientSize;
+        if (size.Width <= 0 || size.Height <= 0) return;
+
+        _windowedBounds = new Rect(Position.X, Position.Y, (int)size.Width, (int)size.Height);
     }
 
 

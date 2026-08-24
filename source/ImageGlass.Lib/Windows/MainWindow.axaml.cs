@@ -275,15 +275,11 @@ public partial class MainWindow : PhWindow
     /// </summary>
     public WindowLayoutSnapshot CaptureWindowLayout()
     {
-        Rect? bounds = null;
-
-        // the LIVE state, not RestorableWindowState: a minimized window reports an off-screen position
-        if (WindowState == WindowState.Normal
-            && ClientSize.Width >= MIN_RESTORE_WIDTH
-            && ClientSize.Height >= MIN_RESTORE_HEIGHT)
-        {
-            bounds = new Rect(Position.X, Position.Y, (int)ClientSize.Width, (int)ClientSize.Height);
-        }
+        // the tracked windowed bounds, never the live ones: a maximized, full screen or minimized
+        // window reports the bounds of that layout, which is not the one to come back to
+        Rect? bounds = WindowedBounds is { } b
+            && b.Width >= MIN_RESTORE_WIDTH
+            && b.Height >= MIN_RESTORE_HEIGHT ? b : null;
 
         return new WindowLayoutSnapshot
         {
