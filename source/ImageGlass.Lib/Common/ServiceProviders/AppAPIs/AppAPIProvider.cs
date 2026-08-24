@@ -36,10 +36,12 @@ using ImageGlass.UI.Windowing;
 using ImageGlass.Windows;
 using System;
 using System.Collections.Frozen;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -49,6 +51,11 @@ public partial class AppAPIProvider
 {
     // wallpaper formats
     private static FrozenSet<string> _desktopNativeFormats => [".bmp", ".jpg", ".jpeg", ".png", ".gif"];
+
+    // clipboard formats carrying the cut-vs-copy hint of a file operation
+    private static readonly DataFormat<byte[]> _winDropEffectFormat = DataFormat.CreateBytesPlatformFormat("Preferred DropEffect");
+    private static readonly DataFormat<byte[]> _gnomeCopiedFilesFormat = DataFormat.CreateBytesPlatformFormat("x-special/gnome-copied-files");
+    private static readonly DataFormat<byte[]> _kdeCutSelectionFormat = DataFormat.CreateBytesPlatformFormat("application/x-kde-cutselection");
 
     // windowed layout captured on entering full screen; null when not in full screen
     private WindowLayoutSnapshot? _preFullScreenLayout;
@@ -2175,6 +2182,8 @@ public partial class AppAPIProvider
         try
         {
             var dt = new DataTransfer();
+            var clipboardPaths = new List<string>(Core.StringClipboard.Count);
+
             foreach (var path in Core.StringClipboard)
             {
                 var fi = await App.MainWindow.StorageProvider.TryGetFileFromPathAsync(path);
@@ -2183,10 +2192,16 @@ public partial class AppAPIProvider
                 var dti = new DataTransferItem();
                 dti.SetFile(fi);
                 dt.Add(dti);
+
+                clipboardPaths.Add(path);
             }
 
 
-            // 4. perform copy/cut
+            // 4. tell the paste target whether to move (cut) or copy the files
+            AddFileOperationHint__(dt, clipboardPaths, forCutting);
+
+
+            // 5. perform copy/cut
             await App.MainWindow.Clipboard.SetDataAsync(dt);
 
             _ = Message.ShowAsync(Core.Lang[forCutting
@@ -2202,6 +2217,36 @@ public partial class AppAPIProvider
                 Description = ex.Message,
             });
         }
+    }
+
+
+    /// <summary>
+    /// Adds the platform-specific hint telling the paste target
+    /// whether the files were cut (moved) or copied.
+    /// </summary>
+    private static void AddFileOperationHint__(DataTransfer dt, IReadOnlyList<string> filePaths, bool forCutting)
+    {
+        if (filePaths.Count == 0) return;
+        var dti = new DataTransferItem();
+
+        if (BHelper.OS == OSType.Windows)
+        {
+            // File Explorer's convention: DROPEFFECT_MOVE = 2, DROPEFFECT_COPY | DROPEFFECT_LINK = 5
+            var dropEffect = forCutting ? 2u : 5u;
+            dti.Set(_winDropEffectFormat, BitConverter.GetBytes(dropEffect));
+        }
+        else if (BHelper.OS == OSType.Linux)
+        {
+            var uris = filePaths.Select(path => new Uri(path).AbsoluteUri);
+            var opName = forCutting ? "cut" : "copy";
+
+            dti.Set(_gnomeCopiedFilesFormat, Encoding.UTF8.GetBytes($"{opName}\n{string.Join('\n', uris)}"));
+            dti.Set(_kdeCutSelectionFormat, Encoding.UTF8.GetBytes(forCutting ? "1" : "0"));
+        }
+        // macOS Finder has no cut-and-paste for files
+        else return;
+
+        dt.Add(dti);
     }
 
 
