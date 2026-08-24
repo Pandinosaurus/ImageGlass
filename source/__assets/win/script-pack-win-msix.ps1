@@ -241,7 +241,8 @@ function Export-ExtIconPngs([string]$IcoPath, [string]$OutDir, [string]$BaseName
 }
 
 # Build the <uap:Extension> file-type-association blocks and stage their logos. A claimed type takes
-# its icon from the package, outranking the classic DefaultIcon, so only the Store flavour claims any.
+# its icon AND type name from the package, outranking the classic registration, so only the Store
+# flavour claims any; keep DisplayName in step with Win32DefaultAppApi.GetFriendlyTypeName.
 function New-FileTypeAssociationXml([string]$StagingDir) {
     if ($UnvirtualizedResources) { return '' }
 
@@ -253,21 +254,29 @@ function New-FileTypeAssociationXml([string]$StagingDir) {
 
     $extensions = Get-SupportedExtensions
     $blocks = [System.Text.StringBuilder]::new()
-    $unbranded = [System.Collections.Generic.List[string]]::new()
+    $unbranded = 0
     $indent = ' ' * 8
 
+    # one association per format, never a grouped one: DisplayName is per association, and a group
+    # would label every format in it identically (the classic-registration bug, in manifest form)
     foreach ($ext in $extensions) {
         $baseName = $ext.TrimStart('.').ToUpperInvariant()
         $icoPath = Join-Path $iconSrcDir "$baseName.ico"
+        $hasIcon = Test-Path $icoPath
 
-        # no bundled icon for this format: collect it into one logo-less group at the end
-        if (-not (Test-Path $icoPath)) { $unbranded.Add($ext); continue }
-
-        Export-ExtIconPngs -IcoPath $icoPath -OutDir $iconOutDir -BaseName $baseName
+        if ($hasIcon) { Export-ExtIconPngs -IcoPath $icoPath -OutDir $iconOutDir -BaseName $baseName }
+        else { $unbranded++ }
 
         [void]$blocks.AppendLine("$indent<uap:Extension Category=`"windows.fileTypeAssociation`" EntryPoint=`"Windows.FullTrustApplication`" Executable=`"ImageGlass\ImageGlass.exe`">")
         [void]$blocks.AppendLine("$indent  <uap:FileTypeAssociation Name=`"imageglass$ext`">")
-        [void]$blocks.AppendLine("$indent    <uap:Logo>Assets\ExtIcons\$baseName.png</uap:Logo>")
+
+        # Explorer's Type column; without it the shell falls back to a bare "<EXT> File"
+        [void]$blocks.AppendLine("$indent    <uap:DisplayName>ImageGlass $baseName File</uap:DisplayName>")
+
+        if ($hasIcon) {
+            [void]$blocks.AppendLine("$indent    <uap:Logo>Assets\ExtIcons\$baseName.png</uap:Logo>")
+        }
+
         [void]$blocks.AppendLine("$indent    <uap:SupportedFileTypes>")
         [void]$blocks.AppendLine("$indent      <uap:FileType>$ext</uap:FileType>")
         [void]$blocks.AppendLine("$indent    </uap:SupportedFileTypes>")
@@ -275,19 +284,7 @@ function New-FileTypeAssociationXml([string]$StagingDir) {
         [void]$blocks.AppendLine("$indent</uap:Extension>")
     }
 
-    if ($unbranded.Count -gt 0) {
-        [void]$blocks.AppendLine("$indent<uap:Extension Category=`"windows.fileTypeAssociation`" EntryPoint=`"Windows.FullTrustApplication`" Executable=`"ImageGlass\ImageGlass.exe`">")
-        [void]$blocks.AppendLine("$indent  <uap:FileTypeAssociation Name=`"imageglass.assocfiles`">")
-        [void]$blocks.AppendLine("$indent    <uap:SupportedFileTypes>")
-        foreach ($ext in $unbranded) {
-            [void]$blocks.AppendLine("$indent      <uap:FileType>$ext</uap:FileType>")
-        }
-        [void]$blocks.AppendLine("$indent    </uap:SupportedFileTypes>")
-        [void]$blocks.AppendLine("$indent  </uap:FileTypeAssociation>")
-        [void]$blocks.AppendLine("$indent</uap:Extension>")
-    }
-
-    Write-Host "    file type associations: $($extensions.Count) format(s), $($unbranded.Count) without a bundled icon"
+    Write-Host "    file type associations: $($extensions.Count) format(s), $unbranded without a bundled icon"
 
     return $blocks.ToString().TrimEnd()
 }
