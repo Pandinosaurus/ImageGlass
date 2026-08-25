@@ -374,7 +374,8 @@ public class Win32ShellProvider : PhDisposable, IShellProvider
     /// </summary>
     public string InstallChannelId => Win32AppIdentity.IsMsStorePackage
         ? "msstore"
-        : Win32AppIdentity.IsPackaged ? "msix" : "zip";
+        : Win32AppIdentity.IsPackaged ? "msix"
+        : ConfigMode.IsPortable ? "zip" : "msi";
 
 
     /// <summary>

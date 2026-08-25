@@ -136,7 +136,7 @@ public static partial class UsageStatsAgent
         {
             GetOsToken(),
             GetArchToken(),
-            SanitizeToken(Core.ShellProvider?.InstallChannelId) ?? "zip",
+            SanitizeToken(Core.ShellProvider?.InstallChannelId) ?? "other",
             SanitizeToken(Core.BuildInfo?.ReleaseType) ?? "stable",
             GetLangToken(),
             Core.IsProEnabled ? "pro" : "classic",

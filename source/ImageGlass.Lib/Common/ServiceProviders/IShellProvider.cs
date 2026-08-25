@@ -137,7 +137,7 @@ public interface IShellProvider : IDisposable
 
     /// <summary>
     /// Coarse distribution channel reported by the anonymous usage statistics, e.g.
-    /// <c>msstore</c>, <c>msix</c>, <c>flatpak</c>, <c>dmg</c>, <c>zip</c>.
+    /// <c>msstore</c>, <c>msix</c>, <c>msi</c>, <c>flatpak</c>, <c>dmg</c>, <c>zip</c>.
     /// Must stay a small closed set; never derive it from a filesystem path.
     /// </summary>
     string InstallChannelId => "zip";
