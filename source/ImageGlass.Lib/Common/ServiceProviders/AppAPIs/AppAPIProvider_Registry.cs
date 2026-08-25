@@ -38,6 +38,7 @@ public partial class AppAPIProvider
 
         { API.IG_OpenFolder,            PhCommands.Create(IG_OpenFolderAsync) },
         { API.IG_OpenPath,              PhCommands.Create(IG_OpenPath) },
+        { API.IG_ApplySettings,         PhCommands.Create(IG_ApplySettingsAsync) },
 
 
         // Main Menu
@@ -243,6 +244,7 @@ public partial class AppAPIProvider
         API.IG_SetLockScreenImage,
         API.IG_SetDefaultPhotoViewer,
         API.IG_RemoveDefaultPhotoViewer,
+        API.IG_ApplySettings,
         API.IG_Exit,
     }.ToFrozenSet();
 

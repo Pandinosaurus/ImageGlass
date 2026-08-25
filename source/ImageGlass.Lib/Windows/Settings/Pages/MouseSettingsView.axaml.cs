@@ -197,7 +197,7 @@ public partial class MouseSettingsView : SettingsPageView
         DisableIfLocked(ConfigId.MouseClickActions, PART_ClickTable, PART_ResetClick);
 
         // custom mouse click actions are Pro
-        ProGate(PART_MouseClickBadge, PART_ClickTable, PART_ResetClick);
+        ProGate(ConfigId.MouseClickActions, PART_MouseClickBadge, PART_ClickTable, PART_ResetClick);
     }
 
 

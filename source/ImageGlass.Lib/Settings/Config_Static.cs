@@ -85,18 +85,24 @@ public partial class Config
 
 
     /// <summary>
-    /// Config ids locked by <see cref="CONFIG_ADMIN"/>: every top-level key the admin layer
-    /// defines. The user cannot change these in the Settings window, and they are refused on save.
-    /// Empty when the admin layer is absent, spec-incompatible, or admin config is disabled.
+    /// Config ids locked by <see cref="CONFIG_ADMIN"/>.
     /// </summary>
     [JsonIgnore]
     public static FrozenSet<ConfigId> AdminLockedConfigs { get; private set; } = FrozenSet<ConfigId>.Empty;
 
 
     /// <summary>
-    /// Whether <paramref name="id"/> is locked by the admin config layer (<see cref="AdminLockedConfigs"/>).
+    /// Settings that need a Pro license.
     /// </summary>
-    public static bool IsConfigLocked(ConfigId id) => AdminLockedConfigs.Contains(id);
+    [JsonIgnore]
+    public static FrozenSet<ConfigId> ProGatedConfigs { get; } = new[]
+    {
+        ConfigId.EnableFileWatcher,
+        ConfigId.EnableAutoOpenNewAddedImage,
+        ConfigId.MouseClickActions,
+        ConfigId.EnableFreePan,
+        ConfigId.PanMargin,
+    }.ToFrozenSet();
 
 
     /// <summary>
@@ -104,9 +110,7 @@ public partial class Config
     /// </summary>
     [JsonIgnore]
     public static ReadOnlyCollection<string> DefaultFileFormats { get; } = new(
-        Const.IMAGE_FORMATS.Split(';',
-            StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries
-        )
+        Const.IMAGE_FORMATS.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
     );
 
 
@@ -608,6 +612,19 @@ public partial class Config
 
 
     /// <summary>
+    /// Whether <paramref name="id"/> is locked by the admin config layer (<see cref="AdminLockedConfigs"/>).
+    /// </summary>
+    public static bool IsConfigLocked(ConfigId id) => AdminLockedConfigs.Contains(id);
+
+
+    /// <summary>
+    /// Whether <paramref name="id"/> is a Pro-only setting the active license does not unlock.
+    /// </summary>
+    public static bool IsConfigProGated(ConfigId id) => !Core.IsProEnabled && ProGatedConfigs.Contains(id);
+
+
+
+    /// <summary>
     /// Seeds <see cref="PredefinedExternalTools"/> into <see cref="Tools"/>, keeping user edits.
     /// Skipped when an admin defines the setting.
     /// </summary>
@@ -724,6 +741,117 @@ public partial class Config
             }
         }
         catch { }
+    }
+
+
+    /// <summary>
+    /// Applies a partial <see cref="CONFIG_USER"/>-shaped JSON object onto <paramref name="config"/>, returning the changed ids.
+    /// </summary>
+    /// <param name="json">A JSON object, e.g. <c>{ "WindowBackdrop": "Acrylic" }</c>.</param>
+    public static IReadOnlyList<ConfigId> ApplyJsonOverrides(Config config, string? json)
+    {
+        // 1. parse the requested settings
+        using var overrideDoc = ParseSettingsJson(json);
+
+        // 2. resolve the keys, dropping the ones policy refuses
+        var overrides = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        var targetIds = new List<ConfigId>();
+        var unknownKeys = new List<string>();
+
+        foreach (var prop in overrideDoc.RootElement.EnumerateObject())
+        {
+            // a whole config file may be passed in; its metadata is not a setting
+            if (string.Equals(prop.Name, nameof(_Metadata), StringComparison.OrdinalIgnoreCase)) continue;
+
+            if (!Enum.TryParse<ConfigId>(prop.Name, ignoreCase: true, out var id))
+            {
+                unknownKeys.Add(prop.Name);
+                continue;
+            }
+
+            if (_fileOnlyKeys.Contains(prop.Name))
+            {
+                System.Diagnostics.Debug.WriteLine($"[Config] Setting '{id}' ignored (not allowed outside a config file).");
+                continue;
+            }
+
+            if (IsConfigLocked(id))
+            {
+                System.Diagnostics.Debug.WriteLine($"[Config] Setting '{id}' ignored (locked by {CONFIG_ADMIN}).");
+                continue;
+            }
+
+            if (IsConfigProGated(id))
+            {
+                System.Diagnostics.Debug.WriteLine($"[Config] Setting '{id}' ignored (requires a Pro license).");
+                continue;
+            }
+
+            // key by the canonical enum name so two case variants cannot both be written
+            overrides[id.ToString()] = prop.Value.GetRawText();
+            targetIds.Add(id);
+        }
+
+        // 3. refuse the whole batch on a bad name, rather than applying half of it
+        if (unknownKeys.Count > 0)
+        {
+            // no paramName: the message is shown to the user as-is
+            throw new ArgumentException($"Unknown setting name(s): {string.Join(", ", unknownKeys)}.");
+        }
+
+        if (targetIds.Count == 0) return [];
+
+        // 4. round-trip through the merge layer so each value is parsed by its own converter
+        var jsonOptions = BHelper.CreateJsonOptions();
+        var jsonContext = new ConfigJsonContext(jsonOptions);
+
+        var currentJson = JsonSerializer.SerializeToUtf8Bytes(config, jsonContext.Config);
+        using var currentDoc = JsonDocument.Parse(currentJson);
+        var mergedJson = MergeJsonLayers(null, currentDoc, overrides, null);
+
+        var updated = JsonSerializer.Deserialize(mergedJson, jsonContext.Config)
+            ?? throw new JsonException("IGE: Could not parse the merged config.");
+
+        // 5. copy back ONLY the requested ids; the merged config also carries every current value
+        var changedIds = new List<ConfigId>(targetIds.Count);
+        foreach (var id in targetIds)
+        {
+            if (!updated._values.TryGetValue(id, out var value)) continue;
+
+            config.Set(id, value);
+            changedIds.Add(id);
+        }
+
+        return changedIds;
+    }
+
+
+    /// <summary>
+    /// Parses an <see cref="ApplyJsonOverrides"/> payload, reporting the reason in the message the caller shows.
+    /// </summary>
+    private static JsonDocument ParseSettingsJson(string? json)
+    {
+        const string shape = "The settings JSON must be an object of setting names.";
+
+        if (string.IsNullOrWhiteSpace(json)) throw new JsonException($"No settings were given. {shape}");
+
+        JsonDocument doc;
+        try
+        {
+            doc = JsonDocument.Parse(json);
+        }
+        catch (JsonException ex)
+        {
+            throw new JsonException($"The settings JSON could not be parsed. {ex.Message}", ex);
+        }
+
+        if (doc.RootElement.ValueKind != JsonValueKind.Object)
+        {
+            doc.Dispose();
+            throw new JsonException(shape);
+        }
+
+        return doc;
     }
 
 
@@ -1031,9 +1159,9 @@ public partial class Config
     #region Private static methods (config merge)
 
     /// <summary>
-    /// Security-sensitive keys blocked from the CLI <c>-p:</c> layer (file-only).
+    /// Security-sensitive keys accepted only from a config file, never from CLI args or an action argument.
     /// </summary>
-    private static readonly HashSet<string> _cliBlockedKeys = new(StringComparer.OrdinalIgnoreCase)
+    private static readonly HashSet<string> _fileOnlyKeys = new(StringComparer.OrdinalIgnoreCase)
     {
         nameof(Tools),
         nameof(PluginTrust),
@@ -1096,7 +1224,7 @@ public partial class Config
             if (key.Length == 0) continue;
 
             // Security: never accept security-sensitive keys from the command line.
-            if (_cliBlockedKeys.Contains(key))
+            if (_fileOnlyKeys.Contains(key))
             {
                 System.Diagnostics.Debug.WriteLine($"[Config] CLI override for '{key}' ignored (not allowed from the command line).");
                 continue;
@@ -1110,14 +1238,13 @@ public partial class Config
 
 
     /// <summary>
-    /// Merges multiple JSON config layers into a single UTF-8 byte array.
-    /// Later layers override earlier ones at the top-level property level (shallow merge).
-    /// CLI overrides are written as raw JSON values.
+    /// Merges JSON config layers into one UTF-8 byte array; a later layer replaces a whole top-level property.
+    /// <paramref name="rawOverrides"/> is unparsed JSON text: CLI <c>-p:</c> args, or an <see cref="ApplyJsonOverrides"/> payload.
     /// </summary>
     private static byte[] MergeJsonLayers(
         JsonDocument? defaultDoc,
         JsonDocument? userDoc,
-        Dictionary<string, string> cliOverrides,
+        Dictionary<string, string> rawOverrides,
         JsonDocument? adminDoc)
     {
         var buffer = new ArrayBufferWriter<byte>();
@@ -1139,20 +1266,20 @@ public partial class Config
         var allKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         allKeys.UnionWith(defaultMap.Keys);
         allKeys.UnionWith(userMap.Keys);
-        foreach (var k in cliOverrides.Keys) allKeys.Add(k);
+        foreach (var k in rawOverrides.Keys) allKeys.Add(k);
         allKeys.UnionWith(adminMap.Keys);
 
         foreach (var key in allKeys)
         {
-            // admin > CLI > user > default (last wins)
+            // admin > overrides > user > default (last wins)
             if (adminMap.TryGetValue(key, out var adminVal))
             {
                 writer.WritePropertyName(key);
                 adminVal.WriteTo(writer);
             }
-            else if (cliOverrides.TryGetValue(key, out var cliRaw))
+            else if (rawOverrides.TryGetValue(key, out var raw))
             {
-                WriteCliValue(writer, key, cliRaw);
+                WriteRawValue(writer, key, raw);
             }
             else if (userMap.TryGetValue(key, out var userVal))
             {
@@ -1235,10 +1362,10 @@ public partial class Config
 
 
     /// <summary>
-    /// Writes a CLI override value as a JSON property.
+    /// Writes an override value as a JSON property.
     /// Attempts to parse the value as JSON first; falls back to writing as a string.
     /// </summary>
-    private static void WriteCliValue(Utf8JsonWriter writer, string key, string rawValue)
+    private static void WriteRawValue(Utf8JsonWriter writer, string key, string rawValue)
     {
         writer.WritePropertyName(key);
 
@@ -1250,7 +1377,7 @@ public partial class Config
         }
         catch (JsonException)
         {
-            // not valid JSON, write as a quoted string
+            // not valid JSON (a bare CLI value), write as a quoted string
             writer.WriteStringValue(rawValue);
         }
     }

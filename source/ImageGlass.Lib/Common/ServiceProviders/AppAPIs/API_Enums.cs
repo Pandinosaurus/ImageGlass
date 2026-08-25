@@ -26,6 +26,7 @@ public enum API
     IG_ViewByStep,
     IG_ViewByIndex,
     IG_OpenSettings,
+    IG_ApplySettings,
 
 
     // Menu > File

@@ -107,10 +107,10 @@ public sealed class SettingsViewModel : PhReactive
 
 
     /// <summary>
-    /// Runs explicit follow-up actions for committed settings that don't propagate on
-    /// their own via <see cref="Core.Config"/> bindings.
+    /// Runs explicit follow-up actions for committed settings that don't propagate on their own via
+    /// <see cref="Core.Config"/> bindings. Shared with <see cref="AppAPIProvider.IG_ApplySettingsAsync"/>.
     /// </summary>
-    private static void RunApplyActions(IReadOnlyList<ConfigId> changedIds)
+    internal static void RunApplyActions(IReadOnlyList<ConfigId> changedIds)
     {
         // changes require reloading photo list
         var reloadList = changedIds.Any(static id => id
@@ -147,6 +147,12 @@ public sealed class SettingsViewModel : PhReactive
         if (changedIds.Contains(ConfigId.Language))
         {
             _ = Core.Config.LoadCurrentLanguageAsync();
+        }
+
+        // feature lock edited -> rebuild the lock snapshot FeatureManager answers from
+        if (changedIds.Contains(ConfigId.LockedFeatures))
+        {
+            FeatureManager.Refresh();
         }
 
         // external tools edited -> rebuild the registry so the Tools menu / IG_OpenTool use the new values

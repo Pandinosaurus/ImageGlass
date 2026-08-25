@@ -169,6 +169,33 @@ public partial class AppAPIProvider
         BHelper.ExitApp(false);
     }
 
+
+
+    /// <summary>
+    /// Applies settings from a JSON object.
+    /// </summary>
+    public static async Task IG_ApplySettingsAsync(string? jsonStr = null)
+    {
+        if (string.IsNullOrWhiteSpace(jsonStr))
+        {
+            throw new ArgumentException($$"""
+                A JSON object of settings is required, e.g. { "Language": "Vietnamese.iglang.json" }.
+
+                ----------
+                👉🏼 Method: {{nameof(IG_ApplySettingsAsync)}}
+                """,
+                nameof(jsonStr));
+        }
+
+        var changedIds = Config.ApplyJsonOverrides(Core.Config, jsonStr);
+        if (changedIds.Count == 0) return;
+
+        // same order as SettingsViewModel.CommitAsync
+        await Core.Config.SaveAsync();
+        SettingsViewModel.RunApplyActions(changedIds);
+    }
+
+
     #endregion // Main Menu APIs
 
 
