@@ -717,12 +717,14 @@ public partial class MainWindowView : PhControl
                 Command = Core.API.GetApiCommand(API.IG_CopyFiles),
                 HotkeyText = AppAPIProvider.GetMenuHotkeyText(LangId.Menu_MnuCopyFile),
             });
-            mnuContext.Items.Add(new PhMenuItem
-            {
-                LangKey = LangId.Menu_MnuCutFile,
-                Command = Core.API.GetApiCommand(API.IG_CutFiles),
-                HotkeyText = AppAPIProvider.GetMenuHotkeyText(LangId.Menu_MnuCutFile),
-            });
+            if (BHelper.OS != OSType.Mac) {
+                mnuContext.Items.Add(new PhMenuItem
+                {
+                    LangKey = LangId.Menu_MnuCutFile,
+                    Command = Core.API.GetApiCommand(API.IG_CutFiles),
+                    HotkeyText = AppAPIProvider.GetMenuHotkeyText(LangId.Menu_MnuCutFile),
+                });
+            }
             mnuContext.Items.Add(new PhMenuItem
             {
                 LangKey = LangId.Menu_MnuClearClipboard,

@@ -407,7 +407,12 @@
                                 <ui:PhMenuItem Click="MainMenuItem_Click" LangKey="Menu_MnuCopyImagePixels" />
                                 <ui:PhMenuItem Click="MainMenuItem_Click" LangKey="Menu_MnuCopyPath" />
                                 <ui:PhMenuItem Click="MainMenuItem_Click" LangKey="Menu_MnuCopyFile" />
-                                <ui:PhMenuItem Click="MainMenuItem_Click" LangKey="Menu_MnuCutFile" />
+                                <ui:PhMenuItem
+                                    Click="MainMenuItem_Click"
+                                    IsVisible="{OnPlatform True,
+                                                       macOS=False,
+                                                       x:TypeArguments=x:Boolean}"
+                                    LangKey="Menu_MnuCutFile" />
                                 <ui:PhMenuItem Header="-" />
 
                                 <ui:PhMenuItem Click="MainMenuItem_Click" LangKey="Menu_MnuClearClipboard" />

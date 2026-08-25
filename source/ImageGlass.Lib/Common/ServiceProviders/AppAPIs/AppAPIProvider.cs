@@ -2173,6 +2173,11 @@ public partial class AppAPIProvider
     /// </summary>
     public static async Task IG_CutFilesAsync()
     {
+        if (BHelper.OS == OSType.Mac)
+        {
+            throw new NotSupportedException($"IGE: This feature is not supported on {BHelper.OS}.");
+        }
+
         await SetFileToClipboardAsync(Core.Photos.CurrentFilePath, true);
     }
 

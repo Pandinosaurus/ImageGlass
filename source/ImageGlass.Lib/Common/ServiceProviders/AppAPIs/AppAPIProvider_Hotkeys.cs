@@ -141,7 +141,9 @@ public partial class AppAPIProvider
         new(LangId.Menu_MnuPasteImage,       API.IG_PasteImage,          Hotkey.Ctrl, Key.V),
         new(LangId.Menu_MnuCopyImagePixels,  API.IG_CopyImagePixels,     Hotkey.Ctrl | MKeys.Shift, Key.C),
         new(LangId.Menu_MnuCopyFile,         API.IG_CopyFiles,           Hotkey.Ctrl, Key.C),
-        new(LangId.Menu_MnuCutFile,          API.IG_CutFiles,            Hotkey.Ctrl, Key.X),
+        .. SupportedOn(BHelper.OS != OSType.Mac, [
+            new(LangId.Menu_MnuCutFile,      API.IG_CutFiles,            Hotkey.Ctrl, Key.X),
+        ]),
         new(LangId.Menu_MnuCopyPath,         API.IG_CopyImagePath,       Hotkey.Ctrl, Key.L),
         new(LangId.Menu_MnuClearClipboard,   API.IG_ClearClipboard,      Hotkey.Ctrl, Key.OemTilde),
 
