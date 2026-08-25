@@ -7,6 +7,13 @@
   <!-- ImageGlass 9 shipped as an Advanced Installer MSI; installing v10 removes it. -->
   <?define Ig9UpgradeCode = "877DB994-AB03-4025-B99D-41CE565E810B" ?>
 
+  <!-- Where ImageGlass 9 recorded its own scope, so this package can install into the same one
+       and actually be able to remove it; its Manufacturer was spelled with spaces. -->
+  <?define Ig9SetupRegKey = "Software\Duong Dieu Phap\{$(var.Ig9UpgradeCode)}" ?>
+
+  <!-- Stable forever: a ComponentSearch on it is how an upgrade finds the folder to land on. -->
+  <?define IgExeComponentGuid = "844B158B-59C3-4D43-98A3-026638A07922" ?>
+
   <!-- Version-qualified, so Apps & features and the wizard title name the exact build. The install
        folder deliberately stays unversioned: an upgrade must land on top of the previous one. -->
   <?define IgProductName  = "ImageGlass $(var.ProductVersion)" ?>

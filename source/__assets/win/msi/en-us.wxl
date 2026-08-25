@@ -5,7 +5,7 @@
   <String Id="IgFeatureMainTitle"      Value="ImageGlass" />
   <String Id="IgShortcutName"          Value="ImageGlass" />
   <String Id="IgShortcutDescription"   Value="A Fast, Seamless Photo Viewer" />
-  <String Id="IgNewerVersionInstalled" Value="A newer version of [ProductName] is already installed. Setup will now exit." />
+  <String Id="IgNewerVersionInstalled" Value="A newer version of ImageGlass is already installed. Setup will now exit." />
 
   <String Id="IgDlgTitle"              Value="[ProductName] Setup" />
   <String Id="IgBannerBitmap"          Value="WixUI_Bmp_Banner" />
@@ -33,6 +33,10 @@
   <String Id="IgBrowse"                Value="Br&amp;owse..." />
   <String Id="IgElevationNote"         Value="Windows will ask for administrator approval when the installation starts." />
   <String Id="IgReplaceNote"           Value="An existing ImageGlass installation was found and will be replaced." />
+  <String Id="IgReplaceNoteLocked"     Value="ImageGlass is already installed. Setup will replace it, so the installation type is fixed to match it." />
+  <!-- Silent installs only: the wizard cannot reach a mismatch, because it locks the choice. -->
+  <String Id="IgScopeMismatchMachine"  Value="ImageGlass is already installed for all users of this computer. Windows Installer cannot move it to a per-user installation, so run setup again with ALLUSERS=2 MSIINSTALLPERUSER=&quot;&quot; to update it, or uninstall it first." />
+  <String Id="IgScopeMismatchUser"     Value="ImageGlass is already installed for the current user only. Windows Installer cannot move it to a per-machine installation, so run setup again with ALLUSERS=2 MSIINSTALLPERUSER=1 to update it, or uninstall it first." />
 
   <!-- Two strings because an XML attribute cannot carry the line break, and no emoji: MSI
        stores strings in an ANSI codepage, so anything outside CP1252 fails the build. -->

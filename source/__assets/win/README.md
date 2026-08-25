@@ -234,6 +234,33 @@ Public properties, all settable on the command line: `MSIINSTALLPERUSER`, `INSTA
 `IGDESKTOPSHORTCUT`, `IGSTARTMENUSHORTCUT`, `IGREMOVEFILEASSOC`, `IGAGREETOTERMS`. `IGINSTALLSCOPE`
 only drives the radio button in the UI; it does **not** change the install context.
 
+### Upgrading an existing install
+
+**Windows Installer cannot move a product between per-user and per-machine.** A major upgrade run
+in the other scope cannot remove what it is replacing, so it either rolls back or leaves two
+copies installed. The package therefore works out which scope is already in use, from the hive its
+own `HKMU` marker landed in:
+
+| Signature | Left by |
+|---|---|
+| `<IgSetupRegKey>\InstallLocation` | every build that carries this authoring |
+| `<IgSetupRegKey>\StartMenuShortcut`, `\DesktopShortcut` | earlier builds, unless the user declined both shortcuts |
+| `Software\Duong Dieu Phap\{<Ig9UpgradeCode>}\AI_INSTALLPERUSER` | ImageGlass 9 (Advanced Installer wrote it the same way) |
+
+`ComponentSearch` on `IgExeComponentGuid` then yields the exact folder, custom paths included, so
+an upgrade lands on top of the previous install rather than in the default location.
+
+- **In the wizard**, the scope is preselected and the radio group is **disabled**, so a mismatch
+  cannot be produced at all. ImageGlass 9 only preselects: its removal is best-effort, and forcing
+  an elevated install for it would be wrong.
+- **Silently**, the mismatch is **refused** with the command line to use instead. It deliberately
+  is not auto-corrected: the installer settles the context while starting up, so flipping
+  `ALLUSERS` from a custom action changes whether elevation is demanded but *not* the directory
+  redirection already applied to `ProgramFiles64Folder`, which would put a per-machine install in
+  `%LocalAppData%`. Measured, not assumed.
+- **Neither covers an install too old to have left any marker** (an earlier build where the user
+  declined both shortcuts). That case still fails the way it always did.
+
 ### Notes
 
 - **The package must NOT be marked "UAC compliant".** Word Count summary bit 3 ("elevated

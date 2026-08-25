@@ -107,8 +107,12 @@
 
         <!-- A RadioButtonGroup cannot raise ControlEvents, so the two PathEdit controls below
              sit at the same coordinates and swap on this property instead. -->
+        <!-- Locked to the scope already installed: Windows Installer cannot move a product
+             between the two, so letting it be changed only produces a failed upgrade. -->
         <Control Id="ScopeGroup" Type="RadioButtonGroup" X="20" Y="70" Width="330" Height="78"
-                 Property="IGINSTALLSCOPE">
+                 Property="IGINSTALLSCOPE"
+                 EnableCondition="NOT IGPREVPERUSER AND NOT IGPREVPERMACHINE"
+                 DisableCondition="IGPREVPERUSER OR IGPREVPERMACHINE">
           <RadioButtonGroup Property="IGINSTALLSCOPE">
             <RadioButton Value="perUser"    X="0" Y="0"  Width="320" Height="17"
                          Text="!(loc.IgScopePerUser)" />
@@ -155,12 +159,16 @@
                  Text="!(loc.IgElevationNote)"
                  ShowCondition="IGINSTALLSCOPE = &quot;perMachine&quot;"
                  HideCondition="IGINSTALLSCOPE &lt;&gt; &quot;perMachine&quot;" />
-        <!-- WIX_UPGRADE_DETECTED covers a previous v10 (MajorUpgrade), IGV9INSTALLED covers v9;
-             both are set by FindRelatedProducts, which runs before this dialog. -->
+        <!-- Set by FindRelatedProducts, which runs before this dialog. Shown only for an install
+             too old to have left a scope marker; the locked note below covers the rest. -->
         <Control Id="ReplaceNote" Type="Text" X="20" Y="216" Width="330" Height="20"
                  Text="!(loc.IgReplaceNote)"
-                 ShowCondition="WIX_UPGRADE_DETECTED OR IGV9INSTALLED"
-                 HideCondition="NOT WIX_UPGRADE_DETECTED AND NOT IGV9INSTALLED" />
+                 ShowCondition="(WIX_UPGRADE_DETECTED OR IGV9INSTALLED) AND NOT IGPREVPERUSER AND NOT IGPREVPERMACHINE"
+                 HideCondition="IGPREVPERUSER OR IGPREVPERMACHINE OR (NOT WIX_UPGRADE_DETECTED AND NOT IGV9INSTALLED)" />
+        <Control Id="ReplaceNoteLocked" Type="Text" X="20" Y="216" Width="330" Height="20"
+                 Text="!(loc.IgReplaceNoteLocked)"
+                 ShowCondition="IGPREVPERUSER OR IGPREVPERMACHINE"
+                 HideCondition="NOT IGPREVPERUSER AND NOT IGPREVPERMACHINE" />
 
         <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" />
         <Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17"

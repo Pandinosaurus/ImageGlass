@@ -19,6 +19,11 @@
     "ImageGlass.exe --ig-remove-default-viewer" so the classic file-type registration does
     not outlive the app.
 
+    An upgrade must run in the scope of the install it replaces, because Windows Installer
+    cannot move a product between the two. The package detects that scope and locks the
+    wizard to it; a silent install that disagrees is refused, not silently corrected. See
+    "Upgrading an existing install" in __assets/win/README.md.
+
     The portable marker is NEVER shipped here: an installed copy carrying .igportable cannot
     start at all, because Program Files is not writable and the app refuses to fall back to
     %LocalAppData% behind the user's back.

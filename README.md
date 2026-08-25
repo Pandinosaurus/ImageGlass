@@ -8,8 +8,8 @@ ImageGlass is a fast, modern, open-source image viewer built for Windows, macOS,
 
 <br/>
 
-[![Total downloads](https://img.shields.io/github/downloads/d2phap/imageglass/total?color=%23d60068&label=Total%20downloads&)](https://imageglass.org/download)
-[![Latest version downloads](https://img.shields.io/github/downloads/d2phap/imageglass/latest/total?color=%23e66700&label=Latest%20version&)](https://imageglass.org/download)
+[![Total downloads](https://img.shields.io/github/downloads/d2phap/imageglass/total?color=%23d60068&label=Total%20downloads&)](https://imageglass.org/pricing)
+[![Latest version downloads](https://img.shields.io/github/downloads/d2phap/imageglass/latest/total?color=%23e66700&label=Latest%20version&)](https://imageglass.org/pricing)
 
 [![Discord](https://img.shields.io/discord/818852544859209748?label=chat&logo=discord&color=%233097B8&style=social)](https://discord.gg/tWjbynH2X8)
 [![Twitter Follow](https://img.shields.io/twitter/follow/duongdieuphap?style=social)](https://twitter.com/duongdieuphap)
@@ -32,7 +32,7 @@ ImageGlass is a fast, modern, open-source image viewer built for Windows, macOS,
 
 <div align="center">
 
-<a href="https://imageglass.org/download">
+<a href="https://imageglass.org/pricing">
   <img width="225" height="37" alt="Get ImageGlass" src="https://github.com/user-attachments/assets/a44993c4-8fbb-4209-8341-be6996059b5a" />
 </a>
 

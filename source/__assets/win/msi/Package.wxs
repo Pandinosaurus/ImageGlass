@@ -73,13 +73,84 @@
                       Name="ProgramFilesDir" Type="raw" Bitness="always64" />
     </Property>
 
-    <!-- Both path editors need a non-empty initial value before their dialog is created. -->
+    <!-- ==== The install being replaced ================================================== -->
+    <!-- Windows Installer cannot move a product between per-user and per-machine, so an upgrade
+         only succeeds when it runs in the same scope as the install it replaces. -->
+
+    <!-- The exact folder of that install, custom paths included. The component GUID never
+         changes, so this locates one an earlier release created just as well. -->
+    <Property Id="IGPREVDIR" Secure="yes">
+      <ComponentSearch Id="PrevAppDir" Guid="$(var.IgExeComponentGuid)" Type="directory" />
+    </Property>
+
+    <!-- Scope is whichever hive the HKMU marker landed in. InstallLocation is written below;
+         the two shortcut values are the only trace an earlier release left, so they count too. -->
+    <Property Id="IGPREVMACHINEDIR" Secure="yes">
+      <RegistrySearch Id="PrevMachineDir" Root="HKLM" Key="$(var.IgSetupRegKey)"
+                      Name="InstallLocation" Type="raw" Bitness="always64" />
+    </Property>
+    <Property Id="IGPREVMACHINESM" Secure="yes">
+      <RegistrySearch Id="PrevMachineSm" Root="HKLM" Key="$(var.IgSetupRegKey)"
+                      Name="StartMenuShortcut" Type="raw" Bitness="always64" />
+    </Property>
+    <Property Id="IGPREVMACHINEDT" Secure="yes">
+      <RegistrySearch Id="PrevMachineDt" Root="HKLM" Key="$(var.IgSetupRegKey)"
+                      Name="DesktopShortcut" Type="raw" Bitness="always64" />
+    </Property>
+    <Property Id="IGPREVUSERDIR" Secure="yes">
+      <RegistrySearch Id="PrevUserDir" Root="HKCU" Key="$(var.IgSetupRegKey)"
+                      Name="InstallLocation" Type="raw" />
+    </Property>
+    <Property Id="IGPREVUSERSM" Secure="yes">
+      <RegistrySearch Id="PrevUserSm" Root="HKCU" Key="$(var.IgSetupRegKey)"
+                      Name="StartMenuShortcut" Type="raw" />
+    </Property>
+    <Property Id="IGPREVUSERDT" Secure="yes">
+      <RegistrySearch Id="PrevUserDt" Root="HKCU" Key="$(var.IgSetupRegKey)"
+                      Name="DesktopShortcut" Type="raw" />
+    </Property>
+
+    <!-- ImageGlass 9 recorded its scope the same way, under its own vendor key. -->
+    <Property Id="IGPREV9MACHINE" Secure="yes">
+      <RegistrySearch Id="Prev9Machine" Root="HKLM" Key="$(var.Ig9SetupRegKey)"
+                      Name="AI_INSTALLPERUSER" Type="raw" Bitness="always64" />
+    </Property>
+
+    <!-- Recomputed per sequence rather than carried over from the UI, so a silent install
+         resolves alike; chained because two SetProperty rows cannot share an After= anchor. -->
+    <SetProperty Id="IGPREVPERMACHINE" Value="1" After="AppSearch" Sequence="both"
+                 Condition="IGPREVMACHINEDIR OR IGPREVMACHINESM OR IGPREVMACHINEDT" />
+    <SetProperty Id="IGPREVPERUSER" Value="1" After="SetIGPREVPERMACHINE" Sequence="both"
+                 Condition="IGPREVUSERDIR OR IGPREVUSERSM OR IGPREVUSERDT" />
+    <!-- Paired with FindRelatedProducts so a key left behind by an uninstalled ImageGlass 9
+         cannot force an elevated install for nothing. -->
+    <SetProperty Id="IGPREV9PERMACHINE" Value="1" After="SetIGPREVPERUSER" Sequence="both"
+                 Condition="IGV9INSTALLED AND IGPREV9MACHINE" />
+
+    <!-- Refused rather than auto-corrected, because a late ALLUSERS flip cannot undo the
+         directory redirection already applied. See README, "Upgrading an existing install". -->
+    <CustomAction Id="IgBlockPerUserOverMachine" Error="!(loc.IgScopeMismatchMachine)" />
+    <CustomAction Id="IgBlockPerMachineOverUser" Error="!(loc.IgScopeMismatchUser)" />
+
+    <!-- Preselect the scope already in use. The dialog locks the choice for a previous
+         ImageGlass 10, and leaves it changeable for ImageGlass 9, whose removal is best-effort. -->
+    <SetProperty Id="IGINSTALLSCOPE" Value="perMachine" After="SetIGPREV9PERMACHINE" Sequence="ui"
+                 Condition="IGPREVPERMACHINE OR IGPREV9PERMACHINE" />
+
+    <!-- Both path editors need a non-empty initial value before their dialog is created; the
+         previous folder seeds them first, so an upgrade lands on a custom path rather than beside it. -->
+    <SetProperty Id="IGFOLDERPERUSER" Action="SetIgFolderPerUserFromPrev" Value="[IGPREVDIR]"
+                 After="CostFinalize" Sequence="ui"
+                 Condition="IGPREVDIR AND IGPREVPERUSER AND NOT IGPREVPERMACHINE" />
+    <SetProperty Id="IGFOLDERPERMACHINE" Action="SetIgFolderPerMachineFromPrev" Value="[IGPREVDIR]"
+                 After="SetIgFolderPerUserFromPrev" Sequence="ui"
+                 Condition="IGPREVDIR AND IGPREVPERMACHINE" />
     <SetProperty Id="IGFOLDERPERUSER"
                  Value="[LocalAppDataFolder]Programs\$(var.IgFolderName)\"
-                 After="CostFinalize" Sequence="ui" Condition="NOT IGFOLDERPERUSER" />
+                 After="SetIgFolderPerMachineFromPrev" Sequence="ui" Condition="NOT IGFOLDERPERUSER" />
     <SetProperty Id="IGFOLDERPERMACHINE"
                  Value="[IGPROGRAMFILES64]\$(var.IgFolderName)\"
-                 After="CostFinalize" Sequence="ui" Condition="NOT IGFOLDERPERMACHINE" />
+                 After="SetIGFOLDERPERUSER" Sequence="ui" Condition="NOT IGFOLDERPERMACHINE" />
 
     <!-- ==== Add/Remove Programs ========================================================= -->
     <!-- sys.SOURCEFILEDIR, not a bare relative path: wix resolves those against the CWD. -->
@@ -91,7 +162,7 @@
     <Property Id="ARPHELPLINK"      Value="https://imageglass.org/support" />
     <Property Id="ARPURLINFOABOUT"  Value="https://imageglass.org" />
     <Property Id="ARPURLUPDATEINFO" Value="https://imageglass.org/download" />
-    <Property Id="ARPCOMMENTS"      Value="A fast, seamless photo viewer" />
+    <Property Id="ARPCOMMENTS"      Value="A Fast, Seamless Photo Viewer" />
 
     <!-- One feature only, so Change would be a dead end; Repair still works from a re-run. -->
     <Property Id="ARPNOMODIFY" Value="1" />
@@ -128,6 +199,12 @@
                   Return="ignore" />
 
     <InstallExecuteSequence>
+      <!-- Ahead of costing and RemoveExistingProducts, so a refusal changes nothing. NOT ALLUSERS
+           is how per-user reads by here, the switching pair having already been collapsed. -->
+      <Custom Action="IgBlockPerUserOverMachine" After="SetIGPREV9PERMACHINE"
+              Condition="NOT Installed AND IGPREVPERMACHINE AND NOT ALLUSERS" />
+      <Custom Action="IgBlockPerMachineOverUser" After="IgBlockPerUserOverMachine"
+              Condition="NOT Installed AND IGPREVPERUSER AND NOT IGPREVPERMACHINE AND ALLUSERS" />
       <!-- Before RemoveFiles so the exe still exists. NOT UPGRADINGPRODUCTCODE is critical, or
            every major upgrade would strip the associations via RemoveExistingProducts. -->
       <Custom Action="IgRemoveDefaultViewer" Before="RemoveFiles"
@@ -140,9 +217,16 @@
     <ComponentGroup Id="IgAppFiles" Directory="INSTALLFOLDER">
 
       <!-- Hand-authored because the uninstall CustomAction needs it as a FileRef target. -->
-      <Component Id="CmpImageGlassExe" Guid="844B158B-59C3-4D43-98A3-026638A07922">
+      <Component Id="CmpImageGlassExe" Guid="$(var.IgExeComponentGuid)">
         <File Id="FileImageGlassExe" Source="$(var.PayloadDir)\ImageGlass.exe"
               Name="ImageGlass.exe" KeyPath="yes" />
+      </Component>
+
+      <!-- Unconditional, unlike the shortcut markers, so the next upgrade can still tell which
+           scope to reuse when the user declined both. HKMU redirects it per install context. -->
+      <Component Id="CmpInstallInfo" Guid="DB85ED25-70C2-494B-91F7-9F137447CD58">
+        <RegistryValue Root="HKMU" Key="$(var.IgSetupRegKey)" Name="InstallLocation"
+                       Type="string" Value="[INSTALLFOLDER]" KeyPath="yes" />
       </Component>
 
       <!-- Flat layout is load-bearing: native DLLs, default.webp and the _-folders all resolve
