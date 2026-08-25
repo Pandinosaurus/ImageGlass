@@ -245,7 +245,7 @@ public static class Core
 
 
     /// <summary>
-    /// Gets the path of the image file from the arguments.
+    /// Gets the resolved path of the image file from the arguments.
     /// </summary>
     public static string InputImagePathFromArgs => _initImagePathFromArgs;
 
@@ -938,7 +938,8 @@ public static class Core
             }
         }
 
-        _initImagePathFromArgs = pathToLoad ?? string.Empty;
+        // store resolved: a shortcut's own folder must never pass as the folder being opened
+        _initImagePathFromArgs = BHelper.ResolvePath(pathToLoad);
     }
 
 

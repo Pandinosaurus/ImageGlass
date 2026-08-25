@@ -850,10 +850,14 @@ public partial class MainWindowView : PhControl
 
         Dispatcher.UIThread.Post(async () =>
         {
+            // resolve first: a shortcut must contribute its target's type, never ".lnk"
+            var resolvedPaths = inputPaths.Select(BHelper.ResolvePath).ToList();
+            var resolvedCurrentPath = BHelper.ResolvePath(currentFilePath);
+
             // include the opened file's own type so it's listed even before its plugin loads
             var allowedExts = Core.GetSupportedFileExtensions();
-            AddFileExtension(allowedExts, currentFilePath);
-            foreach (var p in inputPaths) AddFileExtension(allowedExts, p);
+            AddFileExtension(allowedExts, resolvedCurrentPath);
+            foreach (var p in resolvedPaths) AddFileExtension(allowedExts, p);
 
             // start loading files
             var searchOptions = new FileSearchOptions()
@@ -867,7 +871,7 @@ public partial class MainWindowView : PhControl
                 OrderBy = Core.Config.ImageLoadingOrder,
                 OrderType = Core.Config.ImageLoadingOrderType,
             };
-            var initPhoto = Core.Photos.StartLoadingFiles(inputPaths, currentFilePath, searchOptions, Files_Searched, reloadInitPhoto);
+            var initPhoto = Core.Photos.StartLoadingFiles(resolvedPaths, resolvedCurrentPath, searchOptions, Files_Searched, reloadInitPhoto);
 
 
             if (reloadInitPhoto && initPhoto is not null)
