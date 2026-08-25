@@ -18,7 +18,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 using ImageGlass.Common.Actions;
 using ImageGlass.Common.AppThemes;
-using ImageGlass.Common.Extensions;
 using ImageGlass.Common.Localization;
 using ImageGlass.Common.Photoing;
 using ImageGlass.Common.ServiceProviders;
@@ -926,16 +925,17 @@ public partial class Config
         else LightTheme = th.FolderName;
 
 
-        // 5. follow the theme's bg unless the user set a custom one. "Not custom" = empty, or it
-        //    matches a theme it could have been following: the previous/active theme, or — after an
-        //    OS-mode switch across restarts — the other mode's configured theme.
+        // 5. follow the theme's bg unless the user set a custom one (= a stored value matching no
+        //    theme it could have been following). The IsValid guard matters: at startup Core.Theme
+        //    is a placeholder whose hardcoded bg would clobber a custom color equal to it.
+        var hasStoredBg = HasValue(ConfigId.BackgroundColor) && !string.IsNullOrWhiteSpace(BackgroundColor);
         var currentBg = BHelper.ColorFromHex(BackgroundColor);
-        var isFollowingTheme = currentBg.IsEmpty
-            || currentBg == BHelper.ColorFromHex(Core.Theme.Colors.BgColor)
+        var isThemePackBg = currentBg == BHelper.ColorFromHex(Core.Theme.Colors.BgColor);
+        var isFollowingTheme = !hasStoredBg
+            || (Core.Theme.IsValid && isThemePackBg)
             || currentBg == BHelper.ColorFromHex(th.Colors.BgColor);
 
-        // not matched? at startup Core.Theme is a placeholder, so the value may have been following
-        // the other OS-mode's theme from the previous session — check that pack's bg too
+        // if not matched, it may have followed the other OS-mode's theme in the previous session
         if (!isFollowingTheme && !forceUpdateBackground)
         {
             var otherName = darkMode ? LightTheme : DarkTheme;
