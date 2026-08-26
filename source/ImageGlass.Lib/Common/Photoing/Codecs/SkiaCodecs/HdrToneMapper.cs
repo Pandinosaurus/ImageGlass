@@ -30,8 +30,8 @@ namespace ImageGlass.Common.Photoing;
 /// <para>
 /// Two tone-mapping strategies are used depending on content type:
 /// <list type="bullet">
-/// <item><b>Per-channel</b> for linear scene-referred content (EXR, Radiance HDR, JXR)
-/// — avoids overflow artifacts (skyblue tint, blue->white wash-out) in sRGB space.</item>
+/// <item><b>Per-channel</b> for linear sRGB-primaries content (EXR, Radiance HDR, scRGB):
+/// avoids overflow artifacts (skyblue tint, blue->white wash-out) in sRGB space.</item>
 /// <item><b>Luminance-based</b> for wide-gamut PQ/HLG content (JXL, AVIF, HEIF)
 /// — preserves channel ratios needed by the Rec.2020->sRGB gamut matrix.</item>
 /// </list>
@@ -55,6 +55,11 @@ public static class HdrToneMapper
     /// ITU-R BT.2408 HDR reference white, and the default <see cref="HdrToneMappingOptions.WhitePointNits"/>.
     /// </summary>
     private const float Bt2408ReferenceWhiteNits = 203f;
+
+    /// <summary>
+    /// scRGB reference white (IEC 61966-2-2): the luminance its 1.0 stands for.
+    /// </summary>
+    private const float ScRgbWhiteNits = 80f;
 
     // Rec.2020 luminance coefficients (ITU-R BT.2020) — used by luminance-based path
     private const float Lum2020R = 0.2627f;
@@ -99,9 +104,10 @@ public static class HdrToneMapper
 
             if (!IsHdrColorSpace(source.ColorSpace))
             {
-                if (transferFn is HdrTransferFunction.None or HdrTransferFunction.Linear)
+                if (transferFn is HdrTransferFunction.None or HdrTransferFunction.Linear
+                    or HdrTransferFunction.ScRgb)
                 {
-                    // Linear scene-referred HDR (EXR, Radiance HDR, JXR):
+                    // Linear sRGB-primaries HDR (EXR, Radiance HDR, scRGB):
                     // pixels are already linear but the source may have no color
                     // space tag (or sRGB). Tag as linear-sRGB so that Skia's
                     // DrawImage in ToneMapManual doesn't apply an unwanted sRGB
@@ -174,7 +180,7 @@ public static class HdrToneMapper
     /// 3. Apply tone curve on <b>luminance</b>, scale RGB proportionally.
     /// 4. Gamut-map Rec.2020 -> sRGB via 3×3 matrix.
     /// 5. Encode to sRGB gamma.
-    /// <para><b>Linear scene-referred path</b> (EXR, Radiance HDR, JXR):</para>
+    /// <para><b>Linear sRGB path</b> (EXR, Radiance HDR, scRGB):</para>
     /// 1. Read float pixels directly (already linear sRGB).
     /// 2. Apply tone curve <b>per-channel</b> independently.
     /// 3. Encode to sRGB gamma.
@@ -193,14 +199,15 @@ public static class HdrToneMapper
         HdrTransferFunction transferFn, HdrToneMappingOptions options, float saturation,
         Func<float, float> toneCurve)
     {
-        var isLinearSceneReferred = transferFn is HdrTransferFunction.None or HdrTransferFunction.Linear;
+        var isLinearSrgb = transferFn is HdrTransferFunction.None or HdrTransferFunction.Linear
+            or HdrTransferFunction.ScRgb;
 
         // ── Step 1: linearize source into float pixels ──
-        using var linearBmp = LinearizeToFloat(source, isLinearSceneReferred);
+        using var linearBmp = LinearizeToFloat(source, isLinearSrgb);
         if (linearBmp is null) return null;
 
         // nothing above diffuse white means no HDR range, so mapping it would only darken an SDR image
-        if (isLinearSceneReferred && !HasValuesAboveDiffuseWhite(linearBmp)) return null;
+        if (isLinearSrgb && !HasValuesAboveDiffuseWhite(linearBmp)) return null;
 
         var width = linearBmp.Width;
         var height = linearBmp.Height;
@@ -219,7 +226,7 @@ public static class HdrToneMapper
         var normScale = ComputeNormScale(transferFn, options);
 
         // ── Step 4: per-pixel tone mapping ──
-        if (isLinearSceneReferred)
+        if (isLinearSrgb)
         {
             ToneMapPerChannel(srcPtr, srcRowBytes, dstPtr, dstRowBytes,
                 width, height, normScale, saturation, toneCurve);
@@ -237,14 +244,14 @@ public static class HdrToneMapper
 
     /// <summary>
     /// Linearizes the source image into an <see cref="SKColorType.RgbaF32"/> bitmap.
-    /// For scene-referred content (EXR/HDR/JXR), the target is linear sRGB.
+    /// For sRGB-primaries content (EXR/HDR/scRGB), the target is linear sRGB.
     /// For PQ/HLG content, the target is linear Rec.2020.
     /// </summary>
     /// <returns>An <see cref="SKBitmap"/> owning the linearized pixels,
     /// or <c>null</c> on failure. Caller owns disposal.</returns>
-    private static SKBitmap? LinearizeToFloat(SKImage source, bool isLinearSceneReferred)
+    private static SKBitmap? LinearizeToFloat(SKImage source, bool isLinearSrgb)
     {
-        var targetCs = isLinearSceneReferred
+        var targetCs = isLinearSrgb
             ? SKColorSpace.CreateSrgbLinear()
             : SKColorSpace.CreateRgb(SKColorSpaceTransferFn.Linear, SKColorSpaceXyz.Rec2020);
 
@@ -309,10 +316,14 @@ public static class HdrToneMapper
     {
         var whiteNits = Math.Clamp((float)options.WhitePointNits, 50f, 1000f);
 
-        // Both branches put reference white at 1.0; PQ is absolute nits, the rest are relative.
-        var normScale = transferFn == HdrTransferFunction.PQ
-            ? PqPeakNits / whiteNits
-            : Bt2408ReferenceWhiteNits / whiteNits;
+        // Every branch puts reference white at 1.0, but each source encodes 1.0 differently:
+        // PQ is absolute nits, scRGB pins 1.0 to 80 nits, scene-referred calls 1.0 diffuse white.
+        var normScale = transferFn switch
+        {
+            HdrTransferFunction.PQ => PqPeakNits / whiteNits,
+            HdrTransferFunction.ScRgb => ScRgbWhiteNits / whiteNits,
+            _ => Bt2408ReferenceWhiteNits / whiteNits,
+        };
 
         // Exposure in EV stops: 0 = no change, +1 = 2×, -1 = 0.5×.
         var exposure = (float)options.Exposure;
@@ -326,7 +337,7 @@ public static class HdrToneMapper
 
 
     /// <summary>
-    /// Per-channel tone mapping for linear scene-referred sRGB content.
+    /// Per-channel tone mapping for linear sRGB-primaries content.
     /// Each channel is independently compressed — avoids overflow artifacts.
     /// </summary>
     private static unsafe void ToneMapPerChannel(
@@ -503,6 +514,8 @@ public static class HdrToneMapper
     /// <param name="compression">0 = white level at 6x reference white, 1 = 24x (max compression).</param>
     private static float ReferenceWhiteToneMap(float v, float compression)
     {
+        // A knee curve is wrong here: real HDR grades put a lot of content above reference white
+        // (29% on a 1164-nit sample), and a tight knee clips all of it to white.
         if (v <= 0f) return 0f;
 
         // A higher white level keeps more highlight detail at a lower peak brightness

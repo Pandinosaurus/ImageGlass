@@ -53,11 +53,6 @@
     <PackageReference Include="Avalonia.Themes.Fluent" />
     <PackageReference Include="D2Phap.FileWatcherEx" />
     <PackageReference Include="ImageGlass.SDK" />
-    <!--
-      TEMPORARY, for the plugin encoder work: builds the SDK working tree instead of the published
-      package. Revert to <PackageReference Include="ImageGlass.SDK" /> once the SDK is published and
-      Directory.Packages.props is bumped.
-    -->
     <PackageReference Include="Magick.NET-Q16-HDRI-OpenMP-x64" Condition="'$(Platform)' == 'x64'" />
     <PackageReference Include="Magick.NET-Q16-HDRI-OpenMP-arm64" Condition="'$(Platform)' == 'ARM64' And !$([MSBuild]::IsOSPlatform('osx'))" />
     <PackageReference Include="Magick.NET-Q16-HDRI-arm64" Condition="'$(Platform)' == 'ARM64' And $([MSBuild]::IsOSPlatform('osx'))" />

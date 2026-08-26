@@ -323,6 +323,7 @@ public partial class AppStatusInfo : PhDisposable
                         Photoing.HdrTransferFunction.PQ => "HDR PQ",
                         Photoing.HdrTransferFunction.HLG => "HDR HLG",
                         Photoing.HdrTransferFunction.GainMap => "HDR Gain Map",
+                        Photoing.HdrTransferFunction.ScRgb => "HDR scRGB",
                         _ => "HDR",
                     };
                     parts.Add(fn);

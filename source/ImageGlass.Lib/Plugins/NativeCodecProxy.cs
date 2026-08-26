@@ -874,6 +874,7 @@ internal sealed unsafe class NativeCodecProxy : PhDisposable, ICodec
             IGHdrTransferFn.HLG => HdrTransferFunction.HLG,
             IGHdrTransferFn.GainMap => HdrTransferFunction.GainMap,
             IGHdrTransferFn.Linear => HdrTransferFunction.Linear,
+            IGHdrTransferFn.ScRgb => HdrTransferFunction.ScRgb,
             _ => HdrTransferFunction.None,
         };
     }
