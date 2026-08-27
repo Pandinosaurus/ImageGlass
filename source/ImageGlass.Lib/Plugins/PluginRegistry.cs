@@ -47,19 +47,8 @@ public sealed unsafe class PluginRegistry : PhDisposable
     internal const string TRASH_DIR_NAME = "_trash";
 
     // Derived from real field offsets: counting fields gets it wrong (a leading int pads to 8).
-    private static readonly int MIN_CODEC_API_SIZE = MeasureCodecApi();
     private static readonly int MIN_CAPABILITY_SIZE = MeasureCapabilityDecodeFields();
     private static readonly int CAPABILITY_ENCODE_FIELDS_END = MeasureCapabilityEncodeFields();
-
-
-    /// <summary>
-    /// Offset past <c>FreePixelBuffer</c>: the smallest table carrying the required decode members.
-    /// </summary>
-    private static int MeasureCodecApi()
-    {
-        IGCodecApi probe = default;
-        return (int)((byte*)&probe.FreePixelBuffer - (byte*)&probe) + sizeof(nint);
-    }
 
 
     /// <summary>
@@ -299,14 +288,15 @@ public sealed unsafe class PluginRegistry : PhDisposable
                 }
 
                 // First member and the only stable offset, so validate before touching anything
-                // else; a stale library has a function pointer here and gets refused.
-                if (codecApi->StructSize < MIN_CODEC_API_SIZE || codecApi->StructSize > sizeof(IGCodecApi))
+                // else; a stale library has a function pointer here and gets refused. A LONGER
+                // table is fine: it was built against a newer SDK whose extra fields we ignore.
+                if (codecApi->StructSize < PluginAbi.MinCodecApiSize)
                 {
                     codecErrors.Add($"codec[{i}]: IGCodecApi.StructSize is {codecApi->StructSize}, expected "
-                        + $"{MIN_CODEC_API_SIZE}..{sizeof(IGCodecApi)}; rebuild against the current SDK.");
+                        + $"at least {PluginAbi.MinCodecApiSize}; rebuild against the current SDK.");
                     continue;
                 }
-                if (codecApi->GetCapability == null)
+                if (!PluginAbi.HasEntryPoint(codecApi, &codecApi->GetCapability))
                 {
                     codecErrors.Add($"codec[{i}]: GetCapability is null.");
                     continue;
@@ -328,10 +318,10 @@ public sealed unsafe class PluginRegistry : PhDisposable
                     continue;
                 }
 
-                if (cap->StructSize < MIN_CAPABILITY_SIZE || cap->StructSize > sizeof(IGCodecCapability))
+                if (cap->StructSize < MIN_CAPABILITY_SIZE)
                 {
                     codecErrors.Add($"codec[{i}]: IGCodecCapability.StructSize is {cap->StructSize}, expected "
-                        + $"{MIN_CAPABILITY_SIZE}..{sizeof(IGCodecCapability)}; rebuild against the current SDK.");
+                        + $"at least {MIN_CAPABILITY_SIZE}; rebuild against the current SDK.");
                     continue;
                 }
 
@@ -472,21 +462,21 @@ public sealed unsafe class PluginRegistry : PhDisposable
             : [];
 
         var animDecode = cap->SupportsAnimationDecoding != 0
-            && codecApi->GetAnimationInfo != null
-            && codecApi->FreeAnimationInfo != null
-            && codecApi->DecodeAnimationFrame != null;
+            && PluginAbi.HasEntryPoint(codecApi, &codecApi->GetAnimationInfo)
+            && PluginAbi.HasEntryPoint(codecApi, &codecApi->FreeAnimationInfo)
+            && PluginAbi.HasEntryPoint(codecApi, &codecApi->DecodeAnimationFrame);
 
         // An empty encode list must never read as "encodes everything".
         var staticEncode = hasEncodeFields
             && cap->SupportsStaticRasterEncoding != 0
-            && codecApi->EncodeStaticRaster != null
+            && PluginAbi.HasEntryPoint(codecApi, &codecApi->EncodeStaticRaster)
             && encodeExts.Length > 0;
 
         var multiEncode = staticEncode
             && cap->SupportsMultiFrameEncoding != 0
-            && codecApi->BeginEncodeMultiFrame != null
-            && codecApi->EncodeFrame != null
-            && codecApi->EndEncodeMultiFrame != null;
+            && PluginAbi.HasEntryPoint(codecApi, &codecApi->BeginEncodeMultiFrame)
+            && PluginAbi.HasEntryPoint(codecApi, &codecApi->EncodeFrame)
+            && PluginAbi.HasEntryPoint(codecApi, &codecApi->EndEncodeMultiFrame);
 
         return new CodecPluginCapability
         {
@@ -497,10 +487,12 @@ public sealed unsafe class PluginRegistry : PhDisposable
             EncodePriority = hasEncodeFields ? cap->EncodePriority : 0,
             DecodingExtensions = decodeExts,
             EncodingExtensions = encodeExts,
-            SupportsMetadata = cap->SupportsMetadata != 0 && codecApi->LoadMetadata != null,
+            SupportsMetadata = cap->SupportsMetadata != 0
+                && PluginAbi.HasEntryPoint(codecApi, &codecApi->LoadMetadata),
             SupportsColorProfiles = cap->SupportsColorProfiles != 0,
             SupportsStaticRasterDecoding = cap->SupportsStaticRasterDecoding != 0
-                && codecApi->DecodeStaticRaster != null && codecApi->FreePixelBuffer != null,
+                && PluginAbi.HasEntryPoint(codecApi, &codecApi->DecodeStaticRaster)
+                && PluginAbi.HasEntryPoint(codecApi, &codecApi->FreePixelBuffer),
             SupportsAnimationDecoding = animDecode,
             SupportsStaticRasterEncoding = staticEncode,
             SupportsMultiFrameEncoding = multiEncode,

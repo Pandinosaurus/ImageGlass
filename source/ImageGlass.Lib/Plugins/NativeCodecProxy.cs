@@ -305,7 +305,7 @@ internal sealed unsafe class NativeCodecProxy : PhDisposable, ICodec
     private PhotoMetadata LoadMetadataCore(string filePath, CancellationToken token)
     {
         var meta = new PhotoMetadata(filePath);
-        if (_codecApi->LoadMetadata == null) return meta;
+        if (!PluginAbi.HasEntryPoint(_codecApi, &_codecApi->LoadMetadata)) return meta;
 
         // hold the plugin alive: a hot-disable could otherwise unmap it mid-call
         if (!_plugin.LiveToken.TryEnter()) return meta;
@@ -370,7 +370,8 @@ internal sealed unsafe class NativeCodecProxy : PhDisposable, ICodec
     /// </summary>
     private CodecDecodeResult DecodeCore(PhotoMetadata metadata, int frameIndex, CancellationToken token)
     {
-        if (_codecApi->DecodeStaticRaster == null || _codecApi->FreePixelBuffer == null)
+        if (!PluginAbi.HasEntryPoint(_codecApi, &_codecApi->DecodeStaticRaster)
+            || !PluginAbi.HasEntryPoint(_codecApi, &_codecApi->FreePixelBuffer))
         {
             throw new NotSupportedException($"Native codec '{CodecId}' does not support static-raster decode.");
         }
@@ -582,7 +583,8 @@ internal sealed unsafe class NativeCodecProxy : PhDisposable, ICodec
     {
         // Re-check the extension: a plugin that ignores it would otherwise write its own format
         // into whatever path a direct caller passed.
-        if (!CanEncode(request.DestFilePath, CodecEncodeContext.Default) || _codecApi->EncodeStaticRaster == null)
+        if (!CanEncode(request.DestFilePath, CodecEncodeContext.Default)
+            || !PluginAbi.HasEntryPoint(_codecApi, &_codecApi->EncodeStaticRaster))
         {
             return new CodecEncodeResult(false, true);
         }
@@ -636,8 +638,9 @@ internal sealed unsafe class NativeCodecProxy : PhDisposable, ICodec
     private CodecEncodeResult EncodeMultiFrameCore(CodecMultiFrameEncodeRequest request, CancellationToken token)
     {
         if (!CanEncodeMultiFrame(request.DestFilePath, CodecEncodeContext.Default)
-            || _codecApi->BeginEncodeMultiFrame == null
-            || _codecApi->EncodeFrame == null || _codecApi->EndEncodeMultiFrame == null)
+            || !PluginAbi.HasEntryPoint(_codecApi, &_codecApi->BeginEncodeMultiFrame)
+            || !PluginAbi.HasEntryPoint(_codecApi, &_codecApi->EncodeFrame)
+            || !PluginAbi.HasEntryPoint(_codecApi, &_codecApi->EndEncodeMultiFrame))
         {
             return new CodecEncodeResult(false, true);
         }

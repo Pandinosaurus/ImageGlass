@@ -131,7 +131,7 @@ internal sealed class PluginPixelBufferRelease
         try
         {
             var codecApi = (IGCodecApi*)apiPtr;
-            if (codecApi->FreePixelBuffer == null) return;
+            if (!PluginAbi.HasEntryPoint(codecApi, &codecApi->FreePixelBuffer)) return;
 
             var localBuf = Buffer;
             codecApi->FreePixelBuffer(&localBuf);

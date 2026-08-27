@@ -64,9 +64,9 @@ internal sealed unsafe class NativePluginAnimator : AnimatorImpl
         PhotoMetadata metadata, CancellationToken token)
     {
         var codecApi = proxy.CodecApi;
-        if (codecApi->GetAnimationInfo == null
-            || codecApi->FreeAnimationInfo == null
-            || codecApi->DecodeAnimationFrame == null)
+        if (!PluginAbi.HasEntryPoint(codecApi, &codecApi->GetAnimationInfo)
+            || !PluginAbi.HasEntryPoint(codecApi, &codecApi->FreeAnimationInfo)
+            || !PluginAbi.HasEntryPoint(codecApi, &codecApi->DecodeAnimationFrame))
         {
             throw new NotSupportedException(
                 $"IGE: Native codec '{proxy.CodecId}' is missing one of the animation entry points.");
