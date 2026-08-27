@@ -271,7 +271,8 @@ internal sealed unsafe class NativePluginAnimator : AnimatorImpl
             if (status != IGStatus.OK) return null;
             bufferOwned = true;
 
-            var image = _proxy.WrapPluginBufferAsImage(in buffer, _colorSpace);
+            var frameHasAlpha = _frames[frameIndex].AlphaType != SKAlphaType.Opaque;
+            var image = _proxy.WrapPluginBufferAsImage(in buffer, _colorSpace, frameHasAlpha);
             ownershipTransferred = true;
             return image;
         }

@@ -422,7 +422,9 @@ internal sealed unsafe class NativeCodecProxy : PhDisposable, ICodec
             // Wrap zero-copy: the SKImage takes ownership of the plugin buffer; when
             // SkiaSharp disposes it, the release delegate calls back into the plugin's
             // FreePixelBuffer (which the SDK contract requires to be thread-safe).
-            var image = WrapPluginBufferAsImage(in buffer, metadata.SkiaColorSpace);
+            // FrameCount is 0 until metadata is really loaded, so HasAlpha means nothing before that
+            var knownAlpha = metadata.FrameCount > 0 ? metadata.HasAlpha : (bool?)null;
+            var image = WrapPluginBufferAsImage(in buffer, metadata.SkiaColorSpace, knownAlpha);
             ownershipTransferred = true;
 
             // Synchronize the managed metadata dimensions with the decoded image.
@@ -793,7 +795,9 @@ internal sealed unsafe class NativeCodecProxy : PhDisposable, ICodec
     /// disposing the image calls back into the plugin's <c>FreePixelBuffer</c>
     /// via the release delegate (which the SDK contract requires to be thread-safe).
     /// </summary>
-    internal SKImage WrapPluginBufferAsImage(in IGPixelBuffer buffer, SKColorSpace? srcColorSpace)
+    /// <param name="hasAlpha">The plugin's alpha answer; only a definite <c>false</c> marks it opaque.</param>
+    internal SKImage WrapPluginBufferAsImage(in IGPixelBuffer buffer, SKColorSpace? srcColorSpace,
+        bool? hasAlpha = null)
     {
         // Validate the buffer before we hand it to Skia.
         if (buffer.Data == null || buffer.Width <= 0 || buffer.Height <= 0)
@@ -802,7 +806,7 @@ internal sealed unsafe class NativeCodecProxy : PhDisposable, ICodec
                 $"IGE: Native codec '{CodecId}' returned an invalid pixel buffer.");
         }
 
-        var (colorType, alphaType) = MapPixelFormat((IGPixelFormat)buffer.PixelFormat);
+        var (colorType, alphaType) = MapPixelFormat((IGPixelFormat)buffer.PixelFormat, hasAlpha);
         if (colorType == SKColorType.Unknown)
         {
             throw new InvalidDataException(
@@ -874,14 +878,18 @@ internal sealed unsafe class NativeCodecProxy : PhDisposable, ICodec
     /// Returns (<see cref="SKColorType.Unknown"/>, <see cref="SKAlphaType.Unknown"/>) when the
     /// host has no compatible Skia format for the buffer.
     /// </summary>
-    internal static (SKColorType ColorType, SKAlphaType AlphaType) MapPixelFormat(IGPixelFormat format)
+    /// <param name="hasAlpha">A definite <c>false</c> marks it opaque so Skia skips the unpremultiply pass.</param>
+    internal static (SKColorType ColorType, SKAlphaType AlphaType) MapPixelFormat(IGPixelFormat format,
+        bool? hasAlpha = null)
     {
+        var alphaType = hasAlpha == false ? SKAlphaType.Opaque : SKAlphaType.Unpremul;
+
         return format switch
         {
-            IGPixelFormat.Bgra8Unorm => (SKColorType.Bgra8888, SKAlphaType.Unpremul),
-            IGPixelFormat.Rgba8Unorm => (SKColorType.Rgba8888, SKAlphaType.Unpremul),
-            IGPixelFormat.Rgba16Unorm => (SKColorType.Rgba16161616, SKAlphaType.Unpremul),
-            IGPixelFormat.RgbaFloat16 => (SKColorType.RgbaF16, SKAlphaType.Unpremul),
+            IGPixelFormat.Bgra8Unorm => (SKColorType.Bgra8888, alphaType),
+            IGPixelFormat.Rgba8Unorm => (SKColorType.Rgba8888, alphaType),
+            IGPixelFormat.Rgba16Unorm => (SKColorType.Rgba16161616, alphaType),
+            IGPixelFormat.RgbaFloat16 => (SKColorType.RgbaF16, alphaType),
             _ => (SKColorType.Unknown, SKAlphaType.Unknown),
         };
     }
