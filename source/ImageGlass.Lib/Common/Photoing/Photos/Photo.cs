@@ -59,12 +59,23 @@ public partial class Photo : PhDisposable
     private readonly SemaphoreSlim _thumbnailLock = new(1, 1);
 
     /// <summary>
-    /// Limits how many different Photo instances load thumbnails concurrently across the entire
-    /// app. Scaled to the CPU so the first screen of gallery thumbnails isn't serialized through
-    /// just a few slots (was a fixed 4).
+    /// Rough transient cost of one thumbnail slot: a cache miss decodes the full image first.
     /// </summary>
-    private static readonly int _thumbnailConcurrency = Math.Clamp(Environment.ProcessorCount - 1, 4, 16);
-    private static readonly SemaphoreSlim _thumbnailThrottleLock = new(_thumbnailConcurrency, _thumbnailConcurrency);
+    private const uint MB_PER_THUMBNAIL_SLOT = 128;
+
+    /// <summary>
+    /// Limits how many different Photo instances load thumbnails concurrently across the entire
+    /// app. Every in-flight slot can transiently hold one full-resolution decode, so the ceiling
+    /// follows the cache budget and only then the CPU. Lazy so it reads the loaded config.
+    /// </summary>
+    private static readonly Lazy<SemaphoreSlim> _thumbnailThrottleLock = new(() =>
+    {
+        var byCpu = Math.Clamp(Environment.ProcessorCount - 1, 4, 16);
+        var byBudget = (int)(Core.Config.CacheMaxMemoryInMb / MB_PER_THUMBNAIL_SLOT);
+        var slots = Math.Clamp(byBudget, 4, byCpu);
+
+        return new SemaphoreSlim(slots, slots);
+    });
 
 
 
@@ -1029,7 +1040,7 @@ public partial class Photo : PhDisposable
 
         // 2. acquire global throttle to avoid saturating the thread pool
         //    (prevents blocking the main image loading when many thumbnails load at once)
-        await _thumbnailThrottleLock.WaitAsync(cancellationToken).ConfigureAwait(false);
+        await _thumbnailThrottleLock.Value.WaitAsync(cancellationToken).ConfigureAwait(false);
 
         try
         {
@@ -1145,7 +1156,7 @@ public partial class Photo : PhDisposable
         }
         finally
         {
-            _thumbnailThrottleLock.Release();
+            _thumbnailThrottleLock.Value.Release();
         }
     }
 

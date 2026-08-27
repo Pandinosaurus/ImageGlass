@@ -328,7 +328,7 @@ public partial class PhotoManager
     public void Clear(Photo? excludeFromDisposal = null)
     {
         // cancel and clear all cached photos first
-        ClearCache();
+        ClearCache(excludeFromDisposal);
 
         Photo? initPhoto;
         Photo[] snapshot;

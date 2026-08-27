@@ -127,22 +127,62 @@ public partial class PhotoManager
 
 
     /// <summary>
-    /// Unloads all cached photos (not the current photo) and resets tracking.
+    /// Unloads every decoded photo and resets tracking.
     /// </summary>
-    public void ClearCache()
+    /// <param name="excludePhoto">
+    /// A photo to leave decoded, e.g. one being carried over into a rebuilt list.
+    /// </param>
+    public void ClearCache(Photo? excludePhoto = null)
     {
         CancelCaching();
 
-        int[] snapshot;
         lock (_cacheLock)
         {
-            snapshot = [.. _cachedIndexes];
             _cachedIndexes.Clear();
         }
 
-        foreach (var idx in snapshot)
+        UnloadPhotosOutside([], excludePhoto);
+    }
+
+
+    /// <summary>
+    /// Unloads every decoded photo whose index is not in <paramref name="keepIndexes"/>.
+    /// </summary>
+    /// <param name="keepIndexes">Indexes that must stay decoded.</param>
+    /// <param name="excludePhoto">An extra photo to leave decoded, matched by reference.</param>
+    /// <remarks>
+    /// Authoritative over the whole list on purpose: a cache pass cancelled mid-load leaves photos
+    /// decoded but untracked, so evicting only the tracked set strands them for the process lifetime.
+    /// </remarks>
+    private void UnloadPhotosOutside(HashSet<int> keepIndexes, Photo? excludePhoto)
+    {
+        Photo[] snapshot;
+        lock (_lock)
         {
-            Get(idx)?.Unload();
+            snapshot = [.. Items];
+        }
+
+        for (var i = 0; i < snapshot.Length; i++)
+        {
+            if (keepIndexes.Contains(i)) continue;
+
+            var photo = snapshot[i];
+            if (photo.State != PhotoState.Loaded) continue;
+            if (ReferenceEquals(photo, excludePhoto)) continue;
+
+            photo.Unload();
+        }
+    }
+
+
+    /// <summary>
+    /// Marks a photo as cache-owned as soon as it is decoded.
+    /// </summary>
+    private void TrackCached(int index)
+    {
+        lock (_cacheLock)
+        {
+            _cachedIndexes.Add(index);
         }
     }
 
@@ -199,8 +239,10 @@ public partial class PhotoManager
             // of the memory budget or caps, so the next transition is seamless
             var guaranteedIndex = isSlideshow ? GetForwardIndex(centerIndex, totalCount, canLoop) : -1;
 
-            // estimate current memory usage from already-cached photos
-            var usedMemory = EstimateCachedMemory(centerIndex);
+            // the spiral visits every already-decoded photo and counts it below, so the budget
+            // starts from the current photo alone; seeding from the tracked set double-counts
+            var currentPhoto = Get(centerIndex);
+            var usedMemory = currentPhoto is null ? 0L : EstimatePhotoMemory(currentPhoto);
 
             // collect the set of indexes that should remain cached after this pass
             var newCachedSet = new HashSet<int>();
@@ -274,6 +316,10 @@ public partial class PhotoManager
 
                 // load the photo
                 await photo.LoadAsync(useCache: true, skipLoadingEvent: true);
+
+                // track before the cancel check: a decoded but untracked photo escapes both
+                // the budget estimate and the eviction sweep, and is never freed again
+                TrackCached(idx);
                 if (token.IsCancellationRequested) return;
 
                 usedMemory += estimatedMem;
@@ -282,11 +328,8 @@ public partial class PhotoManager
 
             if (token.IsCancellationRequested) return;
 
-            // unload photos that were cached in a previous pass but are no longer needed
-            int[] toUnload;
             lock (_cacheLock)
             {
-                toUnload = [.. _cachedIndexes];
                 _cachedIndexes.Clear();
                 foreach (var idx in newCachedSet)
                 {
@@ -294,14 +337,10 @@ public partial class PhotoManager
                 }
             }
 
-            foreach (var idx in toUnload)
-            {
-                if (token.IsCancellationRequested) return;
-                if (newCachedSet.Contains(idx)) continue;
-                if (idx == centerIndex) continue;
-
-                Get(idx)?.Unload();
-            }
+            // evict everything the budget did not keep, whatever decoded it; the viewer owns
+            // the current photo, which is why both center and current are held back
+            var keepIndexes = new HashSet<int>(newCachedSet) { centerIndex, CurrentIndex };
+            UnloadPhotosOutside(keepIndexes, null);
         }
         catch (OperationCanceledException) { /* expected on navigation */ }
         catch (Exception ex)
