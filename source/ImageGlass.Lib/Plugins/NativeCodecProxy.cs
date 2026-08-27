@@ -825,12 +825,26 @@ internal sealed unsafe class NativeCodecProxy : PhDisposable, ICodec
             LiveToken = _plugin.LiveToken,
         };
 
-        // Wrap the plugin pointer in SKData with a release callback, then build the SKImage.
+        // native memory the GC cannot see; without this, decoded frames pile up unnoticed
         var byteCount = checked(buffer.Stride * buffer.Height);
-        var data = SKData.Create((nint)buffer.Data, byteCount,
-            PluginPixelBufferRelease.ReleaseData, carrier);
+        carrier.TrackNativeMemory(byteCount);
 
-        var image = SKImage.FromPixels(info, data, buffer.Stride);
+        // Wrap the plugin pointer in SKData with a release callback, then build the SKImage.
+        SKData? data = null;
+        SKImage? image;
+        try
+        {
+            data = SKData.Create((nint)buffer.Data, byteCount,
+                PluginPixelBufferRelease.ReleaseData, carrier);
+
+            image = SKImage.FromPixels(info, data, buffer.Stride);
+        }
+        catch
+        {
+            data?.Dispose();
+            carrier.ReleaseFromHost();
+            throw;
+        }
 
         if (image is null)
         {

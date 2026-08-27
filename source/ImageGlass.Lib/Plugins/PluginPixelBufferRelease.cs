@@ -64,6 +64,11 @@ internal sealed class PluginPixelBufferRelease
     /// </summary>
     private int _released;
 
+    /// <summary>
+    /// Buffer size reported to the GC via <see cref="GC.AddMemoryPressure"/>, 0 when untracked.
+    /// </summary>
+    private long _pressureBytes;
+
 
     /// <summary>
     /// Cached delegate handed to <c>SKImage.FromPixels</c> so we don't re-allocate per call.
@@ -87,6 +92,18 @@ internal sealed class PluginPixelBufferRelease
 
 
     /// <summary>
+    /// Accounts this buffer to the GC, which cannot otherwise see plugin-owned native memory.
+    /// </summary>
+    public void TrackNativeMemory(long byteCount)
+    {
+        if (byteCount <= 0 || _pressureBytes != 0) return;
+
+        _pressureBytes = byteCount;
+        GC.AddMemoryPressure(byteCount);
+    }
+
+
+    /// <summary>
     /// Releases the plugin buffer immediately. Safe to call multiple times.
     /// </summary>
     public unsafe void ReleaseFromHost()
@@ -97,6 +114,9 @@ internal sealed class PluginPixelBufferRelease
         // uncatchable AccessViolationException. Memory is reclaimed by the OS on unload.
         if (LiveToken is not null) LiveToken.RunIfAlive(FreeBuffer);
         else FreeBuffer();
+
+        // paired with TrackNativeMemory; the interlock above makes it exactly once
+        if (_pressureBytes > 0) GC.RemoveMemoryPressure(_pressureBytes);
     }
 
 
