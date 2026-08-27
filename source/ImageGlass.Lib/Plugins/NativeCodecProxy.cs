@@ -261,16 +261,26 @@ internal sealed unsafe class NativeCodecProxy : PhDisposable, ICodec
     {
         var frameIndex = Math.Max(0, options?.FrameIndex ?? 0);
 
+        // 0 means full size; only the preview/thumbnail callers ask for a box
+        var maxWidth = (int)Math.Min(int.MaxValue, options?.Width ?? 0);
+        var maxHeight = (int)Math.Min(int.MaxValue, options?.Height ?? 0);
+
+        // A size box only ever comes from the thumbnail/preview path, which wants one still;
+        // building an animator to take frame 0 from it decodes the whole canvas for nothing.
+        var wantsScaledStill = maxWidth > 0 && maxHeight > 0
+            && PluginAbi.HasEntryPoint(_codecApi, &_codecApi->DecodeStaticRasterScaled);
+
         // Animation branch: the plugin advertises animation AND metadata says
         // the file plays as a timeline. Build the animator on a background
         // thread; per-frame decode is lazy inside the animator.
-        if (SupportsAnimationDecoding && metadata.CanAnimate)
+        if (SupportsAnimationDecoding && metadata.CanAnimate && !wantsScaledStill)
         {
             return Task.Factory.StartNew(() => DecodeAnimationCore(metadata, cancellationToken),
                 cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Default);
         }
 
-        return Task.Factory.StartNew(() => DecodeCore(metadata, frameIndex, cancellationToken),
+        return Task.Factory.StartNew(
+            () => DecodeCore(metadata, frameIndex, maxWidth, maxHeight, cancellationToken),
             cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Default);
     }
 
@@ -368,7 +378,8 @@ internal sealed unsafe class NativeCodecProxy : PhDisposable, ICodec
     /// <summary>
     /// Invokes the plugin decode entry point and wraps the returned pixel buffer in a codec result.
     /// </summary>
-    private CodecDecodeResult DecodeCore(PhotoMetadata metadata, int frameIndex, CancellationToken token)
+    private CodecDecodeResult DecodeCore(PhotoMetadata metadata, int frameIndex,
+        int maxWidth, int maxHeight, CancellationToken token)
     {
         if (!PluginAbi.HasEntryPoint(_codecApi, &_codecApi->DecodeStaticRaster)
             || !PluginAbi.HasEntryPoint(_codecApi, &_codecApi->FreePixelBuffer))
@@ -391,6 +402,12 @@ internal sealed unsafe class NativeCodecProxy : PhDisposable, ICodec
 
         try
         {
+            // A scaled decode is worth asking for only when the caller wants a box AND the
+            // plugin has the entry point; Unsupported from it just means "use the full path".
+            var wantsScaled = maxWidth > 0 && maxHeight > 0
+                && PluginAbi.HasEntryPoint(_codecApi, &_codecApi->DecodeStaticRasterScaled);
+            var isScaled = false;
+
             IGStatus status;
             try
             {
@@ -398,7 +415,23 @@ internal sealed unsafe class NativeCodecProxy : PhDisposable, ICodec
                 fixed (char* pPath = filePath)
                 {
                     var pathRef = new IGStringRef { Data = pPath, Length = filePath.Length };
-                    status = _codecApi->DecodeStaticRaster(pathRef, frameIndex, &buffer, (void*)cancelHandle);
+
+                    if (wantsScaled)
+                    {
+                        status = _codecApi->DecodeStaticRasterScaled(pathRef, frameIndex,
+                            maxWidth, maxHeight, &buffer, (void*)cancelHandle);
+                        isScaled = status == IGStatus.OK;
+                    }
+                    else
+                    {
+                        status = IGStatus.Unsupported;
+                    }
+
+                    if (!isScaled && status is IGStatus.Unsupported or IGStatus.NotImplemented)
+                    {
+                        status = _codecApi->DecodeStaticRaster(pathRef, frameIndex, &buffer,
+                            (void*)cancelHandle);
+                    }
                 }
             }
             catch (Exception ex)
@@ -428,11 +461,15 @@ internal sealed unsafe class NativeCodecProxy : PhDisposable, ICodec
             var image = WrapPluginBufferAsImage(in buffer, metadata.SkiaColorSpace, knownAlpha);
             ownershipTransferred = true;
 
-            // Synchronize the managed metadata dimensions with the decoded image.
-            if (metadata.Width == 0) metadata.Width = (uint)buffer.Width;
-            if (metadata.Height == 0) metadata.Height = (uint)buffer.Height;
-            if (metadata.OriginalWidth == 0) metadata.OriginalWidth = (uint)buffer.Width;
-            if (metadata.OriginalHeight == 0) metadata.OriginalHeight = (uint)buffer.Height;
+            // Synchronize the managed metadata dimensions with the decoded image; a scaled
+            // buffer is smaller than the file, so it must never stand in for the real size.
+            if (!isScaled)
+            {
+                if (metadata.Width == 0) metadata.Width = (uint)buffer.Width;
+                if (metadata.Height == 0) metadata.Height = (uint)buffer.Height;
+                if (metadata.OriginalWidth == 0) metadata.OriginalWidth = (uint)buffer.Width;
+                if (metadata.OriginalHeight == 0) metadata.OriginalHeight = (uint)buffer.Height;
+            }
 
             // Build the final decode result the registry expects.
             return new CodecDecodeResult
