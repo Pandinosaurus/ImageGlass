@@ -346,6 +346,7 @@ internal sealed unsafe class NativeCodecProxy : PhDisposable, ICodec
                 meta.HasAlpha = info.HasAlpha != 0;
                 meta.FrameCount = (uint)Math.Max(1, info.FrameCount);
                 meta.HdrTransferFn = MapHdrTransferFn(info.HdrTransferFn);
+                meta.BitsPerChannel = MapBitsPerChannel((IGPixelFormat)info.PixelFormat);
 
                 // Animation gate: only flip CanAnimate when the codec advertises animation
                 // AND the file genuinely has multiple frames. Multi-page documents (e.g. TIFF)
@@ -842,6 +843,16 @@ internal sealed unsafe class NativeCodecProxy : PhDisposable, ICodec
 
         return image;
     }
+
+
+    /// <summary>
+    /// Bits per channel the plugin's declared pixel format decodes to; drives the cache budget.
+    /// </summary>
+    internal static int MapBitsPerChannel(IGPixelFormat format) => format switch
+    {
+        IGPixelFormat.Rgba16Unorm or IGPixelFormat.RgbaFloat16 => 16,
+        _ => 8,
+    };
 
 
     /// <summary>

@@ -104,6 +104,14 @@ public partial class Photo : PhDisposable
     public uint Height => (uint)Size.Height;
 
     /// <summary>
+    /// Gets the bytes one decoded pixel occupies. Codec plugins can hand back 16-bit or
+    /// half-float frames, so this is not always 4; falls back to 4 before the decode.
+    /// </summary>
+    public int BytesPerPixel => Bitmap is SKImage img && !img.IsDisposed()
+        ? Math.Max(1, img.ColorType.GetBytesPerPixel())
+        : 4;
+
+    /// <summary>
     /// Gets the linear scale this photo was decoded at. Below 1 when the full resolution
     /// exceeded what the renderer can hold, so <see cref="Size"/> is smaller than the file.
     /// </summary>

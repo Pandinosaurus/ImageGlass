@@ -444,14 +444,14 @@ public partial class PhotoManager
 
 
     /// <summary>
-    /// Estimates the memory footprint of a loaded photo (4 bytes per pixel for BGRA32).
+    /// Estimates the memory footprint of a loaded photo from its real pixel depth.
     /// Returns 0 if the photo is not loaded.
     /// </summary>
     private static long EstimatePhotoMemory(Photo photo)
     {
         if (photo.State != PhotoState.Loaded) return 0;
 
-        return (long)photo.Width * photo.Height * 4;
+        return (long)photo.Width * photo.Height * photo.BytesPerPixel;
     }
 
 
@@ -464,7 +464,10 @@ public partial class PhotoManager
         var h = photo.Metadata.Height;
         if (w == 0 || h == 0) return 8L * 1024 * 1024; // fallback estimate: 8 MB
 
-        return (long)w * h * 4;
+        // deep sources decode to 16-bit or half-float, i.e. twice the usual BGRA32
+        var bytesPerPixel = photo.Metadata.BitsPerChannel > 8 ? 8 : 4;
+
+        return (long)w * h * bytesPerPixel;
     }
 
 
