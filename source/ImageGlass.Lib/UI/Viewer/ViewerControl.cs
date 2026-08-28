@@ -228,7 +228,7 @@ public partial class ViewerControl : PhControl
         var requestRerender = false;
 
         // set the init point for panning
-        if (p.Pointer.Type == PointerType.Mouse)
+        if (p.Pointer.Type == PointerType.Mouse && !IsThumbButtonPressed(p))
         {
             var canPanByMouse = !EnableSelection || e.Properties.IsMiddleButtonPressed;
 
@@ -267,15 +267,22 @@ public partial class ViewerControl : PhControl
 
     protected override void OnPointerReleased(PointerReleasedEventArgs e)
     {
-        // reset the panning point
-        _lastMousePanPoint = null;
+        var isThumbButton = IsThumbButton(e.InitialPressMouseButton);
 
-        var requestRerender = OnSelectionEnd(false);
-        if (requestRerender) InvalidateVisual();
+        // a thumb button owns no drag gesture, so releasing one must not end a pan or a
+        // selection that another button still has in progress
+        if (!isThumbButton)
+        {
+            // reset the panning point
+            _lastMousePanPoint = null;
+
+            var requestRerender = OnSelectionEnd(false);
+            if (requestRerender) InvalidateVisual();
+        }
 
         // dispatch mouse click action (single clicks only)
         DispatchMouseClickAction(e);
-        _mouseClickDownPoint = null;
+        if (!isThumbButton) _mouseClickDownPoint = null;
 
         base.OnPointerReleased(e);
     }
@@ -478,20 +485,6 @@ public partial class ViewerControl : PhControl
     /// </summary>
     private void DispatchMouseClickAction(PointerReleasedEventArgs e)
     {
-        if (_mouseClickDownPoint is null) return;
-        if (EnableSelection) return;
-
-        var pos = e.GetPosition(this);
-
-        // don't fire if the user dragged (threshold 5px)
-        var dragDistance = Math.Sqrt(
-            Math.Pow(pos.X - _mouseClickDownPoint.Value.X, 2)
-            + Math.Pow(pos.Y - _mouseClickDownPoint.Value.Y, 2));
-        if (dragDistance > 5) return;
-
-        // exclude nav button regions
-        if (IsInNavButtonHitArea(pos)) return;
-
         // determine the single-click event
         var clickEvent = e.InitialPressMouseButton switch
         {
@@ -503,7 +496,47 @@ public partial class ViewerControl : PhControl
         };
         if (clickEvent is null) return;
 
+
+        // the guards below only protect the left/middle drag gestures (pan, selection, nav
+        // buttons); a thumb button drives none of them, so it always dispatches
+        if (!IsThumbButton(e.InitialPressMouseButton))
+        {
+            if (_mouseClickDownPoint is null) return;
+            if (EnableSelection) return;
+
+            var pos = e.GetPosition(this);
+
+            // don't fire if the user dragged (threshold 5px)
+            var dragDistance = Math.Sqrt(
+                Math.Pow(pos.X - _mouseClickDownPoint.Value.X, 2)
+                + Math.Pow(pos.Y - _mouseClickDownPoint.Value.Y, 2));
+            if (dragDistance > 5) return;
+
+            // exclude nav button regions
+            if (IsInNavButtonHitArea(pos)) return;
+        }
+
         ViewerPointerClicked?.Invoke(this, new ViewerPointerClickEventArgs(e, clickEvent.Value));
+    }
+
+
+    /// <summary>
+    /// Checks if the press that raised the event came from a thumb button (XButton1/XButton2).
+    /// </summary>
+    private static bool IsThumbButtonPressed(PointerPoint p)
+    {
+        return p.Properties.PointerUpdateKind
+            is PointerUpdateKind.XButton1Pressed
+            or PointerUpdateKind.XButton2Pressed;
+    }
+
+
+    /// <summary>
+    /// Checks if the given mouse button is a thumb button (XButton1/XButton2).
+    /// </summary>
+    private static bool IsThumbButton(MouseButton button)
+    {
+        return button is MouseButton.XButton1 or MouseButton.XButton2;
     }
 
     #endregion // Override Methods
