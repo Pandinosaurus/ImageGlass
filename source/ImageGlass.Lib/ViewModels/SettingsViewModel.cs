@@ -152,12 +152,6 @@ public sealed class SettingsViewModel : PhReactive
             _ = Core.Config.LoadCurrentLanguageAsync();
         }
 
-        // feature lock edited -> rebuild the lock snapshot FeatureManager answers from
-        if (changedIds.Contains(ConfigId.LockedFeatures))
-        {
-            FeatureManager.Refresh();
-        }
-
         // external tools edited -> rebuild the registry so the Tools menu / IG_OpenTool use the new values
         if (changedIds.Contains(ConfigId.Tools))
         {

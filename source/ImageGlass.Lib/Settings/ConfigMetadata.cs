@@ -149,7 +149,6 @@ public enum ConfigId
     MenuHotkeys,
     MouseClickActions,
     MouseWheelActions,
-    LockedFeatures,
     Layout,
     PluginTrust,
     Tools,

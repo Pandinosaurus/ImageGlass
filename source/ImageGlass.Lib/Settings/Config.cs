@@ -941,16 +941,6 @@ public partial class Config : PhReactive
     }
 
     /// <summary>
-    /// Gets, sets the list of locked features.
-    /// </summary>
-    [JsonConverter(typeof(JsonHashSetToArrayConverter))]
-    public HashSet<string> LockedFeatures
-    {
-        get => Get(ConfigId.LockedFeatures, new HashSet<string>(StringComparer.OrdinalIgnoreCase));
-        set => Set(ConfigId.LockedFeatures, value);
-    }
-
-    /// <summary>
     /// Gets, sets layout for FrmMain. Syntax:
     /// <c>Dictionary["ControlName", "LayoutPosition"]</c>
     /// </summary>

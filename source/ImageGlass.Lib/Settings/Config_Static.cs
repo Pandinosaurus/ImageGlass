@@ -99,6 +99,13 @@ public partial class Config
 
 
     /// <summary>
+    /// API names locked by <see cref="CONFIG_ADMIN"/>; not a <see cref="ConfigId"/>, so no user-writable layer can set it.
+    /// </summary>
+    [JsonIgnore]
+    public static FrozenSet<string> LockedFeatures { get; private set; } = FrozenSet<string>.Empty;
+
+
+    /// <summary>
     /// Settings that need a Pro license.
     /// </summary>
     [JsonIgnore]
@@ -556,10 +563,8 @@ public partial class Config
     {
         Config? appConfig = null;
 
-        // capture admin-locked ids from their own guarded read, BEFORE (and independently of) the
-        // main load. A corrupt/locked igconfig.json aborts the load below into the catch; if the lock
-        // capture lived there too, a user could defeat every admin lock by corrupting their own config.
-        AdminLockedConfigs = LoadAdminLockedConfigs();
+        // read before (and independently of) the main load: a corrupt igconfig.json aborts it into the catch
+        LoadAdminPolicies();
 
         try
         {
@@ -1338,22 +1343,22 @@ public partial class Config
 
 
     /// <summary>
-    /// Reads <see cref="CONFIG_ADMIN"/> on its own and returns the locked <see cref="ConfigId"/>s,
-    /// independently of the main <see cref="Load"/> flow. Isolating it guarantees admin enforcement
-    /// survives a corrupt/unreadable user config (which would otherwise abort <see cref="Load"/>
-    /// before the locks were captured). Returns an empty set when admin config is disabled or on error.
+    /// Captures <see cref="AdminLockedConfigs"/> and <see cref="LockedFeatures"/> from an own guarded read of <see cref="CONFIG_ADMIN"/>, so admin enforcement survives an unreadable user config.
     /// </summary>
-    private static FrozenSet<ConfigId> LoadAdminLockedConfigs()
+    private static void LoadAdminPolicies()
     {
         try
         {
             using var adminDoc = ReadAdminConfigDocument();
             var effectiveAdminDoc = IsCompatibleConfigLayer(adminDoc) ? adminDoc : null;
-            return BuildAdminLockedConfigs(effectiveAdminDoc);
+
+            AdminLockedConfigs = BuildAdminLockedConfigs(effectiveAdminDoc);
+            LockedFeatures = BuildLockedFeatures(effectiveAdminDoc);
         }
         catch
         {
-            return FrozenSet<ConfigId>.Empty;
+            AdminLockedConfigs = FrozenSet<ConfigId>.Empty;
+            LockedFeatures = FrozenSet<string>.Empty;
         }
     }
 
@@ -1377,6 +1382,31 @@ public partial class Config
         }
 
         return ids.ToFrozenSet();
+    }
+
+
+    /// <summary>
+    /// Reads the <see cref="LockedFeatures"/> API names from the admin layer; empty unless the key holds an array.
+    /// </summary>
+    private static FrozenSet<string> BuildLockedFeatures(JsonDocument? adminDoc)
+    {
+        if (adminDoc is null || adminDoc.RootElement.ValueKind != JsonValueKind.Object)
+            return FrozenSet<string>.Empty;
+
+        if (!TryGetPropertyIgnoreCase(adminDoc.RootElement, nameof(LockedFeatures), out var value)
+            || value.ValueKind != JsonValueKind.Array)
+            return FrozenSet<string>.Empty;
+
+        var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var item in value.EnumerateArray())
+        {
+            if (item.ValueKind != JsonValueKind.String) continue;
+
+            var name = item.GetString()?.Trim();
+            if (!string.IsNullOrEmpty(name)) names.Add(name);
+        }
+
+        return names.ToFrozenSet(StringComparer.OrdinalIgnoreCase);
     }
 
 

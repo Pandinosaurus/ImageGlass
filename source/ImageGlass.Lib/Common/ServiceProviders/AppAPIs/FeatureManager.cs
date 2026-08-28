@@ -50,10 +50,8 @@ internal static class FeatureManager
     /// </summary>
     public static void Refresh()
     {
-        // admin feature-lock is itself a Pro capability, so honor it only when licensed
-        var newLocked = Core.IsProEnabled
-            ? FrozenSet.ToFrozenSet(Core.Config.LockedFeatures, StringComparer.OrdinalIgnoreCase)
-            : FrozenSet<string>.Empty;
+        // admin-only, already Pro-gated at capture
+        var newLocked = Config.LockedFeatures;
 
         // consumer Pro features stay gated until a license is active
         var newProGated = Core.IsProEnabled ? FrozenSet<LangId>.Empty : _proFeatureKeys;
