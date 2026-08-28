@@ -510,7 +510,10 @@ public partial class App : Application
         if (wizard.DialogResult == DialogExitCode.Cancel)
         {
             Core.Config.QuickSetupVersion = Const.QUICK_SETUP_VERSION;
-            await Core.Config.SaveAsync();
+            if (!await Core.Config.SaveAsync())
+            {
+                await ModalWindow.ShowSettingsSaveErrorAsync(null, Core.Lang[LangId.QuickSetup_Title]);
+            }
             BHelper.RestartApp(suppressQuickSetup: true);
             return false;
         }

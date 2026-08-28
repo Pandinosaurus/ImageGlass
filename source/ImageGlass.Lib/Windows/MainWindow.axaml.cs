@@ -28,6 +28,7 @@ using ImageGlass.UI;
 using ImageGlass.UI.Windowing;
 using ImageGlass.ViewModels;
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -151,14 +152,22 @@ public partial class MainWindow : PhWindow
         PART_MainView.PART_Gallery.ItemClicked -= PART_Gallery_ItemClicked;
 
 
-        // stop slideshow so pre-slideshow config values are restored before saving
-        _ = await Core.API.RunApiAsync(API.IG_ToggleSlideshow, "false");
+        // this pass already accepted the close, so nothing below may escape and keep the window open
+        try
+        {
+            // stop slideshow so pre-slideshow config values are restored before saving
+            Core.API?.IG_ToggleSlideshow(false);
 
-        // stop all external tool processes before saving config
-        await Core.ToolRegistry.ExternalTools.StopAllAsync();
+            // stop all external tool processes before saving config
+            await Core.ToolRegistry.ExternalTools.StopAllAsync();
 
-        // only save config here, do NOT dispose resources yet
-        await SaveConfigOnClosingAsync();
+            // only save config here, do NOT dispose resources yet
+            await SaveConfigOnClosingAsync();
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[MainWindow] Closing failed: {ex}");
+        }
 
         // now close for real — _isClosingHandled lets the second pass through
         Close();

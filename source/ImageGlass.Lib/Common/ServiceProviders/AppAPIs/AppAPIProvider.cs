@@ -191,8 +191,11 @@ public partial class AppAPIProvider
         if (changedIds.Count == 0) return;
 
         // same order as SettingsViewModel.CommitAsync
-        await Core.Config.SaveAsync();
+        var isSaved = await Core.Config.SaveAsync();
         SettingsViewModel.RunApplyActions(changedIds);
+
+        // the values are live either way; the caller still has to hear that the file was not written
+        if (!isSaved && Config.SavingException is Exception ex) throw ex;
     }
 
 

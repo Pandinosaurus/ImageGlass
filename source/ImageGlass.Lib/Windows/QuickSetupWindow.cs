@@ -190,7 +190,13 @@ public partial class QuickSetupWindow : DialogWindow
         // reset everything to built-in defaults, then apply the wizard choices on top
         Core.Config.ResetToDefault();
         ApplySettings();
-        await Core.Config.SaveAsync();
+
+        // the restart below reloads the config from disk, so an unwritten file discards every choice
+        if (!await Core.Config.SaveAsync())
+        {
+            await ModalWindow.ShowSettingsSaveErrorAsync(this, Core.Lang[LangId.QuickSetup_Title]);
+            return;
+        }
 
         // restart so the fresh instance loads the reset config (all settings applied);
         // suppress the wizard on relaunch so an admin-locked version can't loop

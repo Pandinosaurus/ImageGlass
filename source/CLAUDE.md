@@ -191,7 +191,8 @@ Extension methods on framework types. Prefer these over re-implementing:
   - `ResolvePath()` is the **single** public path normalizer: it unwraps `ig://`, strips quotes, expands env vars, follows `.lnk` and macOS `.app`, then makes the result absolute. Never add a second normalizer beside it; if a caller needs only part of that, make the missing piece a `private` helper *inside* `ResolvePath` rather than a parallel public API.
 - `ProcessHelper.cs`: `RunExeAsync()` / `RunExeCmd()`, `RunSync()`, `ExitApp()`
 - `Sound.cs`: `PlayNotificationSoundAsync()` (extracts the bundled `Assets/Sounds/notification.wav` to `_temp`, then plays it via NetCoreAudio on Windows/macOS, or a probed CLI player on Linux)
-- `JsonEx.cs`: `CreateJsonOptions()`, `ReadJsonFromFile()` / `WriteJsonToFileAsync()` (AOT-safe via `JsonTypeInfo<T>`)
+- `JsonEx.cs`: `CreateJsonOptions()`, `ReadJsonFromFile()` / `WriteJsonToFileAsync()` (AOT-safe via `JsonTypeInfo<T>`); both go through `FileIO.cs`, so every JSON file is multi-instance safe
+- `FileIO.cs`: `OpenReadShared()` / `WriteAllTextSharedAsync()`, the multi-instance-safe file primitives (see "Concurrent file writes")
 - `Task.cs`: `Debounce()`, `GcCollect()`
 
 ### JSON Converters: `Common/Types/JsonTypeConverters/`
@@ -366,6 +367,13 @@ Occurs in `Program.cs` before Avalonia app setup (Linux/Mac have equivalent regi
 - Converters in `Common/Types/JsonTypeConverters/` (e.g., `JsonStringToHotkeyConverter`, `JsonArrayToZoomFactorConverter`)
 - Cached in `AppData\Local\ImageGlass\`, or the startup dir in portable mode (see below)
 - Async save via `Config.SaveAsync()`
+
+### Concurrent file writes (`BHelper.WriteAllTextSharedAsync`)
+- Every instance writes the **same** `igconfig.json`, and closing a taskbar group closes them all at once, so a plain `File.WriteAllTextAsync` loses the race with a sharing violation. All JSON writes therefore stage into `<path>.<pid>.tmp` and rename over the target, guarded by a per-path `SemaphoreSlim` (two windows of one process) plus a bounded retry.
+- **`File.Move(overwrite: true)` is only atomic while no one holds the target for writing.** Held, it degrades into an in-place copy, and a concurrent reader then sees a truncated file. That is why `OpenReadShared` asks for `FileShare.Read | FileShare.Delete`: `Delete` lets the rename proceed under an open handle, and withholding `Write` is what keeps the swap a rename. Measured over ~166k reads: `ReadWrite` gave 878 truncated reads, `Read` gave 0.
+- **`File.Replace` is not the fix**, despite being the usual advice: it leaves `~RF*.TMP` litter, and the target name briefly does not exist mid-call, which makes a concurrent reader *and* a concurrent writer fail with `FileNotFoundException`.
+- `Config.SaveAsync` never throws: it returns `false` and records `Config.SavingException`, because it is reached from `async void` close handlers and a fire-and-forget save in `SettingsWindow.OnClosing`, where an escaping exception is an unhandled-exception dialog on a window that is already closing. Every path the **user** explicitly triggered still reports the failure (`ModalWindow.ShowSettingsSaveErrorAsync`, or a throw out of `IG_ApplySettings`); only the two close paths stay silent, and `QuickSetupWindow` additionally refuses to restart, since the restart would reload the unwritten file and discard every choice.
+- Last writer wins is unchanged and intended: each instance persists its own whole `Config`.
 
 ### Portable mode (`ConfigMode`)
 - A `.igportable` marker file (`Const.PORTABLE_MARKER_FILE`) in the **startup dir** moves the whole config dir there: `BHelper.ConfigPath` returns `BasePath` instead of `%LocalAppData%\ImageGlass`, so `igconfig.json`, `_cache`, `_logs`, `_plugins`, `_lang`, `_themes` all live next to the exe and the folder can be relocated without losing settings.
@@ -563,6 +571,7 @@ Scripts in `__assets/<win|mac|linux>/`, VS Code tasks `pack-*`, output in `__art
 - **No slideshow notification sound?** `BHelper.PlayNotificationSoundAsync()` plays the bundled `Assets/Sounds/notification.wav`, never a system beep. Windows/macOS use NetCoreAudio (winmm MCI / `afplay`); **Linux deliberately does not**, because NetCoreAudio hardcodes `aplay`, which neither the Flatpak runtime nor an alsa-utils-less distro has — and since it shells out through `/bin/bash`, the missing binary exits 127 without throwing, so nothing reaches the `catch`. `PlayLinuxSoundAsync` instead probes `paplay`/`pw-play`/`aplay`/`ffplay`, keeping the first that exits 0 (a player may exist yet fail for want of a sound server). Flatpak additionally needs `--socket=pulseaudio` in `finish-args`, without which every player fails.
 - **Window comes back the wrong size (or the gallery/toolbar reappears) after leaving full screen?** The pre-fullscreen `WindowLayoutSnapshot` was never captured, or the close handler persisted the live full screen values over it. See "Full screen & the windowed layout".
 - **A hotkey in `igconfig.json` changes by itself, or the whole config fails to load?** `Hotkey` has two texts and they are not interchangeable: `KeyString` is the platform display text (`KeyGesture.ToString("p")`, which prints `Back` as "Backspace" and `Meta` as "Win"/"⌘"), `InvariantKeyString` is the only one that may be persisted. Never persist the display text: `KeyGesture.Parse` cannot read it back, and it reads a digit string as the enum *value* ("1" -> `Key.Cancel`). `Hotkey.ParseFrom` is the sole reverse of `ToInvariantString`, accepts the display spellings too, and never throws; `JsonHotkeyArrayConverter` drops an entry it cannot parse so one bad string cannot fail `Config.Load`.
+- **"The process cannot access the file 'igconfig.json'" when several instances close together?** Every instance saves the same file, so a write must go through `BHelper.WriteAllTextSharedAsync` (stage + rename + retry) and a read through `BHelper.OpenReadShared`; a new `File.WriteAllText`/`File.OpenRead` on a config-dir file reintroduces it. See "Concurrent file writes".
 - **Serialization fails?** Validate JSON converter exists in `Common/Types/JsonTypeConverters/`
 - **Cache not evicting?** Check `MipmapTileCache.MAX_CACHED_TILES` (100) and LRU promotion logic
 - **AOT trimming errors?** Review trimmer warnings; add `[DynamicallyAccessedMembers]` annotations or custom converters

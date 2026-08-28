@@ -21,6 +21,7 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using ImageGlass.Common.Localization;
 using ImageGlass.UI.Windowing;
+using System.Threading.Tasks;
 
 namespace ImageGlass.Common.Windows;
 
@@ -119,7 +120,7 @@ public partial class SettingsWindow : DialogWindow
     {
         if (!e.CanProceed) return;
 
-        await _vm.CommitAsync();
+        await CommitAndReportAsync();
         base.OnDialogSubmitted(e);
     }
 
@@ -128,8 +129,19 @@ public partial class SettingsWindow : DialogWindow
     {
         if (!e.CanProceed) return;
 
-        await _vm.CommitAsync();
+        await CommitAndReportAsync();
         base.OnDialogApplied(e);
+    }
+
+
+    /// <summary>
+    /// Commits the staged edits, reporting a failed write; the values stay applied for this session.
+    /// </summary>
+    private async Task CommitAndReportAsync()
+    {
+        if (await _vm.CommitAsync()) return;
+
+        await ModalWindow.ShowSettingsSaveErrorAsync(this, Core.Lang[LangId.Menu_MnuSettings]);
     }
 
 

@@ -78,6 +78,13 @@ public partial class Config
 
 
     /// <summary>
+    /// Gets the exception from the last <see cref="SaveAsync"/>, or <c>null</c> if it succeeded.
+    /// </summary>
+    [JsonIgnore]
+    public static Exception? SavingException { get; private set; } = null;
+
+
+    /// <summary>
     /// Path of the ignored incompatible user config file, or <c>null</c> when none.
     /// </summary>
     [JsonIgnore]
@@ -978,18 +985,30 @@ public partial class Config
 
 
     /// <summary>
-    /// Writes configs to file.
+    /// Writes configs to file. Never throws: a losing writer must not kill a closing window.
     /// </summary>
-    public async Task SaveAsync()
+    /// <returns><c>false</c> if the file was not written; the reason is <see cref="SavingException"/>.</returns>
+    public async Task<bool> SaveAsync()
     {
         // portable mode could not claim its folder; the app is quitting, never write anywhere else
-        if (ConfigMode.PortableError is not null) return;
+        if (ConfigMode.PortableError is not null) return false;
 
         var jsonFilePath = BHelper.ConfigDir(CONFIG_USER);
         var jsonOptions = BHelper.CreateJsonOptions();
         var jsonContext = new ConfigJsonContext(jsonOptions);
 
-        await BHelper.WriteJsonToFileAsync(jsonFilePath, this, jsonContext.Config);
+        try
+        {
+            await BHelper.WriteJsonToFileAsync(jsonFilePath, this, jsonContext.Config);
+            SavingException = null;
+            return true;
+        }
+        catch (Exception ex)
+        {
+            SavingException = ex;
+            System.Diagnostics.Debug.WriteLine($"[Config] Could not save '{jsonFilePath}': {ex.Message}");
+            return false;
+        }
     }
 
 

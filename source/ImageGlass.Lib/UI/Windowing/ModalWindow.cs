@@ -818,6 +818,22 @@ public partial class ModalWindow : DialogWindow
 
 
     /// <summary>
+    /// Reports why <see cref="Config.SaveAsync"/> could not write the settings file; no-op if it did.
+    /// </summary>
+    public static async Task ShowSettingsSaveErrorAsync(PhWindow? owner, string title)
+    {
+        if (Config.SavingException is not Exception ex) return;
+
+        _ = await ShowErrorAsync(owner, new ModalWindowOptions
+        {
+            Title = title,
+            Heading = ex.Message,
+            Description = BHelper.GetRealPlatformConfigDir(Config.CONFIG_USER),
+        });
+    }
+
+
+    /// <summary>
     /// Reports unhandled exception,
     /// returns <c>true</c> if user ignores the error to continue.
     /// </summary>

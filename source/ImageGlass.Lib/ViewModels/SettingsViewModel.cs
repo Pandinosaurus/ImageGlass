@@ -76,9 +76,10 @@ public sealed class SettingsViewModel : PhReactive
     /// Writes all staged edits into <see cref="Core.Config"/>, persists to disk,
     /// then clears the staging store and runs any post-apply actions.
     /// </summary>
-    public async Task CommitAsync()
+    /// <returns><c>false</c> if the values were applied but not persisted to disk.</returns>
+    public async Task<bool> CommitAsync()
     {
-        if (_pending.Count == 0) return;
+        if (_pending.Count == 0) return true;
 
         // 1. push staged values into the live config (raises PropertyChanged -> live UI updates).
         //    admin-locked ids are refused here: skipping Set keeps their admin-merged value, and
@@ -93,10 +94,12 @@ public sealed class SettingsViewModel : PhReactive
         _pending.Clear();
 
         // 2. persist to disk
-        await Core.Config.SaveAsync();
+        var isSaved = await Core.Config.SaveAsync();
 
         // 3. run settings that need an explicit apply step (theme/language/list reload)
         RunApplyActions(changedIds);
+
+        return isSaved;
     }
 
 
