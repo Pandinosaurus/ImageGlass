@@ -22,6 +22,7 @@ using Avalonia.Markup.Xaml.MarkupExtensions;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
+using Avalonia.Svg.Skia;
 using System;
 using System.Collections.Frozen;
 using System.Collections.Generic;
@@ -105,6 +106,24 @@ public static class Resx
         {
             using var stream = AssetLoader.Open(new Uri($"avares://ImageGlass.Lib/Assets/{id}.png"));
             return Bitmap.DecodeToHeight(stream, 256);
+        }
+        catch { }
+
+        return null;
+    }
+
+
+    /// <summary>
+    /// Gets a bundled SVG as a scalable image.
+    /// </summary>
+    public static SvgImage? GetSvg(ResxSvgId? id)
+    {
+        if (id is null) return null;
+
+        try
+        {
+            var source = SvgSource.Load($"avares://ImageGlass.Lib/Assets/Svg/{id}.svg", null);
+            if (source is not null) return new SvgImage { Source = source };
         }
         catch { }
 
@@ -324,4 +343,15 @@ public enum StockIconId
     Rename,
     Shield,
     Warning,
+}
+
+
+/// <summary>
+/// Bundled SVG assets in <c>Assets/Svg</c>; the name is the file name. These are Fluent Emoji (MIT).
+/// </summary>
+public enum ResxSvgId
+{
+    Cyclone,
+    SmilingFaceWithSmilingEyes,
+    StarStruck,
 }

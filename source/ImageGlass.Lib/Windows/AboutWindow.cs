@@ -80,6 +80,10 @@ public partial class AboutWindow : DialogWindow
           https://github.com/microsoft/CsWin32
           Copyright (c) Microsoft Corporation
 
+        ◍ Fluent Emoji                                     MIT licence
+          https://github.com/microsoft/fluentui-emoji
+          Copyright (c) Microsoft Corporation
+
         ◍ D2Phap.EggShell                           Apache-2.0 license
           Copyright (c) 2024-2026 Dương Diệu Pháp
 

@@ -36,6 +36,7 @@
     <AvaloniaResource Include="Assets\Rename.png" />
     <AvaloniaResource Include="Assets\Shield.png" />
     <AvaloniaResource Include="Assets\Sounds\notification.wav" />
+    <AvaloniaResource Include="Assets\Svg\*.svg" />
     <AvaloniaResource Include="Assets\Warning.png" />
   </ItemGroup>
 
