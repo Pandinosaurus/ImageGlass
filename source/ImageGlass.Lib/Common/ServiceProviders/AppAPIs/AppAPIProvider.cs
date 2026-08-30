@@ -3286,6 +3286,9 @@ public partial class AppAPIProvider
 
         if (showUI)
         {
+            // show check progress
+            await Task.Delay(1000);
+
             // transition the already-open window to result state
             updateWindow!.SetResultState(result);
         }

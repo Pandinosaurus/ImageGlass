@@ -16,16 +16,11 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-using Avalonia;
-using Avalonia.Controls;
-using Avalonia.Controls.Primitives;
-using Avalonia.Media;
 using ImageGlass.Common;
 using ImageGlass.Common.Localization;
 using ImageGlass.Common.ServiceProviders.Licensing;
 using ImageGlass.Common.ServiceProviders.Update;
 using ImageGlass.Common.Types;
-using ImageGlass.UI;
 using ImageGlass.UI.Windowing;
 using System;
 
@@ -35,8 +30,8 @@ public partial class UpdateWindow : ModalWindow
 {
     private UpdateCheckResult? _result;
 
-    protected override int MIN_WIDTH => 500;
-    protected override int MAX_WIDTH => 500;
+    protected override int MIN_WIDTH => 550;
+    protected override int MAX_WIDTH => 550;
 
 
     /// <summary>
@@ -54,14 +49,29 @@ public partial class UpdateWindow : ModalWindow
 
     public UpdateWindow()
     {
+        InitializeComponent();
+
         ShowInTaskbar = true;
         Title = Core.Lang[LangId._CheckForUpdate];
         Description = Core.Lang[LangId.Menu_MnuCheckForUpdate_CurrentVersion, Core.BuildInfo.Version];
+
+        PART_BtnTitle.Click += (_, _) => OpenChangeLog();
+        PART_BtnChangelog.Click += (_, _) => OpenChangeLog();
+        PART_BtnSkipVersion.Click += (_, _) => SkipVersion();
     }
 
 
 
     #region Override Methods
+
+    protected override void OnIgLanguageChanged()
+    {
+        base.OnIgLanguageChanged();
+
+        PART_BtnSkipVersion.Text = Core.Lang[LangId.Menu_MnuCheckForUpdate_SkipVersion];
+        PART_BtnChangelog.Text = Core.Lang[LangId.QuickSetup_SeeWhatNew];
+    }
+
 
     protected override void OnDialogSubmitted(DialogEventArgs e)
     {
@@ -90,45 +100,19 @@ public partial class UpdateWindow : ModalWindow
     #region Private Methods
 
     /// <summary>
-    /// Creates the footer left content with "Skip this version" link button.
+    /// Remembers the release as skipped, then closes the window.
     /// </summary>
-    private PhButton CreateSkipButton()
+    private void SkipVersion()
     {
-        var btnSkip = new PhButton
+        var version = _result?.Release?.Version;
+        if (!string.IsNullOrWhiteSpace(version))
         {
-            Text = Core.Lang[LangId.Menu_MnuCheckForUpdate_SkipVersion],
-            Variant = PhButtonVariant.Link,
-        };
-        btnSkip.Click += (_, _) =>
-        {
-            var version = _result?.Release?.Version;
-            if (!string.IsNullOrWhiteSpace(version))
-            {
-                Core.Config.UpdateSkippedVersion = version;
-                IsSkipped = true;
-            }
+            Core.Config.UpdateSkippedVersion = version;
+            IsSkipped = true;
+        }
 
-            DialogResult = DialogExitCode.Cancel;
-            Close();
-        };
-
-        return btnSkip;
-    }
-
-
-    /// <summary>
-    /// Creates the footer left content with a "Learn more" link that opens the changelog.
-    /// </summary>
-    private PhButton CreateChangelogButton()
-    {
-        var btn = new PhButton
-        {
-            Text = Core.Lang[LangId._LearnMore],
-            Variant = PhButtonVariant.Link,
-        };
-        btn.Click += (_, _) => OpenChangeLog();
-
-        return btn;
+        DialogResult = DialogExitCode.Cancel;
+        Close();
     }
 
 
@@ -146,79 +130,36 @@ public partial class UpdateWindow : ModalWindow
 
 
     /// <summary>
-    /// Creates the latest-release info card: title, version, published date, and release notes.
+    /// Fills and shows the latest-release card: title, version, published date, and release notes.
     /// </summary>
-    private Border CreateReleaseCard(UpdateReleaseInfo release)
+    private void ShowReleaseCard(UpdateReleaseInfo release)
     {
+        var versionText = Core.Lang[LangId.Menu_MnuCheckForUpdate_LatestVersion, release.Version];
+
         // primary title (fall back to the version label when the release has no title)
-        var lnkTitle = new PhButton
-        {
-            Variant = PhButtonVariant.Link,
-            Text = !string.IsNullOrWhiteSpace(release.Title)
-                ? release.Title
-                : Core.Lang[LangId.Menu_MnuCheckForUpdate_LatestVersion, release.Version],
-            FontSize = Const.FONT_SIZE_SUBTITLE,
-            FontWeight = FontWeight.SemiBold,
-        };
-        lnkTitle.Click += (_, _) => OpenChangeLog();
+        PART_BtnTitle.Text = !string.IsNullOrWhiteSpace(release.Title) ? release.Title : versionText;
+        PART_LblVersion.Text = versionText;
 
-        // muted metadata: version, then published date
-        var metaPanel = new StackPanel
-        {
-            Spacing = 2,
-            Margin = new Thickness(0, 5, 0, 0),
-        };
-        metaPanel.Children.Add(new SelectableTextBlock
-        {
-            Text = Core.Lang[LangId.Menu_MnuCheckForUpdate_LatestVersion, release.Version],
-            Opacity = 0.75,
-        });
-        if (!string.IsNullOrWhiteSpace(release.PublishedDate))
-        {
-            metaPanel.Children.Add(new SelectableTextBlock
-            {
-                Text = Core.Lang[LangId.Menu_MnuCheckForUpdate_PublishedDate, release.PublishedDate],
-                Opacity = 0.75,
-            });
-        }
+        PART_LblPublishedDate.Text = Core.Lang[LangId.Menu_MnuCheckForUpdate_PublishedDate, release.PublishedDate];
+        PART_LblPublishedDate.IsVisible = !string.IsNullOrWhiteSpace(release.PublishedDate);
 
-        var content = new StackPanel();
-        content.Children.Add(lnkTitle);
-        content.Children.Add(metaPanel);
+        // the separator only earns its space when there are notes below it
+        var hasNotes = !string.IsNullOrWhiteSpace(release.Description);
+        PART_LblNotes.Text = release.Description;
+        PART_NotesSeparator.IsVisible = hasNotes;
+        PART_NotesScroller.IsVisible = hasNotes;
 
-        // release notes: selectable + scrollable, separated from the header
-        if (!string.IsNullOrWhiteSpace(release.Description))
-        {
-            content.Children.Add(new Border
-            {
-                Height = 1,
-                Margin = new Thickness(0, 14),
-                [!Border.BackgroundProperty] = Resx.CreateBinding(ResxId.TextControlBorderBrush),
+        PART_ReleaseCard.IsVisible = true;
+    }
 
-            });
-            content.Children.Add(new ScrollViewer
-            {
-                MaxHeight = 200,
-                HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
-                VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
-                Content = new SelectableTextBlock
-                {
-                    Text = release.Description,
-                    TextWrapping = TextWrapping.Wrap,
-                },
-            });
-        }
 
-        return new Border
-        {
-            Padding = new Thickness(14, 8),
-            ClipToBounds = true,
-            BorderThickness = new Thickness(1),
-            [!Border.CornerRadiusProperty] = Resx.CreateBinding(ResxId.ControlCornerRadius),
-            [!Border.BorderBrushProperty] = Resx.CreateBinding(ResxId.IG_BorderNeutralBrush),
-            [!Border.BackgroundProperty] = Resx.CreateBinding(ResxId.IG_BackgroundNeutralBrush),
-            Child = content,
-        };
+    /// <summary>
+    /// Hides the release card and both footer links.
+    /// </summary>
+    private void HideResultContent()
+    {
+        PART_ReleaseCard.IsVisible = false;
+        PART_BtnSkipVersion.IsVisible = false;
     }
 
     #endregion // Private Methods
@@ -234,6 +175,7 @@ public partial class UpdateWindow : ModalWindow
     {
         _result = null;
         Heading = Core.Lang[LangId.Menu_MnuCheckForUpdate_Checking];
+        Thumbnail = Resx.GetSvg(ResxSvgId.Cyclone);
 
         IsProgressVisible = true;
         IsProgressIndeterminate = true;
@@ -244,8 +186,7 @@ public partial class UpdateWindow : ModalWindow
         Button2Text = Core.Lang[LangId._Close];
         DefaultFocus = DialogFocus.Button2;
 
-        DialogFooterLeftContent = null!;
-        ModalExtraContent = null!;
+        HideResultContent();
     }
 
 
@@ -261,8 +202,8 @@ public partial class UpdateWindow : ModalWindow
 
         // shared defaults: a single [Close] button, no extra content
         Note = null;
-        ModalExtraContent = null!;
-        DialogFooterLeftContent = null!;
+        Thumbnail = null;
+        HideResultContent();
         IsButton1Visible = false;
         IsButton3Visible = false;
         IsButton2Visible = true;
@@ -276,10 +217,11 @@ public partial class UpdateWindow : ModalWindow
         {
             Heading = Core.Lang[LangId.Menu_MnuCheckForUpdate_NewVersion];
             Description = Core.Lang[LangId.Menu_MnuCheckForUpdate_CurrentVersion, Core.BuildInfo.Version];
-            ModalExtraContent = CreateReleaseCard(release);
+            Thumbnail = Resx.GetSvg(ResxSvgId.StarStruck);
+            ShowReleaseCard(release);
 
             // "Skip this version" link + [Update] [Close]
-            DialogFooterLeftContent = CreateSkipButton();
+            PART_BtnSkipVersion.IsVisible = true;
             Button1Text = Core.Lang[LangId._Update];
             IsButton1Visible = true;
             DefaultButton = DialogButton.Button1;
@@ -295,16 +237,14 @@ public partial class UpdateWindow : ModalWindow
             // NoUpdate: always show the latest release info when we have it
             Heading = Core.Lang[LangId.Menu_MnuCheckForUpdate_NoUpdate];
             Description = Core.Lang[LangId.Menu_MnuCheckForUpdate_CurrentVersion, Core.BuildInfo.Version];
+            Thumbnail = Resx.GetSvg(ResxSvgId.SmilingFaceWithSmilingEyes);
 
             if (release is not null)
             {
-                ModalExtraContent = CreateReleaseCard(release);
+                ShowReleaseCard(release);
 
                 // offer the changelog even when already up-to-date
-                if (!string.IsNullOrWhiteSpace(release.ChangelogUrl))
-                {
-                    DialogFooterLeftContent = CreateChangelogButton();
-                }
+                PART_BtnChangelog.IsVisible = !string.IsNullOrWhiteSpace(release.ChangelogUrl);
             }
         }
     }

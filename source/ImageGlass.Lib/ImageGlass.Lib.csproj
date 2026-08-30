@@ -76,6 +76,9 @@
     <Compile Update="Tools\ToolHostControl.axaml.cs">
       <DependentUpon>ToolHostControl.axaml</DependentUpon>
     </Compile>
+    <Compile Update="Windows\UpdateWindow.axaml.cs">
+      <DependentUpon>UpdateWindow.axaml</DependentUpon>
+    </Compile>
   </ItemGroup>
 
 </Project>
