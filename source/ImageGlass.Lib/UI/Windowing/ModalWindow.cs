@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
-using Avalonia.Media.Imaging;
+using Avalonia.Media;
 using ImageGlass.Common;
 using ImageGlass.Common.Localization;
 using ImageGlass.Common.Types;
@@ -121,13 +121,13 @@ public partial class ModalWindow : DialogWindow
     /// <summary>
     /// Gets, sets the thumbnail of modal.
     /// </summary>
-    public Bitmap? Thumbnail
+    public IImage? Thumbnail
     {
         get => GetValue(ThumbnailProperty);
         set => SetValue(ThumbnailProperty, value);
     }
-    public static readonly StyledProperty<Bitmap?> ThumbnailProperty =
-        AvaloniaProperty.Register<ModalWindow, Bitmap?>(nameof(Thumbnail));
+    public static readonly StyledProperty<IImage?> ThumbnailProperty =
+        AvaloniaProperty.Register<ModalWindow, IImage?>(nameof(Thumbnail));
 
 
     /// <summary>
@@ -424,7 +424,8 @@ public partial class ModalWindow : DialogWindow
             Width = THUMBNAIL_SIZE,
             Height = THUMBNAIL_SIZE,
             Stretch = Avalonia.Media.Stretch.Uniform,
-            StretchDirection = Avalonia.Media.StretchDirection.DownOnly,
+            // Both, not DownOnly: the slot is a fixed 80px box, and a vector source has no natural size
+            StretchDirection = Avalonia.Media.StretchDirection.Both,
             [!Viewbox.IsVisibleProperty] = this[!IsThumbnailVisibleProperty],
             Child = new Image
             {

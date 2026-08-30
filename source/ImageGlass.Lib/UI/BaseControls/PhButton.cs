@@ -107,6 +107,18 @@ public class PhButton : Button
 
 
     /// <summary>
+    /// Gets, sets how the text is trimmed. Needs a width-constraining parent (e.g. a <c>*</c> column).
+    /// </summary>
+    public TextWrapping TextWrapping
+    {
+        get => GetValue(TextWrappingProperty);
+        set => SetValue(TextWrappingProperty, value);
+    }
+    public static readonly StyledProperty<TextWrapping> TextWrappingProperty =
+        AvaloniaProperty.Register<PhButton, TextWrapping>(nameof(TextWrapping), TextWrapping.NoWrap);
+
+
+    /// <summary>
     /// Gets, sets the visual style variant of the button.
     /// </summary>
     public PhButtonVariant Variant
@@ -469,6 +481,7 @@ public class PhButton : Button
             [!TextBlock.ForegroundProperty] = this[!ForegroundProperty],
             [!TextBlock.IsVisibleProperty] = this[!IsTextVisibleProperty],
             [!TextBlock.TextTrimmingProperty] = this[!TextTrimmingProperty],
+            [!TextBlock.TextWrappingProperty] = this[!TextWrappingProperty],
         };
 
 
