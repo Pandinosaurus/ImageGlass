@@ -1,0 +1,195 @@
+#!/bin/sh
+#
+# Optional desktop integration for the ImageGlass AppImage: installs a .desktop entry and
+# icons into ~/.local/share so the app appears in the launcher and can be set as the
+# default image viewer. The app cannot do this itself -- LinuxShellProvider throws
+# NotSupportedException for SetDefaultPhotoViewerAsync.
+#
+#   --maybe     called by AppRun on every launch; prompts once, then never again
+#   --install   install unconditionally
+#   --remove    uninstall and forget the choice
+#
+# State lives beside the config dir, so it survives replacing the .AppImage file.
+
+set -eu
+
+APP_ID="io.github.d2phap.imageglass"
+DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
+STATE_FILE="$DATA_HOME/ImageGlass/.appimage-integration"
+APPS_DIR="$DATA_HOME/applications"
+ICONS_DIR="$DATA_HOME/icons/hicolor"
+DESKTOP_TARGET="$APPS_DIR/$APP_ID.desktop"
+ASK_LOCK="$STATE_FILE.asking"
+# The helper runs from inside the read-only mount, so an unanswered dialog would pin it
+# open for the whole desktop session. Bound the wait instead.
+ASK_TIMEOUT=120
+
+# Set by AppRun; recomputed so the helper also works when run by hand.
+if [ -z "${APPDIR:-}" ]; then
+    APPDIR="$(dirname "$(dirname "$(dirname "$(readlink -f "$0")")")")"
+fi
+
+read_state() {
+    if [ -f "$STATE_FILE" ]; then
+        sed -n "s/^$1=//p" "$STATE_FILE" | tail -n1
+    fi
+}
+
+write_state() {
+    mkdir -p "$(dirname "$STATE_FILE")"
+    printf 'status=%s\nappimage=%s\n' "$1" "${APPIMAGE:-}" > "$STATE_FILE"
+}
+
+refresh_caches() {
+    if command -v update-desktop-database >/dev/null 2>&1; then
+        update-desktop-database "$APPS_DIR" >/dev/null 2>&1 || :
+    fi
+    if command -v gtk-update-icon-cache >/dev/null 2>&1; then
+        gtk-update-icon-cache -f -t "$ICONS_DIR" >/dev/null 2>&1 || :
+    fi
+}
+
+do_install() {
+    mkdir -p "$APPS_DIR" "$ICONS_DIR/512x512/apps" "$ICONS_DIR/scalable/apps"
+    if [ -f "$APPDIR/$APP_ID.png" ]; then
+        cp -f "$APPDIR/$APP_ID.png" "$ICONS_DIR/512x512/apps/$APP_ID.png"
+    fi
+    if [ -f "$APPDIR/$APP_ID.svg" ]; then
+        cp -f "$APPDIR/$APP_ID.svg" "$ICONS_DIR/scalable/apps/$APP_ID.svg"
+    fi
+
+    # Exec must be the absolute image path (quoted -- it may contain spaces); TryExec lets
+    # launchers hide the entry once the file is moved or deleted.
+    #
+    # Escaped per the Desktop Entry Spec, in order: the shell-quote layer inside the quoted
+    # argument, then the key-file layer, which doubles every backslash again.
+    # '%' is deliberately NOT doubled: the spec and desktop-file-validate want '%%', but GLib
+    # then rejects the whole entry, so the app vanishes from the launcher; a bare '%' loads.
+    _exec=$(printf '%s' "$APPIMAGE" | sed -e 's/\\/\\\\/g' -e 's/["$`]/\\&/g' -e 's/\\/\\\\/g')
+    _tryexec=$(printf '%s' "$APPIMAGE" | sed 's/\\/\\\\/g')
+
+    # printf %s never re-interprets escapes in its ARGUMENT, unlike awk -v, which would turn
+    # a lone backslash in the path into a tab.
+    while IFS= read -r _line || [ -n "$_line" ]; do
+        case "$_line" in
+            Exec=*)    printf 'Exec="%s" %%F\n' "$_exec"; printf 'TryExec=%s\n' "$_tryexec" ;;
+            TryExec=*) ;;
+            *)         printf '%s\n' "$_line" ;;
+        esac
+    done < "$APPDIR/$APP_ID.desktop" > "$DESKTOP_TARGET"
+
+    refresh_caches
+    write_state installed
+}
+
+do_remove() {
+    rm -f "$DESKTOP_TARGET" \
+          "$ICONS_DIR/512x512/apps/$APP_ID.png" \
+          "$ICONS_DIR/scalable/apps/$APP_ID.svg" \
+          "$STATE_FILE"
+    refresh_caches
+}
+
+# True when another integration manager (Gear Lever, AppImageLauncher) already owns this image.
+already_integrated_elsewhere() {
+    [ -d "$APPS_DIR" ] || return 1
+    for f in "$APPS_DIR"/*.desktop; do
+        [ -f "$f" ] || continue
+        [ "$f" = "$DESKTOP_TARGET" ] && continue
+        if grep -qF "$APPIMAGE" "$f" 2>/dev/null; then return 0; fi
+    done
+    return 1
+}
+
+# Monotonic-ish seconds; /proc/uptime avoids depending on `date` and never jumps.
+now_secs() {
+    if [ -r /proc/uptime ]; then
+        read -r _up _rest < /proc/uptime && echo "${_up%%.*}"
+    else
+        date +%s 2>/dev/null || echo 0
+    fi
+}
+
+bounded() {
+    if command -v timeout >/dev/null 2>&1; then
+        timeout "$ASK_TIMEOUT" "$@" >/dev/null 2>&1
+    else
+        "$@" >/dev/null 2>&1
+    fi
+}
+
+have_dialog() {
+    # No display means no dialog can render, and zenity would exit 1 -- indistinguishable
+    # from the user clicking No, which we would then remember forever.
+    [ -n "${DISPLAY:-}" ] || [ -n "${WAYLAND_DISPLAY:-}" ] || return 1
+    command -v zenity >/dev/null 2>&1 || command -v kdialog >/dev/null 2>&1
+}
+
+# 0 = yes, 1 = no, anything else = could not ask (no dialog tool, or timed out).
+ask() {
+    _txt="Add ImageGlass to your applications menu?
+
+This lets you launch it from the menu and set it as your default image viewer."
+    if command -v zenity >/dev/null 2>&1; then
+        bounded zenity --question --title="ImageGlass" --no-wrap --text="$_txt"
+    elif command -v kdialog >/dev/null 2>&1; then
+        bounded kdialog --title "ImageGlass" --yesno "$_txt"
+    else
+        return 2
+    fi
+}
+
+case "${1:---maybe}" in
+    --install)
+        if [ -z "${APPIMAGE:-}" ]; then echo "Not running from an AppImage." >&2; exit 1; fi
+        do_install
+        ;;
+    --remove)
+        do_remove
+        ;;
+    --maybe)
+        [ -n "${APPIMAGE:-}" ] || exit 0
+        case "$(read_state status)" in
+            declined) exit 0 ;;
+            installed)
+                # Re-point silently when the .AppImage has been moved or renamed.
+                if [ "$(read_state appimage)" = "$APPIMAGE" ]; then exit 0; fi
+                do_install
+                exit 0
+                ;;
+        esac
+        if already_integrated_elsewhere; then exit 0; fi
+        # Nothing to do when there is no way to ask: never integrate silently, and do not
+        # churn the lock. A later launch can still ask if a dialog tool turns up.
+        have_dialog || exit 0
+
+        # One prompt at a time: launching again while a dialog is open must not stack a
+        # second one. mkdir is the atomic test-and-set; a lock left by a killed helper is
+        # reclaimed once it is older than the dialog can possibly live.
+        mkdir -p "$(dirname "$ASK_LOCK")"
+        if ! mkdir "$ASK_LOCK" 2>/dev/null; then
+            [ -n "$(find "$ASK_LOCK" -maxdepth 0 -mmin +5 2>/dev/null)" ] || exit 0
+            rmdir "$ASK_LOCK" 2>/dev/null || :
+            mkdir "$ASK_LOCK" 2>/dev/null || exit 0
+        fi
+        trap 'rmdir "$ASK_LOCK" 2>/dev/null || :' EXIT HUP INT TERM
+
+        t0=$(now_secs)
+        rc=0; ask || rc=$?
+        # A dialog that "answered No" faster than a human could click never rendered (dead
+        # DISPLAY, missing Qt plugin); rc 1 alone cannot tell the two apart.
+        if [ "$rc" -eq 1 ] && [ "$(( $(now_secs) - t0 ))" -lt 1 ]; then rc=3; fi
+
+        if [ "$rc" -eq 0 ]; then
+            do_install
+        elif [ "$rc" -eq 1 ]; then
+            # Only a real "no" is remembered. No dialog, a timeout, or a dialog that failed to
+            # open writes nothing, so a later launch can still ask.
+            write_state declined
+        fi
+        ;;
+    *)
+        echo "usage: ${0##*/} [--maybe|--install|--remove]" >&2
+        exit 2
+        ;;
+esac

@@ -308,7 +308,7 @@ public partial class AppAPIProvider
         var boundStr = newBounds.ToStringDelimiter();
         var boundCmd = BHelper.BuildConfigCmdLine(nameof(Config.MainWindowBounds), boundStr);
 
-        _ = BHelper.RunExeAsync(BHelper.AppExePath, [boundCmd, filePath]);
+        _ = BHelper.RunExeAsync(BHelper.AppRelaunchPath, [boundCmd, filePath]);
     }
 
 

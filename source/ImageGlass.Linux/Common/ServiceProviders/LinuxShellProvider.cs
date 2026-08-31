@@ -33,7 +33,9 @@ internal class LinuxShellProvider : PhDisposable, IShellProvider
     /// <summary>
     /// <inheritdoc/>
     /// </summary>
-    public string InstallChannelId => BHelper.IsFlatpakSandbox ? "flatpak" : "zip";
+    public string InstallChannelId => BHelper.IsFlatpakSandbox ? "flatpak"
+        : BHelper.IsAppImage ? "appimage"
+        : "zip";
 
 
     public object? ForegroundShell { get; set; }
