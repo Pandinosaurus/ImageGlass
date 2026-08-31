@@ -136,6 +136,28 @@ public interface IShellProvider : IDisposable
 
 
     /// <summary>
+    /// Whether the app can add itself to the system's application menu. False wherever the
+    /// installer already did it, so only a self-contained build that installs nothing says true.
+    /// </summary>
+    bool CanRegisterAppMenuEntry => false;
+
+
+    /// <summary>
+    /// Adds the app to the system's application menu, so it can be launched from there and picked
+    /// as a default handler for image files.
+    /// </summary>
+    /// <returns><c>true</c> when an entry was written.</returns>
+    Task<bool> RegisterAppMenuEntryAsync() => Task.FromResult(false);
+
+
+    /// <summary>
+    /// Removes the entry created by <see cref="RegisterAppMenuEntryAsync"/>.
+    /// </summary>
+    /// <returns><c>true</c> when an entry was removed.</returns>
+    Task<bool> UnregisterAppMenuEntryAsync() => Task.FromResult(false);
+
+
+    /// <summary>
     /// Coarse distribution channel reported by the anonymous usage statistics, e.g.
     /// <c>msstore</c>, <c>msix</c>, <c>msi</c>, <c>flatpak</c>, <c>appimage</c>, <c>dmg</c>, <c>zip</c>.
     /// Must stay a small closed set; never derive it from a filesystem path.

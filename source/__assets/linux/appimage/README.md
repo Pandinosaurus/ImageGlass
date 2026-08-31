@@ -88,11 +88,24 @@ machine-wide `igconfig.admin.json` or a Pro license can only be deployed to
 
 ## Desktop integration
 
-AppImages do not install themselves. On first run the app offers to add a launcher entry
-and icons to `~/.local/share` (via `zenity`/`kdialog`; with neither present it does
-nothing and asks again later). The choice is remembered in
-`~/.local/share/ImageGlass/.appimage-integration`, and moving the `.AppImage` re-points
-the entry on the next launch.
+AppImages do not install themselves. **The app asks, not the packaging**: Quick Setup shows
+an "Applications menu" step on a first run, and Settings > File type associations has an
+"Applications menu" group with Register / Unregister that is always available (Quick Setup
+does not run for someone upgrading from the tarball, since both share
+`~/.local/share/ImageGlass`, nor for someone who hits Skip). Both call
+`ig-appimage-integrate --install`, so the Desktop Entry escaping lives in one place.
+
+Registering is an **unmanaged setting**, and the UI says so: the `.desktop` entry and the
+icons are written to `~/.local/share`, outside anything the app owns, so deleting the
+`.AppImage` cannot remove them. `TryExec=` does keep a stale entry from showing (GLib
+refuses to load an entry whose `TryExec` is missing), but the files remain — unregister
+before deleting the image.
+
+The installed entry is the only state; there is no marker file. `AppRun` runs `--maybe` on
+every launch, which does one thing: re-point an already-registered entry after the
+`.AppImage` is moved or renamed. It never prompts and never registers on its own — a
+blocking dialog launched from inside the image would hold the read-only mount open after
+the app exits.
 
 Manual control, from inside the mounted or extracted image:
 
@@ -100,8 +113,8 @@ Manual control, from inside the mounted or extracted image:
 usr/bin/ig-appimage-integrate --install   # or --remove
 ```
 
-Users who already run [Gear Lever](https://flathub.org/apps/it.mijorus.gearlever) or
-AppImageLauncher are detected and left alone.
+[Gear Lever](https://flathub.org/apps/it.mijorus.gearlever) and AppImageLauncher can manage
+the image instead; they write their own entry and are unaffected by the above.
 
 ## Distribute on GitHub Releases
 

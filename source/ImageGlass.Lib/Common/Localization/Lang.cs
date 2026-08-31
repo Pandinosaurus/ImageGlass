@@ -1134,6 +1134,11 @@ public class Lang
 
         // File type associations > Default photo viewer
         new(LangId.Settings_DefaultPhotoViewer, "Default photo viewer"),
+        new(LangId.Settings_AppMenuEntry, "Applications menu"), //v10.0
+        new(LangId.Settings_AppMenuEntry_Description, "Register ImageGlass in your applications menu, so you can launch it from there and set it as your default image viewer."), //v10.0
+        new(LangId.Settings_AppMenuEntry_Success, "ImageGlass has been registered in your applications menu."), //v10.0
+        new(LangId.Settings_AppMenuEntry_RemoveSuccess, "ImageGlass is no longer in your applications menu."), //v10.0
+        new(LangId.Settings_AppMenuEntry_Error, "Could not update the applications menu."), //v10.0
         new(LangId.Settings_DefaultPhotoViewer_Description, "Register the supported formats of ImageGlass with Windows. You might need to open the Default apps settings and manually select ImageGlass from the list for it to take effect."),
         new(LangId.Settings_DefaultPhotoViewer_ScopePerMachine, "Scope: all user accounts on this computer (per-machine)."),
         new(LangId.Settings_DefaultPhotoViewer_ScopePerUser, "Scope: your user account only (per-user)."),

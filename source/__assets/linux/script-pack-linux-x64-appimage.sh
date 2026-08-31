@@ -114,8 +114,8 @@ install -m 755 "$APPIMAGE_DIR/ig-appimage-integrate" "$APPDIR_STAGE/usr/bin/ig-a
 chmod +x "$APPDIR_STAGE/usr/lib/imageglass/ImageGlass"
 
 # --- Icons ---
-# appimagetool REQUIRES a root icon whose basename matches the desktop file's Icon= key,
-# so a missing source is fatal here (the Flatpak script can afford to skip silently).
+# appimagetool REQUIRES a root icon matching the desktop file's Icon= key, so a missing
+# source is fatal here (the Flatpak script can afford to skip silently).
 for pair in "logo_c_512.png:$APP_ID.png" "logo_c.svg:$APP_ID.svg"; do
 	src="$WORKSPACE_DIR/__assets/${pair%%:*}"
 	if [[ ! -f "$src" ]]; then
@@ -149,10 +149,8 @@ if command -v desktop-file-validate >/dev/null 2>&1; then
 fi
 
 # --- Bundle libgomp.so.1 as a FALLBACK only ---
-# Magick.Native-*.so has libgomp.so.1 as a DT_NEEDED and no RUNPATH, so it resolves via
-# LD_LIBRARY_PATH -> ld.so.cache; libgomp is absent on minimal systems. AppRun adds this
-# dir to LD_LIBRARY_PATH ONLY when the host has no copy, because LD_LIBRARY_PATH is
-# searched first and would otherwise shadow the host's own glibc-matched libgomp.
+# Magick.Native needs libgomp.so.1 (DT_NEEDED, no RUNPATH) and minimal systems lack it.
+# AppRun only uses this copy when the host has none, so it never shadows the host's.
 GOMP_SRC=""
 for d in /lib/x86_64-linux-gnu /usr/lib/x86_64-linux-gnu /usr/lib64 /lib64 /usr/lib; do
 	if [[ -e "$d/libgomp.so.1" ]]; then GOMP_SRC="$d/libgomp.so.1"; break; fi
@@ -172,10 +170,8 @@ fi
 echo "==> Writing AppRun"
 cat > "$APPDIR_STAGE/AppRun" <<'APPRUN_EOF'
 #!/bin/sh
-# ImageGlass AppImage entry point.
-#
-# Keep this minimal: every variable exported here is inherited by every HOST binary the
-# app spawns -- xdg-open, gdbus, paplay/pw-play/aplay/ffplay, lpr, external tools.
+# ImageGlass AppImage entry point. Keep it minimal: everything exported here is inherited
+# by every HOST binary the app spawns (xdg-open, gdbus, paplay, lpr, external tools).
 
 # Exported by the runtime, but NOT when running an extracted squashfs-root/AppRun.
 if [ -z "${APPDIR:-}" ]; then
@@ -183,18 +179,14 @@ if [ -z "${APPDIR:-}" ]; then
     export APPDIR
 fi
 
-# Pin the cwd to the caller's dir, which the runtime exports as OWD (mount mode only;
-# extract-and-run leaves it unset). Current type-2 runtimes already preserve the cwd, so
-# this is a no-op guard -- but relative file arguments and the Save As default directory
-# both depend on it (BHelper.ResolvePath ends in Path.GetFullPath, which uses the CWD),
-# so make it deterministic rather than trusting the runtime.
+# Relative file args and the Save As default dir both follow the cwd; current runtimes
+# already preserve it, so this only guards against one that does not.
 if [ -n "${OWD:-}" ] && [ -d "$OWD" ]; then
     cd "$OWD" || :
 fi
 
-# libgomp fallback for Magick.Native, ONLY when the host has none: LD_LIBRARY_PATH is
-# searched before ld.so.cache, so an unconditional entry would shadow the host's own
-# copy -- the one that matches the host glibc.
+# Only when the host has none: LD_LIBRARY_PATH beats ld.so.cache, so an unconditional
+# entry would shadow the host's own glibc-matched copy.
 if [ -e "$APPDIR/usr/lib/fallback/libgomp.so.1" ]; then
     _ig_gomp=""
     for _ig_d in /lib/x86_64-linux-gnu /usr/lib/x86_64-linux-gnu /usr/lib64 /lib64 /usr/lib; do
@@ -210,23 +202,14 @@ if [ -e "$APPDIR/usr/lib/fallback/libgomp.so.1" ]; then
     unset _ig_gomp _ig_d
 fi
 
-# First-run desktop integration; backgrounded so it never delays the window.
+# Re-points an existing entry after the image is moved. Never prompts or installs, so it
+# cannot block and hold the read-only mount open.
 if [ -n "${APPIMAGE:-}" ] && [ -x "$APPDIR/usr/bin/ig-appimage-integrate" ]; then
     "$APPDIR/usr/bin/ig-appimage-integrate" --maybe >/dev/null 2>&1 &
 fi
 
-# Deliberately NOT set:
-#   TMPDIR        -- AppInstance's lock file lives under it; an unwritable path is
-#                    swallowed and every launch would silently claim "first instance".
-#   XDG_DATA_HOME -- would move the config off ~/.local/share/ImageGlass and orphan the
-#                    settings shared with the tarball install.
-#   LD_LIBRARY_PATH pointing at usr/lib/imageglass -- .NET loads those .so files from
-#                    AppContext.BaseDirectory; exposing them could shadow a host library.
-#   FONTCONFIG_*  -- libSkiaSharp links the HOST libfontconfig and must see the user's
-#                    font configuration.
-#   XDG_DATA_DIRS, LANG/LC_ALL -- nothing is read from $APPDIR/usr/share at runtime, and
-#                    the app follows the user's locale through the host ICU.
-# APPIMAGE is what LinuxShellProvider.InstallChannelId tests for; do not clear it.
+# Never export TMPDIR, XDG_DATA_HOME, XDG_DATA_DIRS, FONTCONFIG_*, or an LD_LIBRARY_PATH
+# covering the payload; and never clear APPIMAGE. See the AppImage notes in CLAUDE.md.
 
 # exec (no subshell) so ProcessName stays "ImageGlass" -- HasOtherInstances() and
 # CloseOtherInstances() match on it.
@@ -236,10 +219,8 @@ chmod 755 "$APPDIR_STAGE/AppRun"
 sh -n "$APPDIR_STAGE/AppRun" || { echo "Error: generated AppRun is not valid POSIX sh" >&2; exit 1; }
 
 # --- Report the glibc floor of the shipped ELFs ---
-# An AppImage runs against the HOST glibc, so the highest symbol version any shipped
-# binary needs IS the minimum distro this build supports. Scope: usr/lib/imageglass only
-# -- the libgomp fallback is conditional and does not set the floor for hosts that have
-# their own. The || true guards matter: under pipefail a no-match grep aborts the script.
+# The highest symbol version any shipped binary needs IS the minimum distro supported.
+# The || true guards matter: under pipefail a no-match grep would abort the script.
 echo "==> glibc floor"
 GLIBC_FLOOR="$(
 	{ find "$APPDIR_STAGE/usr/lib/imageglass" -type f \
@@ -258,10 +239,8 @@ case "$GLIBC_FLOOR" in
 esac
 
 # --- Locate appimagetool ---
-# No distro packages it; it ships only as an AppImage. Cache it under __artifacts/
-# (gitignored) rather than in the repo. Default URL is AppImage/appimagetool, NOT the old
-# AppImageKit v13: the maintained runtime is statically linked against fuse3 and supports
-# zstd, while v13 needs libfuse2 on the USER's machine and cannot read a zstd squashfs.
+# No distro packages it, so cache the download under __artifacts/ (gitignored). Use
+# AppImage/appimagetool, not AppImageKit v13, whose runtime cannot read a zstd squashfs.
 APPIMAGETOOL_URL="${APPIMAGETOOL_URL:-https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage}"
 APPIMAGETOOL_SHA256="${APPIMAGETOOL_SHA256:-}"
 TOOL=""
@@ -350,9 +329,8 @@ else
 	chmod +x "$APPIMAGE_PATH"
 	BUILT=1
 
-	# Prove the EMBEDDED runtime can read the squashfs we just wrote: a runtime built
-	# without zstd support yields an image that refuses to mount, and --appimage-offset
-	# would still succeed because it never touches the filesystem.
+	# Prove the EMBEDDED runtime can read what we wrote: --appimage-offset would pass even
+	# on an image it cannot mount, because it never touches the filesystem.
 	if ( cd "$BUILD_ROOT" && "$APPIMAGE_PATH" --appimage-extract "AppRun" >/dev/null 2>&1 ); then
 		echo "    runtime reads the image OK"
 		rm -rf "$BUILD_ROOT/squashfs-root"
@@ -363,9 +341,8 @@ else
 fi
 
 # --- Clean up staging produced during packing ---
-# The .AppImage is the deliverable; the AppDir is intermediate. Deviation from the
-# Flatpak script: when the build was skipped the AppDir is the ONLY usable output, so
-# keep it. A full `if` (not `[[ ]] && rm`), or set -e kills the run before the report.
+# Keep the AppDir when the build was skipped: it is then the only usable output. A full
+# `if` (not `[[ ]] && rm`), or set -e kills the run before the report.
 if [[ "$BUILT" == "1" ]]; then
 	rm -rf "$BUILD_ROOT"
 fi

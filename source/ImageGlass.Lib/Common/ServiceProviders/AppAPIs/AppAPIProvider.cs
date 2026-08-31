@@ -3345,6 +3345,48 @@ public partial class AppAPIProvider
 
 
     /// <summary>
+    /// Registers or unregisters the app in the system applications menu, then reports the result.
+    /// </summary>
+    /// <param name="owner">Modal owner</param>
+    /// <param name="lang">Language for the result dialog</param>
+    /// <returns><c>true</c> when the menu was updated.</returns>
+    public static async Task<bool> RegisterAppMenuEntryAsync(bool enable, PhWindow? owner = null, Lang? lang = null)
+    {
+        if (Core.ShellProvider is null) return false;
+
+        owner ??= App.MainWindow;
+        lang ??= Core.Lang;
+
+        var ok = enable
+            ? await Core.ShellProvider.RegisterAppMenuEntryAsync()
+            : await Core.ShellProvider.UnregisterAppMenuEntryAsync();
+
+        if (!ok)
+        {
+            await ModalWindow.ShowErrorAsync(owner, new ModalWindowOptions
+            {
+                Title = lang[LangId.Settings_AppMenuEntry],
+                Heading = lang[LangId.Settings_AppMenuEntry_Error],
+            });
+            return false;
+        }
+
+        // the entry and icons live outside the app dir, so uninstalling cannot remove them
+        await ModalWindow.ShowInfoAsync(owner, new ModalWindowOptions
+        {
+            Title = lang[LangId.Settings_AppMenuEntry],
+            Heading = lang[enable
+                ? LangId.Settings_AppMenuEntry_Success
+                : LangId.Settings_AppMenuEntry_RemoveSuccess],
+            Note = enable ? lang[LangId.Settings_UnmanagedSettingReminder] : null,
+            NoteStyle = InfoBarSeverity.Warning,
+        });
+
+        return true;
+    }
+
+
+    /// <summary>
     /// Sets or removes the app as the default photo viewer for supported file formats.
     /// </summary>
     /// <param name="owner">Modal owner</param>
