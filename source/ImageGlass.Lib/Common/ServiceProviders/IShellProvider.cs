@@ -194,4 +194,16 @@ public interface IShellProvider : IDisposable
     /// the app theme implement this.
     /// </summary>
     void SetTitleBarDarkMode(nint windowHandle, bool isDark) { }
+
+
+    /// <summary>
+    /// Keeps the system and the display awake, e.g. while a slideshow plays. Best-effort.
+    /// </summary>
+    void PreventSleep(string reason) { }
+
+
+    /// <summary>
+    /// Releases the request held by <see cref="PreventSleep"/>.
+    /// </summary>
+    void AllowSleep() { }
 }
