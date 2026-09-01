@@ -268,6 +268,7 @@ public enum ResxId
     // theme pack
     IG_ThemeBackgroundBrush,
     IG_ViewerBackgroundBrush,
+    IG_ToolHostBackgroundBrush,
     IG_ThemeForegroundBrush,
     IG_ThemeToolbarBackgroundBrush,
     IG_ThemeGalleryBackgroundBrush,
