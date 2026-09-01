@@ -98,6 +98,7 @@ internal class LinuxShellProvider : PhDisposable, IShellProvider
     protected override void OnDisposing()
     {
         base.OnDisposing();
+        AllowSleep();
         ForegroundShell = null;
     }
 
@@ -296,6 +297,18 @@ internal class LinuxShellProvider : PhDisposable, IShellProvider
         // which the gdbus CLI cannot pass. Re-enable here once a managed D-Bus client
         // that can pass FDs is wired up.
     }
+
+
+    /// <summary>
+    /// <inheritdoc/>
+    /// </summary>
+    public void PreventSleep(string reason) => LinuxPowerApi.PreventSleep(reason);
+
+
+    /// <summary>
+    /// <inheritdoc/>
+    /// </summary>
+    public void AllowSleep() => LinuxPowerApi.AllowSleep();
 
 
 
