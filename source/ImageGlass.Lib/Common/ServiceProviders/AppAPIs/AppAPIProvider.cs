@@ -68,6 +68,7 @@ public partial class AppAPIProvider
     private bool _showGalleryBeforeSlideshow = true;
     private bool _windowMaximizedBeforeSlideshow;
     private DispatcherTimer? _slideshowCountdownTimer;
+    private IdleCursorHider? _slideshowCursorHider;
     private bool _slideshowIsAdvancing;
 
     // set once the user runs a check-for-update with UI; the startup silent check then completes
@@ -2698,6 +2699,12 @@ public partial class AppAPIProvider
 
         // 4. start countdown refresh timer for the viewer overlay
         SetSlideshowCountdown(Core.Config.EnableSlideshowCountdown);
+
+
+        // 5. auto-hide the idle cursor; the viewer is listed since its own cursor shadows the window's
+        _slideshowCursorHider?.Dispose();
+        _slideshowCursorHider = new IdleCursorHider(App.MainWindow, Viewer);
+        _slideshowCursorHider.Start();
     }
 
     private void StopSlideshow__()
@@ -2706,8 +2713,11 @@ public partial class AppAPIProvider
 
         Core.Config.EnableSlideshow = false;
 
-        // 1. stop countdown timer
+        // 1. stop countdown timer and bring the mouse cursor back
         SetSlideshowCountdown(false);
+
+        _slideshowCursorHider?.Dispose();
+        _slideshowCursorHider = null;
 
 
         // 2. stop and dispose the slideshow service
