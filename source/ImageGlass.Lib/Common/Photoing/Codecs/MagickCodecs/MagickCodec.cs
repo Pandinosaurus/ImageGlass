@@ -1092,6 +1092,29 @@ public static partial class MagickCodec
         {
             meta.IsWideGamut = true;
         }
+
+        // 10. HDR10 content peak, which the tone curve uses as its white level instead of guessing
+        if (meta.IsHdr && meta.HdrTransferFn != HdrTransferFunction.GainMap)
+        {
+            meta.ContentPeakNits = DetectContentPeakNits(meta);
+        }
+    }
+
+
+    /// <summary>
+    /// Reads the declared peak content luminance in nits, preferring the container's own HDR10
+    /// metadata over the EXIF copy. Returns <c>0</c> when the file declares none.
+    /// </summary>
+    private static double DetectContentPeakNits(PhotoMetadata meta)
+    {
+        var peak = meta.FileExtension switch
+        {
+            ".avif" or ".heif" or ".heic" or ".hif" => ParseContentPeakFromIsobmff(meta.FilePath),
+            ".png" => ParseContentPeakFromPng(meta.FilePath),
+            _ => null,
+        };
+
+        return peak ?? 0d;
     }
 
 

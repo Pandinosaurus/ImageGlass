@@ -595,4 +595,147 @@ public static partial class MagickCodec
         return null;
     }
 
+
+    /// <summary>
+    /// Whether a parsed peak is usable: rejects a bad box match and the flat 10000 encoders emit
+    /// when they do not know the real peak (the PQ container ceiling, not a grade).
+    /// </summary>
+    private static bool IsPlausiblePeakNits(double nits) => nits is >= 100d and < 10_000d;
+
+
+    /// <summary>
+    /// Parses the HDR10 content peak from ISOBMFF (AVIF, HEIF): the 'clli' box (MaxCLL), falling
+    /// back to 'mdcv' mastering display max luminance as HDR tone mappers conventionally do.
+    /// </summary>
+    /// <returns>Peak luminance in nits, or <c>null</c> when the file declares none.</returns>
+    private static double? ParseContentPeakFromIsobmff(string filePath)
+    {
+        if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath)) return null;
+
+        const int SEARCH_SIZE = 256 * 1024;
+
+        try
+        {
+            using var fs = File.OpenRead(filePath);
+            var bufSize = (int)Math.Min(fs.Length, SEARCH_SIZE);
+            var buf = new byte[bufSize];
+            fs.ReadExactly(buf);
+
+            var span = buf.AsSpan();
+
+            // 'clli' body: [2 max_content_light_level][2 max_pic_average_light_level], already in nits
+            var clliPos = FindSizedBox(span, "clli"u8, 4);
+            if (clliPos >= 0)
+            {
+                var maxCll = (double)BinaryPrimitives.ReadUInt16BigEndian(span.Slice(clliPos));
+                if (IsPlausiblePeakNits(maxCll)) return maxCll;
+            }
+
+            // 'mdcv' body: 12 bytes primaries + 4 white point, then max/min luminance in 0.0001 nits
+            var mdcvPos = FindSizedBox(span, "mdcv"u8, 24);
+            if (mdcvPos >= 0)
+            {
+                var maxMastering = BinaryPrimitives.ReadUInt32BigEndian(span.Slice(mdcvPos + 16)) / 10_000d;
+                if (IsPlausiblePeakNits(maxMastering)) return maxMastering;
+            }
+        }
+        catch { }
+
+        return null;
+    }
+
+
+    /// <summary>
+    /// Finds an ISOBMFF box by type, validating the size field in front of the 4CC so a bare
+    /// 4-byte scan cannot match compressed pixel data.
+    /// </summary>
+    /// <returns>Offset of the box body, or <c>-1</c> when not found.</returns>
+    private static int FindSizedBox(ReadOnlySpan<byte> span, ReadOnlySpan<byte> boxType, int bodySize)
+    {
+        var expectedSize = 8 + bodySize;
+        var searchFrom = 0;
+
+        while (searchFrom <= span.Length - 4)
+        {
+            var found = span.Slice(searchFrom).IndexOf(boxType);
+            if (found < 0) return -1;
+
+            var typePos = searchFrom + found;
+            var bodyPos = typePos + 4;
+
+            if (typePos >= 4 && bodyPos + bodySize <= span.Length
+                && BinaryPrimitives.ReadUInt32BigEndian(span.Slice(typePos - 4)) == expectedSize)
+            {
+                return bodyPos;
+            }
+
+            searchFrom = typePos + 1;
+        }
+
+        return -1;
+    }
+
+
+    /// <summary>
+    /// Parses the HDR10 content peak from a PNG 'cLLi' chunk (encoders use that spelling, not the
+    /// spec's 'cLLI'), falling back to 'mDCV'. Both carry luminance in units of 0.0001 nits.
+    /// </summary>
+    /// <returns>Peak luminance in nits, or <c>null</c> when the file declares none.</returns>
+    private static double? ParseContentPeakFromPng(string filePath)
+    {
+        if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath)) return null;
+
+        const int SEARCH_SIZE = 64 * 1024;
+
+        try
+        {
+            using var fs = File.OpenRead(filePath);
+
+            Span<byte> sig = stackalloc byte[8];
+            if (fs.Read(sig) < 8) return null;
+            ReadOnlySpan<byte> pngSig = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A];
+            if (!sig.SequenceEqual(pngSig)) return null;
+
+            var bufSize = (int)Math.Min(fs.Length, SEARCH_SIZE);
+            var buf = new byte[bufSize];
+            fs.Position = 0;
+            fs.ReadExactly(buf);
+
+            var span = buf.AsSpan();
+            double? masteringPeak = null;
+
+            // walk chunks: [4 length][4 type][data...][4 CRC]
+            var pos = 8;
+            while (pos + 12 <= span.Length)
+            {
+                var chunkLen = BinaryPrimitives.ReadInt32BigEndian(span.Slice(pos));
+                if (chunkLen < 0) break;
+
+                var dataPos = pos + 8;
+                var chunkType = span.Slice(pos + 4, 4);
+
+                // content light level data: [4 MaxCLL][4 MaxFALL]
+                if ((chunkType.SequenceEqual("cLLi"u8) || chunkType.SequenceEqual("cLLI"u8))
+                    && dataPos + 4 <= span.Length)
+                {
+                    var maxCll = BinaryPrimitives.ReadUInt32BigEndian(span.Slice(dataPos)) / 10_000d;
+                    if (IsPlausiblePeakNits(maxCll)) return maxCll;
+                }
+                // mDCV data: 12 bytes primaries + 4 white point, then max/min luminance
+                else if (chunkType.SequenceEqual("mDCV"u8) && dataPos + 20 <= span.Length)
+                {
+                    var maxMastering = BinaryPrimitives.ReadUInt32BigEndian(span.Slice(dataPos + 16)) / 10_000d;
+                    if (IsPlausiblePeakNits(maxMastering)) masteringPeak = maxMastering;
+                }
+
+                pos += 12 + chunkLen;
+            }
+
+            return masteringPeak;
+        }
+        catch { }
+
+        return null;
+    }
+
 }

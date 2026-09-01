@@ -1254,7 +1254,7 @@ public class Lang
         #region Tool: HDR tone mapper
         new(LangId.Tool_Hdr_LblMode, "Mode"), //v10.0
         new(LangId.Tool_Hdr_LblExposure, "Exposure: {0}"), //v10.0
-        new(LangId.Tool_Hdr_LblWhitePoint, "White point (nits): {0}"), //v10.0
+        new(LangId.Tool_Hdr_LblReferenceWhite, "Reference white: {0} nits"), //v10.0
         new(LangId.Tool_Hdr_LblHighlightCompression, "Highlight compression: {0}"), //v10.0
         new(LangId.Tool_Hdr_LblSaturation, "Saturation: {0}"), //v10.0
         new(LangId.Tool_Hdr_BtnReset, "Reset"), //v10.0

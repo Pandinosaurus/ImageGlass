@@ -814,7 +814,7 @@ public enum LangId
     #region Tool: HDR tone mapper
     Tool_Hdr_LblMode,
     Tool_Hdr_LblExposure,
-    Tool_Hdr_LblWhitePoint,
+    Tool_Hdr_LblReferenceWhite,
     Tool_Hdr_LblHighlightCompression,
     Tool_Hdr_LblSaturation,
     Tool_Hdr_BtnReset,
