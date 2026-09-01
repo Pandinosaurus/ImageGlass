@@ -328,6 +328,7 @@ public enum ResxIconId
     IconIntegrated,
     IconInfo,
     IconVerify,
+    IconPlaceholder,
     IconWeatherMoon,
     IconWeatherSunny,
 }

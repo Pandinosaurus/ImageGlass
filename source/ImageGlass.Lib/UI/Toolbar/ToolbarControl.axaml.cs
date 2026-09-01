@@ -229,6 +229,9 @@ public partial class ToolbarControl : PhControl
 
 
             // 2. Button item
+            // an inert button (no click action) has nothing to run: leave it out of the menu entirely
+            if (!item.HasClickAction) continue;
+
             // get toolbar item metadata
             var mnuItem = new PhMenuItem
             {
@@ -251,6 +254,16 @@ public partial class ToolbarControl : PhControl
                     };
                 }
                 catch { }
+            }
+
+            // no icon: the same hatch placeholder the toolbar button shows
+            else if (item.IsPlaceholderIconVisible)
+            {
+                mnuItem.Icon = new PathIcon
+                {
+                    Opacity = 0.6,
+                    Data = Resx.GetIcon(ResxIconId.IconPlaceholder),
+                };
             }
 
             // get display text
@@ -375,6 +388,10 @@ public partial class ToolbarControl : PhControl
             {
                 var itemBtn = new ToolbarButton();
                 itemBtn.IsChecked = ComputeCheckState(vm);
+
+                // a button with no click action is inert: hit-testing off also kills hover/press/tooltip
+                itemBtn.IsEnabled = itemBtn.IsHitTestVisible = vm.HasClickAction;
+
                 itemBtn.Click += ToolbarButton_Click;
                 itemEl = itemBtn;
             }
