@@ -50,6 +50,10 @@ public partial class Photo : PhDisposable
 
     // track pending tasks
     private ConcurrentDictionary<Guid, bool> _taskRefs = new();
+
+    // in-flight file writes across all photos; shutdown waits on this
+    private static int _pendingSaveCount;
+
     private CancellationTokenSource? _cancelThumbnailLoading;
     private double _galleryThumbnailRequestSize;
 
@@ -961,6 +965,7 @@ public partial class Photo : PhDisposable
     {
         var taskId = Guid.NewGuid();
         _ = _taskRefs.TryAdd(taskId, true);
+        _ = Interlocked.Increment(ref _pendingSaveCount);
 
         try
         {
@@ -972,27 +977,29 @@ public partial class Photo : PhDisposable
             // 1. save clipboard photo to file
             if (!handled && IsClipboard && Bitmap is SKImage img)
             {
-                await Task.Factory.StartNew(async () =>
-                {
-                    await SkiaCodec.SaveAsync(img, destFilePath, transforms, quality, token);
-                }, token, TaskCreationOptions.LongRunning, TaskScheduler.Default).Unwrap();
+                await SaveStaging.WriteThenPromoteAsync(destFilePath, stagePath =>
+                    Task.Factory.StartNew(async () =>
+                    {
+                        await SkiaCodec.SaveAsync(img, stagePath, transforms, quality, token);
+                    }, token, TaskCreationOptions.LongRunning, TaskScheduler.Default).Unwrap(), token);
             }
 
             // 2. save photo to file
             else if (!handled)
             {
-                await Task.Factory.StartNew(async () =>
+                // update read options
+                var readOptions = ReadOptions with
                 {
-                    // update read options
-                    var readOptions = ReadOptions with
-                    {
-                        FrameIndex = Metadata.FrameCount > 1
-                            ? -1 // save all frame
-                            : ReadOptions.FrameIndex, // save only current frame
-                    };
+                    FrameIndex = Metadata.FrameCount > 1
+                        ? -1 // save all frame
+                        : ReadOptions.FrameIndex, // save only current frame
+                };
 
-                    await MagickCodec.SaveAsync(Metadata, destFilePath, readOptions, transforms, quality, token);
-                }, token, TaskCreationOptions.LongRunning, TaskScheduler.Default).Unwrap();
+                await SaveStaging.WriteThenPromoteAsync(destFilePath, stagePath =>
+                    Task.Factory.StartNew(async () =>
+                    {
+                        await MagickCodec.SaveAsync(Metadata, stagePath, readOptions, transforms, quality, token);
+                    }, token, TaskCreationOptions.LongRunning, TaskScheduler.Default).Unwrap(), token);
             }
 
 
@@ -1005,7 +1012,28 @@ public partial class Photo : PhDisposable
         catch (OperationCanceledException) { }
         finally
         {
+            _ = Interlocked.Decrement(ref _pendingSaveCount);
             _ = _taskRefs.TryRemove(taskId, out _);
+        }
+    }
+
+
+    /// <summary>
+    /// Number of file writes currently in flight across all photos.
+    /// </summary>
+    public static int PendingSaveCount => Volatile.Read(ref _pendingSaveCount);
+
+
+    /// <summary>
+    /// Waits until every in-flight save has finished, so the app cannot tear down mid-write.
+    /// </summary>
+    public static async Task WaitForPendingSavesAsync(TimeSpan timeout)
+    {
+        var startedAt = Stopwatch.StartNew();
+
+        while (Volatile.Read(ref _pendingSaveCount) > 0 && startedAt.Elapsed < timeout)
+        {
+            await Task.Delay(20).ConfigureAwait(false);
         }
     }
 
