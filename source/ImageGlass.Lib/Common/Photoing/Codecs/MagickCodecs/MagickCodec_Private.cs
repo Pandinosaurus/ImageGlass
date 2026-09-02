@@ -42,6 +42,10 @@ public static partial class MagickCodec
     {
         IMagickImage? thumbM = null;
 
+        // Ping exposes no ICC for JXL, so metadata can arrive marked SDR for a PQ image; correct
+        // it from this fully-read copy before the transform below, which keys off meta.IsHdr.
+        if (!meta.IsHdr) ApplyIccHdrInfo__(meta, refImgM);
+
 
         // Use embedded thumbnails if specified
         if (requestThumbnail && meta.ExifProfile != null && options.OnlyLoadNonRawPreview)
@@ -497,6 +501,69 @@ public static partial class MagickCodec
         catch { }
 
         return false;
+    }
+
+
+    /// <summary>
+    /// Upgrades <paramref name="meta"/> to HDR when the image's ICC profile says so.
+    /// </summary>
+    private static void ApplyIccHdrInfo__(PhotoMetadata meta, IMagickImage img)
+    {
+        if (img.GetProfile("icc") is not { } profile) return;
+        if (ParseCicpFromIcc(profile.ToReadOnlySpan()) is not (var primaries, var transfer)) return;
+
+        meta.HdrTransferFn = transfer switch
+        {
+            16 => HdrTransferFunction.PQ,
+            18 => HdrTransferFunction.HLG,
+            _ => meta.HdrTransferFn,
+        };
+
+        if (!meta.IsWideGamut && primaries is 9 or 11 or 12)
+        {
+            meta.IsWideGamut = true;
+        }
+    }
+
+
+    /// <summary>
+    /// Reads the CICP values out of an ICC profile's <c>cicp</c> tag (ICC.1:2022, 10.4).
+    /// </summary>
+    private static (int ColorPrimaries, int TransferCharacteristics)? ParseCicpFromIcc(ReadOnlySpan<byte> icc)
+    {
+        // 128-byte header, then a uint32 tag count, then 12 bytes per tag table entry
+        const int TAG_COUNT_OFFSET = 128;
+        const int TAG_TABLE_OFFSET = 132;
+        const int TAG_ENTRY_SIZE = 12;
+        const int CICP_TAG_SIZE = 12;
+
+        if (icc.Length < TAG_TABLE_OFFSET) return null;
+
+        var tagCount = BinaryPrimitives.ReadUInt32BigEndian(icc[TAG_COUNT_OFFSET..]);
+
+        // a sane profile has tens of tags; anything wilder means the bytes are not an ICC profile
+        if (tagCount == 0 || tagCount > 256) return null;
+
+        for (var i = 0; i < (int)tagCount; i++)
+        {
+            var entry = TAG_TABLE_OFFSET + (i * TAG_ENTRY_SIZE);
+            if (entry + TAG_ENTRY_SIZE > icc.Length) return null;
+
+            if (!icc.Slice(entry, 4).SequenceEqual("cicp"u8)) continue;
+
+            var dataOffset = BinaryPrimitives.ReadUInt32BigEndian(icc[(entry + 4)..]);
+            var dataSize = BinaryPrimitives.ReadUInt32BigEndian(icc[(entry + 8)..]);
+            if (dataSize < CICP_TAG_SIZE || dataOffset + CICP_TAG_SIZE > (uint)icc.Length) return null;
+
+            var data = icc.Slice((int)dataOffset, CICP_TAG_SIZE);
+
+            // the tag data repeats its own signature, then 4 reserved bytes
+            if (!data[..4].SequenceEqual("cicp"u8)) return null;
+
+            return (data[8], data[9]);
+        }
+
+        return null;
     }
 
 
