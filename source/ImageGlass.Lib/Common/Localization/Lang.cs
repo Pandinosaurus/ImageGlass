@@ -835,6 +835,9 @@ public class Lang
         new(LangId.Menu_MnuUpgradeLicense_BuyOnline, "Buy online…"), // v10.0
         new(LangId.Menu_MnuUpgradeLicense_ViewFeatures, "View Pro features"), // v10.0
         new(LangId.Menu_MnuUpgradeLicense_OutOfScope, "Your {0} license covers ImageGlass {1}, not ImageGlass {2}. Upgrade your license to turn Pro back on."), // v10.0
+        new(LangId.Menu_MnuUpgradeLicense_Expired, "Your {0} license expired on {1}, and ImageGlass has switched to the Classic edition. Purchase a new license or import a renewal to reactivate Pro features."), // v10.0
+        new(LangId.Menu_MnuUpgradeLicense_ExpiredTitle, "Your license is expired"), // v10.0
+        new(LangId.Menu_MnuUpgradeLicense_SwitchToClassic, "Switch to Classic edition"), // v10.0
 
         new(LangId.Menu_MnuManageLicense, "Manage license"), // v10.0
         new(LangId.Menu_MnuManageLicense_ChangeLicense, "Change license file…"), // v10.0
