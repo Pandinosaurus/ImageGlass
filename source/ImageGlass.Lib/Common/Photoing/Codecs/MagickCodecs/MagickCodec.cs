@@ -442,7 +442,7 @@ public static partial class MagickCodec
                     }
 
                     meta.MagickColorProfile = colorProfile;
-                    meta.SkiaColorSpace = SKColorSpace.CreateIcc(colorProfile.ToByteArray());
+                    meta.SkiaColorSpace = SkiaCodec.CreateIccColorSpace(colorProfile.ToReadOnlySpan());
                 }
             }
             catch { }
