@@ -18,14 +18,16 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 using Avalonia;
 using Avalonia.Media;
+using ImageGlass.Common;
 using ImageGlass.Common.Types;
+using System;
 
-namespace ImageGlass.Common.Windows;
+namespace ImageGlass.UI;
 
 /// <summary>
-/// The shared star glyph of the license hero: one geometry, one gradient, one draw routine.
+/// The Pro star: a control that draws it once at rest, plus the shared glyph other stars draw with.
 /// </summary>
-internal static class HeroStar
+public sealed class PhProStar : PhControl
 {
     /// <summary>
     /// The <c>IconProStar</c> viewBox width; hardcoded, as the platform path bounds may differ.
@@ -44,11 +46,48 @@ internal static class HeroStar
 
     private const string DARK_CORE_COLOR = "#FFFFFFFF";
     private const string DARK_EDGE_COLOR = "#FFA7D5F7";
+
     // the badge sits on the blue logo, so it stays white in both themes
     private const string BADGE_EDGE_COLOR = "#FFE4F2FD";
     private const string LIGHT_CORE_FALLBACK = "#FF1C5E96";
     private const string LIGHT_EDGE_FALLBACK = "#FF004F90";
 
+    private Geometry? _geometry;
+    private IBrush? _brush;
+
+
+    public PhProStar()
+    {
+        IsHitTestVisible = false;
+    }
+
+
+    #region Overrides
+
+    public override void Render(DrawingContext c)
+    {
+        base.Render(c);
+
+        // purely cosmetic, so a failure here must not reach the hosting window
+        try
+        {
+            _geometry ??= TryGetGeometry();
+            _brush ??= CreateWhiteBrush();
+            if (_geometry is null || _brush is null) return;
+
+            var size = Math.Min(Bounds.Width, Bounds.Height);
+            if (size <= 0) return;
+
+            Draw(c, _geometry, _brush, Bounds.Width / 2, Bounds.Height / 2, size, 0);
+        }
+        catch { }
+    }
+
+    #endregion // Overrides
+
+
+
+    #region Shared glyph
 
     /// <summary>
     /// Resolves the shared star geometry; callers must degrade to drawing nothing on null.
@@ -67,14 +106,14 @@ internal static class HeroStar
 
 
     /// <summary>
-    /// Builds the flying-star gradient for the current theme, with fully opaque stops.
+    /// Builds the star gradient for the current theme, with fully opaque stops.
     /// </summary>
-    internal static IBrush CreateBrush()
+    internal static IBrush CreateThemedBrush()
     {
         var core = Color.Parse(DARK_CORE_COLOR);
         var edge = Color.Parse(DARK_EDGE_COLOR);
 
-        // a white core is invisible on a light hero, so light mode uses the accent pair
+        // a white core is invisible on a light background, so light mode uses the accent pair
         if (!Core.Theme.Settings.IsDarkMode)
         {
             try
@@ -96,8 +135,28 @@ internal static class HeroStar
     /// <summary>
     /// Builds the authored white gradient, for a star sitting on the blue logo in either theme.
     /// </summary>
-    internal static IBrush CreateFixedBrush()
+    internal static IBrush CreateWhiteBrush()
         => BuildBrush(Color.Parse(DARK_CORE_COLOR), Color.Parse(BADGE_EDGE_COLOR));
+
+
+    /// <summary>
+    /// Draws one star centered on the given point, scaled so its viewBox edge measures <paramref name="size"/>.
+    /// </summary>
+    internal static void Draw(DrawingContext c, Geometry geometry, IBrush brush,
+        double centerX, double centerY, double size, double rotationRadians)
+    {
+        var scale = size / VIEWBOX_WIDTH;
+        var pivot = new Point(VIEWBOX_WIDTH / 2, VIEWBOX_HEIGHT / 2);
+
+        // Avalonia's Matrix is row-vector, so A * B applies A then B
+        var matrix = Matrix.CreateRotation(rotationRadians, pivot)
+            * Matrix.CreateTranslation(-pivot.X, -pivot.Y)
+            * Matrix.CreateScale(scale, scale)
+            * Matrix.CreateTranslation(centerX, centerY);
+
+        using var _ = c.PushTransform(matrix);
+        c.DrawGeometry(brush, null, geometry);
+    }
 
 
     private static IBrush BuildBrush(Color core, Color edge)
@@ -127,23 +186,6 @@ internal static class HeroStar
         }
     }
 
+    #endregion // Shared glyph
 
-    /// <summary>
-    /// Draws one star centered on the given point, scaled so its viewBox edge measures <paramref name="size"/>.
-    /// </summary>
-    internal static void Draw(DrawingContext c, Geometry geometry, IBrush brush,
-        double centerX, double centerY, double size, double rotationRadians)
-    {
-        var scale = size / VIEWBOX_WIDTH;
-        var pivot = new Point(VIEWBOX_WIDTH / 2, VIEWBOX_HEIGHT / 2);
-
-        // Avalonia's Matrix is row-vector, so A * B applies A then B
-        var matrix = Matrix.CreateRotation(rotationRadians, pivot)
-            * Matrix.CreateTranslation(-pivot.X, -pivot.Y)
-            * Matrix.CreateScale(scale, scale)
-            * Matrix.CreateTranslation(centerX, centerY);
-
-        using var _ = c.PushTransform(matrix);
-        c.DrawGeometry(brush, null, geometry);
-    }
 }

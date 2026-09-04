@@ -16,13 +16,11 @@
             Orientation="Vertical"
             Spacing="4">
 
-            <!--  app logo; the source follows the theme pack, so it is assigned in code  -->
-            <Image
-                x:Name="PART_Logo"
-                Width="96"
-                Height="96"
+            <!--  app logo  -->
+            <ui:PhLogo
                 Margin="0,16,0,0"
-                HorizontalAlignment="Center" />
+                HorizontalAlignment="Center"
+                LogoSize="96" />
 
             <!--  app name  -->
             <TextBlock

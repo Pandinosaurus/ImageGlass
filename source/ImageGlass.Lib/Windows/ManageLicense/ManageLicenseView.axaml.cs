@@ -18,14 +18,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 using Avalonia.Controls;
 using Avalonia.Interactivity;
-using Avalonia.Media.Imaging;
 using Avalonia.Platform.Storage;
-using Avalonia.Svg.Skia;
 using Avalonia.Threading;
-using ImageGlass.Common.AppThemes;
 using ImageGlass.Common.Localization;
 using ImageGlass.Common.ServiceProviders.Licensing;
-using ImageGlass.Common.Types;
 using ImageGlass.UI;
 using ImageGlass.UI.Windowing;
 using System;
@@ -49,10 +45,9 @@ public partial class ManageLicenseView : PhControl
         PART_UpgradeBody.IsVisible = !isPro;
         PART_ManageBody.IsVisible = isPro;
 
-        UpdateLogo();
         UpdateHeading();
         if (isPro) FillLicenseInfo();
-        SetupHero(isPro);
+        SetupHero();
 
         PART_BtnPlan.Click += (_, _) => OpenUrl("https://imageglass.org/license");
         PART_BtnChangeLicense.Click += async (_, _) => await UpgradeToProControl.ImportLicenseAsync(this);
@@ -81,13 +76,6 @@ public partial class ManageLicenseView : PhControl
         // RunOnce is dispatcher-global, so a closed dialog would be held until it fires
         _heroIntroTimer?.Dispose();
         _heroIntroTimer = null;
-    }
-
-
-    protected override void OnIgThemeChanged(ThemePackChangedEventArgs e)
-    {
-        base.OnIgThemeChanged(e);
-        UpdateLogo();
     }
 
 
@@ -179,12 +167,11 @@ public partial class ManageLicenseView : PhControl
     /// <summary>
     /// Wires up the hero decoration; a failure here must never block the license actions.
     /// </summary>
-    private void SetupHero(bool isPro)
+    private void SetupHero()
     {
         try
         {
-            PART_ProStar.IsVisible = isPro;
-            PART_HeroStars.BobTarget = PART_LogoHost;
+            PART_HeroStars.BobTarget = PART_Logo;
             PART_Header.PointerPressed += (_, _) => PlayHeroBurst();
         }
         catch { }
@@ -278,32 +265,6 @@ public partial class ManageLicenseView : PhControl
         return BHelper.FormatDateTime(expiresAt.Value.ToLocalTime().DateTime);
     }
 
-
-    private void UpdateLogo()
-    {
-        if (PART_Logo is null) return;
-
-        // try the theme logo first
-        try
-        {
-            var iconPath = Core.Theme.GetIconPath(IgThemeIcon.AppLogo);
-            PART_Logo.Source = new SvgImage
-            {
-                Source = SvgSource.Load(iconPath),
-            };
-        }
-        catch { }
-
-        // fall back to the default logo
-        if (PART_Logo.Source is null)
-        {
-            using var stream = Resx.GetDefaultWindowIconAsStream();
-            if (stream is not null)
-            {
-                PART_Logo.Source = Bitmap.DecodeToHeight(stream, 256);
-            }
-        }
-    }
 
     #endregion // Methods
 

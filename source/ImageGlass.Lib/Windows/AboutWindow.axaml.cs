@@ -19,9 +19,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
-using Avalonia.Media.Imaging;
-using Avalonia.Svg.Skia;
-using ImageGlass.Common.AppThemes;
 using ImageGlass.Common.Localization;
 using ImageGlass.Common.ServiceProviders;
 using ImageGlass.Common.Types;
@@ -97,7 +94,6 @@ public partial class AboutWindow : DialogWindow
         PART_LblCopyright.Text = $"Copyright © 2010-{DateTime.UtcNow.Year} Dương Diệu Pháp";
         PART_LblCreditContent.Text = _creditContent;
 
-        UpdateLogo();
         SetupEditionChip();
 
         // PhButton.ApplyVariant clears Padding, so the link spacing cannot live in the markup
@@ -118,13 +114,6 @@ public partial class AboutWindow : DialogWindow
 
 
     #region Override Methods
-
-    protected override void OnIgThemeChanged(ThemePackChangedEventArgs e)
-    {
-        base.OnIgThemeChanged(e);
-        UpdateLogo();
-    }
-
 
     protected override void OnIgLanguageChanged()
     {
@@ -207,32 +196,6 @@ public partial class AboutWindow : DialogWindow
 
     private void OpenUrl(string url) => _ = BHelper.OpenUrlAsync(this, url, "from_about");
 
-
-    private void UpdateLogo()
-    {
-        if (PART_Logo is null) return;
-
-        // 1. try load theme logo
-        try
-        {
-            var iconPath = Core.Theme.GetIconPath(IgThemeIcon.AppLogo);
-            PART_Logo.Source = new SvgImage
-            {
-                Source = SvgSource.Load(iconPath),
-            };
-        }
-        catch { }
-
-        // 2. load the default logo
-        if (PART_Logo.Source is null)
-        {
-            using var stream = Resx.GetDefaultWindowIconAsStream();
-            if (stream is not null)
-            {
-                PART_Logo.Source = Bitmap.DecodeToHeight(stream, 256);
-            }
-        }
-    }
 
     #endregion // Private Methods
 

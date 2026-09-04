@@ -31,23 +31,11 @@
                     HorizontalAlignment="Center"
                     Orientation="Vertical"
                     Spacing="12">
-                    <!--  one host, so the Pro mark floats with the logo  -->
-                    <Panel
-                        x:Name="PART_LogoHost"
-                        Width="48"
-                        Height="48"
+                    <ui:PhLogo
+                        x:Name="PART_Logo"
                         HorizontalAlignment="Center"
-                        VerticalAlignment="Center">
-                        <Image x:Name="PART_Logo" />
-                        <windows:ProStarGlyph
-                            x:Name="PART_ProStar"
-                            Width="10"
-                            Height="10"
-                            Margin="0,4,4,0"
-                            HorizontalAlignment="Right"
-                            VerticalAlignment="Top"
-                            IsVisible="False" />
-                    </Panel>
+                        VerticalAlignment="Center"
+                        LogoSize="48" />
                     <ui:PhTextBlock
                         x:Name="PART_LblHeading"
                         VerticalAlignment="Center"

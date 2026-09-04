@@ -166,7 +166,7 @@ public sealed class HeroStarsOverlay : PhControl
                 if (opacity <= 0.004) continue;
 
                 using var _ = c.PushOpacity(opacity);
-                HeroStar.Draw(c, _geometry, _brush,
+                PhProStar.Draw(c, _geometry, _brush,
                     p.StartX + p.VelX * age,
                     p.StartY + p.VelY * age,
                     p.Size,
@@ -204,8 +204,8 @@ public sealed class HeroStarsOverlay : PhControl
 
     private void EnsureResources()
     {
-        _geometry ??= HeroStar.TryGetGeometry();
-        _brush ??= HeroStar.CreateBrush();
+        _geometry ??= PhProStar.TryGetGeometry();
+        _brush ??= PhProStar.CreateThemedBrush();
     }
 
 
