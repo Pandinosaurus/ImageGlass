@@ -17,9 +17,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 using Avalonia.Controls;
+using Avalonia.Interactivity;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform.Storage;
 using Avalonia.Svg.Skia;
+using Avalonia.Threading;
 using ImageGlass.Common.AppThemes;
 using ImageGlass.Common.Localization;
 using ImageGlass.Common.ServiceProviders.Licensing;
@@ -34,6 +36,11 @@ namespace ImageGlass.Common.Windows;
 
 public partial class ManageLicenseView : PhControl
 {
+    private const int HERO_INTRO_DELAY_SEC = 1;
+
+    private IDisposable? _heroIntroTimer;
+
+
     public ManageLicenseView()
     {
         InitializeComponent();
@@ -45,6 +52,7 @@ public partial class ManageLicenseView : PhControl
         UpdateLogo();
         UpdateHeading();
         if (isPro) FillLicenseInfo();
+        SetupHero(isPro);
 
         PART_BtnPlan.Click += (_, _) => OpenUrl("https://imageglass.org/license");
         PART_BtnChangeLicense.Click += async (_, _) => await UpgradeToProControl.ImportLicenseAsync(this);
@@ -54,6 +62,27 @@ public partial class ManageLicenseView : PhControl
 
 
     #region Overrides
+
+    protected override void OnLoaded(RoutedEventArgs e)
+    {
+        base.OnLoaded(e);
+
+        // OnLoaded can fire again on a tree re-attach, so never leave a timer armed twice
+        _heroIntroTimer?.Dispose();
+        _heroIntroTimer = DispatcherTimer.RunOnce(PlayHeroBurst,
+            TimeSpan.FromSeconds(HERO_INTRO_DELAY_SEC));
+    }
+
+
+    protected override void OnUnloaded(RoutedEventArgs e)
+    {
+        base.OnUnloaded(e);
+
+        // RunOnce is dispatcher-global, so a closed dialog would be held until it fires
+        _heroIntroTimer?.Dispose();
+        _heroIntroTimer = null;
+    }
+
 
     protected override void OnIgThemeChanged(ThemePackChangedEventArgs e)
     {
@@ -144,6 +173,31 @@ public partial class ManageLicenseView : PhControl
             label.IsVisible = hasValue;
             value.IsVisible = hasValue;
         }
+    }
+
+
+    /// <summary>
+    /// Wires up the hero decoration; a failure here must never block the license actions.
+    /// </summary>
+    private void SetupHero(bool isPro)
+    {
+        try
+        {
+            PART_ProStar.IsVisible = isPro;
+            PART_HeroStars.BobTarget = PART_LogoHost;
+            PART_Header.PointerPressed += (_, _) => PlayHeroBurst();
+        }
+        catch { }
+    }
+
+
+    private void PlayHeroBurst()
+    {
+        // an early click must not be restarted by the pending intro timer
+        _heroIntroTimer?.Dispose();
+        _heroIntroTimer = null;
+
+        PART_HeroStars?.Play();
     }
 
 
