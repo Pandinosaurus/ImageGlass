@@ -16,27 +16,36 @@
             Orientation="Vertical"
             Spacing="4">
 
-            <!--  app logo  -->
-            <ui:PhLogo
-                Margin="0,16,0,0"
-                HorizontalAlignment="Center"
-                LogoSize="96" />
+            <!--  hero: no background of its own, only the star burst behind the logo and titles  -->
+            <Panel x:Name="PART_Hero" Background="Transparent">
+                <!--  first child, so the stars stay behind the logo and titles  -->
+                <ui:PhStarsOverlay x:Name="PART_HeroStars" />
 
-            <!--  app name  -->
-            <TextBlock
-                Margin="0,12,0,0"
-                HorizontalAlignment="Center"
-                FontSize="26"
-                FontWeight="SemiBold"
-                Foreground="{DynamicResource IG_TextAccentColor}"
-                Text="ImageGlass 10" />
+                <StackPanel Orientation="Vertical" Spacing="4">
+                    <!--  app logo  -->
+                    <ui:PhLogo
+                        x:Name="PART_Logo"
+                        Margin="0,16,0,0"
+                        HorizontalAlignment="Center"
+                        LogoSize="96" />
 
-            <!--  slogan  -->
-            <TextBlock
-                x:Name="PART_LblSlogan"
-                HorizontalAlignment="Center"
-                FontSize="{x:Static types:Const.FONT_SIZE_SUBTITLE}"
-                TextAlignment="Center" />
+                    <!--  app name  -->
+                    <TextBlock
+                        Margin="0,12,0,0"
+                        HorizontalAlignment="Center"
+                        FontSize="26"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource IG_TextAccentColor}"
+                        Text="ImageGlass 10" />
+
+                    <!--  slogan  -->
+                    <TextBlock
+                        x:Name="PART_LblSlogan"
+                        HorizontalAlignment="Center"
+                        FontSize="{x:Static types:Const.FONT_SIZE_SUBTITLE}"
+                        TextAlignment="Center" />
+                </StackPanel>
+            </Panel>
 
             <!--  edition chip; text, variant, padding and cursor are set in code, see SetupEditionChip  -->
             <ui:PhButton

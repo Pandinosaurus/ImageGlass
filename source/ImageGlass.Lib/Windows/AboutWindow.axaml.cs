@@ -19,6 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Threading;
 using ImageGlass.Common.Localization;
 using ImageGlass.Common.ServiceProviders;
 using ImageGlass.Common.Types;
@@ -32,6 +33,11 @@ namespace ImageGlass.Common.Windows;
 
 public partial class AboutWindow : DialogWindow
 {
+    private const int HERO_INTRO_DELAY_SEC = 1;
+
+    private IDisposable? _heroIntroTimer;
+
+
     private const string _creditContent = """
         ◍ Avalonia                                         MIT licence 
           https://github.com/AvaloniaUI/Avalonia
@@ -95,6 +101,7 @@ public partial class AboutWindow : DialogWindow
         PART_LblCreditContent.Text = _creditContent;
 
         SetupEditionChip();
+        SetupHero();
 
         // PhButton.ApplyVariant clears Padding, so the link spacing cannot live in the markup
         PhButton[] linkButtons = [PART_BtnWebsite, PART_BtnGitHub, PART_BtnEula, PART_BtnPrivacy];
@@ -114,6 +121,26 @@ public partial class AboutWindow : DialogWindow
 
 
     #region Override Methods
+
+    protected override void OnOpened(EventArgs e)
+    {
+        base.OnOpened(e);
+
+        _heroIntroTimer?.Dispose();
+        _heroIntroTimer = DispatcherTimer.RunOnce(PlayHeroBurst,
+            TimeSpan.FromSeconds(HERO_INTRO_DELAY_SEC));
+    }
+
+
+    protected override void OnClosed(EventArgs e)
+    {
+        base.OnClosed(e);
+
+        // RunOnce is dispatcher-global, so a closed window would be held until it fires
+        _heroIntroTimer?.Dispose();
+        _heroIntroTimer = null;
+    }
+
 
     protected override void OnIgLanguageChanged()
     {
@@ -155,6 +182,32 @@ public partial class AboutWindow : DialogWindow
             {magickVersion}
             {dotnetVersion}
             """;
+    }
+
+
+    /// <summary>
+    /// Wires up the hero decoration; a failure here must never block the About actions.
+    /// </summary>
+    private void SetupHero()
+    {
+        try
+        {
+            // the flying stars are a Pro flourish; Classic gets the floating logo alone
+            PART_HeroStars.EnableStars = Core.IsProEnabled;
+            PART_HeroStars.BobTarget = PART_Logo;
+            PART_Hero.PointerPressed += (_, _) => PlayHeroBurst();
+        }
+        catch { }
+    }
+
+
+    private void PlayHeroBurst()
+    {
+        // an early click must not be restarted by the pending intro timer
+        _heroIntroTimer?.Dispose();
+        _heroIntroTimer = null;
+
+        PART_HeroStars?.Play();
     }
 
 

@@ -24,7 +24,7 @@
 
             <Panel>
                 <!--  first child, so the stars stay behind the logo and heading  -->
-                <windows:HeroStarsOverlay x:Name="PART_HeroStars" />
+                <ui:PhStarsOverlay x:Name="PART_HeroStars" />
 
                 <StackPanel
                     Margin="24,22"
@@ -35,7 +35,7 @@
                         x:Name="PART_Logo"
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
-                        LogoSize="48" />
+                        LogoSize="64" />
                     <ui:PhTextBlock
                         x:Name="PART_LblHeading"
                         VerticalAlignment="Center"

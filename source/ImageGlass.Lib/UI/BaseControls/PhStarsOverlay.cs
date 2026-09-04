@@ -20,15 +20,15 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Threading;
-using ImageGlass.UI;
+using ImageGlass.Common;
 using System;
 
-namespace ImageGlass.Common.Windows;
+namespace ImageGlass.UI;
 
 /// <summary>
-/// A burst of star glyphs rising at 45deg over the license hero, frozen on its last frame.
+/// A burst of star glyphs rising at 45deg behind a hero section, frozen on its last frame.
 /// </summary>
-public sealed class HeroStarsOverlay : PhControl
+public sealed class PhStarsOverlay : PhControl
 {
     /// <summary>
     /// How long one burst lasts, in seconds.
@@ -37,7 +37,7 @@ public sealed class HeroStarsOverlay : PhControl
 
     private const double SQRT_HALF = 0.70710678118654752;
 
-    // the hero is only ~132 DIP tall, so at 45deg each star is a short diagonal streak
+    // a hero is short, so at 45deg each star is a short diagonal streak
     private const int MIN_STARS = 20;
     private const int MAX_STARS = 30;
     private const double MIN_STAR_SIZE = 5.0;
@@ -79,9 +79,9 @@ public sealed class HeroStarsOverlay : PhControl
     private bool _animRunning;
 
 
-    public HeroStarsOverlay()
+    public PhStarsOverlay()
     {
-        // the header Border owns the replay click, and stars must not spill into the body
+        // the hero owns the replay click, and stars must not spill past it
         IsHitTestVisible = false;
         ClipToBounds = true;
     }
@@ -93,6 +93,12 @@ public sealed class HeroStarsOverlay : PhControl
     /// Gets, sets the element that floats along with the burst, driven off the same clock.
     /// </summary>
     public Control? BobTarget { get; set; }
+
+
+    /// <summary>
+    /// Gets, sets whether the stars fly; when off, <see cref="Play"/> only floats <see cref="BobTarget"/>.
+    /// </summary>
+    public bool EnableStars { get; set; } = true;
 
     #endregion // Public Properties
 
@@ -117,10 +123,14 @@ public sealed class HeroStarsOverlay : PhControl
                 return;
             }
 
-            EnsureResources();
-            if (_geometry is null) return;
+            // a missing icon resource costs the stars, never the float
+            _particles = [];
+            if (EnableStars)
+            {
+                EnsureResources();
+                if (_geometry is not null) _particles = GenerateParticles(Bounds.Width, Bounds.Height);
+            }
 
-            _particles = GenerateParticles(Bounds.Width, Bounds.Height);
             _elapsed = 0;
             _startTimestamp = null;
             _bob.Y = 0;
