@@ -20,11 +20,7 @@
             Margin="0,24,0,0"
             HorizontalAlignment="Center"
             Spacing="14">
-            <Image
-                x:Name="PART_Logo"
-                Width="128"
-                Height="128"
-                HorizontalAlignment="Center" />
+            <ui:PhLogo HorizontalAlignment="Center" LogoSize="128" />
 
             <StackPanel
                 x:Name="PART_StepDots"

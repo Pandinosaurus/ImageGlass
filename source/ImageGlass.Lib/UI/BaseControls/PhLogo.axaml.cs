@@ -30,9 +30,9 @@ namespace ImageGlass.UI;
 /// </summary>
 public partial class PhLogo : PhControl
 {
-    // taken from the license hero, where a 48px logo carries a 10px star inset by 4px
-    private const double PRO_STAR_RATIO = 10.0 / 48.0;
-    private const double PRO_STAR_INSET_RATIO = 4.0 / 48.0;
+    // taken from the license hero, where a 48px logo carries a 8px star inset by 5px
+    private const double PRO_STAR_RATIO = 8.0 / 48.0;
+    private const double PRO_STAR_INSET_RATIO = 5.0 / 48.0;
 
 
     public PhLogo()
