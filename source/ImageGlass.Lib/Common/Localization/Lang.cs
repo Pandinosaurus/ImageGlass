@@ -869,6 +869,7 @@ public class Lang
         new(LangId.Menu_MnuCheckForUpdate_CurrentVersion, "Current version: {0}" ), //v9.0
         new(LangId.Menu_MnuCheckForUpdate_LatestVersion, "The latest version: {0}" ), //v9.0
         new(LangId.Menu_MnuCheckForUpdate_PublishedDate, "Published date: {0}" ), //v9.0
+        new(LangId.Menu_MnuCheckForUpdate_ProFromMsStore, "Get ImageGlass Pro from Microsoft Store"), // v10.0
 
         new(LangId.Menu_MnuSetDefaultPhotoViewer, "Set default photo viewer"), //v9.0
         new(LangId.Menu_MnuSetDefaultPhotoViewer_Success, "You have successfully set ImageGlass as default photo viewer."), //v9.0

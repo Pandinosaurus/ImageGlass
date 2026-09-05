@@ -428,6 +428,7 @@ public enum LangId
     Menu_MnuCheckForUpdate_CurrentVersion,
     Menu_MnuCheckForUpdate_LatestVersion,
     Menu_MnuCheckForUpdate_PublishedDate,
+    Menu_MnuCheckForUpdate_ProFromMsStore,
 
     Menu_MnuSetDefaultPhotoViewer,
     Menu_MnuSetDefaultPhotoViewer_Success,
