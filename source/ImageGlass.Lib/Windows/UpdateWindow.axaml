@@ -27,7 +27,7 @@
                         FontWeight="SemiBold"
                         Variant="Accent" />
                     <ui:PhButton
-                        x:Name="PART_BtnProMsStore"
+                        x:Name="PART_BtnProStore"
                         HorizontalAlignment="Stretch"
                         IsVisible="False" />
                 </StackPanel>

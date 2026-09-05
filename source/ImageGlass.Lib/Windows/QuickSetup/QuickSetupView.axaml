@@ -67,11 +67,17 @@
                     </ComboBox.ItemTemplate>
                 </ComboBox>
 
-                <ui:PhButton
-                    x:Name="PART_SeeWhatNew"
-                    Padding="0"
-                    HorizontalAlignment="Center"
-                    Variant="Link" />
+                <!--  See Changelog card  -->
+                <ui:PhAmbientCard
+                    Margin="0,14,0,0"
+                    HorizontalAlignment="Stretch"
+                    CornerRadius="{DynamicResource OverlayCornerRadius}">
+                    <ui:PhButton
+                        x:Name="PART_SeeWhatNew"
+                        Padding="24,8"
+                        HorizontalAlignment="Stretch"
+                        Variant="Link" />
+                </ui:PhAmbientCard>
             </StackPanel>
 
 

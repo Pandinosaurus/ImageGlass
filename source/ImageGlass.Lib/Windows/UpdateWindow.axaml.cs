@@ -60,7 +60,7 @@ public partial class UpdateWindow : ModalWindow
         PART_BtnSkipVersion.Click += (_, _) => SkipVersion();
 
         PART_BtnUpgradePro.Click += (_, _) => OpenUrl(UpdateConstants.ProPricingUrl);
-        PART_BtnProMsStore.Click += (_, _) => OpenUrl(UpdateConstants.MsStoreProductUrl);
+        PART_BtnProStore.Click += (_, _) => OpenUrl(UpdateConstants.MsStoreProductUrl);
     }
 
 
@@ -75,7 +75,7 @@ public partial class UpdateWindow : ModalWindow
         PART_BtnChangelog.Text = Core.Lang[LangId.QuickSetup_SeeWhatNew];
 
         PART_BtnUpgradePro.Text = Core.Lang[LangId.Menu_MnuUpgradeLicense];
-        PART_BtnProMsStore.Text = Core.Lang[LangId.Menu_MnuCheckForUpdate_ProFromMsStore];
+        PART_BtnProStore.Text = Core.Lang[LangId.Menu_MnuCheckForUpdate_ProFromStore];
     }
 
 
@@ -149,7 +149,7 @@ public partial class UpdateWindow : ModalWindow
         PART_ProAdCard.IsVisible = !Core.IsProEnabled && !IsMsStoreBuild;
 
         // the Store route only exists on Windows, and only for a build that is not already from it
-        PART_BtnProMsStore.IsVisible = PART_ProAdCard.IsVisible && BHelper.OS == OSType.Windows;
+        PART_BtnProStore.IsVisible = PART_ProAdCard.IsVisible && BHelper.OS == OSType.Windows;
     }
 
 
